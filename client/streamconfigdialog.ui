@@ -1,0 +1,3224 @@
+<ui version="4.0" >
+ <class>StreamConfigDialog</class>
+ <widget class="QDialog" name="StreamConfigDialog" >
+  <property name="windowModality" >
+   <enum>Qt::ApplicationModal</enum>
+  </property>
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>554</width>
+    <height>521</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet" >
+   <string>QLineEdit:enabled[inputMask = "HH; "],&#xd;
+QLineEdit:enabled[inputMask = "HH HH; "],&#xd;
+QLineEdit:enabled[inputMask = "HH HH HH; "],&#xd;
+QLineEdit:enabled[inputMask = "HH HH HH HH; "], &#xd;
+QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff  } &#xd;
+</string>
+  </property>
+  <property name="modal" >
+   <bool>true</bool>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QTabWidget" name="twTopLevel" >
+     <property name="toolTip" >
+      <string/>
+     </property>
+     <property name="currentIndex" >
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="" >
+      <attribute name="title" >
+       <string>Packet Config</string>
+      </attribute>
+      <layout class="QGridLayout" >
+       <item row="0" column="0" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>171</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1" >
+        <widget class="QGroupBox" name="groupBox_6" >
+         <property name="title" >
+          <string>Data Pattern</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QComboBox" name="cmbPatternMode" >
+            <item>
+             <property name="text" >
+              <string>Fixed</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Increment</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Decrement</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Random</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="HexLineEdit" name="lePattern" >
+            <property name="inputMask" >
+             <string>HH HH HH HH; </string>
+            </property>
+            <property name="text" >
+             <string>   </string>
+            </property>
+            <property name="maxLength" >
+             <number>11</number>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="2" >
+        <widget class="QGroupBox" name="groupBox" >
+         <property name="title" >
+          <string>Frame Length (including CRC)</string>
+         </property>
+         <layout class="QGridLayout" >
+          <item row="0" column="0" >
+           <widget class="QComboBox" name="cmbPktLenMode" >
+            <item>
+             <property name="text" >
+              <string>Fixed</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Increment</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Decrement</string>
+             </property>
+            </item>
+            <item>
+             <property name="text" >
+              <string>Random</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="1" >
+           <widget class="QLabel" name="label_18" >
+            <property name="text" >
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" >
+           <widget class="QLineEdit" name="lePktLenMin" >
+            <property name="text" >
+             <string>64</string>
+            </property>
+            <property name="maxLength" >
+             <number>32767</number>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QLineEdit" name="lePktLen" >
+            <property name="text" >
+             <string>64</string>
+            </property>
+            <property name="maxLength" >
+             <number>32767</number>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" >
+           <widget class="QLabel" name="label_19" >
+            <property name="text" >
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" >
+           <widget class="QLineEdit" name="lePktLenMax" >
+            <property name="text" >
+             <string>64</string>
+            </property>
+            <property name="maxLength" >
+             <number>32767</number>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="3" >
+        <widget class="QTabWidget" name="twProto" >
+         <property name="currentIndex" >
+          <number>2</number>
+         </property>
+         <widget class="QWidget" name="tab_7" >
+          <attribute name="title" >
+           <string>Protocols</string>
+          </attribute>
+          <layout class="QGridLayout" >
+           <item rowspan="2" row="0" column="0" >
+            <widget class="QGroupBox" name="groupBox_4" >
+             <property name="title" >
+              <string>Frame Type</string>
+             </property>
+             <layout class="QHBoxLayout" >
+              <item>
+               <layout class="QHBoxLayout" >
+                <item>
+                 <layout class="QVBoxLayout" >
+                  <item>
+                   <widget class="QRadioButton" name="rbFtNone" >
+                    <property name="text" >
+                     <string>None</string>
+                    </property>
+                    <property name="checked" >
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rbFtEthernet2" >
+                    <property name="text" >
+                     <string>Ethernet II</string>
+                    </property>
+                    <property name="checked" >
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rbFt802Dot3Raw" >
+                    <property name="text" >
+                     <string>802.3 Raw</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rbFt802Dot3Llc" >
+                    <property name="text" >
+                     <string>802.3 LLC</string>
+                    </property>
+                    <property name="checked" >
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rbFtLlcSnap" >
+                    <property name="text" >
+                     <string>LLC SNAP</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="Line" name="line" >
+                  <property name="orientation" >
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QGridLayout" >
+                  <item row="0" column="0" >
+                   <widget class="QLabel" name="lblDsap" >
+                    <property name="text" >
+                     <string>DSAP</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" >
+                   <widget class="QLineEdit" name="leDsap" >
+                    <property name="enabled" >
+                     <bool>true</bool>
+                    </property>
+                    <property name="inputMask" >
+                     <string>HH; </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" >
+                   <widget class="QLabel" name="lblSsap" >
+                    <property name="text" >
+                     <string>SSAP</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1" >
+                   <widget class="QLineEdit" name="leSsap" >
+                    <property name="enabled" >
+                     <bool>true</bool>
+                    </property>
+                    <property name="inputMask" >
+                     <string>HH; </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0" >
+                   <widget class="QLabel" name="lblControl" >
+                    <property name="text" >
+                     <string>Control</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1" >
+                   <widget class="QLineEdit" name="leControl" >
+                    <property name="enabled" >
+                     <bool>true</bool>
+                    </property>
+                    <property name="inputMask" >
+                     <string>HH; </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0" >
+                   <widget class="QLabel" name="lblOui" >
+                    <property name="text" >
+                     <string>OUI</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" >
+                   <widget class="QLineEdit" name="leOui" >
+                    <property name="enabled" >
+                     <bool>true</bool>
+                    </property>
+                    <property name="inputMask" >
+                     <string>HH HH HH; </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0" >
+                   <widget class="QLabel" name="lblTpe" >
+                    <property name="text" >
+                     <string>Type</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1" >
+                   <widget class="QLineEdit" name="leType" >
+                    <property name="enabled" >
+                     <bool>true</bool>
+                    </property>
+                    <property name="inputMask" >
+                     <string>HH HH; </string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="1" >
+            <widget class="QGroupBox" name="groupBox_8" >
+             <property name="title" >
+              <string>L3</string>
+             </property>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbL3None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL3Ipv4" >
+                <property name="text" >
+                 <string>IPv4</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL3Arp" >
+                <property name="text" >
+                 <string>ARP</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL3Other" >
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="1" >
+            <widget class="QGroupBox" name="groupBox_9" >
+             <property name="title" >
+              <string>L4</string>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QRadioButton" name="rbL4None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QRadioButton" name="rbL4Icmp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>ICMP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QRadioButton" name="rbL4Igmp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IGMP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QRadioButton" name="rbL4Tcp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>TCP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QRadioButton" name="rbL4Udp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>UDP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" >
+               <widget class="QRadioButton" name="rbL4Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="0" >
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_4" >
+          <attribute name="title" >
+           <string>L2</string>
+          </attribute>
+          <layout class="QGridLayout" >
+           <item row="0" column="0" colspan="2" >
+            <widget class="QGroupBox" name="groupBox_2" >
+             <property name="title" >
+              <string>Ethernet</string>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QLabel" name="label" >
+                <property name="text" >
+                 <string>Destination</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QLineEdit" name="leDstMac" >
+                <property name="inputMask" >
+                 <string>HH HH HH HH HH HH; </string>
+                </property>
+                <property name="text" >
+                 <string>     </string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QComboBox" name="cmbDstMacMode" >
+                <item>
+                 <property name="text" >
+                  <string>Fixed</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>Increment</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>Decrement</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="0" column="3" >
+               <widget class="QLabel" name="label_2" >
+                <property name="text" >
+                 <string>Count</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4" >
+               <widget class="QLineEdit" name="leDstMacCount" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>1</string>
+                </property>
+                <property name="cursorPosition" >
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5" >
+               <widget class="QLabel" name="label_5" >
+                <property name="text" >
+                 <string>Step</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="6" >
+               <widget class="QLineEdit" name="leDstMacStep" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>1</string>
+                </property>
+                <property name="cursorPosition" >
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QLabel" name="label_3" >
+                <property name="text" >
+                 <string>Source         </string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QLineEdit" name="leSrcMac" >
+                <property name="inputMask" >
+                 <string>HH HH HH HH HH HH; </string>
+                </property>
+                <property name="text" >
+                 <string>     </string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" >
+               <widget class="QComboBox" name="cmbSrcMacMode" >
+                <item>
+                 <property name="text" >
+                  <string>Fixed</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>Increment</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>Decrement</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="3" >
+               <widget class="QLabel" name="label_4" >
+                <property name="text" >
+                 <string>Count</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="4" >
+               <widget class="QLineEdit" name="leSrcMacCount" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>1</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="5" >
+               <widget class="QLabel" name="label_6" >
+                <property name="text" >
+                 <string>Step</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="6" >
+               <widget class="QLineEdit" name="leSrcMacStep" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>1</string>
+                </property>
+                <property name="cursorPosition" >
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0" >
+            <widget class="QGroupBox" name="gbCvlan" >
+             <property name="title" >
+              <string>VLAN/CVLAN</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="checked" >
+              <bool>false</bool>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QLabel" name="label_9" >
+                <property name="text" >
+                 <string>Priority</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QLabel" name="label_8" >
+                <property name="text" >
+                 <string>CFI</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QLabel" name="label_10" >
+                <property name="text" >
+                 <string>VLAN</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3" >
+               <widget class="QCheckBox" name="cbCvlanTpidOverride" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Override TPID</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QComboBox" name="cmbCvlanPrio" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text" >
+                  <string>0</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>1</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>2</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>3</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>4</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>5</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>6</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>7</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QComboBox" name="cmbCvlanCfi" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text" >
+                  <string>0</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>1</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="2" >
+               <widget class="QLineEdit" name="leCvlanId" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3" >
+               <widget class="QLineEdit" name="leCvlanTpid" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="inputMask" >
+                 <string>HH HH; </string>
+                </property>
+                <property name="text" >
+                 <string> </string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="1" >
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="0" >
+            <widget class="QGroupBox" name="gbSvlan" >
+             <property name="title" >
+              <string>SVLAN</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="checked" >
+              <bool>false</bool>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QLabel" name="label_11" >
+                <property name="text" >
+                 <string>Priority</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QLabel" name="label_17" >
+                <property name="text" >
+                 <string>CFI</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QLabel" name="label_16" >
+                <property name="text" >
+                 <string>VLAN</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3" >
+               <widget class="QCheckBox" name="cbSvlanTpidOverride" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Override TPID</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QComboBox" name="cmbSvlanPrio" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text" >
+                  <string>0</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>1</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>2</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>3</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>4</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>5</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>6</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>7</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QComboBox" name="cmbSvlanCfi" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text" >
+                  <string>0</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text" >
+                  <string>1</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="2" >
+               <widget class="QLineEdit" name="leSvlanId" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3" >
+               <widget class="QLineEdit" name="leSvlanTpid" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="inputMask" >
+                 <string>HH HH; </string>
+                </property>
+                <property name="text" >
+                 <string> </string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="1" >
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_8" >
+          <attribute name="title" >
+           <string>L3</string>
+          </attribute>
+          <layout class="QGridLayout" >
+           <item row="0" column="0" >
+            <widget class="QStackedWidget" name="swL3Proto" >
+             <property name="currentIndex" >
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="pgL3Ip" >
+              <layout class="QGridLayout" >
+               <item row="0" column="0" >
+                <layout class="QGridLayout" >
+                 <item row="0" column="0" >
+                  <widget class="QCheckBox" name="cbIpVersionOverride" >
+                   <property name="text" >
+                    <string>Override Version</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" >
+                  <widget class="QLineEdit" name="leIpVersion" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string>4</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0" >
+                  <widget class="QCheckBox" name="cbIpHdrLenOverride" >
+                   <property name="text" >
+                    <string>Override Header Length</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1" >
+                  <widget class="QLineEdit" name="leIpHdrLen" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string>5</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" >
+                  <widget class="QLabel" name="label_22" >
+                   <property name="text" >
+                    <string>TOS/DSCP</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1" >
+                  <widget class="QLineEdit" name="leIpTos" >
+                   <property name="inputMask" >
+                    <string>HH; </string>
+                   </property>
+                   <property name="text" >
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2" >
+                  <widget class="QToolButton" name="toolButton" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string>...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0" >
+                  <widget class="QCheckBox" name="cbIpLengthOverride" >
+                   <property name="text" >
+                    <string>Override Length</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1" >
+                  <widget class="QLineEdit" name="leIpLength" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0" >
+                  <widget class="QLabel" name="label_24" >
+                   <property name="text" >
+                    <string>Identification</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1" >
+                  <widget class="QLineEdit" name="leIpId" >
+                   <property name="inputMask" >
+                    <string>HH HH; </string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="0" column="1" >
+                <widget class="Line" name="line_2" >
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2" >
+                <layout class="QGridLayout" >
+                 <item row="0" column="0" >
+                  <widget class="QLabel" name="label_25" >
+                   <property name="text" >
+                    <string>Fragment Offset</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" >
+                  <widget class="QLineEdit" name="leIpFragOfs" />
+                 </item>
+                 <item row="1" column="0" >
+                  <widget class="QCheckBox" name="cbIpFlagsDf" >
+                   <property name="text" >
+                    <string>Don't Fragment</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1" >
+                  <widget class="QCheckBox" name="cbIpFlagsMf" >
+                   <property name="text" >
+                    <string>More Fragments</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" >
+                  <widget class="QLabel" name="label_26" >
+                   <property name="text" >
+                    <string>Time To Live (TTL)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1" >
+                  <widget class="QLineEdit" name="leIpTtl" >
+                   <property name="text" >
+                    <string>64</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0" >
+                  <widget class="QLabel" name="label_27" >
+                   <property name="text" >
+                    <string>Protocol</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1" >
+                  <widget class="QLineEdit" name="leIpProto" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0" >
+                  <widget class="QCheckBox" name="cbIpCksumOverride" >
+                   <property name="text" >
+                    <string>Override Checksum</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1" >
+                  <widget class="QLineEdit" name="leIpCksum" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="inputMask" >
+                    <string>HH HH; </string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0" colspan="3" >
+                <widget class="QGroupBox" name="groupBox_7" >
+                 <property name="title" >
+                  <string/>
+                 </property>
+                 <property name="flat" >
+                  <bool>false</bool>
+                 </property>
+                 <layout class="QGridLayout" >
+                  <item row="0" column="2" >
+                   <widget class="QLabel" name="label_31" >
+                    <property name="text" >
+                     <string>Mode</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3" >
+                   <widget class="QLabel" name="label_23" >
+                    <property name="text" >
+                     <string>Count</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="4" >
+                   <widget class="QLabel" name="label_30" >
+                    <property name="text" >
+                     <string>Mask</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" >
+                   <widget class="QLabel" name="label_20" >
+                    <property name="text" >
+                     <string>Source</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1" >
+                   <widget class="QLineEdit" name="leIpSrcAddr" >
+                    <property name="inputMask" >
+                     <string>009.009.009.009; </string>
+                    </property>
+                    <property name="text" >
+                     <string>...</string>
+                    </property>
+                    <property name="alignment" >
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2" >
+                   <widget class="QComboBox" name="cmbIpSrcAddrMode" >
+                    <item>
+                     <property name="text" >
+                      <string>Fixed</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Increment Host</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Decrement Host</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Random Host</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="1" column="3" >
+                   <widget class="QLineEdit" name="leIpSrcAddrCount" >
+                    <property name="text" >
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="4" >
+                   <widget class="QLineEdit" name="leIpSrcAddrMask" >
+                    <property name="text" >
+                     <string>255.255.255.255</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0" >
+                   <widget class="QLabel" name="label_21" >
+                    <property name="text" >
+                     <string>Destination</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1" >
+                   <widget class="QLineEdit" name="leIpDstAddr" >
+                    <property name="inputMask" >
+                     <string>000.000.000.000; </string>
+                    </property>
+                    <property name="text" >
+                     <string>...</string>
+                    </property>
+                    <property name="alignment" >
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2" >
+                   <widget class="QComboBox" name="cmbIpDstAddrMode" >
+                    <item>
+                     <property name="text" >
+                      <string>Fixed</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Increment Host</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Decrement Host</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text" >
+                      <string>Random Host</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="2" column="3" >
+                   <widget class="QLineEdit" name="leIpDstAddrCount" >
+                    <property name="text" >
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="4" >
+                   <widget class="QLineEdit" name="leIpDstAddrMask" >
+                    <property name="text" >
+                     <string>255.255.255.255</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="3" >
+                <layout class="QHBoxLayout" >
+                 <item>
+                  <widget class="QLabel" name="label_29" >
+                   <property name="text" >
+                    <string>Options</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="leIpOptions" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string>TODO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="tbIpOptionsEdit" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="text" >
+                    <string>...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="3" column="0" colspan="3" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>470</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="pgL3Arp" >
+              <widget class="QLabel" name="label_39" >
+               <property name="geometry" >
+                <rect>
+                 <x>105</x>
+                 <y>100</y>
+                 <width>296</width>
+                 <height>76</height>
+                </rect>
+               </property>
+               <property name="text" >
+                <string>ARP : TODO</string>
+               </property>
+               <property name="alignment" >
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_6" >
+          <attribute name="title" >
+           <string>L4</string>
+          </attribute>
+          <layout class="QHBoxLayout" >
+           <item>
+            <widget class="QStackedWidget" name="swL4Proto" >
+             <property name="currentIndex" >
+              <number>1</number>
+             </property>
+             <widget class="QWidget" name="page" >
+              <layout class="QGridLayout" >
+               <item rowspan="2" row="0" column="0" >
+                <layout class="QGridLayout" >
+                 <item row="0" column="0" >
+                  <widget class="QLabel" name="label_28" >
+                   <property name="text" >
+                    <string>Source Port</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" >
+                  <widget class="QLineEdit" name="leTcpSrcPort" />
+                 </item>
+                 <item row="1" column="0" >
+                  <widget class="QLabel" name="label_32" >
+                   <property name="text" >
+                    <string>Destination Port</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1" >
+                  <widget class="QLineEdit" name="leTcpDstPort" />
+                 </item>
+                 <item row="2" column="0" >
+                  <widget class="QLabel" name="label_33" >
+                   <property name="text" >
+                    <string>Sequence Number</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1" >
+                  <widget class="QLineEdit" name="leTcpSeqNum" />
+                 </item>
+                 <item row="3" column="0" >
+                  <widget class="QLabel" name="label_34" >
+                   <property name="text" >
+                    <string>Acknowledgement Number</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1" >
+                  <widget class="QLineEdit" name="leTcpAckNum" />
+                 </item>
+                 <item row="4" column="0" >
+                  <widget class="QCheckBox" name="cbTcpHdrLenOverride" >
+                   <property name="text" >
+                    <string>Override Header Length (x4)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1" >
+                  <widget class="QLineEdit" name="leTcpHdrLen" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0" >
+                  <widget class="QLabel" name="label_36" >
+                   <property name="text" >
+                    <string>Window</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1" >
+                  <widget class="QLineEdit" name="leTcpWindow" />
+                 </item>
+                 <item row="6" column="0" >
+                  <widget class="QCheckBox" name="cbTcpCksumOverride" >
+                   <property name="text" >
+                    <string>Override Checksum</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="1" >
+                  <widget class="QLineEdit" name="leTcpCksum" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="inputMask" >
+                    <string>HH HH; </string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="0" >
+                  <widget class="QLabel" name="label_37" >
+                   <property name="text" >
+                    <string>Urgent Pointer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="1" >
+                  <widget class="QLineEdit" name="leTcpUrgentPointer" />
+                 </item>
+                </layout>
+               </item>
+               <item rowspan="3" row="0" column="1" >
+                <widget class="Line" name="line_3" >
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2" >
+                <widget class="QGroupBox" name="groupBox_10" >
+                 <property name="title" >
+                  <string>Flags</string>
+                 </property>
+                 <layout class="QGridLayout" >
+                  <item row="0" column="0" >
+                   <widget class="QCheckBox" name="cbTcpFlagsUrg" >
+                    <property name="text" >
+                     <string>URG</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" >
+                   <widget class="QCheckBox" name="cbTcpFlagsAck" >
+                    <property name="text" >
+                     <string>ACK</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2" >
+                   <widget class="QCheckBox" name="cbTcpFlagsPsh" >
+                    <property name="text" >
+                     <string>PSH</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" >
+                   <widget class="QCheckBox" name="cbTcpFlagsRst" >
+                    <property name="text" >
+                     <string>RST</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1" >
+                   <widget class="QCheckBox" name="cbTcpFlagsSyn" >
+                    <property name="text" >
+                     <string>SYN</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2" >
+                   <widget class="QCheckBox" name="cbTcpFlagsFin" >
+                    <property name="text" >
+                     <string>FIN</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="0" column="3" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item rowspan="2" row="1" column="2" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>20</width>
+                   <height>181</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="2" column="0" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="page_2" >
+              <layout class="QGridLayout" >
+               <item row="0" column="0" >
+                <layout class="QGridLayout" >
+                 <item row="0" column="0" >
+                  <widget class="QLabel" name="label_35" >
+                   <property name="text" >
+                    <string>Source Port</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" >
+                  <widget class="QLineEdit" name="leUdpSrcPort" />
+                 </item>
+                 <item row="1" column="0" >
+                  <widget class="QLabel" name="label_38" >
+                   <property name="text" >
+                    <string>Destination Port</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1" >
+                  <widget class="QLineEdit" name="leUdpDstPort" />
+                 </item>
+                 <item row="2" column="0" >
+                  <widget class="QCheckBox" name="cbUdpLengthOverride" >
+                   <property name="text" >
+                    <string>Override Length</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1" >
+                  <widget class="QLineEdit" name="leUdpLength" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0" >
+                  <widget class="QCheckBox" name="cbUdpCksumOverride" >
+                   <property name="text" >
+                    <string>Override Checksum</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1" >
+                  <widget class="QLineEdit" name="leUdpCksum" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="inputMask" >
+                    <string>HH HH; </string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="0" column="2" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="1" column="1" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="page_3" >
+              <layout class="QHBoxLayout" >
+               <item>
+                <widget class="QLabel" name="label_40" >
+                 <property name="text" >
+                  <string>ICMP: TODO</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="page_4" >
+              <layout class="QHBoxLayout" >
+               <item>
+                <widget class="QLabel" name="label_41" >
+                 <property name="text" >
+                  <string>IGMP: TODO</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2" >
+      <attribute name="title" >
+       <string>Stream Control</string>
+      </attribute>
+      <layout class="QGridLayout" >
+       <item row="0" column="0" >
+        <widget class="QGroupBox" name="groupBox_3" >
+         <property name="title" >
+          <string>Send</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QRadioButton" name="rbSendPackets" >
+            <property name="text" >
+             <string>Packets</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbSendBursts" >
+            <property name="text" >
+             <string>Bursts</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item rowspan="2" row="0" column="1" colspan="2" >
+        <widget class="QGroupBox" name="groupBox_13" >
+         <property name="title" >
+          <string>Numbers</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QLabel" name="label_7" >
+            <property name="text" >
+             <string>Number of Packets</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="leNumPackets" >
+            <property name="text" >
+             <string>1</string>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_13" >
+            <property name="text" >
+             <string>Number of Bursts</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="leNumBursts" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_12" >
+            <property name="text" >
+             <string>Packets per Burst</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lePacketsPerBurst" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item rowspan="2" row="0" column="3" >
+        <widget class="QGroupBox" name="groupBox_11" >
+         <property name="title" >
+          <string>After this stream</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QRadioButton" name="rbActionStop" >
+            <property name="text" >
+             <string>Stop</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbActionGotoNext" >
+            <property name="text" >
+             <string>Goto Next Stream</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbActionGotoStream" >
+            <property name="text" >
+             <string>Goto Stream</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="leStreamId" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" >
+        <widget class="QGroupBox" name="groupBox_5" >
+         <property name="title" >
+          <string>Mode</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QRadioButton" name="rbModeFixed" >
+            <property name="text" >
+             <string>Fixed</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbModeContinuous" >
+            <property name="text" >
+             <string>Continuous</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="4" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>41</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0" colspan="5" >
+        <widget class="Line" name="line_4" >
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2" >
+        <widget class="QGroupBox" name="groupBox_14" >
+         <property name="title" >
+          <string>Rate</string>
+         </property>
+         <property name="checkable" >
+          <bool>false</bool>
+         </property>
+         <property name="checked" >
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" >
+          <item>
+           <widget class="QLabel" name="label_43" >
+            <property name="text" >
+             <string>Packets/Sec</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lePacketsPerSec" >
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_44" >
+            <property name="text" >
+             <string>Bursts/Sec</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="leBurstsPerSec" >
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item rowspan="2" row="3" column="2" colspan="3" >
+        <widget class="QGroupBox" name="groupBox_12" >
+         <property name="enabled" >
+          <bool>true</bool>
+         </property>
+         <property name="title" >
+          <string>Gaps</string>
+         </property>
+         <property name="checkable" >
+          <bool>false</bool>
+         </property>
+         <property name="checked" >
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" >
+          <item row="0" column="0" colspan="2" >
+           <widget class="QLabel" name="label_45" >
+            <property name="text" >
+             <string/>
+            </property>
+            <property name="pixmap" >
+             <pixmap>icons/gaps.png</pixmap>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QLabel" name="label_14" >
+            <property name="text" >
+             <string>ISG</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" >
+           <widget class="QLineEdit" name="leGapIsg" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" >
+           <widget class="QLabel" name="label_15" >
+            <property name="text" >
+             <string>IPG</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" >
+           <widget class="QLabel" name="label_42" >
+            <property name="text" >
+             <string>IBG</string>
+            </property>
+            <property name="buddy" >
+             <cstring>leNumPackets</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" >
+           <widget class="QLineEdit" name="leGapIpg" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1" >
+           <widget class="QLineEdit" name="leGapIbg" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item rowspan="2" row="4" column="0" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="5" column="3" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3" >
+      <attribute name="title" >
+       <string>Packet View</string>
+      </attribute>
+      <layout class="QVBoxLayout" >
+       <item>
+        <widget class="QSplitter" name="splitter" >
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <widget class="QTreeWidget" name="treeWidget" >
+          <property name="uniformRowHeights" >
+           <bool>true</bool>
+          </property>
+          <column>
+           <property name="text" >
+            <string>New Column</string>
+           </property>
+          </column>
+          <item>
+           <property name="text" >
+            <string>Ethernet</string>
+           </property>
+           <item>
+            <property name="text" >
+             <string>DstMac: 00:00:00:00:00:00</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>SrcMac: 00:00:00:00:00:00</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>EtherType: IP (0800)</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text" >
+            <string>IP</string>
+           </property>
+           <item>
+            <property name="text" >
+             <string>Version: 4</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>Header Length: 20</string>
+            </property>
+           </item>
+          </item>
+         </widget>
+         <widget class="QTextEdit" name="textEdit" >
+          <property name="html" >
+           <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;">0004 00 00 00 00 00 00&lt;/p>
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;">&lt;/p>&lt;/body>&lt;/html></string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0" >
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QPushButton" name="pbPrev" >
+       <property name="text" >
+        <string>Prev</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbNext" >
+       <property name="text" >
+        <string>Next</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>191</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbOk" >
+       <property name="text" >
+        <string>OK</string>
+       </property>
+       <property name="default" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbCancel" >
+       <property name="text" >
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>HexLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header location="global" >hexlineedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>twTopLevel</tabstop>
+  <tabstop>cmbPatternMode</tabstop>
+  <tabstop>lePattern</tabstop>
+  <tabstop>cmbPktLenMode</tabstop>
+  <tabstop>lePktLen</tabstop>
+  <tabstop>lePktLenMin</tabstop>
+  <tabstop>lePktLenMax</tabstop>
+  <tabstop>twProto</tabstop>
+  <tabstop>leDstMac</tabstop>
+  <tabstop>cmbDstMacMode</tabstop>
+  <tabstop>leDstMacCount</tabstop>
+  <tabstop>leDstMacStep</tabstop>
+  <tabstop>leSrcMac</tabstop>
+  <tabstop>cmbSrcMacMode</tabstop>
+  <tabstop>leSrcMacCount</tabstop>
+  <tabstop>leSrcMacStep</tabstop>
+  <tabstop>gbCvlan</tabstop>
+  <tabstop>cmbCvlanPrio</tabstop>
+  <tabstop>cmbCvlanCfi</tabstop>
+  <tabstop>leCvlanId</tabstop>
+  <tabstop>cbCvlanTpidOverride</tabstop>
+  <tabstop>leCvlanTpid</tabstop>
+  <tabstop>gbSvlan</tabstop>
+  <tabstop>cmbSvlanPrio</tabstop>
+  <tabstop>cmbSvlanCfi</tabstop>
+  <tabstop>leSvlanId</tabstop>
+  <tabstop>cbSvlanTpidOverride</tabstop>
+  <tabstop>leSvlanTpid</tabstop>
+ </tabstops>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>cbCvlanTpidOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leCvlanTpid</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbSvlanTpidOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSvlanTpid</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbCvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmbCvlanPrio</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbCvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmbCvlanCfi</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbCvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leCvlanId</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>133</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbCvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cbCvlanTpidOverride</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbSvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmbSvlanPrio</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbSvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSvlanId</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbSvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cbSvlanTpidOverride</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>147</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gbSvlan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmbSvlanCfi</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>101</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUdpLengthOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>79</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>99</x>
+     <y>247</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUdpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>79</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>99</x>
+     <y>247</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpVersionOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpVersion</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>42</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>232</x>
+     <y>170</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpHdrLenOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpHdrLen</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>42</x>
+     <y>197</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>232</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpLengthOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>42</x>
+     <y>252</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>232</x>
+     <y>251</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>383</x>
+     <y>274</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>506</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbTcpHdrLenOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpHdrLen</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>79</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>99</x>
+     <y>247</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbTcpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>79</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>99</x>
+     <y>247</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblTpe</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtNone</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leType</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtEthernet2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leDsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSsap</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leOui</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lblTpe</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>137</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFt802Dot3Raw</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leType</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>236</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbOk</sender>
+   <signal>clicked()</signal>
+   <receiver>StreamConfigDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>460</x>
+     <y>510</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>565</x>
+     <y>433</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbCancel</sender>
+   <signal>clicked()</signal>
+   <receiver>StreamConfigDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>543</x>
+     <y>510</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>561</x>
+     <y>466</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtLlcSnap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leDsap</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>286</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtLlcSnap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSsap</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>286</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbFtLlcSnap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>286</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Ipv4</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rbL4Tcp</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>355</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>300</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Ipv4</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rbL4Udp</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>355</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>372</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Ipv4</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rbL4Other</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>355</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>443</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Ipv4</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rbL4Icmp</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>355</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>372</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Ipv4</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rbL4Igmp</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>355</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>443</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3None</sender>
+   <signal>clicked()</signal>
+   <receiver>rbL4None</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>300</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>300</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Arp</sender>
+   <signal>clicked()</signal>
+   <receiver>rbL4None</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>407</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>300</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbL3Other</sender>
+   <signal>clicked()</signal>
+   <receiver>rbL4None</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>457</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>300</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbActionGotoStream</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leStreamId</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>334</x>
+     <y>147</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>411</x>
+     <y>177</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbSendPackets</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lePacketsPerSec</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>38</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>180</x>
+     <y>284</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbSendBursts</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leBurstsPerSec</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>46</x>
+     <y>98</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>162</x>
+     <y>313</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbSendBursts</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lePacketsPerBurst</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>73</x>
+     <y>108</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>225</x>
+     <y>184</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

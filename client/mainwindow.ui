@@ -1,0 +1,159 @@
+<ui version="4.0" >
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget" />
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>File</string>
+    </property>
+    <addaction name="actionE_xit" />
+   </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>View</string>
+    </property>
+    <addaction name="actionPreferences" />
+   </widget>
+   <widget class="QMenu" name="menuWindow" >
+    <property name="title" >
+     <string>Window</string>
+    </property>
+    <addaction name="actionMinimize" />
+    <addaction name="actionMaximize_Restore" />
+    <addaction name="actionMinimize_All" />
+    <addaction name="actionMaximize_Restoe_All" />
+    <addaction name="actionArrange_All_Cascade" />
+    <addaction name="actionArrange_All_Tile" />
+    <addaction name="actionDock" />
+   </widget>
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menuView" />
+   <addaction name="menuWindow" />
+   <addaction name="menuHelp" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <action name="actionOpen_Config" >
+   <property name="text" >
+    <string>Open Config</string>
+   </property>
+  </action>
+  <action name="actionSave_Config" >
+   <property name="text" >
+    <string>Save Config</string>
+   </property>
+  </action>
+  <action name="actionSave_Config_As" >
+   <property name="text" >
+    <string>Save Config As ...</string>
+   </property>
+  </action>
+  <action name="actionOpen_Capture" >
+   <property name="text" >
+    <string>Open Capture</string>
+   </property>
+  </action>
+  <action name="actionSave_Capture" >
+   <property name="text" >
+    <string>Save Capture</string>
+   </property>
+  </action>
+  <action name="actionSave_Capture_As" >
+   <property name="text" >
+    <string>Save Capture As ...</string>
+   </property>
+  </action>
+  <action name="actionE_xit" >
+   <property name="text" >
+    <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionCopy_Port_Config" >
+   <property name="text" >
+    <string>Copy Port Config</string>
+   </property>
+  </action>
+  <action name="actionPaste_Port_Config" >
+   <property name="text" >
+    <string>Paste Port Config</string>
+   </property>
+  </action>
+  <action name="actionPreferences" >
+   <property name="text" >
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionMinimize" >
+   <property name="text" >
+    <string>Minimize</string>
+   </property>
+  </action>
+  <action name="actionMaximize_Restore" >
+   <property name="text" >
+    <string>Maximize/Restore</string>
+   </property>
+  </action>
+  <action name="actionMinimize_All" >
+   <property name="text" >
+    <string>Minimize All</string>
+   </property>
+  </action>
+  <action name="actionMaximize_Restoe_All" >
+   <property name="text" >
+    <string>Maximize/Restoe All</string>
+   </property>
+  </action>
+  <action name="actionArrange_All_Cascade" >
+   <property name="text" >
+    <string>Arrange All - Cascade</string>
+   </property>
+  </action>
+  <action name="actionArrange_All_Tile" >
+   <property name="text" >
+    <string>Arrange All - Tile</string>
+   </property>
+  </action>
+  <action name="actionDock" >
+   <property name="text" >
+    <string>Dock</string>
+   </property>
+  </action>
+  <action name="actionHelp" >
+   <property name="text" >
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="text" >
+    <string>About</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

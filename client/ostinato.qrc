@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>icons/bullet_error.png</file>
+        <file>icons/bullet_green.png</file>
+        <file>icons/bullet_orange.png</file>
+        <file>icons/bullet_red.png</file>
+        <file>icons/bullet_yellow.png</file>
+        <file>icons/control_play.png</file>
+        <file>icons/control_stop.png</file>
+        <file>icons/magnifier.png</file>
+        <file>icons/portgroup_add.png</file>
+        <file>icons/portgroup_connect.png</file>
+        <file>icons/portgroup_delete.png</file>
+        <file>icons/portgroup_disconnect.png</file>
+        <file>icons/sound_mute.png</file>
+        <file>icons/sound_none.png</file>
+        <file>icons/stream_add.png</file>
+        <file>icons/stream_delete.png</file>
+        <file>icons/stream_edit.png</file>
+    </qresource>
+</RCC>

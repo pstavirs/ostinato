@@ -1,0 +1,9 @@
+TEMPLATE = app
+CONFIG += qt
+QT += network
+DEFINES += HAVE_REMOTE
+INCLUDEPATH += "C:\DevelLibs\WpdPack\Include"
+LIBS += -L"C:\DevelLibs\WpdPack\Lib" -lwpcap
+HEADERS += drone.h
+FORMS += drone.ui
+SOURCES += drone_main.cpp drone.cpp rxtx.cpp

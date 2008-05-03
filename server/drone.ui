@@ -1,0 +1,126 @@
+<ui version="4.0" >
+ <class>Drone</class>
+ <widget class="QDialog" name="Drone" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Drone</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="QTabWidget" name="twDisplay" >
+     <property name="currentIndex" >
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="tabStatus" >
+      <attribute name="title" >
+       <string>Status</string>
+      </attribute>
+      <widget class="QLabel" name="label" >
+       <property name="geometry" >
+        <rect>
+         <x>160</x>
+         <y>100</y>
+         <width>46</width>
+         <height>14</height>
+        </rect>
+       </property>
+       <property name="text" >
+        <string>TODO</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tabLog" >
+      <attribute name="title" >
+       <string>Log</string>
+      </attribute>
+      <layout class="QHBoxLayout" >
+       <item>
+        <widget class="QTextEdit" name="teLog" >
+         <property name="readOnly" >
+          <bool>true</bool>
+         </property>
+         <property name="acceptRichText" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QPushButton" name="pbClearLog" >
+       <property name="text" >
+        <string>Clear Log</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton" >
+       <property name="text" >
+        <string>Exit</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Drone</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>341</x>
+     <y>279</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>226</x>
+     <y>268</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbClearLog</sender>
+   <signal>clicked()</signal>
+   <receiver>teLog</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>52</x>
+     <y>278</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>100</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

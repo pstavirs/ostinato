@@ -1,0 +1,133 @@
+<ui version="4.0" >
+ <class>PortStatsWindow</class>
+ <widget class="QWidget" name="PortStatsWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>502</width>
+    <height>415</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="QFrame" name="frame" >
+     <property name="frameShape" >
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QToolButton" name="tbStartTransmit" >
+        <property name="toolTip" >
+         <string>Start Transmit</string>
+        </property>
+        <property name="statusTip" >
+         <string>Stop Transmit</string>
+        </property>
+        <property name="text" >
+         <string>Start Transmit</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/control_play.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStopTransmit" >
+        <property name="toolTip" >
+         <string>Stop Transmit</string>
+        </property>
+        <property name="statusTip" >
+         <string>Stop Transmit</string>
+        </property>
+        <property name="text" >
+         <string>Stop Trasmit</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/control_stop.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbClear" >
+        <property name="text" >
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbClearAll" >
+        <property name="text" >
+         <string>Clear All</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStartCapture" >
+        <property name="text" >
+         <string>Start Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/sound_none.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStopCapture" >
+        <property name="text" >
+         <string>Stop Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/sound_mute.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbViewCapture" >
+        <property name="text" >
+         <string>View Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/magnifier.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableView" name="tvPortStats" />
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
+ <connections/>
+</ui>
