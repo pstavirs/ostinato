@@ -2,6 +2,9 @@
 #include "streamconfigdialog.h"
 #include "stream.h"
 
+// TODO(LOW): Remove
+#include "modeltest.h"
+
 StreamConfigDialog::StreamConfigDialog(QList<Stream> *streamList,
 	uint streamIndex, QWidget *parent) : QDialog (parent)
 {
@@ -12,6 +15,12 @@ StreamConfigDialog::StreamConfigDialog(QList<Stream> *streamList,
 	mpStreamList = streamList;
 	mCurrentStreamIndex = streamIndex;
 	LoadCurrentStream();
+
+	mpPacketModel = new PacketModel(&((*mpStreamList)[mCurrentStreamIndex]),
+		this);
+	tvPacketTree->setModel(mpPacketModel);
+	mpPacketModelTester = new ModelTest(mpPacketModel);
+	tvPacketTree->header()->hide();
 
 	qDebug("stream %p %d/%d loaded", 
 		mpStreamList, mCurrentStreamIndex, mpStreamList->size());
@@ -66,6 +75,8 @@ void StreamConfigDialog::setupUiExtra()
 
 StreamConfigDialog::~StreamConfigDialog()
 {
+	delete mpPacketModelTester;
+	delete mpPacketModel;
 }
 
 void StreamConfigDialog::on_cmbDstMacMode_currentIndexChanged(QString mode)

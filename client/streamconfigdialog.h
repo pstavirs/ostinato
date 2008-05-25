@@ -3,7 +3,9 @@
 
 #include <QDialog>
 #include "ui_streamconfigdialog.h"
-#include <stream.h>
+#include "stream.h"
+#include "packetmodel.h"
+#include "modeltest.h"
 
 #define MAX_MAC_ITER_COUNT	256
 #define MIN_PKT_LEN			64
@@ -26,6 +28,8 @@ public:
 private: 
 	QList<Stream>	*mpStreamList;
 	uint			mCurrentStreamIndex;
+	PacketModel		*mpPacketModel;
+	ModelTest		*mpPacketModelTester;
 
 	void setupUiExtra();
 	void LoadCurrentStream();

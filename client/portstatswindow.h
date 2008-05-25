@@ -15,6 +15,9 @@ public:
 	~PortStatsWindow();
 private:
 	QAbstractItemModel	*model;
+
+private slots:
+	void on_tbFilter_clicked();
 };
 
 #endif

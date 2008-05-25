@@ -18,7 +18,9 @@ void Port::insertDummyStreams()
 {
 	mStreams.append(*(new Stream));
 	mStreams[0].setName(QString("%1:%2:0").arg(portGroupId()).arg(id()));
+#if 1
 	mStreams.append(*(new Stream));
 	mStreams[1].setName(QString("%1:%2:1").arg(portGroupId()).arg(id()));
+#endif
 }
 

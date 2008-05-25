@@ -15,6 +15,9 @@
   <layout class="QVBoxLayout" >
    <item>
     <widget class="QFrame" name="frame" >
+     <property name="toolTip" >
+      <string>Clear All</string>
+     </property>
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -25,10 +28,10 @@
       <item>
        <widget class="QToolButton" name="tbStartTransmit" >
         <property name="toolTip" >
-         <string>Start Transmit</string>
+         <string>Clear All</string>
         </property>
         <property name="statusTip" >
-         <string>Stop Transmit</string>
+         <string>Starts transmit on selected port(s)</string>
         </property>
         <property name="text" >
          <string>Start Transmit</string>
@@ -41,10 +44,10 @@
       <item>
        <widget class="QToolButton" name="tbStopTransmit" >
         <property name="toolTip" >
-         <string>Stop Transmit</string>
+         <string>Clear All</string>
         </property>
         <property name="statusTip" >
-         <string>Stop Transmit</string>
+         <string>Stops transmit on selected port(s)</string>
         </property>
         <property name="text" >
          <string>Stop Trasmit</string>
@@ -56,6 +59,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbClear" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>Clears statistics of the selected port(s)</string>
+        </property>
         <property name="text" >
          <string>Clear</string>
         </property>
@@ -63,6 +72,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbClearAll" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>Clears statistics of all ports</string>
+        </property>
         <property name="text" >
          <string>Clear All</string>
         </property>
@@ -70,6 +85,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbStartCapture" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>Captures packets on the selected port(s)</string>
+        </property>
         <property name="text" >
          <string>Start Capture</string>
         </property>
@@ -80,6 +101,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbStopCapture" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>End capture on selecteed port(s)</string>
+        </property>
         <property name="text" >
          <string>Stop Capture</string>
         </property>
@@ -90,6 +117,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbViewCapture" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>View captured packets on selected port(s)</string>
+        </property>
         <property name="text" >
          <string>View Capture</string>
         </property>
@@ -100,6 +133,9 @@
       </item>
       <item>
        <widget class="Line" name="line" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
         <property name="orientation" >
          <enum>Qt::Vertical</enum>
         </property>
@@ -107,6 +143,9 @@
       </item>
       <item>
        <spacer>
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
         <property name="orientation" >
          <enum>Qt::Horizontal</enum>
         </property>
@@ -118,11 +157,31 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QToolButton" name="tbFilter" >
+        <property name="toolTip" >
+         <string>Clear All</string>
+        </property>
+        <property name="statusTip" >
+         <string>Select which ports to view</string>
+        </property>
+        <property name="text" >
+         <string>Filter</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/portstats_filter.png</iconset>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="tvPortStats" />
+    <widget class="QTableView" name="tvPortStats" >
+     <property name="toolTip" >
+      <string>Clear All</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

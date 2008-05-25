@@ -100,9 +100,9 @@ void PortGroup::ProcessCapabilityInfo(const char *msg, qint32 size)
 			goto _next;
 		}
 
-		p = new Port(NTOHL(cap->port), mPortGroupId);
-		p->setName(cap->name);
-		p->setDescription(cap->desc);
+		p = new Port(NTOHL(cap->portId), mPortGroupId);
+		p->setName(cap->portName);
+		p->setDescription(cap->portDesc);
 		p->insertDummyStreams(); // FIXME: only for testing
 		qDebug("before port append\n");
 		mPorts.append(*p);
@@ -137,7 +137,7 @@ void PortGroup::when_connected()
 	pkt.ver = 1;
 	pkt.resv1 = 0;
 	pkt.resv2 = 0;
-	pkt.msgType = HTONS(e_MT_CapabilityReq);
+	pkt.msgType = HTONS(e_MT_GetCapability);
 	pkt.msgLen = HTONS(8);
 
 	mpSocket->write((char*) &pkt, sizeof(pkt));

@@ -6,11 +6,13 @@
 
 class StreamConfigDialog;
 class StreamModel;
+class PacketModel;
 
 class Stream {
 
 	friend class StreamConfigDialog;
 	friend class StreamModel;
+	friend class PacketModel;
 
 	enum FrameType {
 		e_ft_none,
@@ -113,6 +115,13 @@ class Stream {
 #define VM_CVLAN_TPID_OVERRIDE	0x0002
 #define VM_SVLAN_TAGGED			0x0100
 #define VM_SVLAN_TPID_OVERRIDE	0x0200
+
+#define VM_SINGLE_TAGGED(mask)		\
+	((mask & VM_CVLAN_TAGGED ) | (mask & VM_SVLAN_TAGGED))
+#define VM_DOUBLE_TAGGED(mask)		\
+	(mask & (VM_CVLAN_TAGGED | VM_SVLAN_TAGGED))
+
+
 
 			quint16	ctpid;
 			quint16	cvlanPrio	:  3;

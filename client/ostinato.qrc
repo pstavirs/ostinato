@@ -12,6 +12,7 @@
         <file>icons/portgroup_connect.png</file>
         <file>icons/portgroup_delete.png</file>
         <file>icons/portgroup_disconnect.png</file>
+        <file>icons/portstats_filter.png</file>
         <file>icons/sound_mute.png</file>
         <file>icons/sound_none.png</file>
         <file>icons/stream_add.png</file>
