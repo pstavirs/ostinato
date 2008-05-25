@@ -1,158 +1,45 @@
 #include "packetmodel.h"
 
-
 PacketModel::PacketModel(Stream *pStream, QObject *parent)
 {
 	mpStream = pStream;
+	populatePacketProtocols();
+	registerFrameTypeProto();
+	registerVlanProto();
+	registerIpProto();
+	registerArpProto();
+	registerTcpProto();
+	registerUdpProto();
+	registerIcmpProto();
+	registerIgmpProto();
+	registerData();
+	registerInvalidProto();
 }
 
 int PacketModel::rowCount(const QModelIndex &parent) const
 {
-	// Parent - Invisible Root.
-	// Children - Top Level Items
+	IndexId		parentId;
+
+	// Parent - Invalid i.e. Invisible Root.
+	// Children - Protocol (Top Level) Items
 	if (!parent.isValid())
+		return mPacketProtocols.count();
+
+	// Parent - Valid Item
+	parentId.w = parent.internalId();
+	switch(parentId.ws.type)
 	{
-		int v = 0;
-
-		if (mpStream->l2.eth.vlanMask & VM_SVLAN_TAGGED)
-			v++;
-		if (mpStream->l2.eth.vlanMask & VM_CVLAN_TAGGED)
-			v++;
-
-		if (mpStream->proto.protoMask & PM_L3_PROTO_NONE)
-			return v+2; // L2, Data
-		if (mpStream->proto.protoMask & PM_L4_PROTO_NONE)
-			return v+3; // L2, L3, Data
-		else
-			return v+4; // L2, L3, L4, Data
+	case  ITYP_PROTOCOL:
+		return fieldCount(parentId.ws.protocol);
+	case  ITYP_FIELD: 
+		return subfieldCount(parentId.ws.protocol, parentId.ws.field);
+	case  ITYP_SUBFIELD:
+		return 0;
+	default:
+		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
 
-	// Parent - Top Level Item (L2)
-	// Children(count) - Second Level Items (L2 fields)
-	if (isIndexL2Container(parent))
-	{
-		switch(mpStream->proto.ft)
-		{
-			case Stream::e_ft_none:
-				return 2; // DstMac, SrcMac
-				break;
-
-			case Stream::e_ft_eth_2:
-			case Stream::e_ft_802_3_raw:
-				return 3; // DstMac, SrcMac, Type/Len
-				break;
-
-			case Stream::e_ft_802_3_llc:
-			case Stream::e_ft_snap:
-				return 5; // DstMac, SrcMac, Type, DSAP, SSAP, CTL, OUI, Type
-				break;
-
-			default:
-				qDebug("%s: Unsupported frametype", __FUNCTION__);
-				return -1;
-		}
-	}
-
-	// Parent - Top Level Item (SVLAN)
-	// Children(count) - Second Level Items (SVLAN fields)
-	if (isIndexSvlanContainer(parent))
-	{
-		return 4;	// TPID, PCP, DE, VlanId
-	}
-
-	// Parent - Top Level Item (CVLAN)
-	// Children(count) - Second Level Items (CVLAN fields)
-	if (isIndexCvlanContainer(parent))
-	{
-		return 4;	// TPID, Prio, CFI, VlanId
-	}
-
-	// Parent - Top Level Item (L3)
-	// Children(count) - Second Level Items (L3 fields)
-	if (isIndexL3Container(parent))
-	{
-		// L3 cannot be "None"
-		Q_ASSERT(mpStream->proto.protoMask & PM_L3_PROTO_NONE);
-
-		switch(mpStream->proto.etherType)
-		{
-			case ETH_TYP_IP:
-				return 12;	// Ver, HdrLen, TOS, TotLen, Id, Flags, 
-							// FragOfs, TTL, Proto, Cksum, SrcIp, DstIp
-				break;
-			case ETH_TYP_ARP:
-				return 0;	// TODO(LOW)
-				break;
-			default:
-				qDebug("%s: Unsupported ethtype", __FUNCTION__);
-				return -1;
-		}
-	}
-
-	// Parent - Top Level Item (L4)
-	// Children(count) - Second Level Items (L4 fields)
-	if (isIndexL4Container(parent))
-	{
-		// L4 cannot be "None"
-		Q_ASSERT(mpStream->proto.protoMask & PM_L4_PROTO_NONE);
-
-		switch(mpStream->proto.ipProto)
-		{
-			case IP_PROTO_TCP:
-				return 10;	// SrcPort, DstPort, SeqNum, AckNum, HdrLen,
-							// Rsvd, Flags, Window, Cksum, UrgPtr, 
-				break;
-			case IP_PROTO_UDP:
-				return 4;	// SrcPort, DstPort, TotLen, Cksum
-				break;
-			case IP_PROTO_ICMP:
-			case IP_PROTO_IGMP:
-				return 0;	// TODO(LOW)
-				break;
-			default:
-				qDebug("%s: Unsupported ethtype", __FUNCTION__);
-				return -1;
-		}
-	}
-
-	// Parent - Second Level Item (L2 field)
-	// Children(count) - Third Level Items (L2 subfield)
-	if (isIndexL2Field(parent))
-	{
-		return 0;	// No subfields for any L2 field
-	}
-
-	// Parent - Second Level Item (L3 field)
-	// Children(count) - Third Level Items (L3 subfield)
-	if (isIndexL3Field(parent))
-	{
-		if (isIndexIpField(parent))
-			return 0;	// TODO (MED)
-		if (isIndexArpField(parent))
-			return 0;	// TODO (LOW)
-
-		qDebug("%s: Unknown L3 Field", __FUNCTION__);
-		return 0;	// catch all
-	}
-
-	// Parent - Second Level Item (L4 field)
-	// Children(count) - Third Level Items (L4 subfield)
-	if (isIndexL4Field(parent))
-	{
-		if (isIndexTcpField(parent))
-			return 0;	// TODO (MED)
-		if (isIndexUdpField(parent))
-			return 0;	// No subfields for any UDP fields
-		if (isIndexIcmpField(parent))
-			return 0;	// TODO (LOW)
-		if (isIndexIgmpField(parent))
-			return 0;	// TODO (LOW)
-
-		qDebug("%s: Unknown L4 Field", __FUNCTION__);
-		return 0;	// catch all
-	}
-
-	//qDebug("%s: Catch all - need to investigate", __FUNCTION__);
+	qWarning("%s: Catch all - need to investigate", __FUNCTION__);
 	return 0; // catch all
 }
 
@@ -165,68 +52,42 @@ QModelIndex PacketModel::index(int row, int col, const QModelIndex &parent) cons
 {
 	QModelIndex	index;
 	IndexId	id, parentId;
-	uint	vlanMask = mpStream->l2.eth.vlanMask;
 
 	if (!hasIndex(row, col, parent))
 		goto _exit;
 
+	// Parent is Invisible Root
+	// Request for a Protocol Item
+	if (!parent.isValid())
+	{
+		id.w = 0;
+		id.ws.type = ITYP_PROTOCOL;
+		id.ws.protocol = mPacketProtocols.at(row);
+		index = createIndex(row, col, id.w);
+		goto _exit;
+	}
+
+	// Parent is a Valid Item
 	parentId.w = parent.internalId();
-
-	// Parent - Invisible Root
-	// Requested child - First/Top Level Item
-	if (parentId.ws.b2 == 0xFF)
+	id.w = parentId.w;
+	switch(parentId.ws.type)
 	{
-		Q_ASSERT(!parent.isValid());
-
-		if (mpStream->l2.eth.vlanMask & VM_UNTAGGED)
-			id.ws.b1 = row+2; // Only L2, L3, L4
-		else if (VM_SINGLE_TAGGED(vlanMask))
-		{
-			switch (row)
-			{
-			case 0: id.ws.b1 = 2; break;	// L2
-			case 1: id.ws.b1 = (vlanMask & VM_SVLAN_TAGGED)?0x88:0x81; break;
-			case 2: id.ws.b1 = 3; break;	// L3
-			case 3: id.ws.b1 = 4; break;	// L4
-			case 4: id.ws.b1 = 0; break;	// Data
-			default: qWarning("%s: Unexpected row (%d)", __FUNCTION__, row);
-			}
-		}
-		else if (VM_DOUBLE_TAGGED(vlanMask))
-		{
-			switch (row)
-			{
-			case 0: id.ws.b1 = 2; break;	// L2
-			case 1: id.ws.b1 = 0x88; break;	// SVLAN
-			case 2: id.ws.b1 = 0x81; break;	// CVLAN
-			case 3: id.ws.b1 = 3; break;	// L3
-			case 4: id.ws.b1 = 4; break;	// L4
-			case 5: id.ws.b1 = 0; break;	// Data
-			default: qWarning("%s: Unexpected row (%d)", __FUNCTION__, row);
-			}
-		}
-		id.ws.b2 = 0xFF;
+	case  ITYP_PROTOCOL:
+		id.ws.type = ITYP_FIELD;
+		id.ws.field = row;
 		index = createIndex(row, col, id.w);
 		goto _exit;
-	}
 
-	// Parent - First Level Item
-	// Requested child - Second Level Item
-	if (parentId.ws.b3 == 0xFF)
-	{
-		Q_ASSERT(parentId.ws.b1 != 0xFF);
-		Q_ASSERT(parentId.ws.b2 != 0xFF);
-
-		id.ws.b1 = parentId.ws.b1;
-		id.ws.b2 = 0;	// TODO(MED): Set Field Id for subfields
-		index = createIndex(row, col, id.w);
+	case  ITYP_FIELD: 
+		// TODO(MED): Nothing till subfield support is added
 		goto _exit;
-	}
 
-	// Parent - Second Level Item (Field)
-	// Requested child - Third Level Item (Subfield)
-	// TODO(MED): Support subfields
-	// Till then we return an invalid index
+	case  ITYP_SUBFIELD:
+		goto _exit;
+
+	default:
+		qWarning("%s: Unhandled ItemType", __FUNCTION__);
+	}
 
 _exit:
 	return index;
@@ -234,207 +95,342 @@ _exit:
 
 QModelIndex PacketModel::parent(const QModelIndex &index) const
 {
+	QModelIndex	parentIndex;
 	IndexId		id, parentId;
 
+	if (!index.isValid())
+		return QModelIndex();
+
 	id.w = index.internalId();
-	parentId = id;
-
-	// 1st/Top Level Item - Protocol
-	// Requested Parent => Invisible Root
-	if (id.ws.b2 == 0xFF)
-		return QModelIndex();	
-
-	// Second Level Item - Field
-	// Requested Parent => 1st Level Item (Protocol)
-	if (id.ws.b3 == 0xFF)
+	parentId.w = id.w;
+	switch(id.ws.type)
 	{
-		uint	vlanMask = mpStream->l2.eth.vlanMask;
-		int		row = -1;
+	case  ITYP_PROTOCOL:
+		// return invalid index for invisible root
+		goto _exit;
 
-		parentId.ws.b2 = 0xFF;
+	case  ITYP_FIELD: 
+		parentId.ws.type = ITYP_PROTOCOL;
+		parentId.ws.field = 0;
+		parentIndex = createIndex(mPacketProtocols.indexOf(parentId.ws.protocol), 0, 
+			parentId.w);
+		goto _exit;
 
-		if (vlanMask & VM_UNTAGGED)
-		{
-			row = parentId.ws.b1 - 2;
-		}
-		else if (VM_SINGLE_TAGGED(vlanMask))
-		{
-			switch (parentId.ws.b1)
-			{
-			case 2: row = 0; break;	// L2
-			case 0x88:
-			case 0x81: row = 1; break;	// SVlan/CVlan
-			case 3: row = 2; break; // L3
-			case 4: row = 3; break;	// L4
-			case 0: row = 4; break;	// Data
-			default: qWarning("%s: Unexpected b1 (%d)", __FUNCTION__, parentId.ws.b1);
-			}
-		}
-		else if (VM_DOUBLE_TAGGED(vlanMask))
-		{
-			switch (parentId.ws.b1)
-			{
-			case 2: row = 0; break;	// L2
-			case 0x88: row = 1; break; // Svlan
-			case 0x81: row = 2; break;	// CVlan
-			case 3: row = 3; break; // L3
-			case 4: row = 4; break;	// L4
-			case 0: row = 5; break;	// Data
-			default: qWarning("%s: Unexpected b1 (%d)", __FUNCTION__, parentId.ws.b1);
-			}
-		}
-		else
-			qWarning("%s: Unhandled leg", __FUNCTION__);
+	case  ITYP_SUBFIELD:
+		// TODO(MED): invalid index till subfield support is added
+		goto _exit;
 
-		return createIndex(row, 0, parentId.w);	
+	default:
+		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
 
-	// Third Level Item - Subfield
-	// Requested Parent => 2nd Level Item (Field)
-	// TODO(Med)
-	qWarning("%s: Unexpected leg", __FUNCTION__);
-	return QModelIndex();
+_exit:
+	return parentIndex;
 }
 
 QVariant PacketModel::data(const QModelIndex &index, int role) const
 {
-	IndexId	id;
+	IndexId			id;
+	ProtocolInfo 	proto;
+
+	if (!index.isValid())
+		return QVariant();
+
+	if (role != Qt::DisplayRole)
+		return QVariant();
 
 	id.w = index.internalId();
+	foreach(proto, mProtocols)
+	{
+		if (proto.handle == id.ws.protocol)
+			goto _found;
+	}
+	return QVariant();
 
-	if (id.ws.b2 == 0xFF)
-		return QString("Protocol Header");
-	else
-		return QString("Field: Value");
+_found:
+	switch(id.ws.type)
+	{
+	case  ITYP_PROTOCOL:
+		return proto.name;
+
+	case  ITYP_FIELD: 
+		return	proto.fieldList.at(id.ws.field).name;
+
+	case  ITYP_SUBFIELD:
+		return QVariant();	// TODO(MED): Till subfield support is added
+
+	default:
+		qWarning("%s: Unhandled ItemType", __FUNCTION__);
+	}
+
+	return QVariant();
 }
 
 
 /*
 ** --------------- Private Stuff -----------------
 */
-typedef union
+void PacketModel::populatePacketProtocols()
 {
-	quint32	w;
-	struct
+	int proto;
+
+	// Clear the protocols list
+	mPacketProtocols.clear();
+
+	// Check and populate L2 Protocol
+	switch(mpStream->proto.ft)
 	{
-		quint8	b1;
-		quint8	b2;
-		quint8	b3;
-		quint8	b4;
-	} ws;
-} IndexId;
+		case Stream::e_ft_none:		
+			proto = PTYP_L2_NONE;
+			break;
 
-bool PacketModel::isIndexContainer(const QModelIndex& index, int level) const
-{
-	IndexId	id;
-	
-	id.w = index.internalId();
-	if ((id.ws.b1 == level) && (id.ws.b2 == 0xFF))
-		return true;
-	else 
-		return false;
+		case Stream::e_ft_eth_2:
+			proto = PTYP_L2_ETH_2;
+			break;
+
+		case Stream::e_ft_802_3_raw:
+			proto = PTYP_L2_802_3_RAW;
+			break;
+
+		case Stream::e_ft_802_3_llc:
+			proto = PTYP_L2_802_3_LLC;
+			break;
+
+		case Stream::e_ft_snap:
+			proto = PTYP_L2_SNAP;
+			break;
+
+		default:
+			qDebug("%s: Unsupported frametype", __FUNCTION__);
+			proto = PTYP_INVALID;
+	}
+	mPacketProtocols.append(proto);
+
+	// Check and populate VLANs, if present
+	if (mpStream->l2.eth.vlanMask & VM_SVLAN_TAGGED)
+		mPacketProtocols.append(PTYP_SVLAN);
+
+	if (mpStream->l2.eth.vlanMask & VM_CVLAN_TAGGED)
+		mPacketProtocols.append(PTYP_CVLAN);
+
+	// Check and populate L3 protocols
+	if (mpStream->proto.protoMask & PM_L3_PROTO_NONE)
+		goto _data;
+
+	switch(mpStream->proto.etherType)
+	{
+		case ETH_TYP_IP:
+			proto = PTYP_L3_IP;
+			break;
+
+		case ETH_TYP_ARP:
+			proto = PTYP_L3_ARP;
+			break;
+
+		default:
+			qDebug("%s: Unsupported ethtype", __FUNCTION__);
+			proto = PTYP_INVALID;
+	}
+	mPacketProtocols.append(proto);
+
+	if (mpStream->proto.protoMask & PM_L4_PROTO_NONE)
+		goto _data;
+
+	switch(mpStream->proto.ipProto)
+	{
+		case IP_PROTO_TCP:
+			proto = PTYP_L4_TCP;	
+			break;
+		case IP_PROTO_UDP:
+			proto = PTYP_L4_UDP;	
+			break;
+		case IP_PROTO_ICMP:
+			proto = PTYP_L4_ICMP;	
+			break;
+		case IP_PROTO_IGMP:
+			proto = PTYP_L4_IGMP;	
+			break;
+		default:
+			qDebug("%s: Unsupported ipProto", __FUNCTION__);
+			proto = PTYP_INVALID;
+	};
+	mPacketProtocols.append(proto);
+
+_data:
+	mPacketProtocols.append(PTYP_DATA);
 }
 
-bool PacketModel::isIndexL2Container(const QModelIndex& index) const
+int PacketModel::fieldCount(uint protocol) const
 {
-	return isIndexContainer(index, 2);
+	ProtocolInfo	proto;
+
+	foreach(proto, mProtocols)
+	{
+		if (proto.handle == protocol)
+		{
+			qDebug("proto=%d, name=%s",protocol,proto.name.toAscii().data());
+			qDebug("fieldcount = %d", proto.fieldList.size());
+			return proto.fieldList.size();
+		}
+	}
+
+	return 0;
 }
 
-bool PacketModel::isIndexSvlanContainer(const QModelIndex& index) const
+int PacketModel::subfieldCount(uint protocol, int field) const
 {
-	return isIndexContainer(index, 0x88);
+	// TODO(MED): Till subfield support is added
+	return 0;
 }
 
-bool PacketModel::isIndexCvlanContainer(const QModelIndex& index) const
+/*
+** ------------- Registration Functions ---------------
+*/
+
+void PacketModel::registerProto(uint handle, char *name, char *abbr)
 {
-	return isIndexContainer(index, 0x81);
+	ProtocolInfo	proto;
+
+	proto.handle = handle;
+	proto.name = QString(name);
+	proto.abbr = QString(abbr);
+	mProtocols.append(proto);
 }
 
-bool PacketModel::isIndexL3Container(const QModelIndex& index) const
+void PacketModel::registerField(uint protoHandle, char *name, char *abbr)
 {
-	return isIndexContainer(index, 3);
+	for (int i = 0; i < mProtocols.size(); i++)
+	{
+		if (mProtocols.at(i).handle == protoHandle)
+		{
+			FieldInfo	field;
+
+			field.name = QString(name);
+			field.abbr = QString(abbr);
+			mProtocols[i].fieldList.append(field);
+			qDebug("proto = %d, name = %s", protoHandle, name);
+			break;
+		}
+	}
 }
 
-bool PacketModel::isIndexL4Container(const QModelIndex& index) const
+void PacketModel::registerFrameTypeProto()
 {
-	return isIndexContainer(index, 4);
+	registerProto(PTYP_L2_NONE, "None", "");
+	registerField(PTYP_L2_NONE, "Destination Mac", "dstMac");
+	registerField(PTYP_L2_NONE, "Source Mac", "srcMac");
+
+	registerProto(PTYP_L2_ETH_2, "Ethernet II", "eth");
+	registerField(PTYP_L2_ETH_2, "Destination Mac", "dstMac");
+	registerField(PTYP_L2_ETH_2, "Source Mac", "srcMac");
+	registerField(PTYP_L2_ETH_2, "Ethernet Type", "type");
+
+	registerProto(PTYP_L2_802_3_RAW, "IEEE 802.3 Raw", "dot3raw");
+	registerField(PTYP_L2_802_3_RAW, "Destination Mac", "dstMac");
+	registerField(PTYP_L2_802_3_RAW, "Source Mac", "srcMac");
+	registerField(PTYP_L2_802_3_RAW, "Length", "len");
+
+	registerProto(PTYP_L2_802_3_LLC, "802.3 LLC", "dot3llc");
+	registerField(PTYP_L2_802_3_LLC, "Destination Mac", "dstMac");
+	registerField(PTYP_L2_802_3_LLC, "Source Mac", "srcMac");
+	registerField(PTYP_L2_802_3_LLC, "Destination Service Acces Point", "dsap");
+	registerField(PTYP_L2_802_3_LLC, "Source Service Acces Point", "ssap");
+	registerField(PTYP_L2_802_3_LLC, "Control", "ctl");
+
+	registerProto(PTYP_L2_SNAP, "802.3 LLC SNAP", "dot3snap");
+	registerField(PTYP_L2_SNAP, "Destination Mac", "dstMac");
+	registerField(PTYP_L2_SNAP, "Source Mac", "srcMac");
+	registerField(PTYP_L2_SNAP, "Destination Service Acces Point", "dsap");
+	registerField(PTYP_L2_SNAP, "Source Service Access Point", "ssap");
+	registerField(PTYP_L2_SNAP, "Control", "ctl");
+	registerField(PTYP_L2_SNAP, "Organisationally Unique Identifier", "oui");
+	registerField(PTYP_L2_SNAP, "Type", "type");
+
 }
 
-bool PacketModel::isIndexField(const QModelIndex& index, int level) const
+void PacketModel::registerVlanProto()
 {
-	IndexId	id;
-	
-	id.w = index.internalId();
-	if ((id.ws.b1 == level) && (id.ws.b2 != 0xFF) && (id.ws.b3 == 0xFF))
-		return true;
-	else 
-		return false;
+	registerProto(PTYP_SVLAN, "IEEE 802.1ad Service VLAN", "SVLAN");
+
+	registerField(PTYP_SVLAN, "Tag Protocol Identifier", "tpid");
+	registerField(PTYP_SVLAN, "Priority Code Point", "pcp");
+	registerField(PTYP_SVLAN, "Drop Eligible", "de");
+	registerField(PTYP_SVLAN, "VLAN Identifier", "vlan");
+
+	registerProto(PTYP_CVLAN, "IEEE 802.1Q VLAN/CVLAN", "VLAN");
+
+	registerField(PTYP_CVLAN, "Tag Protocol Identifier", "tpid");
+	registerField(PTYP_CVLAN, "Priority", "prio");
+	registerField(PTYP_CVLAN, "Canonical Format Indicator", "cfi");
+	registerField(PTYP_CVLAN, "VLAN Identifier", "vlan");
 }
 
-bool PacketModel::isIndexL2Field(const QModelIndex& index) const
+void PacketModel::registerIpProto()
 {
-	return isIndexField(index, 2);
+	registerProto(PTYP_L3_IP, "Internet Protocol version 4", "IPv4");
+
+	registerField(PTYP_L3_IP, "Version", "ver");
+	registerField(PTYP_L3_IP, "Header Length", "hdrlen");
+	registerField(PTYP_L3_IP, "Type of Service/DiffServ Code Point", "tos");
+	registerField(PTYP_L3_IP, "Total Length", "len");
+	registerField(PTYP_L3_IP, "Identification", "id");
+	registerField(PTYP_L3_IP, "Flags", "flags");
+	registerField(PTYP_L3_IP, "Fragment Offset", "fragofs");
+	registerField(PTYP_L3_IP, "Time to Live", "ttl");
+	registerField(PTYP_L3_IP, "Protocol Id", "proto");
+	registerField(PTYP_L3_IP, "Checksum", "cksum");
+	registerField(PTYP_L3_IP, "Source IP", "srcip");
+	registerField(PTYP_L3_IP, "Destination IP", "dstip");
 }
 
-bool PacketModel::isIndexL3Field(const QModelIndex& index) const
+void PacketModel::registerArpProto()
 {
-	return isIndexField(index, 3);
+	// TODO (LOW)
 }
 
-bool PacketModel::isIndexL4Field(const QModelIndex& index) const
+void PacketModel::registerTcpProto()
 {
-	return isIndexField(index, 4);
+	registerProto(PTYP_L4_TCP, "Transmission Control Protocol", "TCP");
+
+	registerField(PTYP_L4_TCP, "Source Port", "srcport");
+	registerField(PTYP_L4_TCP, "Destination Port", "dstport");
+	registerField(PTYP_L4_TCP, "Sequence Number", "seqnum");
+	registerField(PTYP_L4_TCP, "Acknowledgement Number", "acknum");
+	registerField(PTYP_L4_TCP, "Header Length", "hdrlen");
+	registerField(PTYP_L4_TCP, "Reserved", "rsvd");
+	registerField(PTYP_L4_TCP, "Flags", "flags");
+	registerField(PTYP_L4_TCP, "Window", "win");
+	registerField(PTYP_L4_TCP, "Checksum", "cksum");
+	registerField(PTYP_L4_TCP, "Urgent Pointer", "urgptr");
 }
 
-bool PacketModel::isIndexIpField(const QModelIndex& index) const
+void PacketModel::registerUdpProto()
 {
-	IndexId	id;
-	
-	id.w = index.internalId();
-	if ((id.ws.b1 == 3) && (id.ws.b2 == 1) && (id.ws.b3 == 0xFF))
-		return true;
-	else 
-		return false;
+	registerProto(PTYP_L4_UDP, "User Datagram Protocol", "UDP");
+
+	registerField(PTYP_L4_UDP, "Source Port", "srcport");
+	registerField(PTYP_L4_UDP, "Destination Port", "dstport");
+	registerField(PTYP_L4_UDP, "Length", "len");
+	registerField(PTYP_L4_UDP, "Checksum", "cksum");
 }
 
-bool PacketModel::isIndexArpField(const QModelIndex& index) const
+void PacketModel::registerIcmpProto()
 {
-	IndexId	id;
-	
-	id.w = index.internalId();
-	if ((id.ws.b1 == 3) && (id.ws.b2 == 2) && (id.ws.b3 == 0xFF))
-		return true;
-	else 
-		return false;
+	// TODO (LOW)
 }
 
-bool PacketModel::isIndexL4ProtoField(const QModelIndex& index, int proto) const
+void PacketModel::registerIgmpProto()
 {
-	IndexId	id;
-	
-	id.w = index.internalId();
-	if ((id.ws.b1 == 4) && (id.ws.b2 == proto) && (id.ws.b3 == 0xFF))
-		return true;
-	else 
-		return false;
+	// TODO (LOW)
 }
 
-bool PacketModel::isIndexTcpField(const QModelIndex& index) const
+void PacketModel::registerInvalidProto()
 {
-	return isIndexL4ProtoField(index, IP_PROTO_TCP);
+	registerProto(PTYP_INVALID, "Invalid Protocol (bug in code)", "invalid");
 }
 
-bool PacketModel::isIndexUdpField(const QModelIndex& index) const
+void PacketModel::registerData()
 {
-	return isIndexL4ProtoField(index, IP_PROTO_UDP);
+	registerProto(PTYP_DATA, "Data", "data");
 }
 
-bool PacketModel::isIndexIcmpField(const QModelIndex& index) const
-{
-	return isIndexL4ProtoField(index, IP_PROTO_ICMP);
-}
-
-bool PacketModel::isIndexIgmpField(const QModelIndex& index) const
-{
-	return isIndexL4ProtoField(index, IP_PROTO_IGMP);
-}

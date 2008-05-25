@@ -102,7 +102,7 @@ void RxTx::ProcessMsg(const char* msg, int len)
 			ProcessPortConfig(msg+sizeof(tCommHdr), len - sizeof(tCommHdr));
 			break;
 		case e_MT_GetPortConfig:
-			SendPortInfo();
+			SendPortInfo(0);	// FIXME
 			break;
 
 		default:
@@ -300,9 +300,7 @@ _exit:
 
 void RxTx::SendPortInfo(unsigned int port)
 {
-	// Assumption: port is valid
-	assert(port < numPorts);
-
+	// FIXME
 }
 
 /*

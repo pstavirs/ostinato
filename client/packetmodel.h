@@ -13,40 +13,84 @@ public:
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role) const;
+	QVariant headerData(int section, Qt::Orientation orientation, 
+		int role = Qt::DisplayRole) const { return QVariant(); } ;
 	QModelIndex index (int row, int col, const QModelIndex & parent = QModelIndex() ) const;
 	QModelIndex parent(const QModelIndex &index) const;		
 
 private:
-	Stream	*mpStream;
 	typedef union _IndexId
 	{
 		quint32	w;
 		struct
 		{
-			quint8	b1;		// 1st Level
-			quint8	b2;		// 2nd Level
-			quint8	b3;		// 3rd Level
-			quint8	b4;		// Reserved
+			quint8	type;
+#define ITYP_PROTOCOL	1
+#define ITYP_FIELD		2
+#define ITYP_SUBFIELD	3
+			quint8	protocol;
+			quint8	field;
+			quint8	subfield;	
 		} ws;
 	} IndexId;
 
-	bool PacketModel::isIndexContainer(const QModelIndex& index, int level) const;
-	bool PacketModel::isIndexL2Container(const QModelIndex& index) const;
-	bool PacketModel::isIndexSvlanContainer(const QModelIndex& index) const;
-	bool PacketModel::isIndexCvlanContainer(const QModelIndex& index) const;
-	bool PacketModel::isIndexL3Container(const QModelIndex& index) const;
-	bool PacketModel::isIndexL4Container(const QModelIndex& index) const;
-	bool PacketModel::isIndexField(const QModelIndex& index, int level) const;
-	bool PacketModel::isIndexL2Field(const QModelIndex& index) const;
-	bool PacketModel::isIndexL3Field(const QModelIndex& index) const;
-	bool PacketModel::isIndexL4Field(const QModelIndex& index) const;
-	bool PacketModel::isIndexIpField(const QModelIndex& index) const;
-	bool PacketModel::isIndexArpField(const QModelIndex& index) const;
-	bool PacketModel::isIndexL4ProtoField(const QModelIndex& index, int proto) const;
-	bool PacketModel::isIndexTcpField(const QModelIndex& index) const;
-	bool PacketModel::isIndexUdpField(const QModelIndex& index) const;
-	bool PacketModel::isIndexIcmpField(const QModelIndex& index) const;
-	bool PacketModel::isIndexIgmpField(const QModelIndex& index) const;
+	typedef struct
+	{
+		QString			name;
+		QString			abbr;
+	} FieldInfo;
+
+	typedef struct
+	{
+		uint				handle;
+		QString				name;
+		QString				abbr;
+		QList<FieldInfo>	fieldList;
+	} ProtocolInfo;
+
+	Stream	*mpStream;
+	QList<uint>	mPacketProtocols;
+	QList<ProtocolInfo> mProtocols;
+
+	void registerProto(uint handle, char *name, char *abbr);
+	void registerField(uint protoHandle, char *name, char *abbr);
+
+	void registerFrameTypeProto();
+	void registerVlanProto();
+	void registerIpProto();
+	void registerArpProto();
+	void registerTcpProto();
+	void registerUdpProto();
+	void registerIcmpProto();
+	void registerIgmpProto();
+	void registerData();
+	void registerInvalidProto();
+
+	void populatePacketProtocols();
+	int fieldCount(uint protocol) const;
+	int subfieldCount(uint protocol, int field) const;
+
+// FIXME(HIGH): Is this how I want this?
+#define PTYP_L2_NONE		1
+#define PTYP_L2_ETH_2		2
+#define PTYP_L2_802_3_RAW	3
+#define PTYP_L2_802_3_LLC	4
+#define PTYP_L2_SNAP		5
+
+#define PTYP_SVLAN			10
+#define PTYP_CVLAN			11
+
+#define PTYP_L3_IP			30
+#define PTYP_L3_ARP			31
+
+#define PTYP_L4_TCP			40	
+#define PTYP_L4_UDP			41	
+#define PTYP_L4_ICMP		42
+#define PTYP_L4_IGMP		43
+
+#define PTYP_INVALID		0
+#define PTYP_DATA			0xFF
+
 };
 #endif
 
