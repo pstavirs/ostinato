@@ -24,20 +24,21 @@ private:
 		quint32	w;
 		struct
 		{
-			quint8	type;
+			quint16	type;
 #define ITYP_PROTOCOL	1
 #define ITYP_FIELD		2
-#define ITYP_SUBFIELD	3
-			quint8	protocol;
-			quint8	field;
-			quint8	subfield;	
+			quint16	protocol;
 		} ws;
 	} IndexId;
+
+	Stream	*mpStream;
+	QList<uint> mPacketProtocols;
 
 	typedef struct
 	{
 		QString			name;
 		QString			abbr;
+		QString			textValue;
 	} FieldInfo;
 
 	typedef struct
@@ -48,10 +49,7 @@ private:
 		QList<FieldInfo>	fieldList;
 	} ProtocolInfo;
 
-	Stream	*mpStream;
-	QList<uint>	mPacketProtocols;
 	QList<ProtocolInfo> mProtocols;
-
 	void registerProto(uint handle, char *name, char *abbr);
 	void registerField(uint protoHandle, char *name, char *abbr);
 
@@ -67,13 +65,26 @@ private:
 	void registerInvalidProto();
 
 	void populatePacketProtocols();
-	int fieldCount(uint protocol) const;
-	int subfieldCount(uint protocol, int field) const;
+
+	int protoCount() const;
+	int fieldCount(int protocol) const;
+	QString protoName(int protocol) const;
+	QString fieldName(int protocol, int field) const;
+	QVariant fieldTextValue(int protocol, int field) const;
+
+	QVariant ethField(int field, int role) const;
+	QVariant llcField(int field, int role) const;
+	QVariant snapField(int field, int role) const;
+	QVariant svlanField(int field, int role) const;
+	QVariant ipField(int field, int role) const;
+	QVariant tcpField(int field, int role) const;
+	QVariant udpField(int field, int role) const;
 
 // FIXME(HIGH): Is this how I want this?
 #define PTYP_L2_NONE		1
 #define PTYP_L2_ETH_2		2
 #define PTYP_L2_802_3_RAW	3
+
 #define PTYP_L2_802_3_LLC	4
 #define PTYP_L2_SNAP		5
 
@@ -91,6 +102,10 @@ private:
 #define PTYP_INVALID		0
 #define PTYP_DATA			0xFF
 
+#define FROL_NAME			1
+#define FROL_TEXT_VALUE		2
+
+#define BASE_HEX			16
 };
 #endif
 

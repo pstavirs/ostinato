@@ -1,9 +1,11 @@
+#include <QHostAddress>
 #include "packetmodel.h"
 
 PacketModel::PacketModel(Stream *pStream, QObject *parent)
 {
 	mpStream = pStream;
 	populatePacketProtocols();
+#if 1
 	registerFrameTypeProto();
 	registerVlanProto();
 	registerIpProto();
@@ -14,6 +16,7 @@ PacketModel::PacketModel(Stream *pStream, QObject *parent)
 	registerIgmpProto();
 	registerData();
 	registerInvalidProto();
+#endif
 }
 
 int PacketModel::rowCount(const QModelIndex &parent) const
@@ -23,7 +26,7 @@ int PacketModel::rowCount(const QModelIndex &parent) const
 	// Parent - Invalid i.e. Invisible Root.
 	// Children - Protocol (Top Level) Items
 	if (!parent.isValid())
-		return mPacketProtocols.count();
+		return protoCount();
 
 	// Parent - Valid Item
 	parentId.w = parent.internalId();
@@ -32,13 +35,12 @@ int PacketModel::rowCount(const QModelIndex &parent) const
 	case  ITYP_PROTOCOL:
 		return fieldCount(parentId.ws.protocol);
 	case  ITYP_FIELD: 
-		return subfieldCount(parentId.ws.protocol, parentId.ws.field);
-	case  ITYP_SUBFIELD:
 		return 0;
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
 
+	Q_ASSERT(1 == 1);	// Unreachable code
 	qWarning("%s: Catch all - need to investigate", __FUNCTION__);
 	return 0; // catch all
 }
@@ -62,7 +64,7 @@ QModelIndex PacketModel::index(int row, int col, const QModelIndex &parent) cons
 	{
 		id.w = 0;
 		id.ws.type = ITYP_PROTOCOL;
-		id.ws.protocol = mPacketProtocols.at(row);
+		id.ws.protocol = row;
 		index = createIndex(row, col, id.w);
 		goto _exit;
 	}
@@ -74,20 +76,17 @@ QModelIndex PacketModel::index(int row, int col, const QModelIndex &parent) cons
 	{
 	case  ITYP_PROTOCOL:
 		id.ws.type = ITYP_FIELD;
-		id.ws.field = row;
 		index = createIndex(row, col, id.w);
 		goto _exit;
 
 	case  ITYP_FIELD: 
-		// TODO(MED): Nothing till subfield support is added
-		goto _exit;
-
-	case  ITYP_SUBFIELD:
 		goto _exit;
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
+
+	Q_ASSERT(1 == 1);	// Unreachable code
 
 _exit:
 	return index;
@@ -111,18 +110,14 @@ QModelIndex PacketModel::parent(const QModelIndex &index) const
 
 	case  ITYP_FIELD: 
 		parentId.ws.type = ITYP_PROTOCOL;
-		parentId.ws.field = 0;
-		parentIndex = createIndex(mPacketProtocols.indexOf(parentId.ws.protocol), 0, 
-			parentId.w);
-		goto _exit;
-
-	case  ITYP_SUBFIELD:
-		// TODO(MED): invalid index till subfield support is added
+		parentIndex = createIndex(id.ws.protocol, 0, parentId.w);
 		goto _exit;
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
+
+	Q_ASSERT(1 == 1); // Unreachable code
 
 _exit:
 	return parentIndex;
@@ -140,28 +135,21 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 
 	id.w = index.internalId();
-	foreach(proto, mProtocols)
-	{
-		if (proto.handle == id.ws.protocol)
-			goto _found;
-	}
-	return QVariant();
-
-_found:
 	switch(id.ws.type)
 	{
 	case  ITYP_PROTOCOL:
-		return proto.name;
+		return protoName(id.ws.protocol);
 
 	case  ITYP_FIELD: 
-		return	proto.fieldList.at(id.ws.field).name;
-
-	case  ITYP_SUBFIELD:
-		return QVariant();	// TODO(MED): Till subfield support is added
+		return	fieldName(id.ws.protocol, index.row()) +
+				QString(" : ") +
+				fieldTextValue(id.ws.protocol, index.row()).toString();
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
+
+	Q_ASSERT(1 == 1); // Unreachable code
 
 	return QVariant();
 }
@@ -169,6 +157,8 @@ _found:
 
 /*
 ** --------------- Private Stuff -----------------
+** FIXME(MED): Move these to the Stream Class
+**
 */
 void PacketModel::populatePacketProtocols()
 {
@@ -193,10 +183,13 @@ void PacketModel::populatePacketProtocols()
 			break;
 
 		case Stream::e_ft_802_3_llc:
+			mPacketProtocols.append(PTYP_L2_NONE);
 			proto = PTYP_L2_802_3_LLC;
 			break;
 
 		case Stream::e_ft_snap:
+			mPacketProtocols.append(PTYP_L2_NONE);
+			mPacketProtocols.append(PTYP_L2_802_3_LLC);
 			proto = PTYP_L2_SNAP;
 			break;
 
@@ -260,28 +253,493 @@ _data:
 	mPacketProtocols.append(PTYP_DATA);
 }
 
-int PacketModel::fieldCount(uint protocol) const
+int PacketModel::protoCount() const
+{
+	return mPacketProtocols.count();
+}
+
+int PacketModel::fieldCount(int protocol) const
 {
 	ProtocolInfo	proto;
 
+	if (protocol >= mPacketProtocols.count())
+		return 0;
+
 	foreach(proto, mProtocols)
 	{
-		if (proto.handle == protocol)
+		if (proto.handle == mPacketProtocols.at(protocol))
 		{
 			qDebug("proto=%d, name=%s",protocol,proto.name.toAscii().data());
 			qDebug("fieldcount = %d", proto.fieldList.size());
-			return proto.fieldList.size();
+			return proto.fieldList.count();
 		}
 	}
 
 	return 0;
 }
 
-int PacketModel::subfieldCount(uint protocol, int field) const
+QString PacketModel::protoName(int protocol) const
 {
-	// TODO(MED): Till subfield support is added
-	return 0;
+	ProtocolInfo	proto;
+
+	if (protocol >= mPacketProtocols.count())
+		return 0;
+
+	foreach(proto, mProtocols)
+	{
+		if (proto.handle == mPacketProtocols.at(protocol))
+		{
+			qDebug("proto=%d, name=%s",protocol,proto.name.toAscii().data());
+			qDebug("fieldcount = %d", proto.fieldList.size());
+			return proto.name;
+		}
+	}
+
+	return QString();
 }
+
+QString PacketModel::fieldName(int protocol, int field) const
+{
+	ProtocolInfo	proto;
+
+	if (protocol >= mPacketProtocols.count())
+		return 0;
+
+	foreach(proto, mProtocols)
+	{
+		if (proto.handle == mPacketProtocols.at(protocol))
+		{
+			qDebug("proto=%d, name=%s",protocol,proto.name.toAscii().data());
+			qDebug("fieldcount = %d", proto.fieldList.size());
+			if (field >= proto.fieldList.count())
+				return QString();
+
+			return proto.fieldList.at(field).name;
+		}
+	}
+
+	return QString();
+}
+
+QVariant PacketModel::fieldTextValue(int protocol, int field) const
+{
+	if (protocol >= mPacketProtocols.count())
+		return QVariant();
+
+	switch(mPacketProtocols.at(protocol))
+	{
+	case PTYP_L2_NONE:
+	case PTYP_L2_ETH_2:
+		return ethField(field, FROL_TEXT_VALUE);
+	case PTYP_L2_802_3_RAW:
+		//return dot3Field(field, FROL_TEXT_VALUE); // FIXME(HIGH)	
+		return ethField(field, FROL_TEXT_VALUE);
+	case PTYP_L2_802_3_LLC:
+		return llcField(field, FROL_TEXT_VALUE);
+	case PTYP_L2_SNAP:
+		return snapField(field, FROL_TEXT_VALUE);
+
+	case PTYP_SVLAN:
+		return svlanField(field, FROL_TEXT_VALUE);
+	case PTYP_CVLAN:
+		// return cvlanField(field, FROL_TEXT_VALUE);	// FIXME(HIGH)
+		return svlanField(field, FROL_TEXT_VALUE);
+
+	case PTYP_L3_IP:
+		return ipField(field, FROL_TEXT_VALUE);
+	case PTYP_L3_ARP:
+		return QString();	// FIXME(HIGH)
+
+	case PTYP_L4_TCP:
+		return tcpField(field, FROL_TEXT_VALUE);
+	case PTYP_L4_UDP:
+		return udpField(field, FROL_TEXT_VALUE);
+	case PTYP_L4_ICMP:
+		return QString();	// FIXME(HIGH)
+	case PTYP_L4_IGMP:
+		return QString();	// FIXME(HIGH)
+
+	case PTYP_INVALID:
+		return QString();	// FIXME(HIGH)
+	case PTYP_DATA:
+		return QString();	// FIXME(HIGH)
+	}
+
+	return QString();
+}
+
+QVariant PacketModel::ethField(int field, int role) const
+{
+	FieldInfo	info;
+
+	// FIXME(MED): Mac Addr formatting
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("Destination Mac Address");
+		info.textValue = QString("%1%2").
+			arg(mpStream->l2.eth.dstMacMshw, 4, BASE_HEX, QChar('0')).
+			arg(mpStream->l2.eth.dstMacLsw, 8, BASE_HEX, QChar('0'));
+		break;
+	case 1:
+		info.name = QString("Source Mac Address");
+		info.textValue = QString("%1%2").
+			arg(mpStream->l2.eth.srcMacMshw, 4, BASE_HEX, QChar('0')).
+			arg(mpStream->l2.eth.srcMacLsw, 8, BASE_HEX, QChar('0'));
+		break;
+	case 2:
+		info.name = QString("Type");
+		info.textValue = QString("0x%1").
+			arg(mpStream->proto.etherType, 4, BASE_HEX, QChar('0'));
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+QVariant PacketModel::llcField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("DSAP");
+		info.textValue = QString("0x%1").
+			arg(mpStream->proto.dsap, 2, BASE_HEX, QChar('0'));
+		break;
+	case 1:
+		info.name = QString("SSAP");
+		info.textValue = QString("0x%1").
+			arg(mpStream->proto.ssap, 2, BASE_HEX, QChar('0'));
+		break;
+	case 2:
+		info.name = QString("Control");
+		info.textValue = QString("0x%1").
+			arg(mpStream->proto.ctl, 2, BASE_HEX, QChar('0'));
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+QVariant PacketModel::snapField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("OUI");
+		info.textValue = QString("0x%1%2").
+			arg(mpStream->proto.ouiMsb, 2, BASE_HEX, QChar('0')).
+			arg(mpStream->proto.ouiLshw, 4, BASE_HEX, QChar('0'));
+		break;
+	case 1:
+		info.name = QString("Type");
+		info.textValue = QString("0x%1").
+			arg(mpStream->proto.etherType, 4, BASE_HEX, QChar('0'));
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+QVariant PacketModel::svlanField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("TPID");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l2.eth.stpid, 4, BASE_HEX, QChar('0'));
+		break;
+	case 1:
+		info.name = QString("PCP");
+		info.textValue = QString("%1").
+			arg(mpStream->l2.eth.svlanPrio);
+		break;
+	case 2:
+		info.name = QString("DE");
+		info.textValue = QString("%1").
+			arg(mpStream->l2.eth.svlanCfi);
+		break;
+	case 3:
+		info.name = QString("VlanId");
+		info.textValue = QString("%1").
+			arg(mpStream->l2.eth.svlanId);
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+
+QVariant PacketModel::ipField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("Version");
+		info.textValue = QString("%1").
+			arg(mpStream->l3.ip.ver);
+		break;
+	case 1:
+		info.name = QString("Header Length");
+		info.textValue = QString("%1").
+			arg(mpStream->l3.ip.hdrLen);
+		break;
+	case 2:
+		info.name = QString("TOS/DSCP");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l3.ip.tos, 2, BASE_HEX, QChar('0'));
+		break;
+	case 3:
+		info.name = QString("Total Length");
+		info.textValue = QString("%1").
+			arg(mpStream->l3.ip.totLen);
+		break;
+	case 4:
+		info.name = QString("ID");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l3.ip.id, 2, BASE_HEX, QChar('0'));
+		break;
+	case 5:
+		info.name = QString("Flags");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l3.ip.flags, 2, BASE_HEX, QChar('0')); // FIXME(HIGH)
+		break;
+	case 6:
+		info.name = QString("Fragment Offset");
+		info.textValue = QString("%1").
+			arg(mpStream->l3.ip.fragOfs);
+		break;
+	case 7:
+		info.name = QString("TTL");
+		info.textValue = QString("%1").
+			arg(mpStream->l3.ip.ttl);
+		break;
+	case 8:
+		info.name = QString("Protocol Type");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l3.ip.proto, 2, BASE_HEX, QChar('0'));
+		break;
+	case 9:
+		info.name = QString("Checksum");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l3.ip.cksum, 4, BASE_HEX, QChar('0'));
+		break;
+	case 10:
+		info.name = QString("Source IP");
+		info.textValue = QHostAddress(mpStream->l3.ip.srcIp).toString();
+		break;
+	case 11:
+		info.name = QString("Destination IP");
+		info.textValue = QHostAddress(mpStream->l3.ip.dstIp).toString();
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+
+QVariant PacketModel::tcpField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("Source Port");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.srcPort);
+		break;
+	case 1:
+		info.name = QString("Destination Port");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.dstPort);
+		break;
+	case 2:
+		info.name = QString("Seq Number");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.seqNum);
+		break;
+	case 3:
+		info.name = QString("Ack Number");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.ackNum);
+		break;
+	case 4:
+		info.name = QString("Header Length");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.hdrLen);
+		break;
+	case 5:
+		info.name = QString("Reserved");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.rsvd);
+		break;
+	case 6:
+		info.name = QString("Flags");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l4.tcp.flags, 2, BASE_HEX, QChar('0'));
+		break;
+	case 7:
+		info.name = QString("Window");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.flags);
+		break;
+	case 8:
+		info.name = QString("Checksum");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l4.tcp.cksum, 4, BASE_HEX, QChar('0'));
+		break;
+	case 9:
+		info.name = QString("Urgent Pointer");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.tcp.urgPtr);
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+
+QVariant PacketModel::udpField(int field, int role) const
+{
+	FieldInfo	info;
+
+	switch(field)
+	{
+	case 0:
+		info.name = QString("Source Port");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.udp.srcPort);
+		break;
+	case 1:
+		info.name = QString("Destination Port");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.udp.dstPort);
+		break;
+	case 2:
+		info.name = QString("Total Length");
+		info.textValue = QString("%1").
+			arg(mpStream->l4.udp.totLen);
+		break;
+	case 3:
+		info.name = QString("Checksum");
+		info.textValue = QString("0x%1").
+			arg(mpStream->l4.udp.cksum, 4, BASE_HEX, QChar('0'));
+		break;
+	default:
+		info.name = QString();
+		info.textValue = QString();
+	}
+
+	switch(role)
+	{
+	case FROL_NAME:
+		return info.name;
+	case FROL_TEXT_VALUE:
+		return info.textValue;
+	default:
+		;
+	}
+	
+	Q_ASSERT(1 == 1); // Unreachable code
+	return QVariant();
+}
+
+
 
 /*
 ** ------------- Registration Functions ---------------
@@ -331,18 +789,11 @@ void PacketModel::registerFrameTypeProto()
 	registerField(PTYP_L2_802_3_RAW, "Length", "len");
 
 	registerProto(PTYP_L2_802_3_LLC, "802.3 LLC", "dot3llc");
-	registerField(PTYP_L2_802_3_LLC, "Destination Mac", "dstMac");
-	registerField(PTYP_L2_802_3_LLC, "Source Mac", "srcMac");
 	registerField(PTYP_L2_802_3_LLC, "Destination Service Acces Point", "dsap");
 	registerField(PTYP_L2_802_3_LLC, "Source Service Acces Point", "ssap");
 	registerField(PTYP_L2_802_3_LLC, "Control", "ctl");
 
-	registerProto(PTYP_L2_SNAP, "802.3 LLC SNAP", "dot3snap");
-	registerField(PTYP_L2_SNAP, "Destination Mac", "dstMac");
-	registerField(PTYP_L2_SNAP, "Source Mac", "srcMac");
-	registerField(PTYP_L2_SNAP, "Destination Service Acces Point", "dsap");
-	registerField(PTYP_L2_SNAP, "Source Service Access Point", "ssap");
-	registerField(PTYP_L2_SNAP, "Control", "ctl");
+	registerProto(PTYP_L2_SNAP, "SNAP", "dot3snap");
 	registerField(PTYP_L2_SNAP, "Organisationally Unique Identifier", "oui");
 	registerField(PTYP_L2_SNAP, "Type", "type");
 
