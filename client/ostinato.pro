@@ -6,7 +6,6 @@ HEADERS += \
 	dumpview.h \
 	hexlineedit.h \
 	mainwindow.h \
-	mythread.h \
 	packetmodel.h \
 	port.h \
 	portgroup.h \
