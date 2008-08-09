@@ -1,6 +1,8 @@
 TEMPLATE = app
 CONFIG += qt debug
 QT += network
+INCLUDEPATH += "c:\msys\1.0\local\include" "..\rpc\"
+LIBS += -L"c:\msys\1.0\local\lib" -lprotobuf -L"..\rpc\debug" -lpbrpc
 RESOURCES += ostinato.qrc 
 HEADERS += \
 	dumpview.h \
@@ -31,7 +33,6 @@ SOURCES += \
 	hexlineedit.cpp \
 	main.cpp \
 	mainwindow.cpp \
-	mythread.cpp \
 	packetmodel.cpp \
 	port.cpp \
 	portgroup.cpp \
@@ -43,6 +44,11 @@ SOURCES += \
 	portswindow.cpp \
 	streamconfigdialog.cpp \
 	streammodel.cpp 
+
+# Protocol Buffer Sources
+
+SOURCES += \
+	..\common\protocol.pb.cc
 
 # TODO(LOW): Test only
 include(modeltest.pri)

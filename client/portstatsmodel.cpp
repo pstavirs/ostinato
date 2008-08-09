@@ -70,7 +70,11 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
 	// Check role
 	if (role == Qt::DisplayRole)
+	{
+#if 0 // PB
 		return pgl->mPortGroups.at(pgidx)->mPorts.at(pidx).mPortStats[index.row()];
+#endif	return 0;	//FIXME: Get actual port stats
+	}
 	else
 		return QVariant();
 

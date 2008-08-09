@@ -1,5 +1,4 @@
 #include "portswindow.h"
-#include "streamlistmodel.h"
 #include "streamconfigdialog.h"
 #include <QInputDialog>
 #include <QItemSelectionModel>

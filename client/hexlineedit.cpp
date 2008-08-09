@@ -1,7 +1,8 @@
 #include "hexlineedit.h"
 #include "qdebug.h"
 
-QString & uintToHexStr(quint32 num, QString &hexStr, quint8 octets);
+QString & uintToHexStr(quint64 num, QString &hexStr, quint8 octets);
+
 HexLineEdit::HexLineEdit( QWidget * parent) 
 	: QLineEdit(parent)
 {

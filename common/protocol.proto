@@ -1,0 +1,302 @@
+// stream.proto
+
+// FIXME: Re-evaluate Tag Values
+
+package OstProto;
+
+// Ethernet
+message Mac {
+
+	enum MacAddrMode {
+		e_mm_fixed = 0;
+		e_mm_inc = 1;
+		e_mm_dec = 2;
+	}
+
+	// Dst Mac
+	optional uint64			dst_mac = 1;
+	optional MacAddrMode	dst_mac_mode = 2 [default = e_mm_fixed];
+	optional uint32			dst_mac_count = 3 [default = 16];
+	optional uint32			dst_mac_step = 4 [default = 1];
+
+	// Src Mac
+	optional uint32			src_mac = 5;
+	optional MacAddrMode	src_mac_mode = 6 [default = e_mm_fixed];
+	optional uint32			src_mac_count = 7 [default = 16];
+	optional uint32			src_mac_step = 8 [default = 1];
+}
+
+message Llc {
+	optional uint32			dsap = 1;
+	optional uint32			ssap = 2;
+	optional uint32			ctl = 3;
+}
+
+message Snap {
+	optional uint32			oui = 1;
+	optional uint32			type = 2;
+}
+
+message Eth2 {
+	optional uint32			type = 1;
+}
+
+message Vlan {
+	// VLAN presence/absence
+	optional bool is_cvlan_tagged = 9;
+	optional bool is_ctpid_override = 10;
+	optional bool is_svlan_tagged = 11;
+	optional bool is_stpid_override = 12;
+
+	// VLAN values
+	optional uint32	ctpid = 13;
+	optional uint32	cvlan_tag = 14; // includes prio, cfi and cvlanid
+	optional uint32	stpid = 15;
+	optional uint32	svlan_tag = 16; // includes pcp, de and svlanid
+}
+
+// IP
+message Ip {
+
+	enum IpAddrMode {
+		e_im_fixed = 0;
+		e_im_inc_host = 1;
+		e_im_dec_host = 2;
+		e_im_random_host = 3;
+	}
+
+	optional bool is_override_ver	= 1;
+	optional bool is_override_hdrlen = 2;
+	optional bool is_override_totlen = 3;
+	optional bool is_override_cksum	= 4;
+
+	optional uint32	ver_hdrlen = 5 [default = 0x45]; 
+	optional uint32	tos = 6;
+	optional uint32	tot_len = 7;
+	optional uint32	id = 8 [default = 1234];
+	// TODO: rename flags to frag_flags
+	optional uint32	flags = 9;
+	optional uint32	frag_ofs = 10;
+	optional uint32	ttl = 11 [default = 127];
+	optional uint32	proto = 12;
+	optional uint32	cksum = 13;
+
+	// Source IP
+	optional fixed32	src_ip = 14;
+	optional IpAddrMode	src_ip_mode = 15 [default = e_im_fixed];
+	optional uint32		src_ip_count = 16 [default = 16];
+	optional fixed32	src_ip_mask = 17 [default = 0xFFFFFFFF];
+	
+	// Destination IP
+	optional fixed32	dst_ip = 18;
+	optional IpAddrMode	dst_ip_mode = 19 [default = e_im_fixed];
+	optional uint32		dst_ip_count = 20 [default = 16];
+	optional fixed32	dst_ip_mask = 21 [default = 0xFFFFFFFF];
+
+	// TODO: Options
+}
+
+message Arp {
+// TODO: ARP
+}
+
+message Tcp {
+
+	optional bool is_override_hdrlen = 1;	
+	optional bool is_override_cksum = 2;	
+
+	optional uint32		src_port = 3 [default = 8902];
+	optional uint32		dst_port = 4 [default = 80];
+
+	optional uint32		seq_num = 5 [default = 129018];
+	optional uint32		ack_num = 6 [default = 98223];
+
+	optional uint32		hdrlen_rsvd = 7 [default = 0x50];
+	optional uint32		flags = 8;
+
+	optional uint32		window = 9 [default = 1024];
+	optional uint32		cksum = 10;
+	optional uint32		urg_ptr = 11;
+}
+
+// UDP
+message Udp {
+	optional bool is_override_totlen = 1;	
+	optional bool is_override_cksum = 2;	
+
+	optional uint32		src_port = 3 [default = 8902];
+	optional uint32		dst_port = 4 [default = 80];
+	optional uint32		totLen = 5;
+	optional uint32		cksum = 6;
+}
+
+// TODO: ICMP
+message Icmp {
+}
+
+// TODO: IGMP
+message Igmp {
+}
+
+
+message StreamCore {
+
+	enum FrameType {
+		e_ft_none = 0;
+		e_ft_eth_2 = 1;
+		e_ft_802_3_raw = 2;
+		e_ft_802_3_llc = 3;
+		e_ft_snap = 4;
+	}
+
+	enum L3Proto {
+		e_l3_none = 0;
+		e_l3_other = 1;
+		e_l3_ip = 2;
+		e_l3_arp = 3;
+	}
+
+	enum L4Proto {
+		e_l4_none = 0;
+		e_l4_other = 1;
+		e_l4_tcp = 2;
+		e_l4_udp = 3;
+		e_l4_icmp = 4;
+		e_l4_igmp = 5;
+	}
+
+	enum DataPatternMode {
+		e_dp_fixed = 0;
+		e_dp_inc = 1;
+		e_dp_dec = 2;
+		e_dp_random = 3;
+	}
+
+	enum FrameLengthMode {
+		e_fl_fixed = 0;
+		e_fl_inc = 1;
+		e_fl_dec = 2;
+		e_fl_random = 3;
+	}
+	
+	// Basics
+	optional string	name = 1;
+	optional bool	is_enabled = 2;
+	optional uint32	ordinal = 3;
+
+	// Data Pattern
+	optional DataPatternMode	pattern_mode = 11;
+	optional uint32				pattern = 12;
+	optional uint32				data_start_ofs = 13;
+
+	// Frame Length (includes CRC)
+	optional FrameLengthMode	len_mode = 14;
+	optional uint32				frame_len = 15;
+	optional uint32				frame_len_min = 16;
+	optional uint32				frame_len_max = 17;
+
+	// Currently Selected Protocols
+	optional FrameType	ft = 21 [default = e_ft_none];
+	optional L3Proto	l3_proto = 22;
+	optional L4Proto	l4_proto = 23;
+}
+
+message StreamId {
+	required uint32	port_id = 1;
+	required uint32	stream_id = 2;
+}
+
+message Stream {
+
+	required StreamId id = 1;
+	optional StreamCore core = 2;
+
+	// Protocol data - L2
+	optional Mac 	mac = 51;
+	optional Llc 	llc = 52;
+	optional Snap 	snap = 53;
+	optional Eth2 	eth2 = 54;
+
+	// Protocol data - L3	
+	optional Ip		ip = 61;
+	optional Arp	arp = 62;
+
+	// Protocol data - L4
+	optional Tcp	tcp = 71;
+	optional Udp	udp = 72;
+	optional Icmp	icmp = 73;
+	optional Igmp	igmp = 74;
+
+}
+
+message Void {
+	// nothing!
+}
+
+message Ack {
+	// TODO
+}
+
+message PortIdList {
+	repeated uint32 port_id = 1;
+}
+
+message StreamIdList {
+	repeated StreamId id = 1;
+}
+
+
+message PortConfig {
+	required uint32 port_id = 1;
+	optional string name = 2;
+	optional string description = 3;
+	optional bool is_enabled = 4;
+	optional bool is_oper_up = 5;
+	optional bool is_exclusive_control = 6;
+}
+
+message PortConfigList {
+	repeated PortConfig list = 1;
+}
+
+message StreamConfigList {
+	repeated Stream stream = 1;
+}
+
+message CaptureBuffer {
+	// TODO
+}
+
+message CaptureBufferList {
+	repeated CaptureBuffer list = 1;
+}
+
+message PortStats {
+	// TODO
+}
+
+message PortStatsList {
+	repeated PortStats list = 1;
+}
+
+service OstService {
+	rpc getPortIdList(Void) returns (PortIdList);
+	rpc getPortConfig(PortIdList) returns (PortConfigList);
+
+	rpc getStreamIdList(PortIdList) returns (StreamIdList);
+	rpc getStreamConfig(StreamIdList) returns (StreamConfigList);
+	rpc addStream(StreamIdList) returns (Ack);
+	rpc deleteStream(StreamIdList) returns (Ack);
+	rpc modifyStream(StreamConfigList) returns (Ack);
+
+	rpc startTx(PortIdList) returns (Ack);
+	rpc stopTx(PortIdList) returns (Ack);
+
+	rpc startCapture(PortIdList) returns (Ack);
+	rpc stopCapture(PortIdList) returns (Ack);
+	rpc getCaptureBuffer(PortIdList) returns (CaptureBufferList);
+
+	rpc getStats(PortIdList) returns (PortStatsList);
+	rpc clearStats(PortIdList) returns (Ack);
+}
+

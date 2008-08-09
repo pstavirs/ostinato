@@ -1,6 +1,12 @@
+
+File Not used anymore
+
+#if 0
 #include "qtglobal" // FIXME: needed only for qdebug
 #include "rxtx.h"
+#if 0 // PB
 #include "../common/protocol.h"
+#endif
 
 
 
@@ -157,7 +163,9 @@ void RxTx::SendCapabilityInfo(void)
 	}
 	host->Log("Sending msg\n");
 	host->Log(logStr);
+#if 0 // PB
 	host->SendMsg(pktBuff, msgLen);
+#endif
 }
 
 void RxTx::ProcessPortConfig(const char* msg, int len)
@@ -503,4 +511,4 @@ Stream* RxTx::GetStream(unsigned int port, unsigned int streamId)
 	
 	return NULL;
 }
-
+#endif

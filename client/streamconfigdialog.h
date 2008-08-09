@@ -37,6 +37,7 @@ private:
 
 private slots:
 	void on_cmbDstMacMode_currentIndexChanged(QString mode);
+	void on_cmbSrcMacMode_currentIndexChanged(QString mode);
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
@@ -56,7 +57,7 @@ private slots:
 	void on_pbOk_clicked();
 };
 
-QString & uintToHexStr(quint32 num, QString &hexStr, quint8 octets);
+QString & uintToHexStr(quint64 num, QString &hexStr, quint8 octets);
 
 #endif
 

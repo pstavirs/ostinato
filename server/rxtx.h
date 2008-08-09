@@ -1,8 +1,15 @@
+
+File not used anymore
+
+#if 0
+
 #ifndef _RXTX_H
 #define _RXTX_H
 
 #include "pcap.h"
 #include "abstracthost.h"
+
+#include "../common/protocol.h"
 
 #define GET16(x)	(UINT16)(	\
 	  (*((UINT8*)x+0) << 16 )	\
@@ -73,4 +80,5 @@ class RxTx
 		void ProcessPortConfig(const char* msg, int len);
 };
 
+#endif
 #endif

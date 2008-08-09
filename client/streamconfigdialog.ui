@@ -33,7 +33,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
       <string/>
      </property>
      <property name="currentIndex" >
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="widget" >
       <attribute name="title" >
@@ -191,7 +191,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
        <item row="1" column="0" colspan="3" >
         <widget class="QTabWidget" name="twProto" >
          <property name="currentIndex" >
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_7" >
           <attribute name="title" >
@@ -2145,12 +2145,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>288</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>
@@ -2161,12 +2161,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>388</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>417</y>
     </hint>
    </hints>
   </connection>
@@ -2177,12 +2177,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>259</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>41</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>
@@ -2193,12 +2193,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>259</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>81</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>
@@ -2209,12 +2209,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>259</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>133</x>
-     <y>238</y>
+     <x>120</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>
@@ -2225,12 +2225,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>259</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>288</y>
     </hint>
    </hints>
   </connection>
@@ -2241,12 +2241,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>359</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>41</x>
+     <y>417</y>
     </hint>
    </hints>
   </connection>
@@ -2257,12 +2257,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>359</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>120</x>
+     <y>417</y>
     </hint>
    </hints>
   </connection>
@@ -2273,12 +2273,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>359</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>147</x>
-     <y>238</y>
+     <x>252</x>
+     <y>388</y>
     </hint>
    </hints>
   </connection>
@@ -2289,12 +2289,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>31</x>
+     <y>359</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>238</y>
+     <x>81</x>
+     <y>417</y>
     </hint>
    </hints>
   </connection>
@@ -2305,12 +2305,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2321,12 +2321,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2401,12 +2401,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2417,12 +2417,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>101</x>
-     <y>276</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -3121,12 +3121,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>224</x>
-     <y>207</y>
+     <x>381</x>
+     <y>140</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>224</x>
-     <y>209</y>
+     <x>381</x>
+     <y>174</y>
     </hint>
    </hints>
   </connection>
@@ -3137,12 +3137,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>125</x>
-     <y>207</y>
+     <x>30</x>
+     <y>69</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>191</x>
-     <y>236</y>
+     <x>85</x>
+     <y>285</y>
     </hint>
    </hints>
   </connection>
@@ -3153,12 +3153,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>125</x>
-     <y>207</y>
+     <x>30</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>173</x>
-     <y>236</y>
+     <x>67</x>
+     <y>331</y>
     </hint>
    </hints>
   </connection>
@@ -3169,12 +3169,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>125</x>
-     <y>207</y>
+     <x>30</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>224</x>
-     <y>216</y>
+     <x>222</x>
+     <y>189</y>
     </hint>
    </hints>
   </connection>

@@ -82,9 +82,29 @@ StreamConfigDialog::~StreamConfigDialog()
 void StreamConfigDialog::on_cmbDstMacMode_currentIndexChanged(QString mode)
 {
 	if (mode == "Fixed")
+	{
 		leDstMacCount->setEnabled(FALSE);
+		leDstMacStep->setEnabled(FALSE);
+	}
 	else
+	{
 		leDstMacCount->setEnabled(TRUE);
+		leDstMacStep->setEnabled(TRUE);
+	}
+}
+
+void StreamConfigDialog::on_cmbSrcMacMode_currentIndexChanged(QString mode)
+{
+	if (mode == "Fixed")
+	{
+		leSrcMacCount->setEnabled(FALSE);
+		leSrcMacStep->setEnabled(FALSE);
+	}
+	else
+	{
+		leSrcMacCount->setEnabled(TRUE);
+		leSrcMacStep->setEnabled(TRUE);
+	}
 }
 
 void StreamConfigDialog::on_pbPrev_clicked()
@@ -246,7 +266,7 @@ void StreamConfigDialog::update_NumPacketsAndNumBursts()
 		leNumBursts->setEnabled(false);
 }
 
-QString & uintToHexStr(quint32 num, QString &hexStr, quint8 octets) 
+QString & uintToHexStr(quint64 num, QString &hexStr, quint8 octets) 
 {
 	int i;
 	QChar	zero('0');
@@ -291,19 +311,19 @@ void StreamConfigDialog::LoadCurrentStream()
 
 	// Meta Data
 	{
-		cmbPatternMode->setCurrentIndex(pStream->meta.patternMode);
-		lePattern->setText(uintToHexStr(pStream->meta.pattern, str, 4));
+		cmbPatternMode->setCurrentIndex(pStream->patternMode());
+		lePattern->setText(uintToHexStr(pStream->pattern(), str, 4));
 
-		cmbPktLenMode->setCurrentIndex(pStream->meta.lenMode);
-		lePktLen->setText(str.setNum(pStream->meta.frameLen));
-		lePktLenMin->setText(str.setNum(pStream->meta.frameLenMin));
-		lePktLenMax->setText(str.setNum(pStream->meta.frameLenMax));
+		cmbPktLenMode->setCurrentIndex(pStream->lenMode());
+		lePktLen->setText(str.setNum(pStream->frameLen()));
+		lePktLenMin->setText(str.setNum(pStream->frameLenMin()));
+		lePktLenMax->setText(str.setNum(pStream->frameLenMax()));
 	}
 
 	// Protocols
 	{
-		qDebug("ft = %d\n", pStream->proto.ft);
-		switch(pStream->proto.ft)
+		qDebug("ft = %d\n", pStream->frameType());
+		switch(pStream->frameType())
 		{
 			case Stream::e_ft_none:
 				rbFtNone->setChecked(TRUE);
@@ -321,6 +341,9 @@ void StreamConfigDialog::LoadCurrentStream()
 				rbFtLlcSnap->setChecked(TRUE);
 				break;
 		}
+
+// TODO
+#if 0
 		leDsap->setText(uintToHexStr(pStream->proto.dsap, str, 1));
 		leSsap->setText(uintToHexStr(pStream->proto.ssap, str, 1));
 		leControl->setText(uintToHexStr(pStream->proto.ctl, str, 1));
@@ -351,24 +374,23 @@ void StreamConfigDialog::LoadCurrentStream()
 		// ... then for None/Other
 		rbL4None->setChecked((pStream->proto.protoMask & PM_L4_PROTO_NONE) > 0);
 		rbL4Other->setChecked((pStream->proto.protoMask & PM_L4_PROTO_OTHER) > 0);
+#endif
 	}
 
 	// L2
 	{
 		// L2 | Ethernet
 		{
-			leDstMac->setText(uintToHexStr(pStream->l2.eth.dstMacMshw, str, 2) + 
-					uintToHexStr(pStream->l2.eth.dstMacLsw, str, 4));
-			cmbDstMacMode->setCurrentIndex(pStream->l2.eth.dstMacMode);
-			leDstMacCount->setText(str.setNum(pStream->l2.eth.dstMacCount));
-			leDstMacStep->setText(str.setNum(pStream->l2.eth.dstMacStep));
+			leDstMac->setText(uintToHexStr(pStream->mac()->dstMac(), str, 6));
+			cmbDstMacMode->setCurrentIndex(pStream->mac()->dstMacMode());
+			leDstMacCount->setText(str.setNum(pStream->mac()->dstMacCount()));
+			leDstMacStep->setText(str.setNum(pStream->mac()->dstMacStep()));
 
-			leSrcMac->setText(uintToHexStr(pStream->l2.eth.srcMacMshw, str, 2) + 
-					uintToHexStr(pStream->l2.eth.srcMacLsw, str, 4));
-			cmbSrcMacMode->setCurrentIndex(pStream->l2.eth.srcMacMode);
-			leSrcMacCount->setText(str.setNum(pStream->l2.eth.srcMacCount));
-			leSrcMacStep->setText(str.setNum(pStream->l2.eth.srcMacStep));
-			
+			leSrcMac->setText(uintToHexStr(pStream->mac()->srcMac(), str, 6));
+			cmbSrcMacMode->setCurrentIndex(pStream->mac()->srcMacMode());
+			leSrcMacCount->setText(str.setNum(pStream->mac()->srcMacCount()));
+			leSrcMacStep->setText(str.setNum(pStream->mac()->srcMacStep()));
+#if 0		
 			cmbCvlanPrio->setCurrentIndex(pStream->l2.eth.cvlanPrio);
 			cmbCvlanCfi->setCurrentIndex(pStream->l2.eth.cvlanCfi);
 			leCvlanId->setText(str.setNum(pStream->l2.eth.cvlanId));
@@ -382,43 +404,48 @@ void StreamConfigDialog::LoadCurrentStream()
 			leSvlanTpid->setText(str.setNum(pStream->l2.eth.stpid));
 			cbSvlanTpidOverride->setChecked((pStream->l2.eth.vlanMask & VM_SVLAN_TPID_OVERRIDE) > 0);
 			gbSvlan->setChecked((pStream->l2.eth.vlanMask & VM_SVLAN_TAGGED) > 0);
+#endif
 		}
 	}
-			
+
 	// L3
 	{
 		// L3 | IP
 		{
-			leIpVersion->setText(str.setNum(pStream->l3.ip.ver));
-			cbIpVersionOverride->setChecked((pStream->l3.ip.ipMask & IM_OVERRIDE_VERSION) > 0);
-			leIpHdrLen->setText(str.setNum(pStream->l3.ip.hdrLen));
-			cbIpHdrLenOverride->setChecked((pStream->l3.ip.ipMask & IM_OVERRIDE_HDRLEN) > 0);
+			leIpVersion->setText(str.setNum(pStream->ip()->ver()));
+			cbIpVersionOverride->setChecked(
+				pStream->ip()->ipFlags().testFlag(IpProtocol::IpOverrideVersion));
+			leIpHdrLen->setText(str.setNum(pStream->ip()->hdrLen()));
+			cbIpHdrLenOverride->setChecked(
+				pStream->ip()->ipFlags().testFlag(IpProtocol::IpOverrideHdrLen));
 			
-			leIpTos->setText(uintToHexStr(pStream->l3.ip.tos, str, 1));
+			leIpTos->setText(uintToHexStr(pStream->ip()->tos(), str, 1));
 
-			leIpLength->setText(str.setNum(pStream->l3.ip.totLen));
-			cbIpLengthOverride->setChecked((pStream->l3.ip.ipMask & IM_OVERRIDE_TOTLEN) > 0);
+			leIpLength->setText(str.setNum(pStream->ip()->totLen()));
+			cbIpLengthOverride->setChecked(
+				pStream->ip()->ipFlags().testFlag(IpProtocol::IpOverrideTotLen));
 
-			leIpId->setText(uintToHexStr(pStream->l3.ip.id, str, 2));
-			leIpFragOfs->setText(str.setNum(pStream->l3.ip.fragOfs));
-			cbIpFlagsDf->setChecked((pStream->l3.ip.flags & IP_FLAG_DF) > 0);
-			cbIpFlagsMf->setChecked((pStream->l3.ip.flags & IP_FLAG_MF) > 0);
+			leIpId->setText(uintToHexStr(pStream->ip()->id(), str, 2));
+			leIpFragOfs->setText(str.setNum(pStream->ip()->fragOfs()));
+			cbIpFlagsDf->setChecked((pStream->ip()->flags() & IP_FLAG_DF) > 0);
+			cbIpFlagsMf->setChecked((pStream->ip()->flags() & IP_FLAG_MF) > 0);
 
-			leIpTtl->setText(str.setNum(pStream->l3.ip.ttl));
-			leIpProto->setText(uintToHexStr(pStream->l3.ip.proto, str, 1));
+			leIpTtl->setText(str.setNum(pStream->ip()->ttl()));
+			leIpProto->setText(uintToHexStr(pStream->ip()->proto(), str, 1));
 
-			leIpCksum->setText(uintToHexStr(pStream->l3.ip.cksum, str, 2));
-			cbIpCksumOverride->setChecked((pStream->l3.ip.ipMask & IM_OVERRIDE_CKSUM) > 0);
+			leIpCksum->setText(uintToHexStr(pStream->ip()->cksum(), str, 2));
+			cbIpCksumOverride->setChecked(
+				pStream->ip()->ipFlags().testFlag(IpProtocol::IpOverrideCksum));
 
-			leIpSrcAddr->setText(QHostAddress(pStream->l3.ip.srcIp).toString());
-			cmbIpSrcAddrMode->setCurrentIndex(pStream->l3.ip.srcIpMode);
-			leIpSrcAddrCount->setText(str.setNum(pStream->l3.ip.srcIpCount));
-			leIpSrcAddrMask->setText(QHostAddress(pStream->l3.ip.srcIpMask).toString());
+			leIpSrcAddr->setText(QHostAddress(pStream->ip()->srcIp()).toString());
+			cmbIpSrcAddrMode->setCurrentIndex(pStream->ip()->srcIpMode());
+			leIpSrcAddrCount->setText(str.setNum(pStream->ip()->srcIpCount()));
+			leIpSrcAddrMask->setText(QHostAddress(pStream->ip()->srcIpMask()).toString());
 
-			leIpDstAddr->setText(QHostAddress(pStream->l3.ip.dstIp).toString());
-			cmbIpDstAddrMode->setCurrentIndex(pStream->l3.ip.dstIpMode);
-			leIpDstAddrCount->setText(str.setNum(pStream->l3.ip.dstIpCount));
-			leIpDstAddrMask->setText(QHostAddress(pStream->l3.ip.dstIpMask).toString());
+			leIpDstAddr->setText(QHostAddress(pStream->ip()->dstIp()).toString());
+			cmbIpDstAddrMode->setCurrentIndex(pStream->ip()->dstIpMode());
+			leIpDstAddrCount->setText(str.setNum(pStream->ip()->dstIpCount()));
+			leIpDstAddrMask->setText(QHostAddress(pStream->ip()->dstIpMask()).toString());
 		}
 
 		// L3 | ARP
@@ -427,6 +454,7 @@ void StreamConfigDialog::LoadCurrentStream()
 		}
 	}
 
+#if 0
 	// L4
 	{
 		// L4 | TCP
@@ -477,6 +505,7 @@ void StreamConfigDialog::LoadCurrentStream()
 			// TODO
 		}
 	}
+#endif
 }
 
 void StreamConfigDialog::StoreCurrentStream()
@@ -487,30 +516,31 @@ void StreamConfigDialog::StoreCurrentStream()
 
 	qDebug("storing pStream %p", pStream);
 
+#if 1 // FIXME: Temp till we use protobuff accessors
 	// Meta Data
-	pStream->meta.patternMode = (Stream::DataPatternMode) cmbPatternMode->currentIndex();
-	pStream->meta.pattern = lePattern->text().remove(QChar(' ')).toULong(&isOk, 16);
+	pStream->setPatternMode((Stream::DataPatternMode) cmbPatternMode->currentIndex());
+	pStream->setPattern(lePattern->text().remove(QChar(' ')).toULong(&isOk, 16));
 
-	pStream->meta.lenMode = (Stream::FrameLengthMode) cmbPktLenMode->currentIndex();
-	pStream->meta.frameLen = lePktLen->text().toULong(&isOk);
-	pStream->meta.frameLenMin = lePktLenMin->text().toULong(&isOk);
-	pStream->meta.frameLenMax = lePktLenMax->text().toULong(&isOk);
-
+	pStream->setLenMode((Stream::FrameLengthMode) cmbPktLenMode->currentIndex());
+	pStream->setFrameLen(lePktLen->text().toULong(&isOk));
+	pStream->setFrameLenMin(lePktLenMin->text().toULong(&isOk));
+	pStream->setFrameLenMax(lePktLenMax->text().toULong(&isOk));
+#endif
 	// Protocols
 	{
 		if (rbFtNone->isChecked()) 
-			pStream->proto.ft = Stream::e_ft_none;
+			pStream->setFrameType(Stream::e_ft_none);
 		else if (rbFtEthernet2->isChecked())
-			pStream->proto.ft = Stream::e_ft_eth_2;
+			pStream->setFrameType(Stream::e_ft_eth_2);
 		else if (rbFt802Dot3Raw->isChecked())
-			pStream->proto.ft = Stream::e_ft_802_3_raw;
+			pStream->setFrameType(Stream::e_ft_802_3_raw);
 		else if (rbFt802Dot3Llc->isChecked())
-			pStream->proto.ft = Stream::e_ft_802_3_llc;
+			pStream->setFrameType(Stream::e_ft_802_3_llc);
 		else if (rbFtLlcSnap->isChecked())
-			pStream->proto.ft = Stream::e_ft_snap;
+			pStream->setFrameType(Stream::e_ft_snap);
+		qDebug("store ft(%d)\n", pStream->frameType());
 
-		qDebug("store ft = %d\n", pStream->proto.ft);
-
+#if 0
 		pStream->proto.dsap = leDsap->text().remove(QChar(' ')).toULong(&isOk, 16);
 		pStream->proto.ssap = leSsap->text().remove(QChar(' ')).toULong(&isOk, 16);
 		pStream->proto.ctl = leControl->text().remove(QChar(' ')).toULong(&isOk, 16);
@@ -531,24 +561,33 @@ void StreamConfigDialog::StoreCurrentStream()
 			pStream->proto.protoMask |= PM_L4_PROTO_NONE;
 		else if (rbL4Other->isChecked())
 			pStream->proto.protoMask |= PM_L4_PROTO_OTHER;
+#endif
 	}
 
 	// L2
 	{
 		// L2 | Ethernet
 		{
-			pStream->l2.eth.dstMacMshw = leDstMac->text().remove(QChar(' ')).left(4).toULong(&isOk, 16);
-			pStream->l2.eth.dstMacLsw = leDstMac->text().remove(QChar(' ')).right(8).toULong(&isOk, 16);
-			pStream->l2.eth.dstMacMode = (Stream::MacAddrMode) cmbDstMacMode->currentIndex();
-			pStream->l2.eth.dstMacCount = leDstMacCount->text().toULong(&isOk);
-			pStream->l2.eth.dstMacStep = leDstMacStep->text().toULong(&isOk);
+			pStream->mac()->setDstMac(
+				leDstMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
+			pStream->mac()->setDstMacMode(
+				(MacProtocol::MacAddrMode) cmbDstMacMode->currentIndex());
+			pStream->mac()->setDstMacCount(
+				leDstMacCount->text().toULong(&isOk));
+			pStream->mac()->setDstMacStep(
+				leDstMacStep->text().toULong(&isOk));
 
-			pStream->l2.eth.srcMacMshw = leSrcMac->text().remove(QChar(' ')).left(4).toULong(&isOk, 16);
-			pStream->l2.eth.srcMacLsw = leSrcMac->text().remove(QChar(' ')).right(8).toULong(&isOk, 16);
-			pStream->l2.eth.srcMacMode = (Stream::MacAddrMode) cmbSrcMacMode->currentIndex();
-			pStream->l2.eth.srcMacCount = leSrcMacCount->text().toULong(&isOk);
-			pStream->l2.eth.srcMacStep = leSrcMacStep->text().toULong(&isOk);
+			pStream->mac()->setSrcMac(
+				leSrcMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
+			pStream->mac()->setSrcMacMode(
+				(MacProtocol::MacAddrMode) cmbSrcMacMode->currentIndex());
+			pStream->mac()->setSrcMacCount(
+				leSrcMacCount->text().toULong(&isOk));
+			pStream->mac()->setSrcMacStep(
 
+				leSrcMacStep->text().toULong(&isOk));
+
+#if 0
 			pStream->l2.eth.vlanMask = 0;
 
 			pStream->l2.eth.cvlanPrio = cmbCvlanPrio->currentIndex();
@@ -568,6 +607,7 @@ void StreamConfigDialog::StoreCurrentStream()
 				pStream->l2.eth.vlanMask |= VM_SVLAN_TPID_OVERRIDE;
 			if (gbSvlan->isChecked())
 				pStream->l2.eth.vlanMask |= VM_SVLAN_TAGGED;
+#endif
 		}
 	}
 
@@ -575,42 +615,48 @@ void StreamConfigDialog::StoreCurrentStream()
 	{
 		// L3 | IP
 		{
-			pStream->l3.ip.ipMask = 0;
+			IpProtocol *ip = pStream->ip();
+			IpProtocol::IpFlags f;
 
-			pStream->l3.ip.ver = leIpVersion->text().toULong(&isOk);
+			ip->setVer(leIpVersion->text().toULong(&isOk));
 			if (cbIpVersionOverride->isChecked())
-				pStream->l3.ip.ipMask |= IM_OVERRIDE_VERSION;
-			pStream->l3.ip.hdrLen = leIpHdrLen->text().toULong(&isOk);
+				f |= IpProtocol::IpOverrideVersion;
+			ip->setHdrLen(leIpHdrLen->text().toULong(&isOk));
 			if (cbIpHdrLenOverride->isChecked())
-				pStream->l3.ip.ipMask |= IM_OVERRIDE_HDRLEN;
+				f |= IpProtocol::IpOverrideHdrLen;
 
-			pStream->l3.ip.tos = leIpTos->text().toULong(&isOk, 16);
+			ip->setTos(leIpTos->text().toULong(&isOk, 16));
 
-			pStream->l3.ip.totLen = leIpLength->text().toULong(&isOk);
+			ip->setTotLen(leIpLength->text().toULong(&isOk));
 			if (cbIpLengthOverride->isChecked())
-				pStream->l3.ip.ipMask |= IM_OVERRIDE_TOTLEN;
+				f |= IpProtocol::IpOverrideHdrLen;
 
-			pStream->l3.ip.id = leIpId->text().remove(QChar(' ')).toULong(&isOk, 16);
-			pStream->l3.ip.fragOfs = leIpFragOfs->text().toULong(&isOk);
-			if (cbIpFlagsDf->isChecked()) pStream->l3.ip.ipMask |= IP_FLAG_DF;
-			if (cbIpFlagsMf->isChecked()) pStream->l3.ip.ipMask |= IP_FLAG_MF;
+			ip->setId(leIpId->text().remove(QChar(' ')).toULong(&isOk, 16));
+			ip->setFragOfs(leIpFragOfs->text().toULong(&isOk));
 
-			pStream->l3.ip.ttl = leIpTtl->text().toULong(&isOk);
-			pStream->l3.ip.proto = leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16);
+			int ff;
+			if (cbIpFlagsDf->isChecked()) ff |= IP_FLAG_DF;
+			if (cbIpFlagsMf->isChecked()) ff |= IP_FLAG_MF;
+			ip->setFlags(ff);
+
+			ip->setTtl(leIpTtl->text().toULong(&isOk));
+			ip->setProto(leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16));
 			
-			pStream->l3.ip.cksum = leIpCksum->text().remove(QChar(' ')).toULong(&isOk);
+			ip->setCksum(leIpCksum->text().remove(QChar(' ')).toULong(&isOk));
 			if (cbIpCksumOverride->isChecked())
-				pStream->l3.ip.ipMask |= IM_OVERRIDE_CKSUM;
+				f |= IpProtocol::IpOverrideCksum;
 
-			pStream->l3.ip.srcIp = QHostAddress(leIpSrcAddr->text()).toIPv4Address();
-			pStream->l3.ip.srcIpMode = (Stream::IpAddrMode) cmbIpSrcAddrMode->currentIndex();
-			pStream->l3.ip.srcIpCount = leIpSrcAddrCount->text().toULong(&isOk);
-			pStream->l3.ip.srcIpMask = QHostAddress(leIpSrcAddrMask->text()).toIPv4Address();
+			ip->setSrcIp(QHostAddress(leIpSrcAddr->text()).toIPv4Address());
+			ip->setSrcIpMode((IpProtocol::IpAddrMode) cmbIpSrcAddrMode->currentIndex());
+			ip->setSrcIpCount(leIpSrcAddrCount->text().toULong(&isOk));
+			ip->setSrcIpMask(QHostAddress(leIpSrcAddrMask->text()).toIPv4Address());
 
-			pStream->l3.ip.dstIp = QHostAddress(leIpDstAddr->text()).toIPv4Address();
-			pStream->l3.ip.dstIpMode = (Stream::IpAddrMode) cmbIpDstAddrMode->currentIndex();
-			pStream->l3.ip.dstIpCount = leIpDstAddrCount->text().toULong(&isOk);
-			pStream->l3.ip.dstIpMask = QHostAddress(leIpDstAddrMask->text()).toIPv4Address();
+			ip->setDstIp(QHostAddress(leIpDstAddr->text()).toIPv4Address());
+			ip->setDstIpMode((IpProtocol::IpAddrMode) cmbIpDstAddrMode->currentIndex());
+			ip->setDstIpCount(leIpDstAddrCount->text().toULong(&isOk));
+			ip->setDstIpMask(QHostAddress(leIpDstAddrMask->text()).toIPv4Address());
+
+			ip->setIpFlags(f);
 		}
 
 		// L3 | ARP
@@ -619,6 +665,8 @@ void StreamConfigDialog::StoreCurrentStream()
 		}
 	}
 
+// TODO
+#if 0
 	// L4
 	{
 		// L4 | TCP
@@ -676,6 +724,7 @@ void StreamConfigDialog::StoreCurrentStream()
 			// TODO
 		}		
 	}
+#endif
 }
 void StreamConfigDialog::on_pbOk_clicked()
 {

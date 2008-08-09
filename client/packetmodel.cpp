@@ -167,6 +167,7 @@ void PacketModel::populatePacketProtocols()
 	// Clear the protocols list
 	mPacketProtocols.clear();
 
+#if 0 // FIXME: protobuf
 	// Check and populate L2 Protocol
 	switch(mpStream->proto.ft)
 	{
@@ -251,6 +252,7 @@ void PacketModel::populatePacketProtocols()
 
 _data:
 	mPacketProtocols.append(PTYP_DATA);
+#endif
 }
 
 int PacketModel::protoCount() const
@@ -373,7 +375,7 @@ QVariant PacketModel::ethField(int field, int role) const
 	FieldInfo	info;
 
 	// FIXME(MED): Mac Addr formatting
-
+#if 0 // FIXME protobuf
 	switch(field)
 	{
 	case 0:
@@ -409,6 +411,7 @@ QVariant PacketModel::ethField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -416,6 +419,7 @@ QVariant PacketModel::llcField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
@@ -449,6 +453,7 @@ QVariant PacketModel::llcField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -456,6 +461,7 @@ QVariant PacketModel::snapField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
@@ -485,6 +491,7 @@ QVariant PacketModel::snapField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -492,6 +499,7 @@ QVariant PacketModel::svlanField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
@@ -530,6 +538,7 @@ QVariant PacketModel::svlanField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -538,6 +547,7 @@ QVariant PacketModel::ipField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
@@ -614,6 +624,7 @@ QVariant PacketModel::ipField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -622,6 +633,7 @@ QVariant PacketModel::tcpField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
@@ -690,6 +702,7 @@ QVariant PacketModel::tcpField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 
@@ -698,6 +711,7 @@ QVariant PacketModel::udpField(int field, int role) const
 {
 	FieldInfo	info;
 
+#if 0 // FIXME:protobuf
 	switch(field)
 	{
 	case 0:
@@ -736,6 +750,7 @@ QVariant PacketModel::udpField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
+#endif
 	return QVariant();
 }
 

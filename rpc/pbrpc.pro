@@ -1,0 +1,13 @@
+TEMPLATE = lib
+CONFIG += qt
+QT += network
+DEFINES += HAVE_REMOTE
+INCLUDEPATH += "c:\msys\1.0\local\include"
+LIBS += -L"C:\msys\1.0\local\lib" -lprotobuf
+HEADERS += rpcserver.h pbrpccontroller.h pbrpcchannel.h
+SOURCES += rpcserver.cpp pbrpcchannel.cpp
+client.path = ..\client\debug
+client.files = debug\libpbrpc.a debug\pbrpc.dll
+server.path = ..\server\debug
+server.files = debug\libpbrpc.a debug\pbrpc.dll
+INSTALLS += client server

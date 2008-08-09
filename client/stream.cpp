@@ -1,15 +1,25 @@
 #include <stream.h>
 
+quint32 Stream::mAllocId = 0;
+
 Stream::Stream()
 {
+	mId = mAllocId++;
+	
+	mCore = new OstProto::StreamCore;
+	mMac = new MacProtocol;
+	mIp = new IpProtocol;
+#if 0
 	// Default constructor
 	InitDefaultMeta();
 	InitDefaultProto();
 	InitDefaultL2();
 	InitDefaultL3();
 	InitDefaultL4();
+#endif
 }
 
+#if 0
 void Stream::InitDefaultMeta()
 {
 	// TODO(LOW): Use #defines
@@ -121,3 +131,4 @@ void Stream::InitDefaultL4Udp()
 	l4.udp.totLen = STREAM_DEF_L4_UDP_TOT_LEN;
 	l4.udp.cksum = STREAM_DEF_L4_UDP_CKSUM;
 }
+#endif
