@@ -65,11 +65,21 @@ void PbRpcChannel::CallMethod(
 	::google::protobuf::Message *response,
 	::google::protobuf::Closure* done)
 {
-	char	msg[1024];	// FIXME: hardcoding
+	char	msg[4096];	// FIXME: hardcoding
 	char 	*p = (char *)&msg;
 	int		len;
   
 	qDebug("In %s", __FUNCTION__);
+
+	if (!req->IsInitialized())
+	{
+		qDebug("RpcChannel: missing required fields in request");
+		qDebug(req->InitializationErrorString().c_str());
+
+		controller->SetFailed("Required fields missing");
+		done->Run();
+		return;
+	}
 
 	pendingMethodId = method->index();
 	this->controller=controller;
@@ -91,7 +101,7 @@ void PbRpcChannel::CallMethod(
 	*((quint16*)(p+4)) = HTONS(len); // len
 
 	qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, len+8,
-		req->ShortDebugString().c_str());
+		req->DebugString().c_str());
 	BUFDUMP(msg, len+8);
 
 	mpSocket->write(msg, len + 8);
@@ -99,7 +109,7 @@ void PbRpcChannel::CallMethod(
 
 void PbRpcChannel::on_mpSocket_readyRead()
 {
-	char	msg[1024]; // FIXME: hardcoding;
+	char	msg[4096]; // FIXME: hardcoding;
 	char	*p = (char*)&msg;
 	int		msgLen;
 	quint16	type, method, len, rsvd;
@@ -146,6 +156,13 @@ void PbRpcChannel::on_mpSocket_readyRead()
 	qDebug("client(%s): Parsed as %s", __FUNCTION__,
 		response->DebugString().c_str());
 
+	if (!response->IsInitialized())
+	{
+		qDebug("RpcChannel: missing required fields in response");
+		qDebug(response->InitializationErrorString().c_str());
+
+		controller->SetFailed("Required fields missing");
+	}
 
 	pendingMethodId = -1;
 	controller = NULL;

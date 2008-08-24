@@ -37,7 +37,7 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
 
 void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcController)
 {
-	char	msg[1024];	// FIXME: hardcoding
+	char	msg[4096];	// FIXME: hardcoding
 	char 	*p = (char *)&msg;
 	int		len;
 
@@ -47,6 +47,13 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
 	if (PbRpcController->Failed())
 	{
 		qDebug("rpc failed");
+		goto _exit;
+	}
+
+	if (!resp->IsInitialized())
+	{
+		qDebug("response missing required fields!!");
+		qDebug(resp->InitializationErrorString().c_str());
 		goto _exit;
 	}
 
@@ -60,9 +67,9 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
 	len = resp->ByteSize();
 	(*(quint16*)(p+4)) = HTONS(len); // len
 
-	qDebug("Server(%s): sending %d bytest to client encoding <%s>", 
+	qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
 		__FUNCTION__, len + 8, resp->DebugString().c_str());
-	BUFDUMP(msg, len + 8);
+	//BUFDUMP(msg, len + 8);
 
 	clientSock->write(msg, len + 8);
 
@@ -116,7 +123,7 @@ void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 
 void RpcServer::when_dataAvail()
 {
-	char	msg[1024]; // FIXME: hardcoding;
+	char	msg[4096]; // FIXME: hardcoding;
 	int		msgLen;
 	char	*p = (char*) &msg;
 	quint16	type, method, len, rsvd;
@@ -128,13 +135,14 @@ void RpcServer::when_dataAvail()
 	LogInt(QString(QByteArray(msg, msgLen).toHex()));
 
 	qDebug("Server %s: rcvd %d bytes", __FUNCTION__, msgLen);
-	BUFDUMP(msg, msgLen);
+	//BUFDUMP(msg, msgLen);
 
 	type = NTOHS(GET16(p+0));
-	qDebug("GET16 = %d/%d, type = %d", GET16(p+0), NTOHS(GET16(p+0)), type);
 	method = NTOHS(GET16(p+2));
 	len = NTOHS(GET16(p+4));
 	rsvd = NTOHS(GET16(p+6));
+	qDebug("type = %d, method = %d, len = %d, rsvd = %d", 
+		type, method, len, rsvd);
 
 	if (type != PB_MSG_TYPE_REQUEST)
 	{
@@ -165,8 +173,21 @@ void RpcServer::when_dataAvail()
 
 	// Serialized data starts from offset 8
 	req->ParseFromArray((void*) (msg+8), len);
+	if (!req->IsInitialized())
+	{
+		qDebug("Missing required fields in request");
+		qDebug(req->InitializationErrorString().c_str());
+		delete req;
+		delete resp;
+
+		goto _error_exit;
+	}
+	qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
+		resp->DebugString().c_str());
 
 	controller = new PbRpcController;
+
+	qDebug("before service->callmethod()");
 
 	service->CallMethod(methodDesc, controller, req, resp,
 		NewCallback(this, &RpcServer::done, resp, controller));

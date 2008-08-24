@@ -6,40 +6,27 @@
 #include <QList>
 #include "stream.h"
 
-class StreamModel;
+//class StreamModel;
 
 class Port {
 
-#if 0 // PB
-	friend class PortStatsModel;
-#endif
-	friend class StreamModel;
-
-	//friend class PbHelper;
-
-	// FIXME: non-friend mechanism
-	//friend QList<Stream>* StreamModel::currentPortStreamList(void); 
+	//friend class StreamModel;
 
 private:
-	OstProto::PortConfig	d;
+	static uint		mAllocStreamId;
+	OstProto::Port	d;
 
+	// FIXME(HI): consider removing mPortId as it is duplicated inside 'd'
 	quint32		mPortId;
 	quint32		mPortGroupId;
 	QString		mUserAlias;			// user defined
 
-	QList<Stream>	mStreams;
+	QList<quint32>	mLastSyncStreamList;
+	QList<Stream>	mStreams;		// sorted by stream's ordinal value
 
-#if 0 // PB
-	quint32		mPortId;
-	QString		mName;
-	QString		mDescription;
-	AdminStatus	mAdminStatus;
-	OperStatus	mOperStatus;
-	ControlMode	mControlMode;
-	
-	quint32		mPortStats[10];		// FIXME(HI):Hardcoding
-#endif
-
+	uint newStreamId();
+	void updateStreamOrdinalsFromIndex();
+	void reorderStreamsByOrdinals();
 public:
 	enum AdminStatus	{ AdminDisable, AdminEnable };
 	enum OperStatus		{ OperDown, OperUp };
@@ -52,7 +39,7 @@ public:
 	const QString& userAlias() const { return mUserAlias; }
 
 	quint32 id() const 
-		{ return d.port_id(); }
+		{ return d.port_id().id(); }
 	const QString name() const 
 		{ return QString().fromStdString(d.name()); }
 	const QString description() const 
@@ -75,10 +62,34 @@ public:
 	void setAlias(QString &alias) { mUserAlias = alias; }
 	//void setExclusive(bool flag);
 
-	void updatePortConfig(OstProto::PortConfig *portConfig);
+	int numStreams() { return mStreams.size(); }
+	Stream& streamByIndex(int index)
+	{
+		Q_ASSERT(index < mStreams.size());
+		return mStreams[index];
+	}
 
-	// FIXME(HIGH): Only for testing
-	void insertDummyStreams();
+	// FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
+	void updatePortConfig(OstProto::Port *port);
+	
+	//! Used by StreamModel
+	//@{
+	bool newStreamAt(int index);
+	bool deleteStreamAt(int index);
+	//@}
+
+	//! Used by MyService::Stub to update from config received from server
+	//@{
+	bool insertStream(uint streamId);
+	bool updateStream(uint streamId, OstProto::Stream *stream);
+	//@}
+
+	void getDeletedStreamsSinceLastSync(OstProto::StreamIdList &streamIdList);
+	void getNewStreamsSinceLastSync(OstProto::StreamIdList &streamIdList);
+	void getModifiedStreamsSinceLastSync(
+		OstProto::StreamConfigList &streamConfigList);
+
+	void when_syncComplete();
 };
 
 #endif

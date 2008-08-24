@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "ui_streamconfigdialog.h"
+#include "port.h"
 #include "stream.h"
 #include "packetmodel.h"
 #include "modeltest.h"
@@ -17,16 +18,18 @@
 **
 */
 
+
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
 	Q_OBJECT
 public:
-	StreamConfigDialog(QList<Stream> *streamList, uint streamIndex, 
-		QWidget *parent = 0);
+	StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
 	~StreamConfigDialog();
 
 private: 
-	QList<Stream>	*mpStreamList;
+	//QList<Stream>	*mpStreamList;
+
+	Port&			mPort;
 	uint			mCurrentStreamIndex;
 	PacketModel		*mpPacketModel;
 	ModelTest		*mpPacketModelTester;

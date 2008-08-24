@@ -5,88 +5,177 @@
 #include "port.h"
 #include "pbhelper.h"
 
+uint Port::mAllocStreamId = 0;
+
+uint Port::newStreamId()
+{
+	return mAllocStreamId++;
+}
 
 Port::Port(quint32 id, quint32 portGroupId)
 {
-	d.set_port_id(id);
+	mPortId = id;
+	d.mutable_port_id()->set_id(id);
 	mPortGroupId = portGroupId;
-
-
-#if 0 // PB
-	// FIXME(HI): TEST only
-	for(int i = 0; i < 10; i++)
-		mPortStats[i] = mPortGroupId*10000+mPortId*100+i;
-#endif
 }
 
-void Port::updatePortConfig(OstProto::PortConfig *portConfig)
+void Port::updatePortConfig(OstProto::Port *port)
 {
+	d.MergeFrom(*port);
+}
 
-	PbHelper	pbh;
+void Port::updateStreamOrdinalsFromIndex()
+{
+	for (int i=0; i < mStreams.size(); i++)
+		mStreams[i].setOrdinal(i);
+}
 
-	pbh.update(&d, portConfig);
-#if 0
-	const ::google::protobuf::Message::Reflection			*ref1;
-	::google::protobuf::Message::Reflection					*ref2;
-	std::vector<const ::google::protobuf::FieldDescriptor*>	list;
+void Port::reorderStreamsByOrdinals()
+{
+	qSort(mStreams);
+}
 
-	qDebug("In %s", __FUNCTION__);
+bool Port::newStreamAt(int index)
+{
+	Stream	s;
 
-	ref1 = portConfig.GetReflection();
-	ref1->ListFields(&list);
+	if (index > mStreams.size())
+		return false;
 
-	ref2 = d.GetReflection();
+	s.setId(newStreamId());
+	mStreams.insert(index, s);
+	updateStreamOrdinalsFromIndex();
 
-	for (uint i=0; i < list.size(); i++)
+	return true;
+}
+
+bool Port::deleteStreamAt(int index)
+{
+	if (index >= mStreams.size())
+		return false;
+
+	mStreams.removeAt(index);
+	updateStreamOrdinalsFromIndex();
+
+	return true;
+}
+
+bool Port::insertStream(uint streamId)
+{
+	Stream	s;
+
+	s.setId(streamId);
+
+	// FIXME(MED): If a stream with id already exists, what do we do?
+	mStreams.append(s);
+
+	// Update mAllocStreamId to take into account the stream id received
+	// from server
+	if (mAllocStreamId <= streamId)
+		mAllocStreamId = streamId + 1;
+
+	return true;
+}
+
+bool Port::updateStream(uint streamId, OstProto::Stream *stream)
+{
+	int i, streamIndex;
+
+	for (i = 0; i < mStreams.size(); i++)
 	{
-		const ::google::protobuf::FieldDescriptor *f1, *f2;
+		if (streamId == mStreams[i].id())
+			goto _found;
+	}
 
-		f1 = list[i];
-		f2 = d.GetDescriptor()->FindFieldByName(f1->name());
-		switch(f2->type())
+	qDebug("%s: Invalid stream id %d", __FUNCTION__, streamId);
+	return false;
+
+_found:
+	streamIndex = i;
+
+	mStreams[streamIndex].update(stream);
+	reorderStreamsByOrdinals();
+
+	return true;
+}
+
+void Port::getDeletedStreamsSinceLastSync(
+	OstProto::StreamIdList &streamIdList)
+{
+	streamIdList.clear_stream_id();
+	for (int i = 0; i < mLastSyncStreamList.size(); i++)
+	{
+		int j;
+
+		for (j = 0; j < mStreams.size(); j++)
 		{
-		case ::google::protobuf::FieldDescriptor::TYPE_UINT32:
-			ref2->SetUInt32(f2, ref1->GetUInt32(f1));
-			break;
-		case ::google::protobuf::FieldDescriptor::TYPE_BOOL:
-			ref2->SetBool(f2, ref1->GetBool(f1));
-			break;
-		case ::google::protobuf::FieldDescriptor::TYPE_STRING:
-			ref2->SetString(f2, ref1->GetString(f1));
-			break;
-		default:
-			qDebug("unhandled Field Type");
-			break;
+			if (mLastSyncStreamList[i] == mStreams[j].id())
+				break;
+		}
+
+		if (j < mStreams.size())
+		{
+			// stream still exists!
+			continue;
+		}	
+		else
+		{
+			// stream has been deleted since last sync
+			OstProto::StreamId	*s;
+
+			s = streamIdList.add_stream_id();
+			s->set_id(mLastSyncStreamList.at(i));
 		}
 	}
-
-	if (msg->GetDescriptor() != OstProto::PortConfig::descriptor())
-	{
-		qDebug("%s: invalid Message Descriptor (%s)", __FUNCTION__,
-			msg->GetDescriptor()->name());
-		goto _error_exit;
-	}
-
-	portConfig = msg;
-
-	// check for "required" param
-	if (!portConfig.has_port_id())
-	{
-		qDebug("%s: invalid Message Descriptor (%s)", __FUNCTION__,
-			msg->GetDescriptor()->name());
-		goto _error_exit;
-	}
-#endif
 }
 
-void Port::insertDummyStreams()
+void Port::getNewStreamsSinceLastSync(
+	OstProto::StreamIdList &streamIdList)
 {
-	mStreams.append(*(new Stream));
-	mStreams[0].setName(QString("%1:%2:0").arg(portGroupId()).arg(id()));
-#if 1
-	mStreams.append(*(new Stream));
-	mStreams[1].setName(QString("%1:%2:1").arg(portGroupId()).arg(id()));
-#endif
+	streamIdList.clear_stream_id();
+	for (int i = 0; i < mStreams.size(); i++)
+	{
+		if (mLastSyncStreamList.contains(mStreams[i].id()))
+		{
+			// existing stream!
+			continue;
+		}
+		else
+		{
+			// new stream!
+			OstProto::StreamId	*s;
+
+			s = streamIdList.add_stream_id();
+			s->set_id(mStreams[i].id());
+		}
+	}
 }
 
+void Port::getModifiedStreamsSinceLastSync(
+	OstProto::StreamConfigList &streamConfigList)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	//streamConfigList.mutable_port_id()->set_id(mPortId);
+	for (int i = 0; i < mStreams.size(); i++)
+	{
+		OstProto::Stream	*s;
+
+		s = streamConfigList.add_stream();
+		mStreams[i].getConfig(mPortId, s);
+	}
+}
+
+
+//
+// ----------- SLOTS -------------
+//
+void Port::when_syncComplete()
+{
+	qSort(mStreams);
+
+	mLastSyncStreamList.clear();
+	for (int i=0; i<mStreams.size(); i++)
+		mLastSyncStreamList.append(mStreams[i].id());
+}
 

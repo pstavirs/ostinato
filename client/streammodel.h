@@ -37,9 +37,11 @@ class StreamModel : public QAbstractTableModel
 		bool removeRows (int row, int count,
 			const QModelIndex & parent = QModelIndex());
 	
+#if 0 // CleanedUp!
 		// FIXME(HIGH): This *is* like a kludge
 		QList<Stream>* currentPortStreamList() 
 			{ return &mCurrentPort->mStreams; }
+#endif
 
 	public slots:
 		void setCurrentPortIndex(const QModelIndex &current);

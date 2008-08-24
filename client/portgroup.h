@@ -31,7 +31,9 @@ private:
 #endif
 	PbRpcChannel						*rpcChannel;
 	::google::protobuf::RpcController	*rpcController;
-	OstProto::OstService::Stub			*serviceStub;
+	::OstProto::OstService::Stub		*serviceStub;
+
+	::OstProto::PortIdList				portIdList;
 public: // FIXME(HIGH): member access
 	QList<Port>		mPorts;
 
@@ -61,6 +63,12 @@ public:
 	void processPortIdList(OstProto::PortIdList *portIdList);
 	void processPortConfigList(OstProto::PortConfigList *portConfigList);
 
+	void getStreamIdList(int portIndex = 0, 
+		OstProto::StreamIdList *streamIdList = NULL);
+	void getStreamConfigList(int portIndex = 0,
+		OstProto::StreamConfigList *streamConfigList = NULL);
+
+	void processModifyStreamAck(OstProto::Ack *ack);
 signals:
 	void portGroupDataChanged(PortGroup* portGroup);
 	void portListAboutToBeChanged(quint32 portGroupId);
@@ -71,6 +79,9 @@ private slots:
 	void on_rpcChannel_connected();
 	void on_rpcChannel_disconnected();
 	void on_rpcChannel_error(QAbstractSocket::SocketError socketError);
+
+public slots:
+	void when_configApply(int portIndex, uint *cookie = NULL);
 #if 0 // PB
 	void on_rpcChannel_when_dataAvail();
 #endif

@@ -151,18 +151,18 @@ message StreamCore {
 
 	enum L3Proto {
 		e_l3_none = 0;
-		e_l3_other = 1;
-		e_l3_ip = 2;
-		e_l3_arp = 3;
+		e_l3_ip = 1;
+		e_l3_arp = 2;
+		//e_l3_other = 3;
 	}
 
 	enum L4Proto {
 		e_l4_none = 0;
-		e_l4_other = 1;
-		e_l4_tcp = 2;
-		e_l4_udp = 3;
-		e_l4_icmp = 4;
-		e_l4_igmp = 5;
+		e_l4_tcp = 1;
+		e_l4_udp = 2;
+		e_l4_icmp = 3;
+		e_l4_igmp = 4;
+		//e_l4_other = 5;
 	}
 
 	enum DataPatternMode {
@@ -202,20 +202,21 @@ message StreamCore {
 }
 
 message StreamId {
-	required uint32	port_id = 1;
-	required uint32	stream_id = 2;
+	required uint32	id = 1;
 }
 
 message Stream {
 
-	required StreamId id = 1;
+	required StreamId stream_id = 1;
 	optional StreamCore core = 2;
 
 	// Protocol data - L2
 	optional Mac 	mac = 51;
+
 	optional Llc 	llc = 52;
 	optional Snap 	snap = 53;
 	optional Eth2 	eth2 = 54;
+	optional Vlan 	vlan = 55;
 
 	// Protocol data - L3	
 	optional Ip		ip = 61;
@@ -237,17 +238,22 @@ message Ack {
 	// TODO
 }
 
+message PortId {
+	required uint32 id = 1;
+}
+
 message PortIdList {
-	repeated uint32 port_id = 1;
+	repeated PortId port_id = 1;
 }
 
 message StreamIdList {
-	repeated StreamId id = 1;
+	required PortId port_id = 1;
+	repeated StreamId stream_id = 2;
 }
 
 
-message PortConfig {
-	required uint32 port_id = 1;
+message Port {
+	required PortId port_id = 1;
 	optional string name = 2;
 	optional string description = 3;
 	optional bool is_enabled = 4;
@@ -256,11 +262,12 @@ message PortConfig {
 }
 
 message PortConfigList {
-	repeated PortConfig list = 1;
+	repeated Port port = 1;
 }
 
 message StreamConfigList {
-	repeated Stream stream = 1;
+	required PortId	port_id = 1;
+	repeated Stream stream = 2;
 }
 
 message CaptureBuffer {
@@ -283,7 +290,7 @@ service OstService {
 	rpc getPortIdList(Void) returns (PortIdList);
 	rpc getPortConfig(PortIdList) returns (PortConfigList);
 
-	rpc getStreamIdList(PortIdList) returns (StreamIdList);
+	rpc getStreamIdList(PortId) returns (StreamIdList);
 	rpc getStreamConfig(StreamIdList) returns (StreamConfigList);
 	rpc addStream(StreamIdList) returns (Ack);
 	rpc deleteStream(StreamIdList) returns (Ack);

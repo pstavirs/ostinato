@@ -2,34 +2,31 @@
 #include "streamconfigdialog.h"
 #include "stream.h"
 
-// TODO(LOW): Remove
 #include "modeltest.h"
 
-StreamConfigDialog::StreamConfigDialog(QList<Stream> *streamList,
-	uint streamIndex, QWidget *parent) : QDialog (parent)
+// TODO(HI): Write HexLineEdit::setNum() and num() and use it in 
+// Load/Store stream methods
+
+StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
+	QWidget *parent) : QDialog (parent), mPort(port)
 {
 	setupUi(this);
 	setupUiExtra();
 	
-	// FIXME(MED): Assumption that streamlist and streamIndex are valid
-	mpStreamList = streamList;
+	//mpStreamList = streamList;
 	mCurrentStreamIndex = streamIndex;
 	LoadCurrentStream();
 
-	mpPacketModel = new PacketModel(&((*mpStreamList)[mCurrentStreamIndex]),
+	mpPacketModel = new PacketModel(&mPort.streamByIndex(mCurrentStreamIndex),
 		this);
 	tvPacketTree->setModel(mpPacketModel);
 	mpPacketModelTester = new ModelTest(mpPacketModel);
 	tvPacketTree->header()->hide();
 
-	qDebug("stream %p %d/%d loaded", 
-		mpStreamList, mCurrentStreamIndex, mpStreamList->size());
 
-// FIXME(MED): Enable this navigation
-#if 0
-	pbPrev->setDisabled((currStreamIdx == 0));
-	pbNext->setDisabled((currStreamIdx == 2));
-#endif
+	// FIXME(MED): Enable this navigation
+	pbPrev->setDisabled(true);
+	pbNext->setDisabled(true);
 }
 
 void StreamConfigDialog::setupUiExtra()
@@ -304,7 +301,7 @@ void StreamConfigDialog::on_lePattern_editingFinished()
 
 void StreamConfigDialog::LoadCurrentStream()
 {
-	Stream	*pStream = &((*mpStreamList)[mCurrentStreamIndex]);
+	Stream	*pStream = &mPort.streamByIndex(mCurrentStreamIndex);
 	QString	str;
 
 	qDebug("loading pStream %p", pStream);
@@ -342,19 +339,56 @@ void StreamConfigDialog::LoadCurrentStream()
 				break;
 		}
 
-// TODO
+		leDsap->setText(uintToHexStr(pStream->llc()->dsap(), str, 1));
+		leSsap->setText(uintToHexStr(pStream->llc()->ssap(), str, 1));
+		leControl->setText(uintToHexStr(pStream->llc()->ctl(), str, 1));
+		leOui->setText(uintToHexStr(pStream->snap()->oui(), str, 3));
+
+		leType->setText(uintToHexStr(pStream->eth2()->type(), str, 2));
+
+		switch(pStream->l3Proto())
+		{
+		case Stream::e_l3_none:
+			rbL3None->setChecked(true);
+			break;
+		case Stream::e_l3_ip:
+			rbL3Ipv4->setChecked(true);
+			break;
+		case Stream::e_l3_arp:
+			rbL3Arp->setChecked(true);
+			break;
+		default:
+			qDebug("%s: unknown L3 Protocol %d", __FUNCTION__,
+				pStream->l3Proto());
+		}
+
+		switch(pStream->l4Proto())
+		{
+		case Stream::e_l4_none:
+			rbL4None->setChecked(true);
+			break;
+		case Stream::e_l4_tcp:
+			rbL4Tcp->setChecked(true);
+			break;
+		case Stream::e_l4_udp:
+			rbL4Udp->setChecked(true);
+			break;
+		case Stream::e_l4_icmp:
+			rbL4Icmp->setChecked(true);
+			break;
+		case Stream::e_l4_igmp:
+			rbL4Igmp->setChecked(true);
+			break;
+		default:
+			qDebug("%s: unknown l4 Protocol %d", __FUNCTION__,
+				pStream->l4Proto());
+		}
+// PB (not needed anymore?)
 #if 0
-		leDsap->setText(uintToHexStr(pStream->proto.dsap, str, 1));
-		leSsap->setText(uintToHexStr(pStream->proto.ssap, str, 1));
-		leControl->setText(uintToHexStr(pStream->proto.ctl, str, 1));
-		leOui->setText(uintToHexStr((pStream->proto.ouiMsb << 16 + pStream->proto.ouiLshw), str, 3));
-
-		leType->setText(uintToHexStr(pStream->proto.etherType, str, 2));
-
 		// Check for specific supported protocols first ...
-		if (pStream->proto.etherType == ETH_TYP_IP)
+		if (pStream->eth2()->type() == ETH_TYP_IP)
 			rbL3Ipv4->setChecked(TRUE);
-		else if (pStream->proto.etherType == ETH_TYP_ARP)
+		else if (pStream->eth2()->type() == ETH_TYP_ARP)
 			rbL3Arp->setChecked(TRUE);
 
 		// ... then for None/Other
@@ -390,21 +424,29 @@ void StreamConfigDialog::LoadCurrentStream()
 			cmbSrcMacMode->setCurrentIndex(pStream->mac()->srcMacMode());
 			leSrcMacCount->setText(str.setNum(pStream->mac()->srcMacCount()));
 			leSrcMacStep->setText(str.setNum(pStream->mac()->srcMacStep()));
-#if 0		
-			cmbCvlanPrio->setCurrentIndex(pStream->l2.eth.cvlanPrio);
-			cmbCvlanCfi->setCurrentIndex(pStream->l2.eth.cvlanCfi);
-			leCvlanId->setText(str.setNum(pStream->l2.eth.cvlanId));
-			leCvlanTpid->setText(str.setNum(pStream->l2.eth.ctpid));
-			cbCvlanTpidOverride->setChecked((pStream->l2.eth.vlanMask & VM_CVLAN_TPID_OVERRIDE) > 0);
-			gbCvlan->setChecked((pStream->l2.eth.vlanMask & VM_CVLAN_TAGGED) > 0);
 
-			cmbSvlanPrio->setCurrentIndex(pStream->l2.eth.svlanPrio);
-			cmbSvlanCfi->setCurrentIndex(pStream->l2.eth.svlanCfi);
-			leSvlanId->setText(str.setNum(pStream->l2.eth.svlanId));
-			leSvlanTpid->setText(str.setNum(pStream->l2.eth.stpid));
-			cbSvlanTpidOverride->setChecked((pStream->l2.eth.vlanMask & VM_SVLAN_TPID_OVERRIDE) > 0);
-			gbSvlan->setChecked((pStream->l2.eth.vlanMask & VM_SVLAN_TAGGED) > 0);
-#endif
+			{
+				VlanProtocol			*vlan = pStream->vlan();
+				VlanProtocol::VlanFlags	f;
+
+				cmbCvlanPrio->setCurrentIndex(vlan->cvlanPrio());
+				cmbCvlanCfi->setCurrentIndex(vlan->cvlanCfi());
+				leCvlanId->setText(str.setNum(vlan->cvlanId()));
+				leCvlanTpid->setText(str.setNum(vlan->ctpid()));
+				cbCvlanTpidOverride->setChecked(vlan->vlanFlags().testFlag(
+					VlanProtocol::VlanCtpidOverride));
+				gbCvlan->setChecked(vlan->vlanFlags().testFlag(
+					VlanProtocol::VlanCvlanTagged));
+
+				cmbSvlanPrio->setCurrentIndex(vlan->svlanPrio());
+				cmbSvlanCfi->setCurrentIndex(vlan->svlanCfi());
+				leSvlanId->setText(str.setNum(vlan->svlanId()));
+				leSvlanTpid->setText(str.setNum(vlan->stpid()));
+				cbSvlanTpidOverride->setChecked(vlan->vlanFlags().testFlag(
+					VlanProtocol::VlanStpidOverride));
+				gbSvlan->setChecked(vlan->vlanFlags().testFlag(
+					VlanProtocol::VlanSvlanTagged));
+			}
 		}
 	}
 
@@ -450,73 +492,75 @@ void StreamConfigDialog::LoadCurrentStream()
 
 		// L3 | ARP
 		{
-			// TODO
+			// TODO(LOW)
 		}
 	}
 
-#if 0
 	// L4
 	{
 		// L4 | TCP
 		{
-			leTcpSrcPort->setText(str.setNum(pStream->l4.tcp.srcPort));
-			leTcpDstPort->setText(str.setNum(pStream->l4.tcp.dstPort));
+			leTcpSrcPort->setText(str.setNum(pStream->tcp()->srcPort()));
+			leTcpDstPort->setText(str.setNum(pStream->tcp()->dstPort()));
 
-			leTcpSeqNum->setText(str.setNum(pStream->l4.tcp.seqNum));
-			leTcpAckNum->setText(str.setNum(pStream->l4.tcp.ackNum));
+			leTcpSeqNum->setText(str.setNum(pStream->tcp()->seqNum()));
+			leTcpAckNum->setText(str.setNum(pStream->tcp()->ackNum()));
 
-			leTcpHdrLen->setText(str.setNum(pStream->l4.tcp.hdrLen));
-			cbTcpHdrLenOverride->setChecked((pStream->l4.tcp.tcpMask & TM_OVERRIDE_HDRLEN) > 0);
+			leTcpHdrLen->setText(str.setNum(pStream->tcp()->hdrLen()));
+			cbTcpHdrLenOverride->setChecked((pStream->tcp()->tcpFlags().
+				testFlag(TcpProtocol::TcpOverrideHdrLen)));
 
-			leTcpWindow->setText(str.setNum(pStream->l4.tcp.window));
+			leTcpWindow->setText(str.setNum(pStream->tcp()->window()));
 
-			leTcpCksum->setText(str.setNum(pStream->l4.tcp.cksum));
-			cbTcpCksumOverride->setChecked((pStream->l4.tcp.tcpMask & TM_OVERRIDE_CKSUM) > 0);
+			leTcpCksum->setText(str.setNum(pStream->tcp()->cksum()));
+			cbTcpCksumOverride->setChecked((pStream->tcp()->tcpFlags().
+				testFlag(TcpProtocol::TcpOverrideCksum)));
 
-			leTcpUrgentPointer->setText(str.setNum(pStream->l4.tcp.urgPtr));
+			leTcpUrgentPointer->setText(str.setNum(pStream->tcp()->urgPtr()));
 
-			cbTcpFlagsUrg->setChecked((pStream->l4.tcp.flags & TCP_FLAG_URG) > 0);
-			cbTcpFlagsAck->setChecked((pStream->l4.tcp.flags & TCP_FLAG_ACK) > 0);
-			cbTcpFlagsPsh->setChecked((pStream->l4.tcp.flags & TCP_FLAG_PSH) > 0);
-			cbTcpFlagsRst->setChecked((pStream->l4.tcp.flags & TCP_FLAG_RST) > 0);
-			cbTcpFlagsSyn->setChecked((pStream->l4.tcp.flags & TCP_FLAG_SYN) > 0);
-			cbTcpFlagsFin->setChecked((pStream->l4.tcp.flags & TCP_FLAG_FIN) > 0);
+			cbTcpFlagsUrg->setChecked((pStream->tcp()->flags() & TCP_FLAG_URG) > 0);
+			cbTcpFlagsAck->setChecked((pStream->tcp()->flags() & TCP_FLAG_ACK) > 0);
+			cbTcpFlagsPsh->setChecked((pStream->tcp()->flags() & TCP_FLAG_PSH) > 0);
+			cbTcpFlagsRst->setChecked((pStream->tcp()->flags() & TCP_FLAG_RST) > 0);
+			cbTcpFlagsSyn->setChecked((pStream->tcp()->flags() & TCP_FLAG_SYN) > 0);
+			cbTcpFlagsFin->setChecked((pStream->tcp()->flags() & TCP_FLAG_FIN) > 0);
 		}
 
 		// L4 | UDP
 		{
-			leUdpSrcPort->setText(str.setNum(pStream->l4.udp.srcPort));
-			leUdpDstPort->setText(str.setNum(pStream->l4.udp.dstPort));
+			leUdpSrcPort->setText(str.setNum(pStream->udp()->srcPort()));
+			leUdpDstPort->setText(str.setNum(pStream->udp()->dstPort()));
 
-			leUdpLength->setText(str.setNum(pStream->l4.udp.totLen));
-			cbUdpLengthOverride->setChecked((pStream->l4.udp.udpMask & UM_OVERRIDE_TOTLEN) > 0);
+			leUdpLength->setText(str.setNum(pStream->udp()->totLen()));
+			cbUdpLengthOverride->setChecked((pStream->udp()->udpFlags().
+				testFlag(UdpProtocol::UdpOverrideTotLen)));
 
-			leUdpCksum->setText(str.setNum(pStream->l4.udp.cksum));
-			cbUdpCksumOverride->setChecked((pStream->l4.udp.udpMask & UM_OVERRIDE_CKSUM) > 0);
+
+			leUdpCksum->setText(str.setNum(pStream->udp()->cksum()));
+			cbUdpCksumOverride->setChecked((pStream->udp()->udpFlags().
+				testFlag(UdpProtocol::UdpOverrideCksum)));
 		}
 
 		// L4 | ICMP
 		{
-			// TODO
+			// TODO(LOW)
 		}
 
 		// L4 | IGMP
 		{
-			// TODO
+			// TODO(LOW)
 		}
 	}
-#endif
 }
 
 void StreamConfigDialog::StoreCurrentStream()
 {
-	Stream	*pStream = &(*mpStreamList)[mCurrentStreamIndex];
+	Stream	*pStream = &mPort.streamByIndex(mCurrentStreamIndex);
 	QString	str;
 	bool	isOk;
 
 	qDebug("storing pStream %p", pStream);
 
-#if 1 // FIXME: Temp till we use protobuff accessors
 	// Meta Data
 	pStream->setPatternMode((Stream::DataPatternMode) cmbPatternMode->currentIndex());
 	pStream->setPattern(lePattern->text().remove(QChar(' ')).toULong(&isOk, 16));
@@ -525,7 +569,7 @@ void StreamConfigDialog::StoreCurrentStream()
 	pStream->setFrameLen(lePktLen->text().toULong(&isOk));
 	pStream->setFrameLenMin(lePktLenMin->text().toULong(&isOk));
 	pStream->setFrameLenMax(lePktLenMax->text().toULong(&isOk));
-#endif
+
 	// Protocols
 	{
 		if (rbFtNone->isChecked()) 
@@ -540,28 +584,39 @@ void StreamConfigDialog::StoreCurrentStream()
 			pStream->setFrameType(Stream::e_ft_snap);
 		qDebug("store ft(%d)\n", pStream->frameType());
 
-#if 0
-		pStream->proto.dsap = leDsap->text().remove(QChar(' ')).toULong(&isOk, 16);
-		pStream->proto.ssap = leSsap->text().remove(QChar(' ')).toULong(&isOk, 16);
-		pStream->proto.ctl = leControl->text().remove(QChar(' ')).toULong(&isOk, 16);
-		pStream->proto.ouiMsb = leOui->text().remove(QChar(' ')).toULong(&isOk, 16) >> 16;
-		pStream->proto.ouiLshw = 0x0000FFFF & leOui->text().remove(QChar(' ')).toULong(&isOk, 16);
-		pStream->proto.etherType = leType->text().remove(QChar(' ')).toULong(&isOk, 16);
+		pStream->llc()->setDsap(leDsap->text().remove(QChar(' ')).toULong(&isOk, 16));
+		pStream->llc()->setSsap(leSsap->text().remove(QChar(' ')).toULong(&isOk, 16));
+		pStream->llc()->setCtl(leControl->text().remove(QChar(' ')).toULong(&isOk, 16));
+		pStream->snap()->setOui(leOui->text().remove(QChar(' ')).toULong(&isOk, 16));
+		pStream->eth2()->setType(leType->text().remove(QChar(' ')).toULong(&isOk, 16));
 
-		pStream->proto.ipProto = leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16);
-
-		// Just check for None/Other - no need to do anything for specific supported protocols
-		pStream->proto.protoMask = 0;
 		if (rbL3None->isChecked())
-			pStream->proto.protoMask |= PM_L3_PROTO_NONE;
-		else if (rbL3Other->isChecked())
-			pStream->proto.protoMask |= PM_L3_PROTO_OTHER;
+			pStream->setL3Proto(Stream::e_l3_none);
+		else if (rbL3Ipv4->isChecked())
+			pStream->setL3Proto(Stream::e_l3_ip);
+		else if (rbL3Arp->isChecked())
+			pStream->setL3Proto(Stream::e_l3_arp);
+		else
+		{
+			qCritical("No L3 Protocol??? Problem in Code!!!");
+			pStream->setL3Proto(Stream::e_l3_none);
+		}
 
 		if (rbL4None->isChecked())
-			pStream->proto.protoMask |= PM_L4_PROTO_NONE;
-		else if (rbL4Other->isChecked())
-			pStream->proto.protoMask |= PM_L4_PROTO_OTHER;
-#endif
+			pStream->setL4Proto(Stream::e_l4_none);
+		else if (rbL4Tcp->isChecked())
+			pStream->setL4Proto(Stream::e_l4_tcp);
+		else if (rbL4Udp->isChecked())
+			pStream->setL4Proto(Stream::e_l4_udp);
+		else if (rbL4Icmp->isChecked())
+			pStream->setL4Proto(Stream::e_l4_icmp);
+		else if (rbL4Igmp->isChecked())
+			pStream->setL4Proto(Stream::e_l4_igmp);
+		else
+		{
+			qCritical("No L4 Protocol??? Problem in Code!!!");
+			pStream->setL4Proto(Stream::e_l4_none);
+		}
 	}
 
 	// L2
@@ -587,27 +642,30 @@ void StreamConfigDialog::StoreCurrentStream()
 
 				leSrcMacStep->text().toULong(&isOk));
 
-#if 0
-			pStream->l2.eth.vlanMask = 0;
+			{
+				VlanProtocol			*vlan = pStream->vlan();
+				VlanProtocol::VlanFlags	f = 0;
 
-			pStream->l2.eth.cvlanPrio = cmbCvlanPrio->currentIndex();
-			pStream->l2.eth.cvlanCfi = cmbCvlanCfi->currentIndex();
-			pStream->l2.eth.cvlanId = leCvlanId->text().toULong(&isOk);
-			pStream->l2.eth.ctpid = leCvlanTpid->text().remove(QChar(' ')).toULong(&isOk);
-			if (cbCvlanTpidOverride->isChecked())
-				pStream->l2.eth.vlanMask |= VM_CVLAN_TPID_OVERRIDE;
-			if (gbCvlan->isChecked())
-				pStream->l2.eth.vlanMask |= VM_CVLAN_TAGGED;
+				vlan->setCvlanPrio(cmbCvlanPrio->currentIndex());
+				vlan->setCvlanCfi(cmbCvlanCfi->currentIndex());
+				vlan->setCvlanId(leCvlanId->text().toULong(&isOk));
+				vlan->setCtpid(leCvlanTpid->text().remove(QChar(' ')).toULong(&isOk));
+				if (cbCvlanTpidOverride->isChecked())
+					f |= VlanProtocol::VlanCtpidOverride;
+				if (gbCvlan->isChecked())
+					f |= VlanProtocol::VlanCvlanTagged;
 
-			pStream->l2.eth.svlanPrio = cmbSvlanPrio->currentIndex();
-			pStream->l2.eth.svlanCfi = cmbSvlanCfi->currentIndex();
-			pStream->l2.eth.svlanId = leSvlanId->text().toULong(&isOk);
-			pStream->l2.eth.stpid = leSvlanTpid->text().remove(QChar(' ')).toULong(&isOk);
-			if (cbSvlanTpidOverride->isChecked())
-				pStream->l2.eth.vlanMask |= VM_SVLAN_TPID_OVERRIDE;
-			if (gbSvlan->isChecked())
-				pStream->l2.eth.vlanMask |= VM_SVLAN_TAGGED;
-#endif
+				vlan->setSvlanPrio(cmbSvlanPrio->currentIndex());
+				vlan->setSvlanCfi(cmbSvlanCfi->currentIndex());
+				vlan->setSvlanId(leSvlanId->text().toULong(&isOk));
+				vlan->setStpid(leSvlanTpid->text().remove(QChar(' ')).toULong(&isOk));
+				if (cbSvlanTpidOverride->isChecked())
+					f |= VlanProtocol::VlanStpidOverride;
+				if (gbSvlan->isChecked())
+					f |= VlanProtocol::VlanSvlanTagged;
+
+				vlan->setVlanFlags(f);
+			}
 		}
 	}
 
@@ -616,7 +674,8 @@ void StreamConfigDialog::StoreCurrentStream()
 		// L3 | IP
 		{
 			IpProtocol *ip = pStream->ip();
-			IpProtocol::IpFlags f;
+			IpProtocol::IpFlags f = 0;
+			int ff = 0;
 
 			ip->setVer(leIpVersion->text().toULong(&isOk));
 			if (cbIpVersionOverride->isChecked())
@@ -634,7 +693,6 @@ void StreamConfigDialog::StoreCurrentStream()
 			ip->setId(leIpId->text().remove(QChar(' ')).toULong(&isOk, 16));
 			ip->setFragOfs(leIpFragOfs->text().toULong(&isOk));
 
-			int ff;
 			if (cbIpFlagsDf->isChecked()) ff |= IP_FLAG_DF;
 			if (cbIpFlagsMf->isChecked()) ff |= IP_FLAG_MF;
 			ip->setFlags(ff);
@@ -661,71 +719,79 @@ void StreamConfigDialog::StoreCurrentStream()
 
 		// L3 | ARP
 		{
-			// TODO
+			// TODO(LOW)
 		}
 	}
 
-// TODO
-#if 0
 	// L4
 	{
 		// L4 | TCP
 		{
-			pStream->l4.tcp.tcpMask = 0;
+			TcpProtocol *tcp = pStream->tcp();
+			TcpProtocol::TcpFlags f = 0;
+			int ff = 0;
 
-			pStream->l4.tcp.srcPort = leTcpSrcPort->text().toULong(&isOk);
-			pStream->l4.tcp.dstPort = leTcpDstPort->text().toULong(&isOk);
+			tcp->setSrcPort(leTcpSrcPort->text().toULong(&isOk));
+			tcp->setDstPort(leTcpDstPort->text().toULong(&isOk));
 
-			pStream->l4.tcp.seqNum = leTcpSeqNum->text().toULong(&isOk);
-			pStream->l4.tcp.ackNum = leTcpAckNum->text().toULong(&isOk);
+			tcp->setSeqNum(leTcpSeqNum->text().toULong(&isOk));
+			tcp->setAckNum(leTcpAckNum->text().toULong(&isOk));
 
-			pStream->l4.tcp.hdrLen = leTcpHdrLen->text().toULong(&isOk);
+			tcp->setHdrLen(leTcpHdrLen->text().toULong(&isOk));
 			if (cbTcpHdrLenOverride->isChecked())
-				pStream->l4.tcp.tcpMask |= TM_OVERRIDE_HDRLEN;
+				f |= TcpProtocol::TcpOverrideHdrLen;
 
-			pStream->l4.tcp.window = leTcpWindow->text().toULong(&isOk);
+			tcp->setWindow(leTcpWindow->text().toULong(&isOk));
 
-			pStream->l4.tcp.cksum = leTcpCksum->text().remove(QChar(' ')).toULong(&isOk);
+			tcp->setCksum(leTcpCksum->text().remove(QChar(' ')).toULong(&isOk));
 			if (cbTcpCksumOverride->isChecked())
-				pStream->l4.tcp.tcpMask |= TM_OVERRIDE_CKSUM;
+				f |= TcpProtocol::TcpOverrideCksum;
 
-			pStream->l4.tcp.urgPtr = leTcpUrgentPointer->text().toULong(&isOk);
+			tcp->setUrgPtr(leTcpUrgentPointer->text().toULong(&isOk));
 
-			pStream->l4.tcp.flags = 0;
-			if (cbTcpFlagsUrg->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_URG;
-			if (cbTcpFlagsAck->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_ACK;
-			if (cbTcpFlagsPsh->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_PSH;
-			if (cbTcpFlagsRst->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_RST;
-			if (cbTcpFlagsSyn->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_SYN;
-			if (cbTcpFlagsFin->isChecked()) pStream->l4.tcp.flags |= TCP_FLAG_FIN;
+			if (cbTcpFlagsUrg->isChecked()) ff |= TCP_FLAG_URG;
+			if (cbTcpFlagsAck->isChecked()) ff |= TCP_FLAG_ACK;
+			if (cbTcpFlagsPsh->isChecked()) ff |= TCP_FLAG_PSH;
+			if (cbTcpFlagsRst->isChecked()) ff |= TCP_FLAG_RST;
+			if (cbTcpFlagsSyn->isChecked()) ff |= TCP_FLAG_SYN;
+			if (cbTcpFlagsFin->isChecked()) ff |= TCP_FLAG_FIN;
+			tcp->setFlags(ff);
+
+			tcp->setTcpFlags(f);
 		}
 
 		// L4 | UDP
 		{
-			pStream->l4.udp.udpMask = 0;
+			UdpProtocol *udp = pStream->udp();
+			UdpProtocol::UdpFlags f = 0;
 
-			pStream->l4.udp.srcPort = leUdpSrcPort->text().toULong(&isOk);
-			pStream->l4.udp.dstPort = leUdpDstPort->text().toULong(&isOk);
+			udp->setSrcPort(leUdpSrcPort->text().toULong(&isOk));
+			udp->setDstPort(leUdpDstPort->text().toULong(&isOk));
 
-			pStream->l4.udp.totLen = leUdpLength->text().toULong(&isOk);
-			if (cbUdpLengthOverride->isChecked()) pStream->l4.udp.udpMask |= UM_OVERRIDE_TOTLEN;
+			udp->setTotLen(leUdpLength->text().toULong(&isOk));
 
-			pStream->l4.udp.cksum = leUdpCksum->text().remove(QChar(' ')).toULong(&isOk);
-			if (cbUdpCksumOverride->isChecked()) pStream->l4.udp.udpMask |= UM_OVERRIDE_CKSUM;
+			if (cbUdpLengthOverride->isChecked())
+				f |= UdpProtocol::UdpOverrideTotLen;
+
+			udp->setCksum(leUdpCksum->text().remove(QChar(' ')).toULong(&isOk));
+			if (cbUdpCksumOverride->isChecked())
+				f |= UdpProtocol::UdpOverrideCksum;
+
+			udp->setUdpFlags(f);
 		}
 
 		// L4 | ICMP
 		{
-			// TODO
+			// TODO)(LOW)
 		}
 
 		// L4 | IGMP
 		{
-			// TODO
+			// TODO(LOW)
 		}		
 	}
-#endif
 }
+
 void StreamConfigDialog::on_pbOk_clicked()
 {
 	// Store dialog contents into stream

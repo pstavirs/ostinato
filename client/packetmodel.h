@@ -4,6 +4,8 @@
 #include <QAbstractItemModel>
 #include "stream.h"
 
+#define NEW_IMPL			// FIXME(HI) - Use this and remove old one
+
 class PacketModel: public QAbstractItemModel
 {
 
@@ -27,11 +29,15 @@ private:
 			quint16	type;
 #define ITYP_PROTOCOL	1
 #define ITYP_FIELD		2
-			quint16	protocol;
+			quint16	protocol;	// protocol is valid for both ITYPs
 		} ws;
 	} IndexId;
 
 	Stream	*mpStream;
+
+#ifdef NEW_IMPL
+// Nothing - required stuff is part of Stream Class
+#else
 	QList<uint> mPacketProtocols;
 
 	typedef struct
@@ -49,6 +55,8 @@ private:
 		QList<FieldInfo>	fieldList;
 	} ProtocolInfo;
 
+	//! Contains registration info (name, size etc) for all protocols
+	// and fields within the protocol
 	QList<ProtocolInfo> mProtocols;
 	void registerProto(uint handle, char *name, char *abbr);
 	void registerField(uint protoHandle, char *name, char *abbr);
@@ -101,6 +109,8 @@ private:
 
 #define PTYP_INVALID		0
 #define PTYP_DATA			0xFF
+
+#endif // NEW_IMPL
 
 #define FROL_NAME			1
 #define FROL_TEXT_VALUE		2

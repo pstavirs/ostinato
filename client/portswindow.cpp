@@ -56,9 +56,13 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 		qDebug("%s: invalid index", __FUNCTION__);
 		return;
 	}
+#if 0 // CleanedUp!
 	// FIXME(MED): This way of passing params must be changed
 	scd = new StreamConfigDialog(plm->getStreamModel()->currentPortStreamList(),
 		(uint) index.row(), this);
+#endif
+	scd = new StreamConfigDialog(plm->port(tvPortList->currentIndex()),
+		index.row(), this);
 	qDebug("stream list activated\n");
 	scd->exec(); // TODO: chk retval
 	delete scd;
@@ -206,7 +210,43 @@ _EXIT:
 
 void PortsWindow::on_pbApply_clicked()
 {
-{
+	QModelIndex	curPort;
+	QModelIndex curPortGroup;
+
+	curPort = tvPortList->selectionModel()->currentIndex();
+	if (!curPort.isValid())
+	{
+		qDebug("%s: curPort is invalid", __FUNCTION__);
+		goto _exit;
+	}
+
+	if (!plm->isPort(curPort))
+	{
+		qDebug("%s: curPort is not a port", __FUNCTION__);
+		goto _exit;
+	}
+
+	curPortGroup = plm->getPortModel()->parent(curPort);
+	if (!curPortGroup.isValid())
+	{
+		qDebug("%s: curPortGroup is invalid", __FUNCTION__);
+		goto _exit;
+	}
+	if (!plm->isPortGroup(curPortGroup))
+	{
+		qDebug("%s: curPortGroup is not a portGroup", __FUNCTION__);
+		goto _exit;
+	}
+
+	// FIXME(HI): shd this be a signal?
+	//portGroup.when_configApply(port);
+	// FIXME(MED): mixing port id and index!!!
+	plm->portGroup(curPortGroup).when_configApply(plm->port(curPort).id());
+
+_exit:
+	return;
+
+#if 0
 	// TODO (LOW): This block is for testing only
 	QModelIndex	current = tvPortList->selectionModel()->currentIndex();
 
@@ -214,7 +254,7 @@ void PortsWindow::on_pbApply_clicked()
 		qDebug("current =  %llx", current.internalId());
 	else
 		qDebug("current is invalid");
-}
+#endif
 }
 
 void PortsWindow::on_actionNew_Port_Group_triggered()

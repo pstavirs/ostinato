@@ -3,6 +3,28 @@
 
 #define LOG(...)   {sprintf(logStr, __VA_ARGS__); host->Log(logStr);}
 
+int MyService::getStreamIndex(unsigned int portIdx,
+	unsigned int streamId)
+{
+	int i;
+
+	// note: index and id are interchageable for port but not for stream
+
+	Q_ASSERT(portIdx < numPorts);
+
+	for (i = 0; i < portInfo[portIdx].streamList.size(); i++)
+	{
+		if (streamId == portInfo[portIdx].streamList.at(i).d.stream_id().id())
+			goto _found;
+	}
+
+	qDebug("%s: stream id %d not found", __PRETTY_FUNCTION__, streamId);
+	return -1;
+
+_found:
+	return i;
+}
+
 MyService::MyService(AbstractHost *host)
 {
     pcap_if_t *dev;
@@ -24,18 +46,12 @@ MyService::MyService(AbstractHost *host)
 	/* Count number of local ports */
     for(dev = alldevs; dev != NULL; dev = dev->next)
 		numPorts++;
-   
+
    	portInfo = new PortInfo[numPorts];
 
     /* Populate and Print the list */
-    for(i=0, dev=alldevs; dev!=NULL; i++, dev=dev->next)
+    for(i=0, dev=alldevs; (i < numPorts) && (dev!=NULL); i++, dev=dev->next)
     {
-#if 0 // PB
-		//portInfo[i].portId = i;
-		//portInfo[i].dev = dev;
-		//portInfo[i].streamHead = NULL;
-		//portInfo[i].streamTail = NULL;
-#endif
 		portInfo[i].setId(i);
 		portInfo[i].setPcapDev(dev);
 #if 1
@@ -44,8 +60,17 @@ MyService::MyService(AbstractHost *host)
 		{
             LOG(" (%s)\n", dev->description);
 		}
-        else
-            LOG(" (No description available)\n");
+#endif
+#if 0
+		// FIXME(HI): Testing only!!!!
+		{
+			StreamInfo		s;
+
+			s.d.mutable_stream_id()->set_id(0);
+			portInfo[i].streamList.append(s);
+			s.d.mutable_stream_id()->set_id(1);
+			portInfo[i].streamList.append(s);
+		}
 #endif
     }
     
@@ -61,11 +86,7 @@ _fail:
 
 MyService::~MyService()
 {
-	unsigned int i;
-#if 0 // PB?????
-	for (i = 0; i < numPorts; i++)
-		DeleteAllStreams(i);
-#endif
+	delete portInfo;
     pcap_freealldevs(alldevs);
 }
 
@@ -75,14 +96,15 @@ void MyService::getPortIdList(
 	::OstProto::PortIdList* response,
 	::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 
 	for (uint i = 0; i < numPorts; i++)
-		response->add_port_id(portInfo[i].d.port_id());
+	{
+		::OstProto::PortId	*p;
 
-	qDebug("Server(%s): portid count = %d", __FUNCTION__, response->port_id_size());
-
-	qDebug("Server(%s): %s", __FUNCTION__, response->DebugString().c_str());
+		p = response->add_port_id();
+		p->set_id(portInfo[i].d.port_id().id());
+	}
 
 	done->Run();
 }
@@ -92,19 +114,19 @@ const ::OstProto::PortIdList* request,
 ::OstProto::PortConfigList* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 
 	for (int i=0; i < request->port_id_size(); i++)
 	{
-		unsigned int id;
+		unsigned int idx;
 
-		id = request->port_id(i);
-		if (id < numPorts)
+		idx = request->port_id(i).id();
+		if (idx < numPorts)
 		{
-			OstProto::PortConfig	*p;
+			OstProto::Port	*p;
 
-			p = response->add_list();
-			p->CopyFrom(portInfo[request->port_id(i)].d);
+			p = response->add_port();
+			p->CopyFrom(portInfo[idx].d);
 		}
 	}
 
@@ -112,34 +134,34 @@ const ::OstProto::PortIdList* request,
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,
-const ::OstProto::PortIdList* request,
+const ::OstProto::PortId* request,
 ::OstProto::StreamIdList* response,
 ::google::protobuf::Closure* done)
 {
+	unsigned int portIdx;
 
-	for (int i = 0; i < request->port_id_size(); i++)
+	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	portIdx = request->id();
+	if (portIdx >= numPorts)
 	{
-		unsigned int portId;
-
-		portId = request->port_id(i);
-		if (portId >= numPorts)
-		{
-			qDebug("%s: Invalid port id %d", __FUNCTION__, portId);
-			continue;		// TODO: Partial status of RPC
-		}
-
-		for (int j = 0; j < portInfo[portId].streamList.size(); j++)
-		{
-			OstProto::StreamId	*s, *q;
-
-			q = portInfo[portId].streamList[j].d.mutable_id();
-			assert(q->port_id() == portId);
-
-			s = response->add_id();
-			s->set_port_id(portId);
-			s->set_stream_id(q->stream_id());
-		}
+		qDebug("%s: Invalid port id %d", __PRETTY_FUNCTION__, portIdx);
+		controller->SetFailed("Invalid Port Id");
+		goto _exit;		// TODO(LOW): Partial status of RPC
 	}
+
+	response->mutable_port_id()->set_id(portIdx);
+	for (int j = 0; j < portInfo[portIdx].streamList.size(); j++)
+	{
+		OstProto::StreamId	*s, *q;
+
+		q = portInfo[portIdx].streamList[j].d.mutable_stream_id();
+
+		s = response->add_stream_id();
+		s->CopyFrom(*q);
+	}
+
+_exit:
 	done->Run();
 }
 
@@ -148,43 +170,32 @@ const ::OstProto::StreamIdList* request,
 ::OstProto::StreamConfigList* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	unsigned int portIdx;
 
-	for (int i = 0; i < request->id_size(); i++)
+	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	portIdx = request->port_id().id();
+	if (portIdx >= numPorts)
 	{
-		unsigned int portId;
-		unsigned int streamId;
-
-		portId = request->id(i).port_id();
-		if (portId >= numPorts)
-		{
-			qDebug("%s: Invalid port id %d", __FUNCTION__, portId);
-			continue;		// TODO: Partial status of RPC
-		}
-
-		streamId = request->id(i).stream_id();
-		if (streamId >= numPorts)
-		{
-			qDebug("%s: Invalid port id %d", __FUNCTION__, portId);
-			continue;		// TODO: Partial status of RPC
-		}
-
-		for (int j = 0; j < portInfo[portId].streamList.size(); j++)
-		{
-			OstProto::Stream	*s, *q;
-
-#if 0
-			q = portInfo[portId].streamList[j].d.e_stream();
-			assert(q->port_id() == portId);
-
-			s = response->add_stream();
-			s->set_port_id(portId);
-			s->set_stream_id(q->stream_id());
-#endif
-			// TODO: more params
-		}
+		controller->SetFailed("invalid portid");
+		goto _exit;
 	}
-	controller->SetFailed("Not Implemented");
+
+	response->mutable_port_id()->set_id(portIdx);
+	for (int i = 0; i < request->stream_id_size(); i++)
+	{
+		int streamIndex;
+		OstProto::Stream	*s;
+
+		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
+		if (streamIndex < 0)
+			continue;		// TODO(LOW): Partial status of RPC
+
+		s = response->add_stream();
+		s->CopyFrom(portInfo[portIdx].streamList[streamIndex].d);
+	}
+
+_exit:
 	done->Run();
 }
 
@@ -193,8 +204,36 @@ const ::OstProto::StreamIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
-	controller->SetFailed("Not Implemented");
+	unsigned int portIdx;
+
+	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	portIdx = request->port_id().id();
+	if (portIdx >= numPorts)
+	{
+		controller->SetFailed("invalid portid");
+		goto _exit;
+	}
+
+	for (int i = 0; i < request->stream_id_size(); i++)
+	{
+		int	streamIndex;
+		StreamInfo		s;
+
+		// If stream with same id as in request exists already ==> error!!
+		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
+		if (streamIndex >= 0)
+			continue;		// TODO(LOW): Partial status of RPC
+
+		// Append a new "default" stream - actual contents of the new stream is
+		// expected in a subsequent "modifyStream" request - set the stream id
+		// now itself however!!!
+		s.d.mutable_stream_id()->CopyFrom(request->stream_id(i));
+		portInfo[portIdx].streamList.append(s);
+
+		// TODO(LOW): fill-in response "Ack"????
+	}
+_exit:
 	done->Run();
 }
 
@@ -203,8 +242,31 @@ const ::OstProto::StreamIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
-	controller->SetFailed("Not Implemented");
+	unsigned int portIdx;
+
+	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	portIdx = request->port_id().id();
+	if (portIdx >= numPorts)
+	{
+		controller->SetFailed("invalid portid");
+		goto _exit;
+	}
+
+	for (int i = 0; i < request->stream_id_size(); i++)
+	{
+		int	streamIndex;
+		StreamInfo		s;
+
+		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
+		if (streamIndex < 0)
+			continue;		// TODO(LOW): Partial status of RPC
+
+		portInfo[portIdx].streamList.removeAt(streamIndex);
+
+		// TODO(LOW): fill-in response "Ack"????
+	}
+_exit:
 	done->Run();
 }
 
@@ -213,8 +275,32 @@ const ::OstProto::StreamConfigList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
-	controller->SetFailed("Not Implemented");
+	unsigned int	portIdx;
+
+	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	portIdx = request->port_id().id();
+	if (portIdx >= numPorts)
+	{
+		controller->SetFailed("invalid portid");
+		goto _exit;
+	}
+
+	for (int i = 0; i < request->stream_size(); i++)
+	{
+		int streamIndex;
+
+		streamIndex = getStreamIndex(portIdx, 
+			request->stream(i).stream_id().id());
+		if (streamIndex < 0)
+			continue;		// TODO(LOW): Partial status of RPC
+
+		portInfo[portIdx].streamList[streamIndex].d.MergeFrom(
+			request->stream(i));
+
+		// TODO(LOW): fill-in response "Ack"????
+	}
+_exit:
 	done->Run();
 }
 
@@ -223,7 +309,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -233,7 +319,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -243,7 +329,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -253,7 +339,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -263,7 +349,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::CaptureBufferList* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -273,7 +359,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::PortStatsList* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }
@@ -283,7 +369,7 @@ const ::OstProto::PortIdList* request,
 ::OstProto::Ack* response,
 ::google::protobuf::Closure* done)
 {
-	qDebug("In %s", __FUNCTION__);
+	qDebug("In %s", __PRETTY_FUNCTION__);
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }

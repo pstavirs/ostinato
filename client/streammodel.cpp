@@ -15,7 +15,7 @@ int StreamModel::rowCount(const QModelIndex &parent) const
 		return 0;
 
 	if (mCurrentPort)
-		return mCurrentPort->mStreams.size();
+		return mCurrentPort->numStreams();
 	else
 		return 0;
 }
@@ -53,7 +53,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 
 	// Check for row/column limits
-	if (index.row() >= mCurrentPort->mStreams.size())
+	if (index.row() >= mCurrentPort->numStreams())
 		return QVariant();
 
 	if (index.column() >= StreamMaxFields)
@@ -80,7 +80,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		case StreamName:
 		{
 			if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
-				return mCurrentPort->mStreams[index.row()].name();
+				return mCurrentPort->streamByIndex(index.row()).name();
 			else
 				return QVariant();
 			break;
@@ -94,7 +94,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 	#endif
 			if ((role == Qt::CheckStateRole) || (role == Qt::EditRole))
 			{
-				if (mCurrentPort->mStreams[index.row()].isEnabled())
+				if (mCurrentPort->streamByIndex(index.row()).isEnabled())
 					return Qt::Checked;
 				else
 					return Qt::Unchecked;
@@ -121,11 +121,11 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
 		switch (index.column())
 		{
 		case StreamName:
-			mCurrentPort->mStreams[index.row()].setName(value.toString());
+			mCurrentPort->streamByIndex(index.row()).setName(value.toString());
 			return true;
 			break;
 		case StreamStatus:
-			mCurrentPort->mStreams[index.row()].setIsEnabled(value.toBool());
+			mCurrentPort->streamByIndex(index.row()).setIsEnabled(value.toBool());
 			return true;
 			break;
 
@@ -178,7 +178,7 @@ bool StreamModel::insertRows(int row, int count, const QModelIndex &parent)
 	qDebug("insertRows() count = %d", count);
 	beginInsertRows(QModelIndex(), row, row+count-1);
 	for (int i = 0; i < count; i++)
-		mCurrentPort->mStreams.insert(row, Stream());
+		mCurrentPort->newStreamAt(row);
 	endInsertRows();
 
 	return true;
@@ -191,8 +191,7 @@ bool StreamModel::removeRows(int row, int count, const QModelIndex &parent)
 	beginRemoveRows(QModelIndex(), row, row+count-1);
 	for (int i = 0; i < count; i++)
 	{
-		// FIXME(HIGH): do we need to free the removed stream?
-		mCurrentPort->mStreams.removeAt(row);
+		mCurrentPort->deleteStreamAt(row);
 	}
 	endRemoveRows();
 

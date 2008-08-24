@@ -4,8 +4,11 @@
 PacketModel::PacketModel(Stream *pStream, QObject *parent)
 {
 	mpStream = pStream;
+#ifdef NEW_IMPL
+// Nothing else
+#else
 	populatePacketProtocols();
-#if 1
+
 	registerFrameTypeProto();
 	registerVlanProto();
 	registerIpProto();
@@ -23,17 +26,25 @@ int PacketModel::rowCount(const QModelIndex &parent) const
 {
 	IndexId		parentId;
 
-	// Parent - Invalid i.e. Invisible Root.
-	// Children - Protocol (Top Level) Items
+	// Parent == Invalid i.e. Invisible Root.
+	// ==> Children are Protocol (Top Level) Items
 	if (!parent.isValid())
+#ifdef NEW_IMPL
+		return mpStream->numProtocols();
+#else
 		return protoCount();
+#endif
 
 	// Parent - Valid Item
 	parentId.w = parent.internalId();
 	switch(parentId.ws.type)
 	{
 	case  ITYP_PROTOCOL:
+#ifdef NEW_IMPL
+		return mpStream->protocol(parentId.ws.protocol)->numFields();
+#else
 		return fieldCount(parentId.ws.protocol);
+#endif
 	case  ITYP_FIELD: 
 		return 0;
 	default:
@@ -126,7 +137,11 @@ _exit:
 QVariant PacketModel::data(const QModelIndex &index, int role) const
 {
 	IndexId			id;
+#ifdef NEW_IMPL
+// Nothing
+#else
 	ProtocolInfo 	proto;
+#endif
 
 	if (!index.isValid())
 		return QVariant();
@@ -138,12 +153,24 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 	switch(id.ws.type)
 	{
 	case  ITYP_PROTOCOL:
+#ifdef NEW_IMPL
+		return QString("%1 (%2)")
+			.arg(mpStream->protocol(id.ws.protocol)->protocolShortName())
+			.arg(mpStream->protocol(id.ws.protocol)->protocolName());
+#else
 		return protoName(id.ws.protocol);
+#endif
 
 	case  ITYP_FIELD: 
+#ifdef NEW_IMPL
+		return	mpStream->protocol(id.ws.protocol)->fieldName(index.row()) +
+				QString(" : ") +
+				mpStream->protocol(id.ws.protocol)->fieldTextValue(index.row());
+#else
 		return	fieldName(id.ws.protocol, index.row()) +
 				QString(" : ") +
 				fieldTextValue(id.ws.protocol, index.row()).toString();
+#endif
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
@@ -154,11 +181,28 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-
+#ifdef NEW_IMPL
+// required methods all part of the Stream class
+#else
 /*
 ** --------------- Private Stuff -----------------
 ** FIXME(MED): Move these to the Stream Class
 **
+*/
+
+/*!
+  Looking at the stream's protocols and populate an ordered list of
+  protocols accordingly. The order of protocols will be in the order of
+  protocol headers viz.
+
+  - None/Eth2/802.3 (Mac Addr)
+  - LLC
+  - SNAP
+  - SVLAN
+  - CVLAN
+  - L3 (IP/ARP)
+  - L4 (TCP/UDP/ICMP/IGMP)
+
 */
 void PacketModel::populatePacketProtocols()
 {
@@ -167,9 +211,8 @@ void PacketModel::populatePacketProtocols()
 	// Clear the protocols list
 	mPacketProtocols.clear();
 
-#if 0 // FIXME: protobuf
 	// Check and populate L2 Protocol
-	switch(mpStream->proto.ft)
+	switch(mpStream->frameType())
 	{
 		case Stream::e_ft_none:		
 			proto = PTYP_L2_NONE;
@@ -195,71 +238,80 @@ void PacketModel::populatePacketProtocols()
 			break;
 
 		default:
-			qDebug("%s: Unsupported frametype", __FUNCTION__);
+			qDebug("%s: Unsupported frametype %d", __FUNCTION__,
+				mpStream->frameType());
 			proto = PTYP_INVALID;
 	}
 	mPacketProtocols.append(proto);
 
 	// Check and populate VLANs, if present
-	if (mpStream->l2.eth.vlanMask & VM_SVLAN_TAGGED)
+	if (mpStream->vlan()->vlanFlags().testFlag(VlanProtocol::VlanSvlanTagged))
 		mPacketProtocols.append(PTYP_SVLAN);
 
-	if (mpStream->l2.eth.vlanMask & VM_CVLAN_TAGGED)
+	if (mpStream->vlan()->vlanFlags().testFlag(VlanProtocol::VlanCvlanTagged))
 		mPacketProtocols.append(PTYP_CVLAN);
 
 	// Check and populate L3 protocols
-	if (mpStream->proto.protoMask & PM_L3_PROTO_NONE)
-		goto _data;
-
-	switch(mpStream->proto.etherType)
+	switch (mpStream->l3Proto())
 	{
-		case ETH_TYP_IP:
+		case Stream::e_l3_none :
+			goto _data;
+			break;
+
+		case Stream::e_l3_ip :
 			proto = PTYP_L3_IP;
 			break;
 
-		case ETH_TYP_ARP:
+		case Stream::e_l3_arp:
 			proto = PTYP_L3_ARP;
 			break;
 
 		default:
-			qDebug("%s: Unsupported ethtype", __FUNCTION__);
+			qDebug("%s: Unsupported L3 Proto %d", __FUNCTION__, 
+				mpStream->l3Proto());
 			proto = PTYP_INVALID;
 	}
 	mPacketProtocols.append(proto);
 
-	if (mpStream->proto.protoMask & PM_L4_PROTO_NONE)
-		goto _data;
-
-	switch(mpStream->proto.ipProto)
+	// Check and populate L4 protocol
+	switch(mpStream->l4Proto())
 	{
-		case IP_PROTO_TCP:
+		case Stream::e_l4_none:
+			goto _data;
+			break;
+		case Stream::e_l4_tcp:
 			proto = PTYP_L4_TCP;	
 			break;
-		case IP_PROTO_UDP:
+		case Stream::e_l4_udp:
 			proto = PTYP_L4_UDP;	
 			break;
-		case IP_PROTO_ICMP:
+		case Stream::e_l4_icmp:
 			proto = PTYP_L4_ICMP;	
 			break;
-		case IP_PROTO_IGMP:
+		case Stream::e_l4_igmp:
 			proto = PTYP_L4_IGMP;	
 			break;
 		default:
-			qDebug("%s: Unsupported ipProto", __FUNCTION__);
+			qDebug("%s: Unsupported L4 Proto %d", __FUNCTION__,
+					mpStream->l4Proto());
 			proto = PTYP_INVALID;
 	};
 	mPacketProtocols.append(proto);
 
 _data:
 	mPacketProtocols.append(PTYP_DATA);
-#endif
 }
-
+/*!
+  Returns the count of protocols in the current stream
+*/
 int PacketModel::protoCount() const
 {
 	return mPacketProtocols.count();
 }
 
+/*!
+  Returns the count of fields in the given protocol
+*/
 int PacketModel::fieldCount(int protocol) const
 {
 	ProtocolInfo	proto;
@@ -375,25 +427,22 @@ QVariant PacketModel::ethField(int field, int role) const
 	FieldInfo	info;
 
 	// FIXME(MED): Mac Addr formatting
-#if 0 // FIXME protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("Destination Mac Address");
-		info.textValue = QString("%1%2").
-			arg(mpStream->l2.eth.dstMacMshw, 4, BASE_HEX, QChar('0')).
-			arg(mpStream->l2.eth.dstMacLsw, 8, BASE_HEX, QChar('0'));
+		info.textValue = QString("%1").
+			arg(mpStream->mac()->dstMac(), 12, BASE_HEX, QChar('0'));
 		break;
 	case 1:
 		info.name = QString("Source Mac Address");
-		info.textValue = QString("%1%2").
-			arg(mpStream->l2.eth.srcMacMshw, 4, BASE_HEX, QChar('0')).
-			arg(mpStream->l2.eth.srcMacLsw, 8, BASE_HEX, QChar('0'));
+		info.textValue = QString("%1").
+			arg(mpStream->mac()->srcMac(), 12, BASE_HEX, QChar('0'));
 		break;
 	case 2:
 		info.name = QString("Type");
 		info.textValue = QString("0x%1").
-			arg(mpStream->proto.etherType, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->eth2()->type(), 4, BASE_HEX, QChar('0'));
 		break;
 	default:
 		info.name = QString();
@@ -411,7 +460,6 @@ QVariant PacketModel::ethField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -419,23 +467,22 @@ QVariant PacketModel::llcField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("DSAP");
 		info.textValue = QString("0x%1").
-			arg(mpStream->proto.dsap, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->llc()->dsap(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 1:
 		info.name = QString("SSAP");
 		info.textValue = QString("0x%1").
-			arg(mpStream->proto.ssap, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->llc()->ssap(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 2:
 		info.name = QString("Control");
 		info.textValue = QString("0x%1").
-			arg(mpStream->proto.ctl, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->llc()->ctl(), 2, BASE_HEX, QChar('0'));
 		break;
 	default:
 		info.name = QString();
@@ -453,7 +500,6 @@ QVariant PacketModel::llcField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -461,19 +507,17 @@ QVariant PacketModel::snapField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("OUI");
-		info.textValue = QString("0x%1%2").
-			arg(mpStream->proto.ouiMsb, 2, BASE_HEX, QChar('0')).
-			arg(mpStream->proto.ouiLshw, 4, BASE_HEX, QChar('0'));
+		info.textValue = QString("0x%1").
+			arg(mpStream->snap()->oui(), 6, BASE_HEX, QChar('0'));
 		break;
 	case 1:
 		info.name = QString("Type");
 		info.textValue = QString("0x%1").
-			arg(mpStream->proto.etherType, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->eth2()->type(), 4, BASE_HEX, QChar('0'));
 		break;
 	default:
 		info.name = QString();
@@ -491,7 +535,6 @@ QVariant PacketModel::snapField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -499,28 +542,27 @@ QVariant PacketModel::svlanField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("TPID");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l2.eth.stpid, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->vlan()->stpid(), 4, BASE_HEX, QChar('0'));
 		break;
 	case 1:
 		info.name = QString("PCP");
 		info.textValue = QString("%1").
-			arg(mpStream->l2.eth.svlanPrio);
+			arg(mpStream->vlan()->svlanPrio());
 		break;
 	case 2:
 		info.name = QString("DE");
 		info.textValue = QString("%1").
-			arg(mpStream->l2.eth.svlanCfi);
+			arg(mpStream->vlan()->svlanCfi());
 		break;
 	case 3:
 		info.name = QString("VlanId");
 		info.textValue = QString("%1").
-			arg(mpStream->l2.eth.svlanId);
+			arg(mpStream->vlan()->svlanId());
 		break;
 	default:
 		info.name = QString();
@@ -538,7 +580,6 @@ QVariant PacketModel::svlanField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -547,66 +588,65 @@ QVariant PacketModel::ipField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("Version");
 		info.textValue = QString("%1").
-			arg(mpStream->l3.ip.ver);
+			arg(mpStream->ip()->ver());
 		break;
 	case 1:
 		info.name = QString("Header Length");
 		info.textValue = QString("%1").
-			arg(mpStream->l3.ip.hdrLen);
+			arg(mpStream->ip()->hdrLen());
 		break;
 	case 2:
 		info.name = QString("TOS/DSCP");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l3.ip.tos, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->ip()->tos(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 3:
 		info.name = QString("Total Length");
 		info.textValue = QString("%1").
-			arg(mpStream->l3.ip.totLen);
+			arg(mpStream->ip()->totLen());
 		break;
 	case 4:
 		info.name = QString("ID");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l3.ip.id, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->ip()->id(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 5:
 		info.name = QString("Flags");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l3.ip.flags, 2, BASE_HEX, QChar('0')); // FIXME(HIGH)
+			arg(mpStream->ip()->flags(), 2, BASE_HEX, QChar('0')); // FIXME(HIGH)
 		break;
 	case 6:
 		info.name = QString("Fragment Offset");
 		info.textValue = QString("%1").
-			arg(mpStream->l3.ip.fragOfs);
+			arg(mpStream->ip()->fragOfs());
 		break;
 	case 7:
 		info.name = QString("TTL");
 		info.textValue = QString("%1").
-			arg(mpStream->l3.ip.ttl);
+			arg(mpStream->ip()->ttl());
 		break;
 	case 8:
 		info.name = QString("Protocol Type");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l3.ip.proto, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->ip()->proto(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 9:
 		info.name = QString("Checksum");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l3.ip.cksum, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->ip()->cksum(), 4, BASE_HEX, QChar('0'));
 		break;
 	case 10:
 		info.name = QString("Source IP");
-		info.textValue = QHostAddress(mpStream->l3.ip.srcIp).toString();
+		info.textValue = QHostAddress(mpStream->ip()->srcIp()).toString();
 		break;
 	case 11:
 		info.name = QString("Destination IP");
-		info.textValue = QHostAddress(mpStream->l3.ip.dstIp).toString();
+		info.textValue = QHostAddress(mpStream->ip()->dstIp()).toString();
 		break;
 	default:
 		info.name = QString();
@@ -624,7 +664,6 @@ QVariant PacketModel::ipField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -633,58 +672,57 @@ QVariant PacketModel::tcpField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME: protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("Source Port");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.srcPort);
+			arg(mpStream->tcp()->srcPort());
 		break;
 	case 1:
 		info.name = QString("Destination Port");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.dstPort);
+			arg(mpStream->tcp()->dstPort());
 		break;
 	case 2:
 		info.name = QString("Seq Number");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.seqNum);
+			arg(mpStream->tcp()->seqNum());
 		break;
 	case 3:
 		info.name = QString("Ack Number");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.ackNum);
+			arg(mpStream->tcp()->ackNum());
 		break;
 	case 4:
 		info.name = QString("Header Length");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.hdrLen);
+			arg(mpStream->tcp()->hdrLen());
 		break;
 	case 5:
 		info.name = QString("Reserved");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.rsvd);
+			arg(mpStream->tcp()->rsvd());
 		break;
 	case 6:
 		info.name = QString("Flags");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l4.tcp.flags, 2, BASE_HEX, QChar('0'));
+			arg(mpStream->tcp()->flags(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 7:
 		info.name = QString("Window");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.flags);
+			arg(mpStream->tcp()->flags());
 		break;
 	case 8:
 		info.name = QString("Checksum");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l4.tcp.cksum, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->tcp()->cksum(), 4, BASE_HEX, QChar('0'));
 		break;
 	case 9:
 		info.name = QString("Urgent Pointer");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.tcp.urgPtr);
+			arg(mpStream->tcp()->urgPtr());
 		break;
 	default:
 		info.name = QString();
@@ -702,7 +740,6 @@ QVariant PacketModel::tcpField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -711,28 +748,27 @@ QVariant PacketModel::udpField(int field, int role) const
 {
 	FieldInfo	info;
 
-#if 0 // FIXME:protobuf
 	switch(field)
 	{
 	case 0:
 		info.name = QString("Source Port");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.udp.srcPort);
+			arg(mpStream->udp()->srcPort());
 		break;
 	case 1:
 		info.name = QString("Destination Port");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.udp.dstPort);
+			arg(mpStream->udp()->dstPort());
 		break;
 	case 2:
 		info.name = QString("Total Length");
 		info.textValue = QString("%1").
-			arg(mpStream->l4.udp.totLen);
+			arg(mpStream->udp()->totLen());
 		break;
 	case 3:
 		info.name = QString("Checksum");
 		info.textValue = QString("0x%1").
-			arg(mpStream->l4.udp.cksum, 4, BASE_HEX, QChar('0'));
+			arg(mpStream->udp()->cksum(), 4, BASE_HEX, QChar('0'));
 		break;
 	default:
 		info.name = QString();
@@ -750,7 +786,6 @@ QVariant PacketModel::udpField(int field, int role) const
 	}
 	
 	Q_ASSERT(1 == 1); // Unreachable code
-#endif
 	return QVariant();
 }
 
@@ -900,3 +935,4 @@ void PacketModel::registerData()
 	registerProto(PTYP_DATA, "Data", "data");
 }
 
+#endif

@@ -191,7 +191,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
        <item row="1" column="0" colspan="3" >
         <widget class="QTabWidget" name="twProto" >
          <property name="currentIndex" >
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_7" >
           <attribute name="title" >
@@ -390,6 +390,9 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               </item>
               <item>
                <widget class="QRadioButton" name="rbL3Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
                 <property name="text" >
                  <string>Other</string>
                 </property>

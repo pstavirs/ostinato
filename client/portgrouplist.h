@@ -31,6 +31,7 @@ public:
 	PortModel* getPortModel() { return &mPortGroupListModel; }
 	PortStatsModel* getPortStatsModel() { return &mPortStatsModel; }
 	StreamModel* getStreamModel() { return &mStreamListModel; }
+
 	bool isPortGroup(const QModelIndex& index);
 	bool isPort(const QModelIndex& index);
 	PortGroup& portGroup(const QModelIndex& index);

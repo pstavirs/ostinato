@@ -3,6 +3,7 @@
 
 #include <QtGlobal>
 #include <QString>
+#include <QList>
 #include "../common/protocol.pb.h"
 
 class StreamConfigDialog;
@@ -15,44 +16,55 @@ class PacketModel;
 #define IP_PROTO_TCP	0x06
 #define IP_PROTO_UDP	0x11
 
-#if 0
-	// Protocols
-	struct {
-		FrameType	ft;
-
-
-
-		quint16		protoMask;
-#define PM_L3_PROTO_NONE	0x0001
-#define PM_L3_PROTO_OTHER	0x0002
-#define PM_L4_PROTO_NONE	0x0004
-#define PM_L4_PROTO_OTHER	0x0008
-
-		quint16		etherType;
-#define	ETH_TYP_IP		0x0800
-#define	ETH_TYP_ARP		0x0806
-
-		quint16		ipProto;
-#define IP_PROTO_ICMP	0x01
-#define IP_PROTO_IGMP	0x02
-#define IP_PROTO_TCP	0x06
-#define IP_PROTO_UDP	0x11
-	} proto;
-
-	// L2
-	struct {
-		// Ethernet
-
-
-
-
-		} eth;
-	} l2;
-#endif
 
 class AbstractProtocol
 {
-	// TODO
+	// TODO(LOW)
+public:
+	/*!
+	  Subclasses should return reference to their protocol specific 
+	  ::google::protobuf::Message
+	*/
+	virtual ::google::protobuf::Message& data() = 0;
+	/*! Subclasses can directly use this method. No need for overload */
+	void getConfig(::google::protobuf::Message *msg)
+		{ msg->CopyFrom(data()); }
+
+	virtual QString protocolName()
+		{ return QString("AbstractProtocol"); }
+	virtual QString protocolShortName()
+		{ return QString("AbsProto"); }
+	virtual int	numFields()
+		{ return 1; }
+	virtual QString fieldName(int index)
+		{ return QString("AbstractField"); }
+	virtual QString fieldTextValue(int index)
+		{ return QString("AbstractFieldValue"); }
+	virtual QByteArray fieldRawValue(int index)
+		{ return QByteArray(4, '\0'); }
+};
+
+class UnknownProtocol: public AbstractProtocol
+{
+	OstProto::Ack	d;		// FIXME(HI): replace 'Ack' with something else
+
+public:
+	virtual ~UnknownProtocol() {}
+
+	virtual ::google::protobuf::Message& data() { return d; }
+
+	virtual QString protocolName()
+		{ return QString("UnknownProtocol"); }
+	QString protocolShortName()
+		{ return QString("???Proto"); }
+	int	numFields()
+		{ return 1; }
+	QString fieldName(int index)
+		{ return QString("UnknownField"); }
+	QString fieldTextValue(int index)
+		{ return QString("UnknownFieldValue"); }
+	QByteArray fieldRawValue(int index)
+		{ return QByteArray(4, '\0'); }
 };
 
 class MacProtocol : public AbstractProtocol 
@@ -66,6 +78,10 @@ public:
 		MacAddrInc,
 		MacAddrDec
 	};
+	virtual ~MacProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+
+	bool update(OstProto::Mac	mac) { d.MergeFrom(mac); return true; }
 
 	// Dst Mac
 	quint64 dstMac()
@@ -110,6 +126,17 @@ public:
 		{ return d.src_mac_step(); }
 	bool	setSrcMacStep(quint16 srcMacStep)
 		{ d.set_src_mac_step(srcMacStep); return true; }
+
+
+	virtual QString protocolName()
+		{ return QString("Media Access Control"); } 
+	QString protocolShortName()
+		{ return QString("MAC"); } 
+	int	numFields()
+		{ return 2; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 class LlcProtocol : public AbstractProtocol
@@ -118,6 +145,11 @@ private:
 	OstProto::Llc	d;
 
 public:
+	virtual ~LlcProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+
+	bool update(OstProto::Llc	llc) { d.MergeFrom(llc); return true; }
+
 	quint8	dsap()
 		{ return d.dsap(); }
 	bool	setDsap(quint8 dsap)
@@ -133,6 +165,16 @@ public:
 	bool	setCtl(quint8 ctl)
 		{ d.set_ctl(ctl); return true; }
 
+
+	virtual QString protocolName()
+		{ return QString("802.3 Logical Link Control"); } 
+	QString protocolShortName()
+		{ return QString("LLC"); } 
+	int	numFields()
+		{ return 3; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 class SnapProtocol : public AbstractProtocol
@@ -141,16 +183,33 @@ private:
 	OstProto::Snap	d;
 
 public:
+	virtual ~SnapProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Snap	snap) { d.MergeFrom(snap); return true; }
+
 	quint32	oui()
 		{ return d.oui(); }
 	bool	setOui(quint32 oui)
 		{ d.set_oui(oui); return true; }
 
+// "Type" field: use from eth2 
+#if 0
 	quint16	type()
 		{ return d.type(); }
 	bool	setType(quint16	type)
 		{ d.set_type(type); return true; }
+#endif
+	virtual QString protocolName()
+		{ return QString("SubNetwork Access Protocol"); } 
+	QString protocolShortName()
+		{ return QString("SNAP"); } 
+	int	numFields()
+		{ return 1; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
+
 
 class Eth2Protocol : public AbstractProtocol
 {
@@ -158,37 +217,145 @@ private:
 	OstProto::Eth2	d;
 
 public:
+	virtual ~Eth2Protocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Eth2	eth2) { d.MergeFrom(eth2); return true; }
+
 	quint16	type()
 		{ return d.type(); }
 	bool	setType(quint16	type)
 		{ d.set_type(type); return true; }
+
+
+	virtual QString protocolName()
+		{ return QString("Protocol Type"); } 
+	QString protocolShortName()
+		{ return QString("TYPE"); } 
+	int	numFields()
+		{ return 1; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 class VlanProtocol : public AbstractProtocol
 {
-// TODO
-#if 0
-	quint16	vlanMask;
-#define VM_UNTAGGED				0x0000
-#define VM_CVLAN_TAGGED			0x0001
-#define VM_CVLAN_TPID_OVERRIDE	0x0002
-#define VM_SVLAN_TAGGED			0x0100
-#define VM_SVLAN_TPID_OVERRIDE	0x0200
+	OstProto::Vlan	d;
+public:
+	virtual ~VlanProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Vlan	vlan) { d.MergeFrom(vlan); return true; }
 
-#define VM_SINGLE_TAGGED(mask)		\
-((mask & VM_CVLAN_TAGGED ) | (mask & VM_SVLAN_TAGGED))
-#define VM_DOUBLE_TAGGED(mask)		\
-(mask & (VM_CVLAN_TAGGED | VM_SVLAN_TAGGED))
+	enum VlanFlag {
+		VlanCvlanTagged = 0x01,
+		VlanCtpidOverride = 0x02,
+		VlanSvlanTagged = 0x04,
+		VlanStpidOverride = 0x08,
+	};
+	Q_DECLARE_FLAGS(VlanFlags, VlanFlag);
 
-	quint16	ctpid;
-	quint16	cvlanPrio	:  3;
-	quint16	cvlanCfi	:  1;
-	quint16	cvlanId		: 13;
-	quint16	stpid;
-	quint16	svlanPrio	:  3;
-	quint16	svlanCfi	:  1;
-	quint16	svlanId		: 13;
-#endif
+	VlanFlags vlanFlags()
+		{
+			VlanFlags f;
+
+			if (d.is_cvlan_tagged()) f|= VlanCvlanTagged;
+			if (d.is_ctpid_override()) f|= VlanCtpidOverride;
+			if (d.is_svlan_tagged()) f|= VlanSvlanTagged;
+			if (d.is_stpid_override()) f|= VlanStpidOverride;
+
+			return f;
+		}
+
+	bool	setVlanFlags(VlanFlags vlanFlags)
+		{
+			d.set_is_cvlan_tagged(vlanFlags.testFlag(VlanCvlanTagged));
+			d.set_is_ctpid_override(vlanFlags.testFlag(VlanCtpidOverride));
+			d.set_is_svlan_tagged(vlanFlags.testFlag(VlanSvlanTagged));
+			d.set_is_stpid_override(vlanFlags.testFlag(VlanStpidOverride));
+
+			return true;
+		}
+
+	bool	isUntagged()
+	{
+		if (!d.is_cvlan_tagged() && !d.is_svlan_tagged())
+			return true;
+		else
+			return false;
+	}
+
+	bool	isSingleTagged()
+	{
+		if (( d.is_cvlan_tagged() && !d.is_svlan_tagged()) ||
+			(!d.is_cvlan_tagged() &&  d.is_svlan_tagged()) )
+			return true;
+		else
+			return false;
+	}
+
+	bool	isDoubleTagged()
+	{
+		if (d.is_cvlan_tagged() && d.is_svlan_tagged())
+			return true;
+		else
+			return false;
+	}
+
+	// CVLAN
+	quint16	ctpid()
+		{ return d.ctpid(); }
+	bool setCtpid(quint16	ctpid)
+		{ d.set_ctpid(ctpid); return true; }
+
+	quint8	cvlanPrio()
+		{ return (d.cvlan_tag() >> 13); }
+	bool setCvlanPrio(quint8 cvlanPrio)
+		{ d.set_cvlan_tag((d.cvlan_tag() & 0x1FFF) | ((cvlanPrio & 0x3) << 13));
+			return true; }
+
+	quint8	cvlanCfi()
+		{ return ((d.cvlan_tag() & 0x1000) >> 12); }
+	bool setCvlanCfi(quint8 cvlanCfi)
+		{ d.set_cvlan_tag((d.cvlan_tag() & 0xEFFF) | ((cvlanCfi & 0x01) << 12));
+			return true; }
+
+	quint16	cvlanId()
+		{ return (d.cvlan_tag() & 0x0FFF); }
+	bool setCvlanId(quint16 cvlanId)
+		{ d.set_cvlan_tag((d.cvlan_tag() & 0xF000) | ((cvlanId & 0x0FFF)));
+			return true; }
+
+	// SVLAN
+	quint16	stpid()
+		{ return d.stpid(); }
+	bool setStpid(quint16	stpid)
+		{ d.set_stpid(stpid); return true; }
+	quint8	svlanPrio()
+		{ return (d.svlan_tag() >> 13); }
+	bool setSvlanPrio(quint8 svlanPrio)
+		{ d.set_svlan_tag((d.svlan_tag() & 0x1FFF) | ((svlanPrio & 0x3) << 13));
+			return true; }
+
+	quint8	svlanCfi()
+		{ return ((d.svlan_tag() & 0x1000) >> 12); }
+	bool setSvlanCfi(quint8 svlanCfi)
+		{ d.set_svlan_tag((d.svlan_tag() & 0xEFFF) | ((svlanCfi & 0x01) << 12));
+			return true; }
+
+	quint16	svlanId()
+		{ return (d.svlan_tag() & 0x0FFF); }
+	bool setSvlanId(quint16 svlanId)
+		{ d.set_svlan_tag((d.svlan_tag() & 0xF000) | ((svlanId & 0x0FFF)));
+			return true; }
+
+	virtual QString protocolName()
+		{ return QString("Virtual Local Access Network"); } 
+	QString protocolShortName()
+		{ return QString("VLAN"); } 
+	int	numFields();
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 // IP
@@ -198,6 +365,10 @@ private:
 	OstProto::Ip d;
 
 public:
+	virtual ~IpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+
+	bool update(OstProto::Ip ip) { d.MergeFrom(ip); return true; }
 
 	enum IpAddrMode {
 		IpAddrFixed,
@@ -209,8 +380,8 @@ public:
 	enum IpFlag {
 		IpOverrideVersion = 0x01,
 		IpOverrideHdrLen = 0x02,
-		IpOverrideTotLen = 0x03,
-		IpOverrideCksum = 0x04
+		IpOverrideTotLen = 0x04,
+		IpOverrideCksum = 0x08
 	};
 	Q_DECLARE_FLAGS(IpFlags, IpFlag);
 
@@ -346,14 +517,31 @@ public:
 	bool	setDstIpMask(quint32 dstIpMask)
 		{ d.set_dst_ip_mask(dstIpMask); return true; }
 	
-	// TODO: Options
+	// TODO(LOW): Options
+
+
+	virtual QString protocolName()
+		{ return QString("Internet Protocol version 4"); } 
+	QString protocolShortName()
+		{ return QString("IPv4"); } 
+	int	numFields()
+		{ return 12; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(IpProtocol::IpFlags)
 
 class ArpProtocol: public AbstractProtocol
 {
-	// TODO: ARP
+	// TODO(LOW): ARP
+	OstProto::Arp	d;
+
+public:
+	virtual ~ArpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Arp	arp) { d.MergeFrom(arp); return true; }
 };
 
 // TCP
@@ -363,6 +551,11 @@ private:
 	OstProto::Tcp d;
 
 public:
+	virtual ~TcpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+
+	bool update(OstProto::Tcp	tcp) { d.MergeFrom(tcp); return true; }
+
 	enum TcpFlag
 	{
 		TcpOverrideHdrLen = 0x01,
@@ -402,7 +595,7 @@ public:
 
 	quint16	dstPort()
 		{ return d.dst_port(); }
-	bool	setdstPort(quint16 dstPort)
+	bool	setDstPort(quint16 dstPort)
 		{ d.set_dst_port(dstPort); return true; }
 
 	quint32	seqNum()
@@ -426,7 +619,7 @@ public:
 		{ d.set_hdrlen_rsvd((d.hdrlen_rsvd() & 0xF0) | rsvd); return true; }
 
 
-	// TODO: convert to enum maybe?
+	// TODO(MED): convert to enum maybe?
 	quint8	flags()
 		{ return d.flags(); }
 	bool setFlags(quint8 flags)
@@ -448,11 +641,21 @@ public:
 	bool	setCksum(quint16 cksum)
 		{ d.set_cksum(cksum); return true; }
 
-	quint16	urg_ptr()
+	quint16	urgPtr()
 		{ return d.urg_ptr(); }
-	bool	seturg_ptr(quint16 urg_ptr)
+	bool	setUrgPtr(quint16 urg_ptr)
 		{ d.set_urg_ptr(urg_ptr); return true; }
 
+
+	virtual QString protocolName()
+		{ return QString("Transmission Control Protocol"); } 
+	QString protocolShortName()
+		{ return QString("TCP"); } 
+	int	numFields()
+		{ return 10; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(TcpProtocol::TcpFlags)
 
@@ -464,6 +667,11 @@ private:
 	OstProto::Udp d;
 
 public:
+	virtual ~UdpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	
+	bool update(OstProto::Udp	udp) { d.MergeFrom(udp); return true; }
+
 	enum UdpFlag
 	{
 		UdpOverrideTotLen = 0x01,
@@ -503,7 +711,7 @@ public:
 
 	quint16	dstPort()
 		{ return d.dst_port(); }
-	bool	setdstPort(quint16 dstPort)
+	bool	setDstPort(quint16 dstPort)
 		{ d.set_dst_port(dstPort); return true; }
 
 	quint16	totLen()
@@ -516,32 +724,78 @@ public:
 	bool	setCksum(quint16 cksum)
 		{ d.set_cksum(cksum); return true; }
 
+
+	virtual QString protocolName()
+		{ return QString("User Datagram Protocol"); } 
+	QString protocolShortName()
+		{ return QString("UDP"); } 
+	int	numFields()
+		{ return 4; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
-class IcmpProtocol {
-// TODO: ICMP
+class IcmpProtocol : public AbstractProtocol
+{
+// TODO(LOW): ICMP
+	OstProto::Icmp	d;
+
+public:
+	virtual ~IcmpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Icmp	icmp) { d.MergeFrom(icmp); return true; }
 };
 
-class IgmpProtocol {
-// TODO: IGMP
+class IgmpProtocol  : public AbstractProtocol
+{
+// TODO(LOW): IGMP
+	OstProto::Igmp	d;
+
+public:
+	virtual ~IgmpProtocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+	bool update(OstProto::Igmp	igmp) { d.MergeFrom(igmp); return true; }
 };
 
 
 class Stream {
 
-	static quint32			mAllocId;
-
 	quint32					mId;
 	OstProto::StreamCore	*mCore;
 
-	MacProtocol	*mMac;
-	IpProtocol	*mIp;
+	UnknownProtocol	*mUnknown;
+	MacProtocol		*mMac;
 
-#if 0
-	friend class StreamConfigDialog;
-	friend class StreamModel;
-	friend class PacketModel;
-#endif
+	LlcProtocol		*mLlc;
+	SnapProtocol	*mSnap;
+	Eth2Protocol	*mEth2;
+	VlanProtocol	*mVlan;
+
+	IpProtocol		*mIp;
+	ArpProtocol		*mArp;
+
+	TcpProtocol		*mTcp;
+	UdpProtocol		*mUdp;
+	IcmpProtocol	*mIcmp;
+	IgmpProtocol	*mIgmp;
+
+public:
+	MacProtocol* mac() { return mMac; }
+
+	LlcProtocol* llc() { return mLlc; }
+	SnapProtocol* snap() { return mSnap; }
+	Eth2Protocol* eth2() { return mEth2; }
+	VlanProtocol* vlan() { return mVlan; }
+
+	IpProtocol* ip() { return mIp; }
+	ArpProtocol* arp() { return mArp; }
+
+	TcpProtocol* tcp() { return mTcp; }
+	UdpProtocol* udp() { return mUdp; }
+	IcmpProtocol* icmp() { return mIcmp; }
+	IgmpProtocol* igmp() { return mIgmp; }
+
 
 public:
 	enum FrameType {
@@ -566,17 +820,68 @@ public:
 		e_fl_random
 	};
 
+	enum L3Proto {
+		e_l3_none,
+		e_l3_ip,
+		e_l3_arp,
+	};
+
+	enum L4Proto {
+		e_l4_none,
+		e_l4_tcp,
+		e_l4_udp,
+		e_l4_icmp,
+		e_l4_igmp,
+	};
+
 	// -------------------------------------------------------
 	// Methods
 	// -------------------------------------------------------
 	Stream();
 
+	bool operator < (const Stream &s) const
+		{ return(mCore->ordinal() < s.mCore->ordinal()); }
+
+	bool update(OstProto::Stream	*stream)
+	{
+		mCore->MergeFrom(stream->core());
+		mMac->update(stream->mac());
+
+		mLlc->update(stream->llc());
+		mSnap->update(stream->snap());
+		mEth2->update(stream->eth2());
+		mVlan->update(stream->vlan());
+
+		mIp->update(stream->ip());
+		mArp->update(stream->arp());
+
+		mTcp->update(stream->tcp());
+		mUdp->update(stream->udp());
+		mIcmp->update(stream->icmp());
+		mIgmp->update(stream->igmp());
+
+		// FIXME(MED): Re-eval why not store complete OstProto::Stream
+		// instead of components
+		return true;
+	}
+
+	void getConfig(uint portId, OstProto::Stream *s);
+
 	quint32	id()
 		{ return mId;}
+	bool setId(quint32 id)
+		{ mId = id; return true;}
+
+#if 0 // FIXME(HI): needed?
+	quint32	portId()
+		{ return mCore->port_id();}
+	bool setPortId(quint32 id)
+		{ mCore->set_port_id(id); return true;}
+#endif
 
 	quint32	ordinal()
 		{ return mCore->ordinal();}
-	bool setOrderdinal(quint32	ordinal)
+	bool setOrdinal(quint32	ordinal)
 		{ mCore->set_ordinal(ordinal); return true; }
 
 	bool isEnabled() const
@@ -606,6 +911,11 @@ public:
 	bool setPattern(quint32 pattern)
 		{ mCore->set_pattern(pattern); return true; }
 
+// TODO(HI) : ?????
+#if 0
+	quint16			dataStartOfs;
+#endif
+
 	// Frame Length (includes CRC)
 	FrameLengthMode	lenMode()
 		{ return (FrameLengthMode) mCore->len_mode(); }
@@ -628,25 +938,33 @@ public:
 	bool setFrameLenMax(quint16 frameLenMax)
 		{ mCore->set_frame_len_max(frameLenMax);  return true; }
 
-// TODO
+	L3Proto l3Proto()
+		{ return (L3Proto) mCore->l3_proto(); }
+	bool setL3Proto(L3Proto l3Proto)
+		{ mCore->set_l3_proto((OstProto::StreamCore::L3Proto) l3Proto); 
+			return true; }
+
+	L4Proto l4Proto()
+		{ return (L4Proto) mCore->l4_proto(); }
+	bool setL4Proto(L4Proto l4Proto)
+		{ mCore->set_l4_proto((OstProto::StreamCore::L4Proto) l4Proto); 
+			return true; }
+
+
+	//---------------------------------------------------------------
+	// Methods for use by Packet Model
+	//---------------------------------------------------------------
+	QList<int> selectedProtocols;
+
+	int numProtocols();
 #if 0
-	quint16			dataStartOfs;
+	int protocolId(int index);
+	int protocolIndex(int id);
 #endif
-
-	MacProtocol* mac() { return mMac; }
-	IpProtocol* ip() { return mIp; }
-
+	AbstractProtocol* protocol(int index);
 private:
-#if 0
-	void InitDefaultMeta();
-	void InitDefaultProto();
-	void InitDefaultL2();
-	void InitDefaultL3();
-	void InitDefaultL3Ip();
-	void InitDefaultL4();
-	void InitDefaultL4Tcp();
-	void InitDefaultL4Udp();
-#endif
+	void updateSelectedProtocols();
+
 };
 
 #endif
