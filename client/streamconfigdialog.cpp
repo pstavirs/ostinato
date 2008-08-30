@@ -16,13 +16,13 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	//mpStreamList = streamList;
 	mCurrentStreamIndex = streamIndex;
 	LoadCurrentStream();
-
 	mpPacketModel = new PacketModel(&mPort.streamByIndex(mCurrentStreamIndex),
 		this);
 	tvPacketTree->setModel(mpPacketModel);
 	mpPacketModelTester = new ModelTest(mpPacketModel);
 	tvPacketTree->header()->hide();
-
+	vwPacketDump->setModel(mpPacketModel);
+	vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
 	// FIXME(MED): Enable this navigation
 	pbPrev->setDisabled(true);
@@ -625,6 +625,11 @@ void StreamConfigDialog::StoreCurrentStream()
 		{
 			pStream->mac()->setDstMac(
 				leDstMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
+#if 1
+			qDebug("%s: dstMac = %llx [%s] %d", __FUNCTION__, 
+					pStream->mac()->dstMac(),
+					leDstMac->text().toAscii().constData(), isOk);
+#endif
 			pStream->mac()->setDstMacMode(
 				(MacProtocol::MacAddrMode) cmbDstMacMode->currentIndex());
 			pStream->mac()->setDstMacCount(
@@ -634,6 +639,9 @@ void StreamConfigDialog::StoreCurrentStream()
 
 			pStream->mac()->setSrcMac(
 				leSrcMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
+			qDebug("%s: srcMac = %llx [%s] %d", __FUNCTION__, 
+					pStream->mac()->srcMac(),
+					leSrcMac->text().toAscii().constData(), isOk);
 			pStream->mac()->setSrcMacMode(
 				(MacProtocol::MacAddrMode) cmbSrcMacMode->currentIndex());
 			pStream->mac()->setSrcMacCount(

@@ -2,6 +2,7 @@
 #define _STREAM_H
 
 #include <QtGlobal>
+
 #include <QString>
 #include <QList>
 #include "../common/protocol.pb.h"
@@ -16,6 +17,8 @@ class PacketModel;
 #define IP_PROTO_TCP	0x06
 #define IP_PROTO_UDP	0x11
 
+
+class Stream;
 
 class AbstractProtocol
 {
@@ -36,6 +39,16 @@ public:
 		{ return QString("AbsProto"); }
 	virtual int	numFields()
 		{ return 1; }
+	QByteArray protocolRawValue()
+	{
+		QByteArray ba;
+#ifndef SRIVATSP
+#else
+		for (int i=0; i < numFields(); i++) 
+			ba.append(fieldRawValue(i));
+#endif
+		return ba;
+	}
 	virtual QString fieldName(int index)
 		{ return QString("AbstractField"); }
 	virtual QString fieldTextValue(int index)
@@ -64,7 +77,31 @@ public:
 	QString fieldTextValue(int index)
 		{ return QString("UnknownFieldValue"); }
 	QByteArray fieldRawValue(int index)
-		{ return QByteArray(4, '\0'); }
+		{ return QByteArray(); }
+};
+
+class PayloadProtocol: public AbstractProtocol
+{
+	Stream			*parentStream;
+	OstProto::Ack	d;		// FIXME(HI): move payload related vars from
+							// stream into here
+
+public:
+	PayloadProtocol (Stream *stream = NULL) { parentStream = stream; }
+	virtual ~PayloadProtocol() {}
+
+	virtual ::google::protobuf::Message& data() { return d; }
+
+	virtual QString protocolName()
+		{ return QString("Payload Data"); }
+	QString protocolShortName()
+		{ return QString("DATA"); }
+	int	numFields()
+		{ return 1; }
+	QString fieldName(int index)
+		{ return QString("Data"); }
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
 };
 
 class MacProtocol : public AbstractProtocol 
@@ -231,6 +268,37 @@ public:
 		{ return QString("Protocol Type"); } 
 	QString protocolShortName()
 		{ return QString("TYPE"); } 
+	int	numFields()
+		{ return 1; }
+	QString fieldName(int index);
+	QString fieldTextValue(int index);
+	QByteArray fieldRawValue(int index);
+};
+
+
+class Dot3Protocol : public AbstractProtocol
+{
+private:
+	Stream			*parentStream;
+	OstProto::Ack	d;		// FIXME(HI): replace 'ack' with somehting else
+
+public:
+	Dot3Protocol(Stream *stream = NULL) 
+		{ parentStream = stream; qDebug("parentStream = %p", stream); }
+	virtual ~Dot3Protocol() {}
+	virtual ::google::protobuf::Message& data() {return d;} 
+
+#if 0 // FIXME(HI): remove?
+	quint16	length()
+		{ return d.length(); }
+	bool	setLength(quint16	length)
+		{ return true; }
+#endif
+
+	virtual QString protocolName()
+		{ return QString("802.3 Length"); } 
+	QString protocolShortName()
+		{ return QString("LEN"); } 
 	int	numFields()
 		{ return 1; }
 	QString fieldName(int index);
@@ -765,11 +833,14 @@ class Stream {
 	OstProto::StreamCore	*mCore;
 
 	UnknownProtocol	*mUnknown;
+	PayloadProtocol	*mPayload;
 	MacProtocol		*mMac;
 
 	LlcProtocol		*mLlc;
 	SnapProtocol	*mSnap;
 	Eth2Protocol	*mEth2;
+	Dot3Protocol	*mDot3;
+
 	VlanProtocol	*mVlan;
 
 	IpProtocol		*mIp;
@@ -781,11 +852,15 @@ class Stream {
 	IgmpProtocol	*mIgmp;
 
 public:
+	//PayloadProtocol* Payload() { return mPayload; }
 	MacProtocol* mac() { return mMac; }
+
+	void* core() { return mCore; } // FIXME(HI): Debug ONLY
 
 	LlcProtocol* llc() { return mLlc; }
 	SnapProtocol* snap() { return mSnap; }
 	Eth2Protocol* eth2() { return mEth2; }
+	Dot3Protocol* dot3() { return mDot3; }
 	VlanProtocol* vlan() { return mVlan; }
 
 	IpProtocol* ip() { return mIp; }
@@ -954,15 +1029,19 @@ public:
 	//---------------------------------------------------------------
 	// Methods for use by Packet Model
 	//---------------------------------------------------------------
-	QList<int> selectedProtocols;
 
 	int numProtocols();
+
+	//! Includes ALL protocol headers excluding payload data
+	int protocolHeaderSize();
 #if 0
 	int protocolId(int index);
 	int protocolIndex(int id);
 #endif
 	AbstractProtocol* protocol(int index);
 private:
+	QList<int>	selectedProtocols;
+	int			mProtocolHeaderSize;
 	void updateSelectedProtocols();
 
 };

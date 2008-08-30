@@ -190,8 +190,8 @@ message StreamCore {
 	optional uint32				data_start_ofs = 13;
 
 	// Frame Length (includes CRC)
-	optional FrameLengthMode	len_mode = 14;
-	optional uint32				frame_len = 15;
+	optional FrameLengthMode	len_mode = 14 [default = e_fl_fixed];
+	optional uint32				frame_len = 15 [default = 64];
 	optional uint32				frame_len_min = 16;
 	optional uint32				frame_len_max = 17;
 

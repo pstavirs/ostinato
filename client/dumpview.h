@@ -1,25 +1,33 @@
 #include <QtGui> // FIXME: High
 
-class DumpView: public QWidget	// QAbstractItemView // FIXME
+
+class DumpView: public QAbstractItemView
 {
-public:
+public:	
 	DumpView(QWidget *parent=0);
-	// bool setBase(uint base); // valid values: 16, 8, 10, 2 etc.
-	// void hideAsciiPane(void);
-	// void showAsciiPane(void);
-	// void hideOffsetPane(void);
-	// void showOffsetPane(void);
 
-
-	//QSize sizeHint() const;
+	QModelIndex indexAt( const QPoint &point ) const;
+	void scrollTo( const QModelIndex &index, ScrollHint hint = EnsureVisible );
+	QRect visualRect( const QModelIndex &index ) const;
 
 protected:
-	void mousePressEvent(QMouseEvent *event);
-	//void mouseMoveEvent(QMouseEvent *event);
+	int horizontalOffset() const;
+	bool isIndexHidden( const QModelIndex &index ) const;
+	QModelIndex moveCursor( CursorAction cursorAction,
+	Qt::KeyboardModifiers modifiers );
+	void setSelection( const QRect &rect, QItemSelectionModel::SelectionFlags flags );
+	int verticalOffset() const;
+	QRegion visualRegionForSelection( const QItemSelection &selection ) const;
+protected slots:
+	void dataChanged( const QModelIndex &topLeft, 
+			const QModelIndex &bottomRight );
+	void selectionChanged( const QItemSelection &selected,
+	const QItemSelection &deselected );
 	void paintEvent(QPaintEvent *event);
 
 private:
-	QString toAscii(QByteArray ba);
+	void DumpView::populateDump(QByteArray &dump, int &selOfs, int &selSize, 
+			QModelIndex parent = QModelIndex());
 	bool inline isPrintable(char c) 
 		{if ((c > 48) && (c < 126)) return true; else return false; }
 
@@ -27,8 +35,8 @@ private:
 	QRect		mOffsetPaneTopRect;
 	QRect		mDumpPaneTopRect;
 	QRect		mAsciiPaneTopRect;
-	QByteArray	data;
 	int			mSelectedRow, mSelectedCol;
 	int			mLineHeight;
 	int			mCharWidth;
 };
+

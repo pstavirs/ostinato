@@ -1,3 +1,4 @@
+#include <qendian.h>
 #include <QHostAddress>
 
 #include "stream.h"
@@ -5,6 +6,72 @@
 #include <google/protobuf/message.h>
 
 #define BASE_HEX		16
+
+QString PayloadProtocol::fieldTextValue(int index)
+{
+	int len;
+	quint32 pat;
+	QString	textValue;
+
+	if (parentStream)
+	{
+		len = parentStream->frameLen() - parentStream->protocolHeaderSize();
+		pat = parentStream->pattern();
+	}
+	else
+	{
+		len = 1500;		// FIXME(HI): testing only
+		pat = 0x0a0b0c0d;
+	}
+
+	// Make a larger string and then resize to the correct size to
+	// take care of the case where len is not a multiple of pattern size
+	if (len > 0)
+	{
+		// TODO(LOW): allow non-4byte patterns!!!
+		int w = 4;	// data pattern size
+
+		for (int i = 0; i < (len/w + 1); i++)
+			textValue.append(QString("%1").arg(
+				pat, w*2, BASE_HEX, QChar('0')));
+		textValue.resize(len);
+	}
+
+	return textValue;
+}
+
+QByteArray PayloadProtocol::fieldRawValue(int index)
+{
+	int len;
+	quint32 pat;
+	QByteArray	rawValue;
+
+	if (parentStream)
+	{
+		len = parentStream->frameLen() - parentStream->protocolHeaderSize();
+		pat = parentStream->pattern();
+	}
+	else
+	{
+		len = 1500;		// FIXME(HI): testing only
+		pat = 0x0a0b0c0d;
+	}
+
+	// Make a larger byteArray and then resize to the correct size to
+	// take care of the case where len is not a multiple of pattern size
+	if (len > 0)
+	{
+		// TODO(LOW): allow non-4byte patterns!!!
+		int w = 4;	// data pattern size
+
+		rawValue.resize(len + 4);
+		for (int i = 0; i < (len/w + 1); i++)
+			qToBigEndian(pat, (uchar*) (rawValue.data() + i*sizeof(pat)));
+		rawValue.resize(len);
+	}
+
+	return rawValue;
+}
 
 QString MacProtocol::fieldName(int index)
 {
@@ -52,6 +119,24 @@ QString MacProtocol::fieldTextValue(int index)
 QByteArray MacProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
+
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(8);
+		qToBigEndian(dstMac(), (uchar *) rawValue.data());
+		rawValue.remove(0, 2);
+		qDebug("dstMac(%d): %s", rawValue.size(), rawValue.toHex().constData());
+		break;
+	case 1:
+		rawValue.resize(8);
+		qToBigEndian(srcMac(), (uchar *) rawValue.data());
+		rawValue.remove(0, 2);
+		qDebug("srcMac(%d): %s", rawValue.size(), rawValue.toHex().constData());
+		break;
+	default:
+		break;
+	}
 
 	return rawValue;
 }
@@ -109,6 +194,24 @@ QByteArray LlcProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(1);
+		rawValue[0] = dsap();
+		break;
+	case 1:
+		rawValue.resize(1);
+		rawValue[0] = ssap();
+		break;
+	case 2:
+		rawValue.resize(1);
+		rawValue[0] = ctl();
+		break;
+	default:
+		break;
+	}
+
 	return rawValue;
 }
 
@@ -151,6 +254,17 @@ QByteArray SnapProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(4);
+		qToBigEndian(oui(), (uchar *) rawValue.data());
+		rawValue.remove(0, 1);
+		break;
+	default:
+		break;
+	}
+
 	return rawValue;
 }
 
@@ -191,7 +305,56 @@ QByteArray Eth2Protocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(2);
+		qToBigEndian(type(), (uchar*) rawValue.data());
+		break;
+	default:
+		break;
+	}
+
 	return rawValue;
+}
+
+QString Dot3Protocol::fieldName(int index)
+{
+	QString name;
+
+	switch(index)
+	{
+	case 0:
+		name = QString("Length");
+		break;
+	default:
+		name = QString();
+		break;
+	}
+	return name;
+}
+
+QString Dot3Protocol::fieldTextValue(int index)
+{ 
+	if (parentStream) 
+		return QString("%1").arg(parentStream->frameLen());
+	else 
+		return QString("00");		
+}
+
+QByteArray Dot3Protocol::fieldRawValue(int index)
+{
+	QByteArray	ba;
+
+	if (parentStream) 
+		qToBigEndian((quint16) parentStream->frameLen(), (uchar*) ba.data());
+	else
+	{
+		ba.resize(2);
+		ba[0] = ba[1] = 0;
+	}
+
+	return ba;
 }
 
 int	VlanProtocol::numFields()
@@ -323,6 +486,56 @@ QByteArray VlanProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	if (isDoubleTagged())
+	{
+		switch(index)
+		{
+		case 0:
+			rawValue.resize(2);
+			qToBigEndian(stpid(), (uchar*) rawValue.data());
+			break;
+		case 1:
+			rawValue.resize(2);
+			qToBigEndian((svlanPrio() << 13) | (svlanCfi() < 12) | svlanId(),
+					(uchar*) rawValue.data());
+			break;
+		case 2:
+			// Combined with prio above
+			break;
+		case 3:
+			// Combined with prio above
+			break;
+		default:
+			index -= 4;
+			goto _single_tag;
+		}
+
+		goto _exit;
+	}
+
+_single_tag:
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(2);
+		qToBigEndian(ctpid(), (uchar*) rawValue.data());
+		break;
+	case 1:
+		rawValue.resize(2);
+		qToBigEndian((cvlanPrio() << 13) | (cvlanCfi() < 12) | cvlanId(),
+		   	(uchar*) rawValue.data());
+		break;
+	case 2:
+		// Combined with prio above
+		break;
+	case 3:
+		// Combined with prio above
+		break;
+	default:
+		break;
+	}
+
+_exit:
 	return rawValue;
 }
 
@@ -438,6 +651,60 @@ QByteArray IpProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(1);
+		//qToBigEndian((ver() << 4) | hdrLen(), (uchar*) rawValue.data());
+		rawValue[0]=(ver() << 4) | hdrLen();
+		break;
+	case 1:
+		// Combined with previous 4 bits of ver!!
+		break;
+	case 2:
+		rawValue.resize(1);
+		qToBigEndian(tos(), (uchar*) rawValue.data());
+		break;
+	case 3:
+		rawValue.resize(2);
+		qToBigEndian(totLen(), (uchar*) rawValue.data());
+		break;
+	case 4:
+		rawValue.resize(2);
+		qToBigEndian(id(), (uchar*) rawValue.data());
+		break;
+	case 5:
+		rawValue.resize(2);
+		qToBigEndian((quint16)((flags() << 13) | fragOfs()),
+				(uchar*) rawValue.data());
+		break;
+	case 6:
+		// Combined with previous 3 bits of flags!!
+		break;
+	case 7:
+		rawValue.resize(1);
+		qToBigEndian(ttl(), (uchar*) rawValue.data());
+		break;
+	case 8:
+		rawValue.resize(1);
+		qToBigEndian(proto(), (uchar*) rawValue.data());
+		break;
+	case 9:
+		rawValue.resize(2);
+		qToBigEndian(cksum(), (uchar*) rawValue.data());
+		break;
+	case 10:
+		rawValue.resize(4);
+		qToBigEndian(srcIp(), (uchar*) rawValue.data());
+		break;
+	case 11:
+		rawValue.resize(4);
+		qToBigEndian(dstIp(), (uchar*) rawValue.data());
+		break;
+	default:
+		break;
+	}
+
 	return rawValue;
 }
 
@@ -520,7 +787,7 @@ QString TcpProtocol::fieldTextValue(int index)
 		break;
 	case 7:
 		textValue = QString("%1").
-			arg(flags());
+			arg(window(), 2, BASE_HEX, QChar('0'));
 		break;
 	case 8:
 		textValue = QString("0x%1").
@@ -540,6 +807,51 @@ QString TcpProtocol::fieldTextValue(int index)
 QByteArray TcpProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
+
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(2);
+		qToBigEndian(srcPort(), (uchar*) rawValue.data());
+		break;
+	case 1:
+		rawValue.resize(2);
+		qToBigEndian(dstPort(), (uchar*) rawValue.data());
+		break;
+	case 2:
+		rawValue.resize(4);
+		qToBigEndian(seqNum(), (uchar*) rawValue.data());
+		break;
+	case 3:
+		rawValue.resize(4);
+		qToBigEndian(ackNum(), (uchar*) rawValue.data());
+		break;
+	case 4:
+		rawValue.resize(1);
+		rawValue[0] = (hdrLen() << 4) | rsvd();
+		break;
+	case 5:
+		// Combined with hdrLen above
+		break;
+	case 6:
+		rawValue.resize(1);
+		rawValue[0] = flags();
+		break;
+	case 7:
+		rawValue.resize(2);
+		qToBigEndian(window(), (uchar*) rawValue.data());
+		break;
+	case 8:
+		rawValue.resize(2);
+		qToBigEndian(cksum(), (uchar*) rawValue.data());
+		break;
+	case 9:
+		rawValue.resize(2);
+		qToBigEndian(urgPtr(), (uchar*) rawValue.data());
+		break;
+	default:
+		break;
+	}
 
 	return rawValue;
 }
@@ -602,6 +914,28 @@ QByteArray UdpProtocol::fieldRawValue(int index)
 {
 	QByteArray rawValue;
 
+	switch(index)
+	{
+	case 0:
+		rawValue.resize(2);
+		qToBigEndian(srcPort(), (uchar*) rawValue.data());
+		break;
+	case 1:
+		rawValue.resize(2);
+		qToBigEndian(dstPort(), (uchar*) rawValue.data());
+		break;
+	case 2:
+		rawValue.resize(2);
+		qToBigEndian(totLen(), (uchar*) rawValue.data());
+		break;
+	case 3:
+		rawValue.resize(2);
+		qToBigEndian(cksum(), (uchar*) rawValue.data());
+		break;
+	default:
+		break;
+	}
+
 	return rawValue;
 }
 
@@ -622,12 +956,14 @@ Stream::Stream()
 //	mCore->set_stream_id(mId);
 
 	mUnknown = new UnknownProtocol;
+	mPayload = new PayloadProtocol(); //FIXME(MED): need to pass parent stream
 
 	mMac = new MacProtocol;
 
 	mLlc = new LlcProtocol;
 	mSnap = new SnapProtocol;
 	mEth2 = new Eth2Protocol;
+	mDot3 = new Dot3Protocol();		// FIXME(MED): need to pass parent stream
 	mVlan = new VlanProtocol;
 
 	mIp = new IpProtocol;
@@ -776,7 +1112,21 @@ void Stream::updateSelectedProtocols()
 	selectedProtocols.append(proto);
 
 _data:
+
+	mProtocolHeaderSize = 0;
+#ifndef SRIVATSP
+#if 0
+	for (int i = 0; i < selectedProtocols.size(); i++)
+		mProtocolHeaderSize += protocol(i)->protocolRawValue().size();
+#endif
+#endif
 	selectedProtocols.append(PTYP_DATA);
+}
+
+int Stream::protocolHeaderSize()
+{
+	updateSelectedProtocols();			// FIXME(HI): shd not happen everytime
+	return mProtocolHeaderSize;
 }
 
 int Stream::numProtocols()
@@ -815,7 +1165,7 @@ AbstractProtocol* Stream::protocol(int index)
 		case PTYP_L2_ETH_2:
 			return eth2();
 		case PTYP_L2_802_3_RAW:
-			return eth2();	// FIXME(HI): define a dot3 protocol?
+			return dot3();
 
 		case PTYP_L2_802_3_LLC:
 			return llc();
@@ -843,7 +1193,7 @@ AbstractProtocol* Stream::protocol(int index)
 		case PTYP_INVALID:
 			return mUnknown;	
 		case PTYP_DATA:
-			return mUnknown;	// FIXME(MED) define a "data" protocol?
+			return mPayload;
 		default:
 			return mUnknown;	
 	}

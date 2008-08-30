@@ -33,7 +33,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
       <string/>
      </property>
      <property name="currentIndex" >
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="widget" >
       <attribute name="title" >
@@ -2035,6 +2035,9 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          <widget class="QTreeView" name="tvPacketTree" >
           <property name="selectionBehavior" >
            <enum>QAbstractItemView::SelectItems</enum>
+          </property>
+          <property name="wordWrap" >
+           <bool>true</bool>
           </property>
          </widget>
          <widget class="DumpView" native="1" name="vwPacketDump" />
