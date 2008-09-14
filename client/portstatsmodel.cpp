@@ -1,10 +1,18 @@
 #include "portstatsmodel.h"
 #include "portgrouplist.h"
 
+#include <QTimer>
+
 PortStatsModel::PortStatsModel(PortGroupList *p, QObject *parent)
 	: QAbstractTableModel(parent) 
 {
+	QTimer	*timer;
+
 	pgl = p;
+
+	timer = new QTimer();
+	connect(timer, SIGNAL(timeout()), this, SLOT(updateStats()));
+	timer->start(5000);
 }
 
 int PortStatsModel::rowCount(const QModelIndex &parent) const
@@ -32,9 +40,33 @@ int PortStatsModel::columnCount(const QModelIndex &parent ) const
 			return numPorts.last();
 }
 
+void PortStatsModel::getDomainIndexes(const QModelIndex &index,
+		uint &portGroupIdx, uint &portIdx) const
+{
+	int portNum;
+
+	// TODO(LOW): Optimize using binary search: see qLowerBound()
+	portNum = index.column() + 1;
+	for (portGroupIdx = 0; portGroupIdx < (uint) numPorts.size(); portGroupIdx++)
+		if (portNum <= numPorts.at(portGroupIdx))
+			break;
+
+	if (portGroupIdx)
+	{
+		if (numPorts.at(portGroupIdx -1))
+			portIdx = (portNum - 1) % numPorts.at(portGroupIdx - 1); 
+		else
+			portIdx = portNum - 1; 
+	}
+	else
+		portIdx = portNum - 1; 
+
+	//qDebug("PSM: %d - %d, %d", index.column(), portGroupIdx, portIdx);
+}
+
 QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 {
-	int pgidx, pidx, portNum;
+	uint pgidx, pidx;
 
 	// Check for a valid index
 	if (!index.isValid())
@@ -50,31 +82,44 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 	if (index.column() >= (numPorts.last()))
 		return QVariant();
 
-	// TODO(LOW): Optimize using binary search: see qLowerBound()
-	portNum = index.column() + 1;
-	for (pgidx = 0; pgidx < numPorts.size(); pgidx++)
-		if (portNum <= numPorts.at(pgidx))
-			break;
-
-	if (pgidx)
-	{
-		if (numPorts.at(pgidx -1))
-			pidx = (portNum - 1) % numPorts.at(pgidx - 1); 
-		else
-			pidx = portNum - 1; 
-	}
-	else
-		pidx = portNum - 1; 
-
-	//qDebug("PSM: %d - %d, %d", index.column(), pgidx, pidx);
+	getDomainIndexes(index, pgidx, pidx);
 
 	// Check role
 	if (role == Qt::DisplayRole)
 	{
-#if 0 // PB
-		return pgl->mPortGroups.at(pgidx)->mPorts.at(pidx).mPortStats[index.row()];
-#endif	
-		return 0;	//FIXME: Get actual port stats
+		OstProto::PortStats	stats;
+
+		stats = pgl->mPortGroups.at(pgidx)->mPorts[pidx].getStats();
+
+		switch(index.row())
+		{
+			case e_STAT_FRAMES_RCVD:
+				return stats.rx_pkts();
+
+			case e_STAT_FRAMES_SENT:
+				return stats.tx_pkts();
+
+			case e_STAT_FRAME_SEND_RATE:
+				return stats.tx_pps();
+
+			case e_STAT_FRAME_RECV_RATE:
+				return stats.rx_pps();
+
+			case e_STAT_BYTES_RCVD:
+				return stats.rx_bytes();
+
+			case e_STAT_BYTES_SENT:
+				return stats.tx_bytes();
+
+			case e_STAT_BYTE_SEND_RATE:
+				return stats.tx_bps();
+
+			case e_STAT_BYTE_RECV_RATE:
+				return stats.rx_bps();
+
+			default:
+				return 0;
+		}
 	}
 	else
 		return QVariant();
@@ -90,6 +135,22 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
 		return QString("Port %1").arg(section);
 	else
 		return PortStatName.at(section);
+}
+
+void PortStatsModel::portListFromIndex(QModelIndexList indices, 
+		QList<PortGroupAndPortList> &portList)
+{
+	portList.clear();
+
+	for (int i = 0; i < indices.size(); i++)
+	{
+		//getDomainIndexes(indices.at(i), portGroupIdx, portIdx);	
+
+		for (int j = 0; j < portList.size(); j++)
+		{
+			// FIXME(HI): Incomplete!!!!
+		}
+	}
 }
 
 //
@@ -121,4 +182,16 @@ void PortStatsModel::on_portStatsUpdate(int port, void*stats)
 	emit dataChanged(topLeft, bottomRight);
 }
 
+void PortStatsModel::updateStats()
+{
+	// Request each portgroup to fetch updated stats - the port group
+	// raises a signal once updated stats are available
+	for (int i = 0; i < pgl->mPortGroups.size(); i++)
+		pgl->mPortGroups[i]->getPortStats();
+}
 
+void PortStatsModel::when_portGroup_stats_update(quint32 portGroupId)
+{
+	// FIXME(MED): update only the changed ports, not all
+	reset();
+}

@@ -1,7 +1,7 @@
 TEMPLATE = app
 CONFIG += qt
 QT += network
-DEFINES += HAVE_REMOTE
+DEFINES += HAVE_REMOTE WPCAP
 INCLUDEPATH += "c:\msys\1.0\local\include"
 INCLUDEPATH += "C:\DevelLibs\WpdPack\Include"
 INCLUDEPATH += "..\rpc"

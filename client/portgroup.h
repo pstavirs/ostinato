@@ -69,10 +69,20 @@ public:
 		OstProto::StreamConfigList *streamConfigList = NULL);
 
 	void processModifyStreamAck(OstProto::Ack *ack);
+
+	void startTx(QList<uint> portList);
+	void processStartTxAck(OstProto::Ack *ack);
+
+	void getPortStats();
+	void processPortStatsList(OstProto::PortStatsList *portStatsList);
+	void clearPortStats();
+	void processClearStatsAck(OstProto::Ack	*ack);
+
 signals:
 	void portGroupDataChanged(PortGroup* portGroup);
 	void portListAboutToBeChanged(quint32 portGroupId);
 	void portListChanged(quint32 portGroupId);
+	void statsChanged(quint32 portGroupId);
 
 private slots:
 	void on_rpcChannel_stateChanged();

@@ -33,9 +33,8 @@ class PortStatsModel : public QAbstractTableModel
 {
 	Q_OBJECT
 
-	PortGroupList	*pgl;
-
 	public:
+
 		PortStatsModel(PortGroupList *p, QObject *parent = 0);
 
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -44,15 +43,31 @@ class PortStatsModel : public QAbstractTableModel
 		QVariant headerData(int section, Qt::Orientation orientation, 
 			int role = Qt::DisplayRole) const;
 
+		class PortGroupAndPortList {
+			uint portGroupId;
+			QList<uint> portList;
+		};
+		void portListFromIndex(QModelIndexList indices, 
+				QList<PortGroupAndPortList> &portList);
+
 	public slots:
 		void when_portListChanged();
 		void on_portStatsUpdate(int port, void*stats);
+		void when_portGroup_stats_update(quint32 portGroupId);
+
+	private slots:
+		void updateStats();
 
 	private:
+		PortGroupList	*pgl;
+
 		// numPorts stores the num of ports per portgroup
 		// in the same order as the portgroups are index in the pgl
 		// Also it stores them as cumulative totals
 		QList<quint16>	numPorts;
+
+		void getDomainIndexes(const QModelIndex &index,
+			  uint &portGroupIdx, uint &portIdx) const;
 
 };
 

@@ -34,7 +34,7 @@ message Llc {
 
 message Snap {
 	optional uint32			oui = 1;
-	optional uint32			type = 2;
+	//optional uint32			type = 2;
 }
 
 message Eth2 {
@@ -126,7 +126,7 @@ message Udp {
 
 	optional uint32		src_port = 3 [default = 8902];
 	optional uint32		dst_port = 4 [default = 80];
-	optional uint32		totLen = 5;
+	optional uint32		totlen = 5;
 	optional uint32		cksum = 6;
 }
 
@@ -279,11 +279,21 @@ message CaptureBufferList {
 }
 
 message PortStats {
-	// TODO
+	required PortId	port_id = 1;
+
+	optional uint64 rx_pkts = 11;
+	optional uint64 rx_bytes = 12;
+	optional uint64 rx_pps = 13;
+	optional uint64 rx_bps = 14;
+
+	optional uint64 tx_pkts = 21;
+	optional uint64 tx_bytes = 22;
+	optional uint64 tx_pps = 23;
+	optional uint64 tx_bps = 24;
 }
 
 message PortStatsList {
-	repeated PortStats list = 1;
+	repeated PortStats port_stats = 1;
 }
 
 service OstService {

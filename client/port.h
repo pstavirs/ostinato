@@ -13,8 +13,9 @@ class Port {
 	//friend class StreamModel;
 
 private:
-	static uint		mAllocStreamId;
-	OstProto::Port	d;
+	static uint			mAllocStreamId;
+	OstProto::Port		d;
+	OstProto::PortStats	stats;
 
 	// FIXME(HI): consider removing mPortId as it is duplicated inside 'd'
 	quint32		mPortId;
@@ -68,6 +69,7 @@ public:
 		Q_ASSERT(index < mStreams.size());
 		return mStreams[index];
 	}
+	OstProto::PortStats	getStats() { return stats; }
 
 	// FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
 	void updatePortConfig(OstProto::Port *port);
@@ -89,7 +91,11 @@ public:
 	void getModifiedStreamsSinceLastSync(
 		OstProto::StreamConfigList &streamConfigList);
 
+
 	void when_syncComplete();
+
+	void updateStats(OstProto::PortStats *portStats);
+
 };
 
 #endif

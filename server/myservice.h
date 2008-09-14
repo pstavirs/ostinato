@@ -10,7 +10,9 @@
 #include "../common/protocol.pb.h"
 #include "abstracthost.h"
 #include <pcap.h>
+#include <QtGlobal>
 #include <QList>
+#include <QThread>
 
 #include "../rpc/pbhelper.h"
 
@@ -22,10 +24,12 @@ class MyService;
 class StreamInfo
 {
 	friend class MyService;
+	friend class PortInfo;
 
 	OstProto::Stream	d;
 
 	StreamInfo() { PbHelper pbh; pbh.ForceSetSingularDefault(&d); }
+	int StreamInfo::makePacket(uchar *buf, int bufMaxSize);
 };
 
 
@@ -33,25 +37,55 @@ class PortInfo
 {
 	friend class MyService;
 
+	class PortMonitor: public QThread
+	{
+		friend class PortInfo;
+
+		PortInfo	*port;
+	public:
+		PortMonitor(PortInfo *port);
+		static void callback(u_char *state, 
+			const struct pcap_pkthdr *header, const u_char *pkt_data);
+		void run();
+	};
+
 	OstProto::Port			d;
+
 	pcap_if_t				*dev;
+	pcap_t					*devHandle;
+	pcap_send_queue			*sendQueue;
+	bool					isSendQueueDirty;
+	PortMonitor				monitor;
+
+	struct PortStats
+	{
+		quint64	rxPkts;
+		quint64	rxBytes;
+		quint64	rxPps;
+		quint64	rxBps;
+
+		quint64	txPkts;
+		quint64	txBytes;
+		quint64	txPps;
+		quint64	txBps;
+	};
+
+	struct PortStats		stats;
 
 	/*! StreamInfo::d::stream_id and index into streamList[] are NOT same! */
 	QList<StreamInfo>		streamList;
 
 public:
-	// TODO(LOW): Both setId and setPcapDev() should together form the ctor
-	void setId(unsigned int id) { d.mutable_port_id()->set_id(id); }
-	void setPcapDev(pcap_if_t	*dev)
-	{
-		this->dev = dev;
-		d.set_name("eth"); // FIXME(MED): suffix portid
-		d.set_description(dev->description);
-		d.set_is_enabled(true);	// FIXME(MED):check
-		d.set_is_oper_up(true); // FIXME(MED):check
-		d.set_is_exclusive_control(false); // FIXME(MED): check
-	}
+	PortInfo::PortInfo(uint id, pcap_if_t *dev);
+	uint id() { return d.port_id().id(); }
+	bool isDirty() { return isSendQueueDirty; }
+	void setDirty(bool dirty) { isSendQueueDirty = dirty; }
+	void update();
+	void startTransmit();
+	void stopTransmit();
+	void resetStats();
 };
+
 
 class MyService: public OstProto::OstService
 {
@@ -59,8 +93,9 @@ class MyService: public OstProto::OstService
 	char			logStr[1024];
 
 	uint		 		numPorts;
+
 	/*! PortInfo::d::port_id and index into portInfo[] are same! */
-	PortInfo		*portInfo;
+	QList<PortInfo*>	portInfo;
 	pcap_if_t		*alldevs;
 
 	int getStreamIndex(unsigned int portIdx,unsigned int streamId);

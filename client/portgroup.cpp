@@ -413,3 +413,81 @@ void PortGroup::processModifyStreamAck(OstProto::Ack *ack)
 
 	// TODO(HI): Apply Button should now be disabled???!!!!???
 }
+
+void PortGroup::startTx(QList<uint> portList)
+{
+	OstProto::PortIdList	portIdList;
+	OstProto::Ack			*ack = new OstProto::Ack;
+
+	qDebug("In %s", __FUNCTION__);
+
+	for (int i = 0; i < portList.size(); i++)
+	{
+		OstProto::PortId	*portId;
+		portId = portIdList.add_port_id();
+		portId->set_id(portList.at(i));
+	}
+
+	serviceStub->startTx(rpcController, &portIdList, ack,
+			NewCallback(this, &PortGroup::processStartTxAck, ack));
+}
+
+void PortGroup::processStartTxAck(OstProto::Ack	*ack)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	delete ack;
+}
+
+void PortGroup::getPortStats()
+{
+	OstProto::PortStatsList	*portStatsList = new OstProto::PortStatsList;
+
+	qDebug("In %s", __FUNCTION__);
+
+	serviceStub->getStats(rpcController, &portIdList, portStatsList,
+			NewCallback(this, &PortGroup::processPortStatsList, portStatsList));
+}
+
+void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	if (rpcController->Failed())
+	{
+		qDebug("%s: rpc failed", __FUNCTION__);
+		goto _error_exit;
+	}
+
+	for(int i = 0; i < portStatsList->port_stats_size(); i++)
+	{
+		uint	id;
+
+		id = portStatsList->port_stats(i).port_id().id();
+		// FIXME: don't mix port id & index into mPorts[]
+		mPorts[id].updateStats(portStatsList->mutable_port_stats(i));
+	}
+
+	emit statsChanged(mPortGroupId);
+
+_error_exit:
+	delete portStatsList;
+}
+
+void PortGroup::clearPortStats()
+{
+	OstProto::Ack	*ack = new OstProto::Ack;
+
+	qDebug("In %s", __FUNCTION__);
+
+	serviceStub->clearStats(rpcController, &portIdList, ack,
+			NewCallback(this, &PortGroup::processClearStatsAck, ack));
+}
+
+void PortGroup::processClearStatsAck(OstProto::Ack	*ack)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	delete ack;
+}
+

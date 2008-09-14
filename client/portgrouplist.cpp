@@ -74,6 +74,9 @@ void PortGroupList::addPortGroup(PortGroup &portGroup)
 	connect(&portGroup, SIGNAL(portListChanged(quint32)),
 		&mPortStatsModel, SLOT(when_portListChanged()));
 
+	connect(&portGroup, SIGNAL(statsChanged(quint32)),
+		&mPortStatsModel, SLOT(when_portGroup_stats_update(quint32)));
+
 	mPortGroups.append(&portGroup);
 	portGroup.connectToHost();
 

@@ -16,6 +16,7 @@ Port::Port(quint32 id, quint32 portGroupId)
 {
 	mPortId = id;
 	d.mutable_port_id()->set_id(id);
+	stats.mutable_port_id()->set_id(id);
 	mPortGroupId = portGroupId;
 }
 
@@ -166,10 +167,6 @@ void Port::getModifiedStreamsSinceLastSync(
 	}
 }
 
-
-//
-// ----------- SLOTS -------------
-//
 void Port::when_syncComplete()
 {
 	qSort(mStreams);
@@ -177,5 +174,10 @@ void Port::when_syncComplete()
 	mLastSyncStreamList.clear();
 	for (int i=0; i<mStreams.size(); i++)
 		mLastSyncStreamList.append(mStreams[i].id());
+}
+
+void Port::updateStats(OstProto::PortStats *portStats)
+{
+	stats.MergeFrom(*portStats);
 }
 
