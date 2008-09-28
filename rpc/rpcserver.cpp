@@ -41,7 +41,7 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
 	char 	*p = (char *)&msg;
 	int		len;
 
-	qDebug("In RpcServer::done");
+	//qDebug("In RpcServer::done");
 
 	// TODO: check PbRpcController to see if method failed
 	if (PbRpcController->Failed())
@@ -67,9 +67,13 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
 	len = resp->ByteSize();
 	(*(quint16*)(p+4)) = HTONS(len); // len
 
-	qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
-		__FUNCTION__, len + 8, resp->DebugString().c_str());
-	//BUFDUMP(msg, len + 8);
+	// Avoid printing stats since it happens once every couple of seconds
+	if (pendingMethodId != 12)
+	{
+		qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
+			__FUNCTION__, len + 8, resp->DebugString().c_str());
+		//BUFDUMP(msg, len + 8);
+	}
 
 	clientSock->write(msg, len + 8);
 
@@ -132,17 +136,17 @@ void RpcServer::when_dataAvail()
 	PbRpcController	*controller;
 	
 	msgLen = clientSock->read(msg, sizeof(msg));
-	LogInt(QString(QByteArray(msg, msgLen).toHex()));
+	//LogInt(QString(QByteArray(msg, msgLen).toHex()));
 
-	qDebug("Server %s: rcvd %d bytes", __FUNCTION__, msgLen);
+	//qDebug("Server %s: rcvd %d bytes", __FUNCTION__, msgLen);
 	//BUFDUMP(msg, msgLen);
 
 	type = NTOHS(GET16(p+0));
 	method = NTOHS(GET16(p+2));
 	len = NTOHS(GET16(p+4));
 	rsvd = NTOHS(GET16(p+6));
-	qDebug("type = %d, method = %d, len = %d, rsvd = %d", 
-		type, method, len, rsvd);
+	//qDebug("type = %d, method = %d, len = %d, rsvd = %d", 
+		//type, method, len, rsvd);
 
 	if (type != PB_MSG_TYPE_REQUEST)
 	{
@@ -182,12 +186,12 @@ void RpcServer::when_dataAvail()
 
 		goto _error_exit;
 	}
-	qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
-		resp->DebugString().c_str());
+	//qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
+		//resp->DebugString().c_str());
 
 	controller = new PbRpcController;
 
-	qDebug("before service->callmethod()");
+	//qDebug("before service->callmethod()");
 
 	service->CallMethod(methodDesc, controller, req, resp,
 		NewCallback(this, &RpcServer::done, resp, controller));

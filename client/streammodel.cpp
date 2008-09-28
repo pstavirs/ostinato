@@ -38,7 +38,10 @@ Qt::ItemFlags StreamModel::flags(const QModelIndex &index) const
 		flags |= Qt::ItemIsEditable;
 		break;
 	case StreamStatus:
+#if 0
 		flags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+#endif
+		flags |= Qt::ItemIsEditable;
 		break;
 	default:
 		break;
@@ -87,11 +90,11 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		}
 		case StreamStatus:
 		{
-	#if 0
 			if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
-				return streamList[index.row()].isEnabled;
-			if ((role == Qt::DisplayRole) || (role == Qt::CheckStateRole) || 
-	#endif
+				return mCurrentPort->streamByIndex(index.row()).isEnabled();
+			else
+				return QVariant();
+	#if 0
 			if ((role == Qt::CheckStateRole) || (role == Qt::EditRole))
 			{
 				if (mCurrentPort->streamByIndex(index.row()).isEnabled())
@@ -101,6 +104,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 			}
 			else
 				return QVariant();
+	#endif
 			break;
 		}
 		default:

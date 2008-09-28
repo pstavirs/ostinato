@@ -13,6 +13,112 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	setupUi(this);
 	setupUiExtra();
 	
+	// Time to play match the signals and slots!
+	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
+
+	// Show/Hide FrameType related inputs for FT None
+	connect(rbFtNone, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
+
+	// Show/Hide FrameType related inputs for FT Ethernet2
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
+
+	// Show/Hide FrameType related inputs for FT 802.3 Raw
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
+
+	// Show/Hide FrameType related inputs for FT 802.3 LLC
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblSsap, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leSsap, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblControl, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leControl, SLOT(setVisible(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
+
+	// Show/Hide FrameType related inputs for FT 802.3 LLC SNAP
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblSsap, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leSsap, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblControl, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leControl, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblOui, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leOui, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
+
+	// Enable/Disable FrameType related inputs for FT 802.3 LLC SNAP
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setDisabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leDsap, SLOT(setDisabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblSsap, SLOT(setDisabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leSsap, SLOT(setDisabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblControl, SLOT(setDisabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leControl, SLOT(setDisabled(bool)));
+
+	// Enable/Disable L4 Protocol Choices for L3 Protocol None
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setDisabled(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Other, SLOT(setDisabled(bool)));
+
+	// Force L4 Protocol = None if L3 Protocol is set to None
+	connect(rbL3None, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
+
+	// Enable/Disable L4 Protocol Choices for L3 Protocol IPv4
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setEnabled(bool)));
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setEnabled(bool)));
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setEnabled(bool)));
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setEnabled(bool)));
+	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Other, SLOT(setEnabled(bool)));
+
+	// Enable/Disable L4 Protocol Choices for L3 Protocol ARP
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setDisabled(bool)));
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Other, SLOT(setDisabled(bool)));
+
+	// Force L4 Protocol = None if L3 Protocol is set to ARP
+	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
+
+	// Init with FT=Eth2 to trigger signals; actual value will be 
+	// initialized by LoadCurrentStream()
+	rbFtEthernet2->click();
+	rbFtNone->click();
+
 	//mpStreamList = streamList;
 	mCurrentStreamIndex = streamIndex;
 	LoadCurrentStream();
@@ -24,9 +130,16 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	vwPacketDump->setModel(mpPacketModel);
 	vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
-	// FIXME(MED): Enable this navigation
+
+
+	// TODO(MED):
+	//! \todo Enable navigation of streams
 	pbPrev->setDisabled(true);
 	pbNext->setDisabled(true);
+	//! \todo Support Goto Stream Id
+	rbActionGotoStream->setDisabled(true);
+	//! \todo Support Continuous Mode
+	rbModeContinuous->setDisabled(true);
 }
 
 void StreamConfigDialog::setupUiExtra()
@@ -126,6 +239,22 @@ void StreamConfigDialog::on_pbNext_clicked()
 	pbPrev->setDisabled((currStreamIdx == 0));
 	pbNext->setDisabled((currStreamIdx == 2));
 #endif
+}
+
+void StreamConfigDialog::on_rbFtNone_toggled(bool checked)
+{
+}
+
+void StreamConfigDialog::on_rbFtEthernet2_toggled(bool checked)
+{
+}
+
+void StreamConfigDialog::on_rbFt802Dot3Raw_toggled(bool checked)
+{
+}
+
+void StreamConfigDialog::on_rbFt802Dot3Llc_toggled(bool checked)
+{
 }
 
 void StreamConfigDialog::on_rbFtLlcSnap_toggled(bool checked)
@@ -551,6 +680,55 @@ void StreamConfigDialog::LoadCurrentStream()
 			// TODO(LOW)
 		}
 	}
+
+	// Stream Control
+	{
+		switch (pStream->sendUnit())
+		{
+		case Stream::e_su_packets:
+			rbSendPackets->setChecked(true);
+			break;
+		case Stream::e_su_bursts:
+			rbSendBursts->setChecked(true);
+			break;
+		default:
+			qWarning("Unhandled sendUnit = %d\n", pStream->sendUnit());
+		}
+
+		switch (pStream->sendMode())
+		{
+		case Stream::e_sm_fixed:
+			rbModeFixed->setChecked(true);
+			break;
+		case Stream::e_sm_continuous:
+			rbModeContinuous->setChecked(true);
+			break;
+		default:
+			qWarning("Unhandled sendMode = %d\n", pStream->sendMode());
+		}
+
+		switch(pStream->nextWhat())
+		{
+		case Stream::e_nw_stop:
+			rbActionStop->setChecked(true);
+			break;
+		case Stream::e_nw_goto_next:
+			rbActionGotoNext->setChecked(true);
+			break;
+		case Stream::e_nw_goto_id:
+			rbActionGotoStream->setChecked(true);
+			break;
+		default:
+			qWarning("Unhandled nextAction = %d\n", pStream->nextWhat());
+		}
+
+		leNumPackets->setText(QString().setNum(pStream->numPackets()));
+		leNumBursts->setText(QString().setNum(pStream->numBursts()));
+		lePacketsPerBurst->setText(QString().setNum(
+					pStream->burstSize()));
+		lePacketsPerSec->setText(QString().setNum(pStream->packetRate()));
+		leBurstsPerSec->setText(QString().setNum(pStream->burstRate()));
+	}
 }
 
 void StreamConfigDialog::StoreCurrentStream()
@@ -623,11 +801,14 @@ void StreamConfigDialog::StoreCurrentStream()
 	{
 		// L2 | Ethernet
 		{
+			qDebug("%s: LL dstMac = %llx", __FUNCTION__, 
+				leDstMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
 			pStream->mac()->setDstMac(
 				leDstMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
 #if 1
-			qDebug("%s: dstMac = %llx [%s] %d", __FUNCTION__, 
-					pStream->mac()->dstMac(),
+			qDebug("%s: dstMac = %llx", __FUNCTION__, 
+					pStream->mac()->dstMac());
+			qDebug("%s: dstMac = [%s] %d", __FUNCTION__, 
 					leDstMac->text().toAscii().constData(), isOk);
 #endif
 			pStream->mac()->setDstMacMode(
@@ -639,8 +820,9 @@ void StreamConfigDialog::StoreCurrentStream()
 
 			pStream->mac()->setSrcMac(
 				leSrcMac->text().remove(QChar(' ')).toULongLong(&isOk, 16));
-			qDebug("%s: srcMac = %llx [%s] %d", __FUNCTION__, 
-					pStream->mac()->srcMac(),
+			qDebug("%s: srcMac = %llx", __FUNCTION__, 
+					pStream->mac()->srcMac());
+			qDebug("%s: srcMac = [%s] %d", __FUNCTION__, 
 					leSrcMac->text().toAscii().constData(), isOk);
 			pStream->mac()->setSrcMacMode(
 				(MacProtocol::MacAddrMode) cmbSrcMacMode->currentIndex());
@@ -657,7 +839,7 @@ void StreamConfigDialog::StoreCurrentStream()
 				vlan->setCvlanPrio(cmbCvlanPrio->currentIndex());
 				vlan->setCvlanCfi(cmbCvlanCfi->currentIndex());
 				vlan->setCvlanId(leCvlanId->text().toULong(&isOk));
-				vlan->setCtpid(leCvlanTpid->text().remove(QChar(' ')).toULong(&isOk));
+				vlan->setCtpid(leCvlanTpid->text().remove(QChar(' ')).toULong(&isOk, 16));
 				if (cbCvlanTpidOverride->isChecked())
 					f |= VlanProtocol::VlanCtpidOverride;
 				if (gbCvlan->isChecked())
@@ -666,7 +848,7 @@ void StreamConfigDialog::StoreCurrentStream()
 				vlan->setSvlanPrio(cmbSvlanPrio->currentIndex());
 				vlan->setSvlanCfi(cmbSvlanCfi->currentIndex());
 				vlan->setSvlanId(leSvlanId->text().toULong(&isOk));
-				vlan->setStpid(leSvlanTpid->text().remove(QChar(' ')).toULong(&isOk));
+				vlan->setStpid(leSvlanTpid->text().remove(QChar(' ')).toULong(&isOk, 16));
 				if (cbSvlanTpidOverride->isChecked())
 					f |= VlanProtocol::VlanStpidOverride;
 				if (gbSvlan->isChecked())
@@ -797,6 +979,32 @@ void StreamConfigDialog::StoreCurrentStream()
 		{
 			// TODO(LOW)
 		}		
+	}
+
+	// Stream Control
+	{
+		if (rbSendPackets->isChecked())
+			pStream->setSendUnit(Stream::e_su_packets);
+		if (rbSendBursts->isChecked())
+			pStream->setSendUnit(Stream::e_su_bursts);
+
+		if (rbModeFixed->isChecked())
+			pStream->setSendMode(Stream::e_sm_fixed);
+		if (rbModeContinuous->isChecked())
+			pStream->setSendMode(Stream::e_sm_continuous);
+
+		if (rbActionStop->isChecked())
+			pStream->setNextWhat(Stream::e_nw_stop);
+		if (rbActionGotoNext->isChecked())
+			pStream->setNextWhat(Stream::e_nw_goto_next);
+		if (rbActionGotoStream->isChecked())
+			pStream->setNextWhat(Stream::e_nw_goto_id);
+
+		pStream->setNumPackets(leNumPackets->text().toULong(&isOk));
+		pStream->setNumBursts(leNumBursts->text().toULong(&isOk));
+		pStream->setBurstSize(lePacketsPerBurst->text().toULong(&isOk));
+		pStream->setPacketRate(lePacketsPerSec->text().toULong(&isOk));
+		pStream->setBurstRate(leBurstsPerSec->text().toULong(&isOk));
 	}
 }
 

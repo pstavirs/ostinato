@@ -18,10 +18,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 	setupUi(this);
 
-	dock->setWidget(portsWindow);
-    addDockWidget(Qt::TopDockWidgetArea, dock);
 	dock2->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, dock2);
+	dock->setWidget(portsWindow);
+    addDockWidget(Qt::TopDockWidgetArea, dock);
 }
 
 void MainWindow::on_actionPreferences_triggered()

@@ -5,6 +5,7 @@
 #include <QAbstractItemModel>
 #include "ui_portstatswindow.h"
 #include "portgrouplist.h"
+#include "portstatsmodel.h"
 
 class PortStatsWindow : public QWidget, public Ui::PortStatsWindow
 {
@@ -16,7 +17,7 @@ public:
 
 private:
 	PortGroupList		*pgl;
-	QAbstractItemModel	*model;
+	PortStatsModel		*model;
 
 private slots:
 	void on_tbStartTransmit_clicked();

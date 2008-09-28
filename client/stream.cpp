@@ -951,6 +951,7 @@ Stream::Stream()
 	mId = 0xFFFFFFFF;
 
 	mCore = new OstProto::StreamCore;
+	mControl = new OstProto::StreamControl;
 
 //	mCore->set_port_id(0xFFFFFFFF);
 //	mCore->set_stream_id(mId);
@@ -973,6 +974,8 @@ Stream::Stream()
 	mUdp = new UdpProtocol;
 	mIcmp = new IcmpProtocol;
 	mIgmp = new IgmpProtocol;
+
+	mCore->set_is_enabled(true);
 }
 
 void Stream::getConfig(uint portId, OstProto::Stream *s)
@@ -980,6 +983,7 @@ void Stream::getConfig(uint portId, OstProto::Stream *s)
 	s->mutable_stream_id()->set_id(mId);
 
 	s->mutable_core()->CopyFrom(*mCore);
+	s->mutable_control()->CopyFrom(*mControl);
 
 	mMac->getConfig(s->mutable_mac());
 	mMac->getConfig(s->mutable_mac());
@@ -997,6 +1001,29 @@ void Stream::getConfig(uint portId, OstProto::Stream *s)
 	mIgmp->getConfig(s->mutable_igmp());
 }
 
+bool Stream::update(OstProto::Stream	*stream)
+	{
+		mCore->MergeFrom(stream->core());
+		mControl->MergeFrom(stream->control());
+		mMac->update(stream->mac());
+
+		mLlc->update(stream->llc());
+		mSnap->update(stream->snap());
+		mEth2->update(stream->eth2());
+		mVlan->update(stream->vlan());
+
+		mIp->update(stream->ip());
+		mArp->update(stream->arp());
+
+		mTcp->update(stream->tcp());
+		mUdp->update(stream->udp());
+		mIcmp->update(stream->icmp());
+		mIgmp->update(stream->igmp());
+
+		// FIXME(MED): Re-eval why not store complete OstProto::Stream
+		// instead of components
+		return true;
+	}
 // FIXME(HIGH): Replace this by some Protocol Registration mechanism at Init
 #define PTYP_L2_NONE		1
 #define PTYP_L2_ETH_2		2

@@ -35,6 +35,7 @@ public:
 
 	// FIXME(HIGH): default args is a hack for QList operations on Port
 	Port(quint32 id = 0xFFFFFFFF, quint32 pgId = 0xFFFFFFFF);
+	~Port();
 
 	quint32 portGroupId() const { return mPortGroupId; }
 	const QString& userAlias() const { return mUserAlias; }

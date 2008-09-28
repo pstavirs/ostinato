@@ -11,6 +11,12 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
 	setupUi(this);
 
+	tvStreamList->horizontalHeader()->resizeSections(
+			QHeaderView::ResizeToContents);
+	tvStreamList->verticalHeader()->setDefaultSectionSize(
+			tvStreamList->verticalHeader()->minimumSectionSize());
+
+	// Populate Context Menu Actions
 	tvPortList->addAction(actionNew_Port_Group);
 	tvPortList->addAction(actionDelete_Port_Group);
 	tvPortList->addAction(actionConnect_Port_Group);
@@ -40,6 +46,10 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 	connect( tvPortList->selectionModel(), 
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		plm->getStreamModel(), SLOT(setCurrentPortIndex(const QModelIndex&)));
+
+	// Initially we don't have any ports - so trigger selection of 
+	// portgroup detail page
+	when_portView_currentChanged(QModelIndex(), QModelIndex());
 }
 
 PortsWindow::~PortsWindow()

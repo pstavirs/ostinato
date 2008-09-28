@@ -831,6 +831,7 @@ class Stream {
 
 	quint32					mId;
 	OstProto::StreamCore	*mCore;
+	OstProto::StreamControl	*mControl;
 
 	UnknownProtocol	*mUnknown;
 	PayloadProtocol	*mPayload;
@@ -909,6 +910,22 @@ public:
 		e_l4_igmp,
 	};
 
+	enum SendUnit {
+		e_su_packets,
+		e_su_bursts
+	};
+
+	enum SendMode {
+		e_sm_fixed,
+		e_sm_continuous
+	};
+
+	enum NextWhat {
+		e_nw_stop,
+		e_nw_goto_next,
+		e_nw_goto_id
+	};
+
 	// -------------------------------------------------------
 	// Methods
 	// -------------------------------------------------------
@@ -917,30 +934,9 @@ public:
 	bool operator < (const Stream &s) const
 		{ return(mCore->ordinal() < s.mCore->ordinal()); }
 
-	bool update(OstProto::Stream	*stream)
-	{
-		mCore->MergeFrom(stream->core());
-		mMac->update(stream->mac());
-
-		mLlc->update(stream->llc());
-		mSnap->update(stream->snap());
-		mEth2->update(stream->eth2());
-		mVlan->update(stream->vlan());
-
-		mIp->update(stream->ip());
-		mArp->update(stream->arp());
-
-		mTcp->update(stream->tcp());
-		mUdp->update(stream->udp());
-		mIcmp->update(stream->icmp());
-		mIgmp->update(stream->igmp());
-
-		// FIXME(MED): Re-eval why not store complete OstProto::Stream
-		// instead of components
-		return true;
-	}
 
 	void getConfig(uint portId, OstProto::Stream *s);
+	bool update(OstProto::Stream *stream);
 
 	quint32	id()
 		{ return mId;}
@@ -1025,6 +1021,48 @@ public:
 		{ mCore->set_l4_proto((OstProto::StreamCore::L4Proto) l4Proto); 
 			return true; }
 
+	SendUnit sendUnit()
+		{ return (SendUnit) mControl->unit(); }
+	bool setSendUnit(SendUnit sendUnit)
+		{ mControl->set_unit(
+			(OstProto::StreamControl::SendUnit) sendUnit); return true; }
+
+	SendMode sendMode()
+		{ return (SendMode) mControl->mode(); }
+	bool setSendMode(SendMode sendMode)
+		{ mControl->set_mode(
+			(OstProto::StreamControl::SendMode) sendMode); return true; }
+
+	NextWhat nextWhat()
+		{ return (NextWhat) mControl->next(); }
+	bool setNextWhat(NextWhat nextWhat)
+		{ mControl->set_next(
+			(OstProto::StreamControl::NextWhat) nextWhat); return true; }
+
+	quint32 numPackets()
+		{ return (quint32) mControl->num_packets(); }
+	bool setNumPackets(quint32 numPackets)
+		{ mControl->set_num_packets(numPackets); return true; }
+
+	quint32 numBursts()
+		{ return (quint32) mControl->num_bursts(); }
+	bool setNumBursts(quint32 numBursts)
+		{ mControl->set_num_bursts(numBursts); return true; }
+
+	quint32 burstSize()
+		{ return (quint32) mControl->packets_per_burst(); }
+	bool setBurstSize(quint32 packetsPerBurst)
+		{ mControl->set_packets_per_burst(packetsPerBurst); return true; }
+
+	quint32 packetRate()
+		{ return (quint32) mControl->packets_per_sec(); }
+	bool setPacketRate(quint32 packetsPerSec)
+		{ mControl->set_packets_per_sec(packetsPerSec); return true; }
+
+	quint32 burstRate()
+		{ return (quint32) mControl->bursts_per_sec(); }
+	bool setBurstRate(quint32 burstsPerSec)
+		{ mControl->set_bursts_per_sec(burstsPerSec); return true; }
 
 	//---------------------------------------------------------------
 	// Methods for use by Packet Model

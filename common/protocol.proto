@@ -109,7 +109,7 @@ message Tcp {
 	optional uint32		dst_port = 4 [default = 80];
 
 	optional uint32		seq_num = 5 [default = 129018];
-	optional uint32		ack_num = 6 [default = 98223];
+	optional uint32		ack_num = 6;
 
 	optional uint32		hdrlen_rsvd = 7 [default = 0x50];
 	optional uint32		flags = 8;
@@ -138,6 +138,9 @@ message Icmp {
 message Igmp {
 }
 
+message StreamId {
+	required uint32	id = 1;
+}
 
 message StreamCore {
 
@@ -201,14 +204,41 @@ message StreamCore {
 	optional L4Proto	l4_proto = 23;
 }
 
-message StreamId {
-	required uint32	id = 1;
+message StreamControl {
+	enum SendUnit {
+		e_su_packets = 0;
+		e_su_bursts = 1;
+	}
+
+	enum SendMode {
+		e_sm_fixed = 0;
+		e_sm_continuous = 1;
+	}
+
+	enum NextWhat {
+		e_nw_stop = 0;
+		e_nw_goto_next = 1;
+		e_nw_goto_id = 2;
+	}
+
+	optional SendUnit	unit = 1 [default = e_su_packets];
+	optional SendMode	mode = 2 [default = e_sm_fixed];
+	optional uint32		num_packets = 3 [default = 1];
+	optional uint32		num_bursts = 4 [default = 1];
+	optional uint32		packets_per_burst = 5 [default = 10];
+	optional NextWhat	next = 6 [default = e_nw_goto_next];
+	optional uint32		packets_per_sec = 7;
+	optional uint32		bursts_per_sec = 8;
+
+	// TODO: Gaps?
+
 }
 
 message Stream {
 
 	required StreamId stream_id = 1;
 	optional StreamCore core = 2;
+	optional StreamControl control = 3;
 
 	// Protocol data - L2
 	optional Mac 	mac = 51;
@@ -283,13 +313,17 @@ message PortStats {
 
 	optional uint64 rx_pkts = 11;
 	optional uint64 rx_bytes = 12;
-	optional uint64 rx_pps = 13;
-	optional uint64 rx_bps = 14;
+	optional uint64 rx_pkts_nic = 13;
+	optional uint64 rx_bytes_nic = 14;
+	optional uint64 rx_pps = 15;
+	optional uint64 rx_bps = 16;
 
 	optional uint64 tx_pkts = 21;
 	optional uint64 tx_bytes = 22;
-	optional uint64 tx_pps = 23;
-	optional uint64 tx_bps = 24;
+	optional uint64 tx_pkts_nic = 23;
+	optional uint64 tx_bytes_nic = 24;
+	optional uint64 tx_pps = 25;
+	optional uint64 tx_bps = 26;
 }
 
 message PortStatsList {

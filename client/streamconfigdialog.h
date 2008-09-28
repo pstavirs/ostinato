@@ -44,6 +44,10 @@ private slots:
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
+	void on_rbFtNone_toggled(bool checked);
+	void on_rbFtEthernet2_toggled(bool checked);
+	void on_rbFt802Dot3Raw_toggled(bool checked);
+	void on_rbFt802Dot3Llc_toggled(bool checked);
 	void on_rbFtLlcSnap_toggled(bool checked);
 
 	void on_rbL3Ipv4_toggled(bool checked);

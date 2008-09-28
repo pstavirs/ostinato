@@ -33,7 +33,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
       <string/>
      </property>
      <property name="currentIndex" >
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="widget" >
       <attribute name="title" >
@@ -214,7 +214,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                      <string>None</string>
                     </property>
                     <property name="checked" >
-                     <bool>false</bool>
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -241,7 +241,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                      <string>802.3 LLC</string>
                     </property>
                     <property name="checked" >
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -332,7 +332,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                    </widget>
                   </item>
                   <item row="4" column="0" >
-                   <widget class="QLabel" name="lblTpe" >
+                   <widget class="QLabel" name="lblType" >
                     <property name="text" >
                      <string>Type</string>
                     </property>
@@ -420,7 +420,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               <item row="0" column="1" >
                <widget class="QRadioButton" name="rbL4Icmp" >
                 <property name="enabled" >
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="text" >
                  <string>ICMP</string>
@@ -430,7 +430,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               <item row="0" column="2" >
                <widget class="QRadioButton" name="rbL4Igmp" >
                 <property name="enabled" >
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="text" >
                  <string>IGMP</string>
@@ -440,7 +440,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               <item row="1" column="0" >
                <widget class="QRadioButton" name="rbL4Tcp" >
                 <property name="enabled" >
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="text" >
                  <string>TCP</string>
@@ -450,7 +450,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               <item row="1" column="1" >
                <widget class="QRadioButton" name="rbL4Udp" >
                 <property name="enabled" >
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="text" >
                  <string>UDP</string>
@@ -2151,12 +2151,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>252</x>
-     <y>288</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>252</x>
-     <y>317</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2167,12 +2167,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>252</x>
-     <y>388</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>252</x>
-     <y>417</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2183,12 +2183,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>259</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>41</x>
-     <y>317</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2199,12 +2199,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>259</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>81</x>
-     <y>317</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2215,12 +2215,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>259</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>120</x>
-     <y>317</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2231,12 +2231,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>259</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>252</x>
-     <y>288</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2247,12 +2247,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>359</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>41</x>
-     <y>417</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2263,12 +2263,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>359</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>120</x>
-     <y>417</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2279,12 +2279,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>359</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>252</x>
-     <y>388</y>
+     <x>112</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2295,12 +2295,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>31</x>
-     <y>359</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>81</x>
-     <y>417</y>
+     <x>92</x>
+     <y>267</y>
     </hint>
    </hints>
   </connection>
@@ -2311,12 +2311,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
    </hints>
   </connection>
@@ -2327,12 +2327,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
    </hints>
   </connection>
@@ -2343,12 +2343,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>42</x>
-     <y>171</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>232</x>
-     <y>170</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2359,12 +2359,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>42</x>
-     <y>197</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>232</x>
-     <y>196</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2375,12 +2375,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>42</x>
-     <y>252</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>232</x>
-     <y>251</y>
+     <x>123</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2391,12 +2391,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>383</x>
-     <y>274</y>
+     <x>192</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>506</x>
-     <y>274</y>
+     <x>192</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -2407,12 +2407,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
    </hints>
   </connection>
@@ -2423,492 +2423,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>123</x>
-     <y>305</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>123</x>
-     <y>305</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>137</x>
-     <y>237</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblTpe</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtNone</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leType</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>137</x>
-     <y>237</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>137</x>
-     <y>237</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtEthernet2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leDsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leSsap</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>137</x>
-     <y>237</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leControl</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leOui</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lblTpe</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>58</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFt802Dot3Raw</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leType</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
+     <x>145</x>
+     <y>334</y>
     </hint>
    </hints>
   </connection>
@@ -2945,194 +2465,18 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    </hints>
   </connection>
   <connection>
-   <sender>rbFtLlcSnap</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leDsap</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtLlcSnap</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leSsap</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbFtLlcSnap</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>leControl</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>57</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>99</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Ipv4</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>rbL4Tcp</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Ipv4</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>rbL4Udp</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Ipv4</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>rbL4Other</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Ipv4</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>rbL4Icmp</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Ipv4</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>rbL4Igmp</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3None</sender>
-   <signal>clicked()</signal>
-   <receiver>rbL4None</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Arp</sender>
-   <signal>clicked()</signal>
-   <receiver>rbL4None</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rbL3Other</sender>
-   <signal>clicked()</signal>
-   <receiver>rbL4None</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>570</x>
-     <y>218</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>570</x>
-     <y>302</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>rbActionGotoStream</sender>
    <signal>toggled(bool)</signal>
    <receiver>leStreamId</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>381</x>
-     <y>140</y>
+     <x>136</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>381</x>
-     <y>174</y>
+     <x>136</x>
+     <y>120</y>
     </hint>
    </hints>
   </connection>
@@ -3143,12 +2487,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>30</x>
-     <y>69</y>
+     <x>41</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>85</x>
-     <y>285</y>
+     <x>96</x>
+     <y>120</y>
     </hint>
    </hints>
   </connection>
@@ -3159,12 +2503,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>30</x>
-     <y>94</y>
+     <x>41</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>67</x>
-     <y>331</y>
+     <x>78</x>
+     <y>120</y>
     </hint>
    </hints>
   </connection>
@@ -3175,12 +2519,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>30</x>
-     <y>94</y>
+     <x>41</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>222</x>
-     <y>189</y>
+     <x>136</x>
+     <y>120</y>
     </hint>
    </hints>
   </connection>

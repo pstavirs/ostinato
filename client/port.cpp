@@ -20,6 +20,10 @@ Port::Port(quint32 id, quint32 portGroupId)
 	mPortGroupId = portGroupId;
 }
 
+Port::~Port()
+{
+}
+
 void Port::updatePortConfig(OstProto::Port *port)
 {
 	d.MergeFrom(*port);

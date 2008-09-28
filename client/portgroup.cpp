@@ -82,6 +82,13 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 	Q_ASSERT(portIndex < mPorts.size());
 
+	if (state() != QAbstractSocket::ConnectedState)
+	{
+		if (cookie != NULL)
+			delete cookie;
+		return;
+	}
+
 	if (cookie == NULL)
 	{
 		// cookie[0]: op [0 - delete, 1 - add, 2 - modify, 3 - Done!]
@@ -414,22 +421,62 @@ void PortGroup::processModifyStreamAck(OstProto::Ack *ack)
 	// TODO(HI): Apply Button should now be disabled???!!!!???
 }
 
-void PortGroup::startTx(QList<uint> portList)
+void PortGroup::startTx(QList<uint> *portList)
 {
 	OstProto::PortIdList	portIdList;
-	OstProto::Ack			*ack = new OstProto::Ack;
+	OstProto::Ack			*ack;
 
 	qDebug("In %s", __FUNCTION__);
 
-	for (int i = 0; i < portList.size(); i++)
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	ack = new OstProto::Ack;
+	if (portList == NULL)
+		goto _exit;
+	else
 	{
-		OstProto::PortId	*portId;
-		portId = portIdList.add_port_id();
-		portId->set_id(portList.at(i));
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
 	}
 
 	serviceStub->startTx(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processStartTxAck, ack));
+_exit:
+	return;
+}
+
+void PortGroup::stopTx(QList<uint> *portList)
+{
+	OstProto::PortIdList	portIdList;
+	OstProto::Ack			*ack;
+
+	qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	ack = new OstProto::Ack;
+	if (portList == NULL)
+		goto _exit;
+	else
+	{
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
+	}
+
+	serviceStub->stopTx(rpcController, &portIdList, ack,
+			NewCallback(this, &PortGroup::processStopTxAck, ack));
+_exit:
+	return;
 }
 
 void PortGroup::processStartTxAck(OstProto::Ack	*ack)
@@ -439,19 +486,30 @@ void PortGroup::processStartTxAck(OstProto::Ack	*ack)
 	delete ack;
 }
 
-void PortGroup::getPortStats()
+void PortGroup::processStopTxAck(OstProto::Ack	*ack)
 {
-	OstProto::PortStatsList	*portStatsList = new OstProto::PortStatsList;
-
 	qDebug("In %s", __FUNCTION__);
 
+	delete ack;
+}
+
+void PortGroup::getPortStats()
+{
+	OstProto::PortStatsList	*portStatsList;
+
+	//qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+   	portStatsList = new OstProto::PortStatsList;
 	serviceStub->getStats(rpcController, &portIdList, portStatsList,
 			NewCallback(this, &PortGroup::processPortStatsList, portStatsList));
 }
 
 void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
 {
-	qDebug("In %s", __FUNCTION__);
+	//qDebug("In %s", __FUNCTION__);
 
 	if (rpcController->Failed())
 	{
@@ -474,11 +532,29 @@ _error_exit:
 	delete portStatsList;
 }
 
-void PortGroup::clearPortStats()
+void PortGroup::clearPortStats(QList<uint> *portList)
 {
-	OstProto::Ack	*ack = new OstProto::Ack;
+	OstProto::PortIdList	portIdList;
+	OstProto::Ack			*ack;
 
 	qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	ack = new OstProto::Ack;
+	if (portList == NULL)
+		portIdList.CopyFrom(this->portIdList);
+	else
+	{
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
+	}
 
 	serviceStub->clearStats(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processClearStatsAck, ack));
@@ -487,6 +563,9 @@ void PortGroup::clearPortStats()
 void PortGroup::processClearStatsAck(OstProto::Ack	*ack)
 {
 	qDebug("In %s", __FUNCTION__);
+
+	// Refresh stats immediately after a stats clear/reset
+	getPortStats();
 
 	delete ack;
 }

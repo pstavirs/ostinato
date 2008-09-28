@@ -105,6 +105,12 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 			case e_STAT_FRAME_RECV_RATE:
 				return stats.rx_pps();
 
+			case e_STAT_FRAMES_RCVD_NIC:
+				return stats.rx_pkts_nic();
+
+			case e_STAT_FRAMES_SENT_NIC:
+				return stats.tx_pkts_nic();
+
 			case e_STAT_BYTES_RCVD:
 				return stats.rx_bytes();
 
@@ -117,7 +123,15 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 			case e_STAT_BYTE_RECV_RATE:
 				return stats.rx_bps();
 
+			case e_STAT_BYTES_RCVD_NIC:
+				return stats.rx_bytes_nic();
+
+			case e_STAT_BYTES_SENT_NIC:
+				return stats.tx_bytes_nic();
+
 			default:
+				qWarning("%s: Unhandled stats id %d\n", __FUNCTION__,
+						index.row());
 				return 0;
 		}
 	}
@@ -140,15 +154,38 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
 void PortStatsModel::portListFromIndex(QModelIndexList indices, 
 		QList<PortGroupAndPortList> &portList)
 {
+	int i, j;
+	QModelIndexList		selectedCols(indices);
+
 	portList.clear();
 
-	for (int i = 0; i < indices.size(); i++)
+	//selectedCols = indices.selectedColumns();
+	for (i = 0; i < selectedCols.size(); i++)
 	{
-		//getDomainIndexes(indices.at(i), portGroupIdx, portIdx);	
+		uint portGroupIdx, portIdx;
 
-		for (int j = 0; j < portList.size(); j++)
+		getDomainIndexes(selectedCols.at(i), portGroupIdx, portIdx);	
+		for (j = 0; j < portList.size(); j++)
 		{
-			// FIXME(HI): Incomplete!!!!
+			if (portList[j].portGroupId == portGroupIdx)
+				break;
+		}
+
+		if (j >= portList.size())
+		{
+			// PortGroup Not found
+			PortGroupAndPortList	p;
+
+			p.portGroupId = portGroupIdx;
+			p.portList.append(portIdx);
+
+			portList.append(p);
+		}
+		else
+		{
+			// PortGroup found
+
+			portList[j].portList.append(portIdx);
 		}
 	}
 }
@@ -193,5 +230,9 @@ void PortStatsModel::updateStats()
 void PortStatsModel::when_portGroup_stats_update(quint32 portGroupId)
 {
 	// FIXME(MED): update only the changed ports, not all
-	reset();
+
+	QModelIndex topLeft = index(0, 0, QModelIndex());
+	QModelIndex bottomRight = index(rowCount(), columnCount(), QModelIndex());
+
+	emit dataChanged(topLeft, bottomRight);
 }

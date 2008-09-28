@@ -14,7 +14,10 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
 	model = pgl->getPortStatsModel();
 	tvPortStats->setModel(model);
 	tvPortStats->horizontalHeader()->setMovable(true);
-	tvPortStats->verticalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
+	tvPortStats->verticalHeader()->setHighlightSections(false);
+	tvPortStats->verticalHeader()->setDefaultSectionSize(
+		tvPortStats->verticalHeader()->minimumSectionSize());
 }
 
 PortStatsWindow::~PortStatsWindow()
@@ -25,21 +28,34 @@ PortStatsWindow::~PortStatsWindow()
 
 void PortStatsWindow::on_tbStartTransmit_clicked()
 {
-	// TODO(MED): get selected ports
+	QList<PortStatsModel::PortGroupAndPortList>	pgpl;
 
-	if (pgl->numPortGroups())
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	pgpl);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < pgpl.size(); i++)
 	{
-		QList<uint>	portIdList;
-
-		// FIXME(HI): Testing only!!!
-		portIdList.append(1); // MS Loopback adapter
-		pgl->portGroupByIndex(0).startTx(portIdList);
+		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
+			startTx(&pgpl[i].portList);
 	}
 }
 
 void PortStatsWindow::on_tbStopTransmit_clicked()
 {
-	// TODO(MED)
+	QList<PortStatsModel::PortGroupAndPortList>	pgpl;
+
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	pgpl);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < pgpl.size(); i++)
+	{
+		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
+			startTx(&pgpl[i].portList);
+	}
 }
 
 void PortStatsWindow::on_tbStartCapture_clicked()
@@ -59,7 +75,18 @@ void PortStatsWindow::on_tbViewCapture_clicked()
 
 void PortStatsWindow::on_tbClear_clicked()
 {
-	// TODO(MED)
+	QList<PortStatsModel::PortGroupAndPortList>	portList;
+
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	portList);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < portList.size(); i++)
+	{
+		pgl->portGroupByIndex(portList.at(i).portGroupId).
+			clearPortStats(&portList[i].portList);
+	}
 }
 
 void PortStatsWindow::on_tbClearAll_clicked()

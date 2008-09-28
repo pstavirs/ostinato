@@ -16,8 +16,15 @@
 
 #include "../rpc/pbhelper.h"
 
+#ifdef Q_OS_WIN32
+#include <packet32.h>
+#endif
+
 #define MAX_PKT_HDR_SIZE			1536
 #define MAX_STREAM_NAME_SIZE		64
+
+//! 7 byte Preamble + 1 byte SFD + 4 byte FCS
+#define ETH_FRAME_HDR_SIZE			12
 
 class MyService;
 
@@ -29,7 +36,13 @@ class StreamInfo
 	OstProto::Stream	d;
 
 	StreamInfo() { PbHelper pbh; pbh.ForceSetSingularDefault(&d); }
-	int StreamInfo::makePacket(uchar *buf, int bufMaxSize);
+
+	//quint16 ipv4Cksum(quint16 ipHdrLen, quint16 buff[]);
+	quint16 ipv4Cksum(uchar *buf, int len);
+	int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n);
+public:
+	bool operator < (const StreamInfo &s) const
+		{ return(d.core().ordinal() < s.d.core().ordinal()); }
 };
 
 
@@ -41,7 +54,10 @@ class PortInfo
 	{
 		friend class PortInfo;
 
-		PortInfo	*port;
+		PortInfo			*port;
+#ifdef Q_OS_WIN32
+		PPACKET_OID_DATA	oidData;
+#endif
 	public:
 		PortMonitor(PortInfo *port);
 		static void callback(u_char *state, 
@@ -51,26 +67,47 @@ class PortInfo
 
 	OstProto::Port			d;
 
-	pcap_if_t				*dev;
-	pcap_t					*devHandle;
-	pcap_send_queue			*sendQueue;
-	bool					isSendQueueDirty;
-	PortMonitor				monitor;
-
 	struct PortStats
 	{
 		quint64	rxPkts;
 		quint64	rxBytes;
+		quint64	rxPktsNic;
+		quint64	rxBytesNic;
 		quint64	rxPps;
 		quint64	rxBps;
 
 		quint64	txPkts;
 		quint64	txBytes;
+		quint64	txPktsNic;
+		quint64	txBytesNic;
 		quint64	txPps;
 		quint64	txBps;
 	};
 
+	//! \todo Need lock for stats access/update
+
+	//! Stuff we need to maintain since PCAP doesn't as of now. As and when
+	// PCAP supports it, we'll remove from here
+	struct PcapExtra
+	{
+		//! pcap_sendqueue_transmit() only returns 'bytes' sent
+		uint		sendQueueNumPkts;
+
+		//! PCAP doesn't do any tx stats
+		quint64		txPkts;
+		quint64		txBytes;
+	};
+
+	pcap_if_t				*dev;
+	pcap_t					*devHandle;
+	pcap_send_queue			*sendQueue;
+	bool					isSendQueueDirty;
+	PcapExtra				pcapExtra;
+	PortMonitor				monitor;
+
+	struct PortStats		epochStats;
 	struct PortStats		stats;
+	struct timeval			lastTs;		//! used for Rate Stats calculations
 
 	/*! StreamInfo::d::stream_id and index into streamList[] are NOT same! */
 	QList<StreamInfo>		streamList;

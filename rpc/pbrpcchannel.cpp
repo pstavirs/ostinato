@@ -69,7 +69,7 @@ void PbRpcChannel::CallMethod(
 	char 	*p = (char *)&msg;
 	int		len;
   
-	qDebug("In %s", __FUNCTION__);
+	//qDebug("In %s", __FUNCTION__);
 
 	if (!req->IsInitialized())
 	{
@@ -88,8 +88,8 @@ void PbRpcChannel::CallMethod(
 	isPending = true;
 
 	*((quint16*)(p+0)) = HTONS(PB_MSG_TYPE_REQUEST); // type
-	qDebug("CLi:GET16 = %d/%d, type = %d", GET16(p+0), NTOHS(GET16(p+0)), 
-		PB_MSG_TYPE_REQUEST);
+	//qDebug("CLi:GET16 = %d/%d, type = %d", GET16(p+0), NTOHS(GET16(p+0)), 
+		//PB_MSG_TYPE_REQUEST);
 	*((quint16*)(p+2)) = HTONS(method->index()); // method id
 	// (p+4) len later after serialization
 	*((quint16*)(p+6)) = HTONS(0); // rsvd
@@ -100,9 +100,13 @@ void PbRpcChannel::CallMethod(
 	len = req->ByteSize();
 	*((quint16*)(p+4)) = HTONS(len); // len
 
-	qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, len+8,
-		req->DebugString().c_str());
-	BUFDUMP(msg, len+8);
+	// Avoid printing stats since it happens every couple of seconds
+	if (pendingMethodId != 12)
+	{
+		qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, len+8,
+			req->DebugString().c_str());
+		BUFDUMP(msg, len+8);
+	}
 
 	mpSocket->write(msg, len + 8);
 }
@@ -115,12 +119,12 @@ void PbRpcChannel::on_mpSocket_readyRead()
 	quint16	type, method, len, rsvd;
 	PbRpcController	*controller;
 
-	qDebug("In %s", __FUNCTION__);
+	//qDebug("In %s", __FUNCTION__);
 	
 	msgLen = mpSocket->read(msg, sizeof(msg));
 
-	qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
-	BUFDUMP(msg, msgLen);
+	//qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
+	//BUFDUMP(msg, msgLen);
 
 	type = NTOHS(GET16(p+0));
 	method = NTOHS(GET16(p+2));
@@ -153,8 +157,13 @@ void PbRpcChannel::on_mpSocket_readyRead()
 
 	// Serialized data starts from offset 8
 	response->ParseFromArray((void*) &msg[8], len);
-	qDebug("client(%s): Parsed as %s", __FUNCTION__,
-		response->DebugString().c_str());
+
+	// Avoid printing stats
+	if (method != 12)
+	{
+		qDebug("client(%s): Parsed as %s", __FUNCTION__,
+			response->DebugString().c_str());
+	}
 
 	if (!response->IsInitialized())
 	{

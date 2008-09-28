@@ -70,12 +70,14 @@ public:
 
 	void processModifyStreamAck(OstProto::Ack *ack);
 
-	void startTx(QList<uint> portList);
+	void startTx(QList<uint> *portList = NULL);
 	void processStartTxAck(OstProto::Ack *ack);
+	void stopTx(QList<uint> *portList = NULL);
+	void processStopTxAck(OstProto::Ack *ack);
 
 	void getPortStats();
 	void processPortStatsList(OstProto::PortStatsList *portStatsList);
-	void clearPortStats();
+	void clearPortStats(QList<uint> *portList = NULL);
 	void processClearStatsAck(OstProto::Ack	*ack);
 
 signals:
