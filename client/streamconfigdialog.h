@@ -39,8 +39,12 @@ private:
 	void StoreCurrentStream();
 
 private slots:
+	void on_cmbPatternMode_currentIndexChanged(QString mode);
+	void on_cmbPktLenMode_currentIndexChanged(QString mode);
 	void on_cmbDstMacMode_currentIndexChanged(QString mode);
 	void on_cmbSrcMacMode_currentIndexChanged(QString mode);
+	void on_cmbIpSrcAddrMode_currentIndexChanged(QString mode);
+	void on_cmbIpDstAddrMode_currentIndexChanged(QString mode);
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
@@ -57,7 +61,6 @@ private slots:
 	void on_rbL4Igmp_toggled(bool checked);
 	void on_rbL4Tcp_toggled(bool checked);
 	void on_rbL4Udp_toggled(bool checked);
-	void on_rbL4Other_toggled(bool checked);
 
 	void update_NumPacketsAndNumBursts();
 

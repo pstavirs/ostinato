@@ -883,9 +883,9 @@ public:
 	};
 
 	enum DataPatternMode {
-		e_dp_fixed,
-		e_dp_inc,
-		e_dp_dec,
+		e_dp_fixed_word,
+		e_dp_inc_byte,
+		e_dp_dec_byte,
 		e_dp_random
 	};
 

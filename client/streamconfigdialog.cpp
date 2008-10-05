@@ -12,6 +12,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 {
 	setupUi(this);
 	setupUiExtra();
+
+	// setupUi
 	
 	// Time to play match the signals and slots!
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
@@ -28,6 +30,11 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFtNone, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
 	connect(rbFtNone, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
 
+	// Enable/Disable L3 Protocol Choices for FT None
+	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
+
 	// Show/Hide FrameType related inputs for FT Ethernet2
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
@@ -39,6 +46,11 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
+
+	// Enable/Disable L3 Protocol Choices for FT Ethernet2
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
+	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
 
 	// Show/Hide FrameType related inputs for FT 802.3 Raw
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
@@ -52,6 +64,14 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
 
+	// Force L3 = None if FT = 802.3 Raw
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
+
+	// Enable/Disable L3 Protocol Choices for FT 802Dot3Raw
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
+	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
+
 	// Show/Hide FrameType related inputs for FT 802.3 LLC
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
@@ -64,6 +84,14 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
 
+	// Force L3 = None if FT = 802.3 LLC (to ensure a valid L3 is selected)
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
+
+	// Enable/Disable L3 Protocol Choices for FT 802Dot3Llc
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
+	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
+
 	// Show/Hide FrameType related inputs for FT 802.3 LLC SNAP
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
@@ -75,6 +103,11 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leOui, SLOT(setVisible(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
+
+	// Enable/Disable L3 Protocol Choices for FT 802.3 LLC SNAP
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
+	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
 
 	// Enable/Disable FrameType related inputs for FT 802.3 LLC SNAP
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setDisabled(bool)));
@@ -90,7 +123,6 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
 	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
 	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Other, SLOT(setDisabled(bool)));
 
 	// Force L4 Protocol = None if L3 Protocol is set to None
 	connect(rbL3None, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
@@ -101,7 +133,6 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setEnabled(bool)));
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Other, SLOT(setEnabled(bool)));
 
 	// Enable/Disable L4 Protocol Choices for L3 Protocol ARP
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
@@ -109,15 +140,20 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Other, SLOT(setDisabled(bool)));
 
 	// Force L4 Protocol = None if L3 Protocol is set to ARP
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
 
-	// Init with FT=Eth2 to trigger signals; actual value will be 
-	// initialized by LoadCurrentStream()
+	//TODO: remove if not needed
+#if 0
+	// This set of 'clicks' is a hack to trigger signals at dialog creation
+	// time so that a coherent 'set' is initialized
+	// Actual stream values will be initialized by LoadCurrentStream()
+	rbL3Ipv4->click();
+	rbL3None->click();
 	rbFtEthernet2->click();
 	rbFtNone->click();
+#endif
 
 	//mpStreamList = streamList;
 	mCurrentStreamIndex = streamIndex;
@@ -148,7 +184,21 @@ void StreamConfigDialog::setupUiExtra()
 	QRegExp reHex4B("[0-9,a-f,A-F]{1,8}");
 	QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
-	// Setup default stuff that cannot be done in designer
+	// ---- Setup default stuff that cannot be done in designer ----
+
+	// Since the dialog defaults are FT = None, L3 = None, L4 = None;
+  	// hide associated input fields since it can't be done in Designer
+	lblDsap->setHidden(true);
+	leDsap->setHidden(true);
+	lblSsap->setHidden(true);
+	leSsap->setHidden(true);
+	lblControl->setHidden(true);
+	leControl->setHidden(true);
+	lblOui->setHidden(true);
+	leOui->setHidden(true);
+	lblType->setHidden(true);
+	leType->setHidden(true);
+
 	twProto->setTabEnabled(2, FALSE);
 	twProto->setTabEnabled(3, FALSE);
 
@@ -189,17 +239,73 @@ StreamConfigDialog::~StreamConfigDialog()
 	delete mpPacketModel;
 }
 
+void StreamConfigDialog::on_cmbPatternMode_currentIndexChanged(QString mode)
+{
+	if (mode == "Fixed Word")
+	{
+		lePattern->setEnabled(true);
+	}
+	else if (mode == "Increment Byte")
+	{
+		lePattern->setDisabled(true);
+	}
+	else if (mode == "Decrement Byte")
+	{
+		lePattern->setDisabled(true);
+	}
+	if (mode == "Random")
+	{
+		lePattern->setDisabled(true);
+	}
+	else
+	{
+		qWarning("Unhandled/Unknown PatternMode = %s", mode.toAscii().data());
+	}
+}
+void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
+{
+	if (mode == "Fixed")
+	{
+		lePktLen->setEnabled(true);
+		lePktLenMin->setDisabled(true);
+		lePktLenMax->setDisabled(true);
+	}
+	else if (mode == "Increment")
+	{
+		lePktLen->setDisabled(true);
+		lePktLenMin->setEnabled(true);
+		lePktLenMax->setEnabled(true);
+	}
+	else if (mode == "Decrement")
+	{
+		lePktLen->setDisabled(true);
+		lePktLenMin->setEnabled(true);
+		lePktLenMax->setEnabled(true);
+	}
+	else if (mode == "Random")
+	{
+		lePktLen->setDisabled(true);
+		lePktLenMin->setEnabled(true);
+		lePktLenMax->setEnabled(true);
+	}
+	else
+	{
+		qWarning("Unhandled/Unknown PktLenMode = %s", mode.toAscii().data());
+	}
+}
+
+
 void StreamConfigDialog::on_cmbDstMacMode_currentIndexChanged(QString mode)
 {
 	if (mode == "Fixed")
 	{
-		leDstMacCount->setEnabled(FALSE);
-		leDstMacStep->setEnabled(FALSE);
+		leDstMacCount->setEnabled(false);
+		leDstMacStep->setEnabled(false);
 	}
 	else
 	{
-		leDstMacCount->setEnabled(TRUE);
-		leDstMacStep->setEnabled(TRUE);
+		leDstMacCount->setEnabled(true);
+		leDstMacStep->setEnabled(true);
 	}
 }
 
@@ -207,13 +313,41 @@ void StreamConfigDialog::on_cmbSrcMacMode_currentIndexChanged(QString mode)
 {
 	if (mode == "Fixed")
 	{
-		leSrcMacCount->setEnabled(FALSE);
-		leSrcMacStep->setEnabled(FALSE);
+		leSrcMacCount->setEnabled(false);
+		leSrcMacStep->setEnabled(false);
 	}
 	else
 	{
-		leSrcMacCount->setEnabled(TRUE);
-		leSrcMacStep->setEnabled(TRUE);
+		leSrcMacCount->setEnabled(true);
+		leSrcMacStep->setEnabled(true);
+	}
+}
+
+void StreamConfigDialog::on_cmbIpSrcAddrMode_currentIndexChanged(QString mode)
+{
+	if (mode == "Fixed")
+	{
+		leIpSrcAddrCount->setDisabled(true);
+		leIpSrcAddrMask->setDisabled(true);
+	}
+	else
+	{
+		leIpSrcAddrCount->setEnabled(true);
+		leIpSrcAddrMask->setEnabled(true);
+	}
+}
+
+void StreamConfigDialog::on_cmbIpDstAddrMode_currentIndexChanged(QString mode)
+{
+	if (mode == "Fixed")
+	{
+		leIpDstAddrCount->setDisabled(true);
+		leIpDstAddrMask->setDisabled(true);
+	}
+	else
+	{
+		leIpDstAddrCount->setEnabled(true);
+		leIpDstAddrMask->setEnabled(true);
 	}
 }
 
@@ -371,14 +505,6 @@ void StreamConfigDialog::on_rbL4Udp_toggled(bool checked)
 	}
 }
 
-void StreamConfigDialog::on_rbL4Other_toggled(bool checked)
-{
-	if (checked)
-		leIpProto->setEnabled(true);
-	else
-		leIpProto->setEnabled(false);
-}
-
 void StreamConfigDialog::update_NumPacketsAndNumBursts()
 {
 	if (rbSendPackets->isChecked() && rbModeFixed->isChecked())
@@ -512,32 +638,6 @@ void StreamConfigDialog::LoadCurrentStream()
 			qDebug("%s: unknown l4 Protocol %d", __FUNCTION__,
 				pStream->l4Proto());
 		}
-// PB (not needed anymore?)
-#if 0
-		// Check for specific supported protocols first ...
-		if (pStream->eth2()->type() == ETH_TYP_IP)
-			rbL3Ipv4->setChecked(TRUE);
-		else if (pStream->eth2()->type() == ETH_TYP_ARP)
-			rbL3Arp->setChecked(TRUE);
-
-		// ... then for None/Other
-		rbL3None->setChecked((pStream->proto.protoMask & PM_L3_PROTO_NONE) > 0);
-		rbL3Other->setChecked((pStream->proto.protoMask & PM_L3_PROTO_OTHER) > 0);
-
-		// Check for specific supported protocols first ...
-		if (pStream->proto.ipProto == IP_PROTO_ICMP)
-			rbL4Icmp->setChecked(TRUE);
-		else if (pStream->proto.ipProto == IP_PROTO_IGMP)
-			rbL4Igmp->setChecked(TRUE);
-		else if (pStream->proto.ipProto == IP_PROTO_TCP)
-			rbL4Tcp->setChecked(TRUE);
-		else if (pStream->proto.ipProto == IP_PROTO_UDP)
-			rbL4Udp->setChecked(TRUE);
-
-		// ... then for None/Other
-		rbL4None->setChecked((pStream->proto.protoMask & PM_L4_PROTO_NONE) > 0);
-		rbL4Other->setChecked((pStream->proto.protoMask & PM_L4_PROTO_OTHER) > 0);
-#endif
 	}
 
 	// L2

@@ -206,6 +206,14 @@
     <string>Delete Stream</string>
    </property>
   </action>
+  <action name="actionEdit_Stream" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/stream_edit.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Edit Stream</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="ostinato.qrc" />

@@ -23,6 +23,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 	tvPortList->addAction(actionDisconnect_Port_Group);
 
 	tvStreamList->addAction(actionNew_Stream);
+	tvStreamList->addAction(actionEdit_Stream);
 	tvStreamList->addAction(actionDelete_Stream);
 
 	tvStreamList->setModel(plm->getStreamModel());
@@ -32,10 +33,12 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 		SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)), 
 		this, SLOT(when_portModel_dataChanged(const QModelIndex&, 
 			const QModelIndex&)));
+
 	connect( tvPortList->selectionModel(), 
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		this, SLOT(when_portView_currentChanged(const QModelIndex&, 
 			const QModelIndex&)));
+
 	connect( tvStreamList->selectionModel(), 
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		this, SLOT(when_streamView_currentChanged(const QModelIndex&, 
@@ -43,13 +46,16 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 	connect( tvStreamList->selectionModel(), 
 		SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
 		this, SLOT(when_streamView_selectionChanged()));
+
+#if 0
 	connect( tvPortList->selectionModel(), 
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		plm->getStreamModel(), SLOT(setCurrentPortIndex(const QModelIndex&)));
+#endif
 
-	// Initially we don't have any ports - so trigger selection of 
-	// portgroup detail page
+	// Initially we don't have any ports/streams - so send signal triggers
 	when_portView_currentChanged(QModelIndex(), QModelIndex());
+	when_streamView_currentChanged(QModelIndex(), QModelIndex());
 }
 
 PortsWindow::~PortsWindow()
@@ -66,11 +72,6 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 		qDebug("%s: invalid index", __FUNCTION__);
 		return;
 	}
-#if 0 // CleanedUp!
-	// FIXME(MED): This way of passing params must be changed
-	scd = new StreamConfigDialog(plm->getStreamModel()->currentPortStreamList(),
-		(uint) index.row(), this);
-#endif
 	scd = new StreamConfigDialog(plm->port(tvPortList->currentIndex()),
 		index.row(), this);
 	qDebug("stream list activated\n");
@@ -81,7 +82,9 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
 	const QModelIndex& previous)
 {
+	plm->getStreamModel()->setCurrentPortIndex(current);
 	updatePortViewActions(current);
+	updateStreamViewActions();
 
 	if (!current.isValid())
 	{	
@@ -143,15 +146,31 @@ void PortsWindow::updateStreamViewActions(const QModelIndex& current)
 
 void PortsWindow::updateStreamViewActions()
 {
-	if (tvStreamList->selectionModel()->hasSelection())
+	// For some reason hasSelection() returns true even if selection size is 0
+	// so additional check for size introduced
+	if (tvStreamList->selectionModel()->hasSelection() &&
+		(tvStreamList->selectionModel()->selection().size() > 0))
 	{
 		qDebug("Has selection %d",
 			tvStreamList->selectionModel()->selection().size());
-		// If more than one non-contiguous ranges selected, disable "New"
+
+		// If more than one non-contiguous ranges selected,
+		// disable "New" and "Edit"
 		if (tvStreamList->selectionModel()->selection().size() > 1)
+		{
 			actionNew_Stream->setDisabled(true);
+			actionEdit_Stream->setDisabled(true);
+		}
 		else
+		{
 			actionNew_Stream->setEnabled(true);
+
+			// Enable "Edit" only if the single range has a single row
+			if (tvStreamList->selectionModel()->selection().at(0).height() > 1)
+				actionEdit_Stream->setDisabled(true);
+			else
+				actionEdit_Stream->setEnabled(true);
+		}
 
 		// Delete is always enabled as long as we have a selection
 		actionDelete_Stream->setEnabled(true);
@@ -160,6 +179,7 @@ void PortsWindow::updateStreamViewActions()
 	{
 		qDebug("No selection");
 		actionNew_Stream->setEnabled(true);
+		actionEdit_Stream->setDisabled(true);
 		actionDelete_Stream->setDisabled(true);
 	}
 }
@@ -344,6 +364,19 @@ void PortsWindow::on_actionNew_Stream_triggered()
 	}
 
 	plm->getStreamModel()->insertRows(row, count);	
+}
+
+void PortsWindow::on_actionEdit_Stream_triggered()
+{
+	qDebug("Edit Stream Action");
+
+	// Ensure we have only one range selected which contains only one row
+	if ((tvStreamList->selectionModel()->selection().size() == 1) &&
+		(tvStreamList->selectionModel()->selection().at(0).height() == 1))
+	{
+		on_tvStreamList_activated(tvStreamList->selectionModel()->
+				selection().at(0).topLeft());
+	}
 }
 
 void PortsWindow::on_actionDelete_Stream_triggered()

@@ -37,8 +37,10 @@ class StreamInfo
 
 	StreamInfo() { PbHelper pbh; pbh.ForceSetSingularDefault(&d); }
 
-	//quint16 ipv4Cksum(quint16 ipHdrLen, quint16 buff[]);
-	quint16 ipv4Cksum(uchar *buf, int len);
+	quint32 pseudoHdrCksumPartial(quint32 srcIp, quint32 dstIp, 
+		quint8 protocol, quint16 len);
+	quint32 ipv4CksumPartial(uchar *buf, int len);
+	quint16 ipv4Cksum(uchar *buf, int len, quint32 partialSum = 0);
 	int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n);
 public:
 	bool operator < (const StreamInfo &s) const
@@ -90,8 +92,10 @@ class PortInfo
 	// PCAP supports it, we'll remove from here
 	struct PcapExtra
 	{
-		//! pcap_sendqueue_transmit() only returns 'bytes' sent
-		uint		sendQueueNumPkts;
+		//! Used to track num of packets (and their sizes) in the
+		// send queue. Also used to find out actual num of pkts sent 
+		// in case of partial send in pcap_sendqueue_transmit()
+		QList<uint>	sendQueueCumLen;
 
 		//! PCAP doesn't do any tx stats
 		quint64		txPkts;

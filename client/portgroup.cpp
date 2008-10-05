@@ -159,6 +159,7 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 	case 3:
 		qDebug("apply completed");
+		mPorts[portIndex].when_syncComplete();
 		delete cookie;
 		break;
 

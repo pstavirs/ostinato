@@ -49,6 +49,7 @@ private slots:
 	void on_actionDisconnect_Port_Group_triggered();
 
 	void on_actionNew_Stream_triggered();
+	void on_actionEdit_Stream_triggered();
 	void on_actionDelete_Stream_triggered();
 };
 
