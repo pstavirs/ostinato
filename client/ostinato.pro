@@ -2,7 +2,9 @@ TEMPLATE = app
 CONFIG += qt debug
 QT += network
 INCLUDEPATH += "../rpc/"
-LIBS += -lprotobuf -L"../rpc/" -lpbrpc
+LIBS += -lprotobuf
+win32:LIBS += -L"../rpc/debug" -lpbrpc
+unix:LIBS += -L"../rpc" -lpbrpc
 RESOURCES += ostinato.qrc 
 HEADERS += \
 	dumpview.h \
