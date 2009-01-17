@@ -4,7 +4,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 
-#include <qDebug.h>
+#include <qdebug.h>
 
 class PbHelper
 {

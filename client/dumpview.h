@@ -26,7 +26,7 @@ protected slots:
 	void paintEvent(QPaintEvent *event);
 
 private:
-	void DumpView::populateDump(QByteArray &dump, int &selOfs, int &selSize, 
+	void populateDump(QByteArray &dump, int &selOfs, int &selSize, 
 			QModelIndex parent = QModelIndex());
 	bool inline isPrintable(char c) 
 		{if ((c > 48) && (c < 126)) return true; else return false; }

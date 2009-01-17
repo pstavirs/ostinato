@@ -487,8 +487,8 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
     char errbuf[PCAP_ERRBUF_SIZE];
 
 	this->dev = dev;
-	devHandle = pcap_open(dev->name, 65536, PCAP_OPENFLAG_PROMISCUOUS , 1000, 
-			NULL, errbuf);
+	devHandle = pcap_open_live(dev->name, 0, PCAP_OPENFLAG_PROMISCUOUS ,
+		1000 /*ms*/, errbuf);
 	if (devHandle == NULL)
 	{
 		qDebug("Error opening port %s: %s\n", 
@@ -509,8 +509,16 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	}
 
 	d.mutable_port_id()->set_id(id);
-	d.set_name(QString("eth%1").arg(id).toAscii().constData());
-	d.set_description(dev->description);
+#ifdef Q_OS_WIN32
+	d.set_name(QString("if%1").arg(id).toAscii().constData());
+#else
+	if (dev->name)
+		d.set_name(dev->name);
+	else
+		d.set_name(QString("if%1").arg(id).toAscii().constData());
+#endif
+	if (dev->description)
+		d.set_description(dev->description);
 	d.set_is_enabled(true);	// FIXME(MED):check
 	d.set_is_oper_up(true); // FIXME(MED):check
 	d.set_is_exclusive_control(false); // FIXME(MED): check
@@ -635,9 +643,18 @@ void PortInfo::startTransmit()
 	// - adjust for it
 	if (bytes)
 		bytes -= pkts * sizeof(pcap_pkthdr);
-
+#ifdef Q_OS_WIN32
+	// Update pcapExtra counters - port TxStats will be updated in the
+	// 'stats callback' function so that both Rx and Tx stats are updated
+	// together
 	pcapExtra.txPkts += pkts;
 	pcapExtra.txBytes += bytes;
+#else
+	// We don't have a regular stats callback function here, so update
+	// Port TxStats directly here
+	stats.txPkts += pkts;
+	stats.txBytes += bytes;
+#endif
 }
 
 void PortInfo::stopTransmit()
@@ -673,9 +690,12 @@ PortInfo::PortMonitor::PortMonitor(PortInfo *port)
 #endif
 }
 
+#ifdef Q_OS_WIN32
 void PortInfo::PortMonitor::callback(u_char *state, 
 		const struct pcap_pkthdr *header, const u_char *pkt_data)
 {
+	// This is the WinPcap Callback - which is a 'stats mode' callback
+
 	uint		usec;
 	PortInfo	*port = (PortInfo*) state;
 
@@ -723,7 +743,7 @@ void PortInfo::PortMonitor::callback(u_char *state,
 	port->monitor.oidData->Oid = OID_GEN_RCV_OK;
 	if (PacketRequest(port->devHandle->adapter, 0, port->monitor.oidData))
 	{
-		if (port->monitor.oidData->Length <= sizeof(port->stats.txPkts))
+		if (port->monitor.oidData->Length <= sizeof(port->stats.rxPktsNic))
 			memcpy((void*)&port->stats.rxPktsNic,
 					(void*)port->monitor.oidData->Data, 
 					port->monitor.oidData->Length);
@@ -731,14 +751,50 @@ void PortInfo::PortMonitor::callback(u_char *state,
 	port->monitor.oidData->Oid = OID_GEN_XMIT_OK;
 	if (PacketRequest(port->devHandle->adapter, 0, port->monitor.oidData))
 	{
-		if (port->monitor.oidData->Length <= sizeof(port->stats.txPkts))
+		if (port->monitor.oidData->Length <= sizeof(port->stats.txPktsNic))
 			memcpy((void*)&port->stats.txPktsNic,
 					(void*)port->monitor.oidData->Data, 
 					port->monitor.oidData->Length);
 	}
 #endif
 }
+#else
+void PortInfo::PortMonitor::callback(u_char *state, 
+		const struct pcap_pkthdr *header, const u_char *pkt_data)
+{
+	// This is the LibPcap Callback - which is a 'capture mode' callback
+	// This callback is called once for EVERY packet
 
+	uint		usec;
+	PortInfo	*port = (PortInfo*) state;
+
+	quint64 pkts;
+	quint64 bytes;
+
+	// Update RxStats and RxRates using PCAP data
+	usec = (header->ts.tv_sec - port->lastTs.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTs.tv_usec);
+	// TODO(rate)
+#if 0
+	port->stats.rxPps = (pkts * 1000000) / usec;
+	port->stats.rxBps = (bytes * 1000000) / usec;
+#endif
+
+	// Note: For a 'capture callback' PCAP reported bytes DOES NOT include
+	// ETH_FRAME_HDR_SIZE - so don't adjust for it
+	port->stats.rxPkts++;
+	port->stats.rxBytes += header->len;
+
+	// NOTE: Port TxStats are updated by Port Transmit Function itself
+	// since this callback is called only when a packet is received
+
+	//! \TODO TxRates
+
+	// Store curr timestamp as last timestamp
+	port->lastTs.tv_sec = header->ts.tv_sec;
+	port->lastTs.tv_usec = header->ts.tv_usec;
+}
+#endif
 void PortInfo::PortMonitor::run()
 {
 	int		ret;
@@ -747,8 +803,7 @@ void PortInfo::PortMonitor::run()
 
 	/* Start the main loop */
 	ret = pcap_loop(port->devHandle, -1, &PortInfo::PortMonitor::callback, 
-			(PUCHAR) port);
-	//ret = pcap_loop(fp, -1, &updateStats, (PUCHAR)&st_ts);
+			(u_char*) port);
 
 	switch(ret)
 	{
@@ -802,7 +857,7 @@ MyService::MyService(AbstractHost *host)
 	alldevs = NULL;
 
     LOG("Retrieving the device list from the local machine\n"); 
-    if (pcap_findalldevs_ex(PCAP_SRC_IF_STRING, NULL, &alldevs, errbuf) == -1)
+    if (pcap_findalldevs(&alldevs, errbuf) == -1)
     {
         LOG("Error in pcap_findalldevs_ex: %s\n", errbuf);
         goto _fail;

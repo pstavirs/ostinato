@@ -15,6 +15,7 @@
 #include <QThread>
 
 #include "../rpc/pbhelper.h"
+#include "pcapextra.h"
 
 #ifdef Q_OS_WIN32
 #include <packet32.h>
@@ -41,7 +42,7 @@ class StreamInfo
 		quint8 protocol, quint16 len);
 	quint32 ipv4CksumPartial(uchar *buf, int len);
 	quint16 ipv4Cksum(uchar *buf, int len, quint32 partialSum = 0);
-	int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n);
+	int makePacket(uchar *buf, int bufMaxSize, int n);
 public:
 	bool operator < (const StreamInfo &s) const
 		{ return(d.core().ordinal() < s.d.core().ordinal()); }
@@ -117,7 +118,7 @@ class PortInfo
 	QList<StreamInfo>		streamList;
 
 public:
-	PortInfo::PortInfo(uint id, pcap_if_t *dev);
+	PortInfo(uint id, pcap_if_t *dev);
 	uint id() { return d.port_id().id(); }
 	bool isDirty() { return isSendQueueDirty; }
 	void setDirty(bool dirty) { isSendQueueDirty = dirty; }

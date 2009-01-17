@@ -26,7 +26,7 @@ class PortGroupList : public QObject {
 
 // Methods
 public:
-	PortGroupList::PortGroupList();
+	PortGroupList();
 
 
 	PortModel* getPortModel() { return &mPortGroupListModel; }
