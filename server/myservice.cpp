@@ -482,33 +482,57 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 // ------------------ PortInfo --------------------
 //
 PortInfo::PortInfo(uint id, pcap_if_t *dev)
-	: monitor(this)
+	: monitorRx(this), monitorTx(this)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
 
 	this->dev = dev;
-	devHandle = pcap_open_live(dev->name, 0, PCAP_OPENFLAG_PROMISCUOUS ,
+
+	/*
+	 * Get 2 device handles - one for rx and one for tx. If we use only
+	 * one handle for both rx and tx anythin that we tx using the single
+	 * handle is not received back to us
+	 */
+	devHandleRx = pcap_open_live(dev->name, 0, PCAP_OPENFLAG_PROMISCUOUS ,
 		1000 /*ms*/, errbuf);
-	if (devHandle == NULL)
+	if (devHandleRx == NULL)
 	{
 		qDebug("Error opening port %s: %s\n", 
-				dev->name, pcap_geterr(devHandle));
+				dev->name, pcap_geterr(devHandleRx));
 	}
 
-#if 0
-	if (pcap_setdirection(devHandle, PCAP_D_IN)<0)
+	if (pcap_setdirection(devHandleRx, PCAP_D_IN)<0)
 	{
 		qDebug("[%s] Error setting direction inbound only\n", dev->name);
 	}
-#endif
 
 	/* By default, put the interface in statistics mode */
-	if (pcap_setmode(devHandle, MODE_STAT)<0)
+	if (pcap_setmode(devHandleRx, MODE_STAT)<0)
+	{
+		qDebug("Error setting statistics mode.\n");
+	}
+
+	devHandleTx = pcap_open_live(dev->name, 0, PCAP_OPENFLAG_PROMISCUOUS ,
+		1000 /*ms*/, errbuf);
+	if (devHandleTx == NULL)
+	{
+		qDebug("Error opening port %s: %s\n", 
+				dev->name, pcap_geterr(devHandleTx));
+	}
+
+	if (pcap_setdirection(devHandleTx, PCAP_D_OUT)<0)
+	{
+		qDebug("[%s] Error setting direction outbound only\n", dev->name);
+	}
+
+	/* By default, put the interface in statistics mode */
+	if (pcap_setmode(devHandleTx, MODE_STAT)<0)
 	{
 		qDebug("Error setting statistics mode.\n");
 	}
 
 	d.mutable_port_id()->set_id(id);
+
 #ifdef Q_OS_WIN32
 	d.set_name(QString("if%1").arg(id).toAscii().constData());
 #else
@@ -517,6 +541,8 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	else
 		d.set_name(QString("if%1").arg(id).toAscii().constData());
 #endif
+	d.set_name(d.name()+pcap_datalink_val_to_name(pcap_datalink(devHandleRx)));
+
 	if (dev->description)
 		d.set_description(dev->description);
 	d.set_is_enabled(true);	// FIXME(MED):check
@@ -534,7 +560,8 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	isSendQueueDirty=true;
 
 	// Start the monitor thread
-	monitor.start();
+	monitorRx.start();
+	monitorTx.start();
 }
 
 void PortInfo::update()
@@ -612,11 +639,13 @@ void PortInfo::startTransmit()
 	uint bytes, pkts;
 
 	// TODO(HI): Stream Mode - one pass/continuous
-	bytes = pcap_sendqueue_transmit(devHandle, sendQueue, false);
+	// NOTE: Transmit on the Rx Handle so that we can receive it back
+	// on the Tx Handle to do stats
+	bytes = pcap_sendqueue_transmit(devHandleRx, sendQueue, false);
 	if (bytes < sendQueue->len)
 	{	
 		qDebug("port %d: sent (%d/%d) error %s. TxStats may be inconsistent", 
-				id(), bytes, sendQueue->len, pcap_geterr(devHandle));
+				id(), bytes, sendQueue->len, pcap_geterr(devHandleTx));
 
 		// parse sendqueue using 'bytes' to get actual pkts sent
 #if 0
@@ -649,11 +678,6 @@ void PortInfo::startTransmit()
 	// together
 	pcapExtra.txPkts += pkts;
 	pcapExtra.txBytes += bytes;
-#else
-	// We don't have a regular stats callback function here, so update
-	// Port TxStats directly here
-	stats.txPkts += pkts;
-	stats.txBytes += bytes;
 #endif
 }
 
@@ -670,7 +694,27 @@ void PortInfo::resetStats()
 // ------------------ PortMonitor -------------------
 //
 
-PortInfo::PortMonitor::PortMonitor(PortInfo *port)
+PortInfo::PortMonitorRx::PortMonitorRx(PortInfo *port)
+{
+	this->port = port;
+#ifdef Q_OS_WIN32
+	{
+		int sz = sizeof(PACKET_OID_DATA) + sizeof(quint64) + 4;
+		//oidData = GlobalAllocPtr(GMEM_MOVEABLE | GMEM_ZEROINIT,
+			//sizeof(PACKET_OID_DATA) + sizeof(quint64) - 1);
+		oidData = (PPACKET_OID_DATA) malloc(sz);
+		if (oidData)
+		{
+			memset(oidData, 0, sz);
+			oidData->Length=sizeof(quint64);
+		}
+		else
+			qFatal("failed to alloc oidData");
+	}
+#endif
+}
+
+PortInfo::PortMonitorTx::PortMonitorTx(PortInfo *port)
 {
 	this->port = port;
 #ifdef Q_OS_WIN32
@@ -691,7 +735,60 @@ PortInfo::PortMonitor::PortMonitor(PortInfo *port)
 }
 
 #ifdef Q_OS_WIN32
-void PortInfo::PortMonitor::callback(u_char *state, 
+void PortInfo::PortMonitorRx::callbackRx(u_char *state, 
+		const struct pcap_pkthdr *header, const u_char *pkt_data)
+{
+	// This is the WinPcap Callback - which is a 'stats mode' callback
+
+	uint		usec;
+	PortInfo	*port = (PortInfo*) state;
+
+	quint64 pkts;
+	quint64 bytes;
+
+	// Update RxStats and RxRates using PCAP data
+	pkts  = *((quint64*)(pkt_data + 0));
+	bytes = *((quint64*)(pkt_data + 8));
+
+	// Note: PCAP reported bytes includes ETH_FRAME_HDR_SIZE - adjust for it
+	bytes -= pkts * ETH_FRAME_HDR_SIZE;
+
+	usec = (header->ts.tv_sec - port->lastTsRx.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTsRx.tv_usec);
+	port->stats.rxPps = (pkts * 1000000) / usec;
+	port->stats.rxBps = (bytes * 1000000) / usec;
+
+	port->stats.rxPkts += pkts;
+	port->stats.rxBytes += bytes;
+
+	// Store curr timestamp as last timestamp
+	port->lastTsRx.tv_sec = header->ts.tv_sec;
+	port->lastTsRx.tv_usec = header->ts.tv_usec;
+
+#if 0
+	for (int i=0; i < 16; i++)
+	{
+		qDebug("%02x ", pkt_data[i]);
+	}
+	qDebug("{%d: %llu, %llu}\n", port->id(),
+			pkts, bytes);
+	qDebug("[%d: pkts : %llu]\n", port->id(), port->stats.rxPkts);
+	qDebug("[%d: bytes: %llu]\n", port->id(), port->stats.rxBytes);
+#endif
+
+	// Retreive NIC stats
+#ifdef Q_OS_WIN32
+	port->monitorRx.oidData->Oid = OID_GEN_RCV_OK;
+	if (PacketRequest(port->devHandleRx->adapter, 0, port->monitorRx.oidData))
+	{
+		if (port->monitorRx.oidData->Length <= sizeof(port->stats.rxPktsNic))
+			memcpy((void*)&port->stats.rxPktsNic,
+					(void*)port->monitorRx.oidData->Data, 
+					port->monitorRx.oidData->Length);
+	}
+#endif
+}
+void PortInfo::PortMonitorTx::callbackTx(u_char *state, 
 		const struct pcap_pkthdr *header, const u_char *pkt_data)
 {
 	// This is the WinPcap Callback - which is a 'stats mode' callback
@@ -717,15 +814,25 @@ void PortInfo::PortMonitor::callback(u_char *state,
 	port->stats.rxPkts += pkts;
 	port->stats.rxBytes += bytes;
 
-	// Update TxStats from PcapExtra
+	// Since WinPCAP (due to NDIS limitation) cannot distinguish between
+	// rx/tx packets, pcap stats are not of much use - for the tx stats
+	// update from PcapExtra
+
+	pkts  = port->pcapExtra.txPkts - port->stats.txPkts;
+	bytes  = port->pcapExtra.txBytes - port->stats.txBytes;
+
+	// Use the pcap timestamp for rate calculation though
+	usec = (header->ts.tv_sec - port->lastTs.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTs.tv_usec);
+	port->stats.txPps = (pkts * 1000000) / usec;
+	port->stats.txBps = (bytes * 1000000) / usec;
+
 	port->stats.txPkts = port->pcapExtra.txPkts;
 	port->stats.txBytes = port->pcapExtra.txBytes;
 
-	//! \TODO TxRates
-
 	// Store curr timestamp as last timestamp
-	port->lastTs.tv_sec = header->ts.tv_sec;
-	port->lastTs.tv_usec = header->ts.tv_usec;
+	port->lastTsTx.tv_sec = header->ts.tv_sec;
+	port->lastTsTx.tv_usec = header->ts.tv_usec;
 
 #if 0
 	for (int i=0; i < 16; i++)
@@ -740,26 +847,18 @@ void PortInfo::PortMonitor::callback(u_char *state,
 
 	// Retreive NIC stats
 #ifdef Q_OS_WIN32
-	port->monitor.oidData->Oid = OID_GEN_RCV_OK;
-	if (PacketRequest(port->devHandle->adapter, 0, port->monitor.oidData))
+	port->monitorTx.oidData->Oid = OID_GEN_XMIT_OK;
+	if (PacketRequest(port->devHandleTx->adapter, 0, port->monitorTx.oidData))
 	{
-		if (port->monitor.oidData->Length <= sizeof(port->stats.rxPktsNic))
-			memcpy((void*)&port->stats.rxPktsNic,
-					(void*)port->monitor.oidData->Data, 
-					port->monitor.oidData->Length);
-	}
-	port->monitor.oidData->Oid = OID_GEN_XMIT_OK;
-	if (PacketRequest(port->devHandle->adapter, 0, port->monitor.oidData))
-	{
-		if (port->monitor.oidData->Length <= sizeof(port->stats.txPktsNic))
+		if (port->monitorTx.oidData->Length <= sizeof(port->stats.txPktsNic))
 			memcpy((void*)&port->stats.txPktsNic,
-					(void*)port->monitor.oidData->Data, 
-					port->monitor.oidData->Length);
+					(void*)port->monitorTx.oidData->Data, 
+					port->monitorTx.oidData->Length);
 	}
 #endif
 }
 #else
-void PortInfo::PortMonitor::callback(u_char *state, 
+void PortInfo::PortMonitorRx::callbackRx(u_char *state, 
 		const struct pcap_pkthdr *header, const u_char *pkt_data)
 {
 	// This is the LibPcap Callback - which is a 'capture mode' callback
@@ -772,8 +871,8 @@ void PortInfo::PortMonitor::callback(u_char *state,
 	quint64 bytes;
 
 	// Update RxStats and RxRates using PCAP data
-	usec = (header->ts.tv_sec - port->lastTs.tv_sec) * 1000000 + 
-		(header->ts.tv_usec - port->lastTs.tv_usec);
+	usec = (header->ts.tv_sec - port->lastTsRx.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTsRx.tv_usec);
 	// TODO(rate)
 #if 0
 	port->stats.rxPps = (pkts * 1000000) / usec;
@@ -785,25 +884,78 @@ void PortInfo::PortMonitor::callback(u_char *state,
 	port->stats.rxPkts++;
 	port->stats.rxBytes += header->len;
 
-	// NOTE: Port TxStats are updated by Port Transmit Function itself
-	// since this callback is called only when a packet is received
+	// Store curr timestamp as last timestamp
+	port->lastTsRx.tv_sec = header->ts.tv_sec;
+	port->lastTsRx.tv_usec = header->ts.tv_usec;
+}
 
-	//! \TODO TxRates
+void PortInfo::PortMonitorTx::callbackTx(u_char *state, 
+		const struct pcap_pkthdr *header, const u_char *pkt_data)
+{
+	// This is the LibPcap Callback - which is a 'capture mode' callback
+	// This callback is called once for EVERY packet
+
+	uint		usec;
+	PortInfo	*port = (PortInfo*) state;
+
+	quint64 pkts;
+	quint64 bytes;
+
+	// Update TxStats and TxRates using PCAP data
+	usec = (header->ts.tv_sec - port->lastTsTx.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTsTx.tv_usec);
+	// TODO(rate)
+#if 0
+	port->stats.txPps = (pkts * 1000000) / usec;
+	port->stats.txBps = (bytes * 1000000) / usec;
+#endif
+
+	// Note: For a 'capture callback' PCAP reported bytes DOES NOT include
+	// ETH_FRAME_HDR_SIZE - so don't adjust for it
+
+	port->stats.txPkts++;
+	port->stats.txBytes += header->len;
 
 	// Store curr timestamp as last timestamp
-	port->lastTs.tv_sec = header->ts.tv_sec;
-	port->lastTs.tv_usec = header->ts.tv_usec;
+	port->lastTsTx.tv_sec = header->ts.tv_sec;
+	port->lastTsTx.tv_usec = header->ts.tv_usec;
 }
 #endif
-void PortInfo::PortMonitor::run()
+void PortInfo::PortMonitorRx::run()
 {
 	int		ret;
 
-	qDebug("before pcap_loop\n");
+	qDebug("before pcap_loop rx \n");
 
 	/* Start the main loop */
-	ret = pcap_loop(port->devHandle, -1, &PortInfo::PortMonitor::callback, 
-			(u_char*) port);
+	ret = pcap_loop(port->devHandleRx, -1,
+			&PortInfo::PortMonitorRx::callbackRx, (u_char*) port);
+
+	switch(ret)
+	{
+		case 0:
+			qDebug("Unexpected return from pcap_loop()\n");
+			break;
+		case -1:
+			qDebug("Unsolicited (error) return from pcap_loop()\n");
+			break;
+		case -2:
+			qDebug("Solicited return from pcap_loop()\n");
+			break;
+		default:
+			qDebug("Unknown return value from pcap_loop()\n");
+	}
+}
+
+void PortInfo::PortMonitorTx::run()
+{
+	int		ret;
+
+	qDebug("before pcap_loopTx\n");
+
+	/* Start the main loop */
+	ret = pcap_loop(port->devHandleTx, -1,
+			&PortInfo::PortMonitorTx::callbackTx, (u_char*) port);
 
 	switch(ret)
 	{

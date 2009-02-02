@@ -53,7 +53,7 @@ class PortInfo
 {
 	friend class MyService;
 
-	class PortMonitor: public QThread
+	class PortMonitorRx: public QThread
 	{
 		friend class PortInfo;
 
@@ -62,8 +62,23 @@ class PortInfo
 		PPACKET_OID_DATA	oidData;
 #endif
 	public:
-		PortMonitor(PortInfo *port);
-		static void callback(u_char *state, 
+		PortMonitorRx(PortInfo *port);
+		static void callbackRx(u_char *state, 
+			const struct pcap_pkthdr *header, const u_char *pkt_data);
+		void run();
+	};
+
+	class PortMonitorTx: public QThread
+	{
+		friend class PortInfo;
+
+		PortInfo			*port;
+#ifdef Q_OS_WIN32
+		PPACKET_OID_DATA	oidData;
+#endif
+	public:
+		PortMonitorTx(PortInfo *port);
+		static void callbackTx(u_char *state, 
 			const struct pcap_pkthdr *header, const u_char *pkt_data);
 		void run();
 	};
@@ -104,15 +119,18 @@ class PortInfo
 	};
 
 	pcap_if_t				*dev;
-	pcap_t					*devHandle;
+	pcap_t					*devHandleRx;
+	pcap_t					*devHandleTx;
 	pcap_send_queue			*sendQueue;
 	bool					isSendQueueDirty;
 	PcapExtra				pcapExtra;
-	PortMonitor				monitor;
+	PortMonitorRx			monitorRx;
+	PortMonitorTx			monitorTx;
 
 	struct PortStats		epochStats;
 	struct PortStats		stats;
-	struct timeval			lastTs;		//! used for Rate Stats calculations
+	struct timeval			lastTsRx;	//! used for Rate Stats calculations
+	struct timeval			lastTsTx;	//! used for Rate Stats calculations
 
 	/*! StreamInfo::d::stream_id and index into streamList[] are NOT same! */
 	QList<StreamInfo>		streamList;
