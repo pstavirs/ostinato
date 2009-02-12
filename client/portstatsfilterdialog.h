@@ -27,6 +27,8 @@ private:
 private slots:
 	void on_tbSelectIn_clicked();
 	void on_tbSelectOut_clicked();
+	void on_lvUnselected_doubleClicked(const QModelIndex &index);
+	void on_lvSelected_doubleClicked(const QModelIndex &index);
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <qglobal.h>
 #include <qendian.h>
 
-#ifdef Q_OS_WIN32
+#if 0
 #include <pcap-int.h>
 #include <Ntddndis.h>
 #endif
@@ -482,7 +482,7 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 // ------------------ PortInfo --------------------
 //
 PortInfo::PortInfo(uint id, pcap_if_t *dev)
-	: monitorRx(this), monitorTx(this)
+	: monitorRx(this), monitorTx(this), transmitter(this)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
 
@@ -501,10 +501,12 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 				dev->name, pcap_geterr(devHandleRx));
 	}
 
+#if 0
 	if (pcap_setdirection(devHandleRx, PCAP_D_IN)<0)
 	{
 		qDebug("[%s] Error setting direction inbound only\n", dev->name);
 	}
+#endif 
 
 	/* By default, put the interface in statistics mode */
 	if (pcap_setmode(devHandleRx, MODE_STAT)<0)
@@ -520,10 +522,12 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 				dev->name, pcap_geterr(devHandleTx));
 	}
 
+#if 0
 	if (pcap_setdirection(devHandleTx, PCAP_D_OUT)<0)
 	{
 		qDebug("[%s] Error setting direction outbound only\n", dev->name);
 	}
+#endif
 
 	/* By default, put the interface in statistics mode */
 	if (pcap_setmode(devHandleTx, MODE_STAT)<0)
@@ -534,14 +538,15 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	d.mutable_port_id()->set_id(id);
 
 #ifdef Q_OS_WIN32
-	d.set_name(QString("if%1").arg(id).toAscii().constData());
+	d.set_name(QString("if%1 ").arg(id).toAscii().constData());
 #else
 	if (dev->name)
 		d.set_name(dev->name);
 	else
-		d.set_name(QString("if%1").arg(id).toAscii().constData());
+		d.set_name(QString("if%1 ").arg(id).toAscii().constData());
 #endif
-	d.set_name(d.name()+pcap_datalink_val_to_name(pcap_datalink(devHandleRx)));
+	d.set_name(d.name()+"{"+
+			pcap_datalink_val_to_name(pcap_datalink(devHandleRx))+"}");
 
 	if (dev->description)
 		d.set_description(dev->description);
@@ -586,6 +591,7 @@ void PortInfo::update()
 		if (streamList[i].d.core().is_enabled())
 		{
 			int	numPackets, numBursts;
+			long ipg;
 
 			switch (streamList[i].d.control().unit())
 			{
@@ -596,6 +602,8 @@ void PortInfo::update()
 			case OstProto::StreamControl::e_su_packets:
 				numBursts = 1;
 				numPackets = streamList[i].d.control().num_packets();
+				ipg = 1000000/streamList[i].d.control().packets_per_sec();
+				qDebug("ipg = %ld\n", ipg);
 				break;
 			default:
 				qWarning("Unhandled stream control unit %d",
@@ -603,9 +611,11 @@ void PortInfo::update()
 				continue;
 			}
 
-
+			pktHdr.ts.tv_sec = 0;
+			pktHdr.ts.tv_usec = 0;
 			for (int j = 0; j < numBursts; j++)
 			{
+				// FIXME(HI): IBG rate (bursts_per_sec)
 				for (int k = 0; k < numPackets; k++)
 				{
 					int len;
@@ -615,7 +625,12 @@ void PortInfo::update()
 					if (len > 0)
 					{
 						pktHdr.caplen = pktHdr.len = len;
-						pktHdr.ts.tv_sec = pktHdr.ts.tv_usec = 0; // FIXME(HI)
+						pktHdr.ts.tv_usec += ipg;
+						if (pktHdr.ts.tv_usec > 1000000)
+						{
+							pktHdr.ts.tv_sec++;
+							pktHdr.ts.tv_usec -= 1000000;
+						}
 
 						if (-1 == pcap_sendqueue_queue(sendQueue, &pktHdr, 
 									(u_char*) pktBuf))
@@ -636,49 +651,7 @@ void PortInfo::update()
 
 void PortInfo::startTransmit()
 {
-	uint bytes, pkts;
-
-	// TODO(HI): Stream Mode - one pass/continuous
-	// NOTE: Transmit on the Rx Handle so that we can receive it back
-	// on the Tx Handle to do stats
-	bytes = pcap_sendqueue_transmit(devHandleRx, sendQueue, false);
-	if (bytes < sendQueue->len)
-	{	
-		qDebug("port %d: sent (%d/%d) error %s. TxStats may be inconsistent", 
-				id(), bytes, sendQueue->len, pcap_geterr(devHandleTx));
-
-		// parse sendqueue using 'bytes' to get actual pkts sent
-#if 0
-		// FIXME(LOW): Get this working
-		pkts = qUpperBound(pcapExtra.sendQueueCumLen, bytes);
-#else
-		for (int i = 0; i < pcapExtra.sendQueueCumLen.size(); i++)
-		{
-			if (pcapExtra.sendQueueCumLen.at(i) > bytes)
-			{
-				pkts = i;
-				break;
-			}
-		}
-#endif
-	}
-	else
-	{
-		qDebug("port %d: sent (%d/%d) bytes\n", id(), bytes, sendQueue->len);
-		pkts = pcapExtra.sendQueueCumLen.size();
-	}
-
-	// pcap_sendqueue_transmit() returned 'bytes' includes size of pcap_pkthdr
-	// - adjust for it
-	if (bytes)
-		bytes -= pkts * sizeof(pcap_pkthdr);
-#ifdef Q_OS_WIN32
-	// Update pcapExtra counters - port TxStats will be updated in the
-	// 'stats callback' function so that both Rx and Tx stats are updated
-	// together
-	pcapExtra.txPkts += pkts;
-	pcapExtra.txBytes += bytes;
-#endif
+	transmitter.start();
 }
 
 void PortInfo::stopTransmit()
@@ -750,6 +723,11 @@ void PortInfo::PortMonitorRx::callbackRx(u_char *state,
 	pkts  = *((quint64*)(pkt_data + 0));
 	bytes = *((quint64*)(pkt_data + 8));
 
+#if 0
+	if (port->id() == 2)
+		qDebug("# %llu", pkts);
+#endif
+
 	// Note: PCAP reported bytes includes ETH_FRAME_HDR_SIZE - adjust for it
 	bytes -= pkts * ETH_FRAME_HDR_SIZE;
 
@@ -777,7 +755,7 @@ void PortInfo::PortMonitorRx::callbackRx(u_char *state,
 #endif
 
 	// Retreive NIC stats
-#ifdef Q_OS_WIN32
+#if 0
 	port->monitorRx.oidData->Oid = OID_GEN_RCV_OK;
 	if (PacketRequest(port->devHandleRx->adapter, 0, port->monitorRx.oidData))
 	{
@@ -799,20 +777,28 @@ void PortInfo::PortMonitorTx::callbackTx(u_char *state,
 	quint64 pkts;
 	quint64 bytes;
 
+
+#if 0
 	// Update RxStats and RxRates using PCAP data
 	pkts  = *((quint64*)(pkt_data + 0));
 	bytes = *((quint64*)(pkt_data + 8));
 
+#if 0
+	if (port->id() == 2)
+		qDebug("@ %llu", pkts);
+#endif
+
 	// Note: PCAP reported bytes includes ETH_FRAME_HDR_SIZE - adjust for it
 	bytes -= pkts * ETH_FRAME_HDR_SIZE;
 
-	usec = (header->ts.tv_sec - port->lastTs.tv_sec) * 1000000 + 
-		(header->ts.tv_usec - port->lastTs.tv_usec);
-	port->stats.rxPps = (pkts * 1000000) / usec;
-	port->stats.rxBps = (bytes * 1000000) / usec;
+	usec = (header->ts.tv_sec - port->lastTsTx.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTsTx.tv_usec);
+	port->stats.txPps = (pkts * 1000000) / usec;
+	port->stats.txBps = (bytes * 1000000) / usec;
 
-	port->stats.rxPkts += pkts;
-	port->stats.rxBytes += bytes;
+	port->stats.txPkts += pkts;
+	port->stats.txBytes += bytes;
+#endif
 
 	// Since WinPCAP (due to NDIS limitation) cannot distinguish between
 	// rx/tx packets, pcap stats are not of much use - for the tx stats
@@ -822,8 +808,8 @@ void PortInfo::PortMonitorTx::callbackTx(u_char *state,
 	bytes  = port->pcapExtra.txBytes - port->stats.txBytes;
 
 	// Use the pcap timestamp for rate calculation though
-	usec = (header->ts.tv_sec - port->lastTs.tv_sec) * 1000000 + 
-		(header->ts.tv_usec - port->lastTs.tv_usec);
+	usec = (header->ts.tv_sec - port->lastTsTx.tv_sec) * 1000000 + 
+		(header->ts.tv_usec - port->lastTsTx.tv_usec);
 	port->stats.txPps = (pkts * 1000000) / usec;
 	port->stats.txBps = (bytes * 1000000) / usec;
 
@@ -846,7 +832,7 @@ void PortInfo::PortMonitorTx::callbackTx(u_char *state,
 #endif
 
 	// Retreive NIC stats
-#ifdef Q_OS_WIN32
+#if 0
 	port->monitorTx.oidData->Oid = OID_GEN_XMIT_OK;
 	if (PacketRequest(port->devHandleTx->adapter, 0, port->monitorTx.oidData))
 	{
@@ -926,7 +912,7 @@ void PortInfo::PortMonitorRx::run()
 	int		ret;
 
 	qDebug("before pcap_loop rx \n");
-
+#if 1
 	/* Start the main loop */
 	ret = pcap_loop(port->devHandleRx, -1,
 			&PortInfo::PortMonitorRx::callbackRx, (u_char*) port);
@@ -945,6 +931,28 @@ void PortInfo::PortMonitorRx::run()
 		default:
 			qDebug("Unknown return value from pcap_loop()\n");
 	}
+#else
+	while (1)
+	{
+		/* Start the main loop */
+		ret = pcap_dispatch(port->devHandleRx, -1,
+				&PortInfo::PortMonitorRx::callbackRx, (u_char*) port);
+
+		switch(ret)
+		{
+			case -1:
+				qDebug("Unsolicited (error) return from pcap_loop() %s\n",
+						pcap_geterr(port->devHandleRx));
+				break;
+			case -2:
+				qDebug("Solicited return from pcap_loop()\n");
+				break;
+			default:
+				//qDebug("%d pkts rcvd\n", ret);
+				break;
+		}
+	}
+#endif
 }
 
 void PortInfo::PortMonitorTx::run()
@@ -952,7 +960,7 @@ void PortInfo::PortMonitorTx::run()
 	int		ret;
 
 	qDebug("before pcap_loopTx\n");
-
+#if 1
 	/* Start the main loop */
 	ret = pcap_loop(port->devHandleTx, -1,
 			&PortInfo::PortMonitorTx::callbackTx, (u_char*) port);
@@ -971,6 +979,84 @@ void PortInfo::PortMonitorTx::run()
 		default:
 			qDebug("Unknown return value from pcap_loop()\n");
 	}
+#else
+	while (1)
+	{
+		/* Start the main loop */
+		ret = pcap_dispatch(port->devHandleTx, -1,
+				&PortInfo::PortMonitorTx::callbackTx, (u_char*) port);
+
+		switch(ret)
+		{
+			case -1:
+				qDebug("Unsolicited (error) return from pcap_loop() %s\n",
+						pcap_geterr(port->devHandleTx));
+				break;
+			case -2:
+				qDebug("Solicited return from pcap_loop()\n");
+				break;
+			default:
+				//qDebug("%d pkts rcvd\n", ret);
+				break;
+		}
+	}
+#endif
+}
+
+/*--------------- PortTransmitter ---------------*/
+
+PortInfo::PortTransmitter::PortTransmitter(PortInfo *port)
+{
+	this->port = port;
+}
+
+void PortInfo::PortTransmitter::run()
+{
+	uint bytes, pkts;
+
+	// TODO(HI): Stream Mode - one pass/continuous
+	// NOTE: Transmit on the Rx Handle so that we can receive it back
+	// on the Tx Handle to do stats
+	bytes = pcap_sendqueue_transmit(port->devHandleRx, port->sendQueue, true);
+	if (bytes < port->sendQueue->len)
+	{	
+		qDebug("port %d: sent (%d/%d) error %s. TxStats may be inconsistent", 
+				port->id(), bytes, port->sendQueue->len, 
+				pcap_geterr(port->devHandleTx));
+
+		// parse sendqueue using 'bytes' to get actual pkts sent
+#if 0
+		// FIXME(LOW): Get this working
+		pkts = qUpperBound(pcapExtra.sendQueueCumLen, bytes);
+#else
+		for (int i = 0; i < port->pcapExtra.sendQueueCumLen.size(); i++)
+		{
+			if (port->pcapExtra.sendQueueCumLen.at(i) > bytes)
+			{
+				pkts = i;
+				break;
+			}
+		}
+#endif
+	}
+	else
+	{
+		qDebug("port %d: sent (%d/%d) bytes\n", port->id(), bytes, 
+				port->sendQueue->len);
+		pkts = port->pcapExtra.sendQueueCumLen.size();
+	}
+
+	// pcap_sendqueue_transmit() returned 'bytes' includes size of pcap_pkthdr
+	// - adjust for it
+	if (bytes)
+		bytes -= pkts * sizeof(pcap_pkthdr);
+#ifdef Q_OS_WIN32
+	// Update pcapExtra counters - port TxStats will be updated in the
+	// 'stats callback' function so that both Rx and Tx stats are updated
+	// together
+	port->pcapExtra.txPkts += pkts;
+	port->pcapExtra.txBytes += bytes;
+#endif
 }
 
 /*--------------- MyService ---------------*/
@@ -1369,6 +1455,11 @@ const ::OstProto::PortIdList* request,
 		s = response->add_port_stats();
 		s->mutable_port_id()->set_id(request->port_id(i).id());
 
+		if (portidx == 2)
+		{
+			qDebug("<%llu", portInfo[portidx]->epochStats.rxPkts);
+			qDebug(">%llu", portInfo[portidx]->stats.rxPkts);
+		}
 		s->set_rx_pkts(portInfo[portidx]->stats.rxPkts -
 				portInfo[portidx]->epochStats.rxPkts);
 		s->set_rx_bytes(portInfo[portidx]->stats.rxBytes -

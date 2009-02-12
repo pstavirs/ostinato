@@ -83,6 +83,17 @@ class PortInfo
 		void run();
 	};
 
+	class PortTransmitter: public QThread
+	{
+		friend class PortInfo;
+
+		PortInfo			*port;
+
+	public:
+		PortTransmitter(PortInfo *port);
+		void run();
+	};
+
 	OstProto::Port			d;
 
 	struct PortStats
@@ -111,7 +122,7 @@ class PortInfo
 		//! Used to track num of packets (and their sizes) in the
 		// send queue. Also used to find out actual num of pkts sent 
 		// in case of partial send in pcap_sendqueue_transmit()
-		QList<uint>	sendQueueCumLen;
+		QList<uint> 	sendQueueCumLen;
 
 		//! PCAP doesn't do any tx stats
 		quint64		txPkts;
@@ -121,11 +132,12 @@ class PortInfo
 	pcap_if_t				*dev;
 	pcap_t					*devHandleRx;
 	pcap_t					*devHandleTx;
-	pcap_send_queue			*sendQueue;
+	pcap_send_queue*		sendQueue;
 	bool					isSendQueueDirty;
 	PcapExtra				pcapExtra;
 	PortMonitorRx			monitorRx;
 	PortMonitorTx			monitorTx;
+	PortTransmitter			transmitter;
 
 	struct PortStats		epochStats;
 	struct PortStats		stats;

@@ -105,12 +105,6 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 			case e_STAT_FRAME_RECV_RATE:
 				return stats.rx_pps();
 
-			case e_STAT_FRAMES_RCVD_NIC:
-				return stats.rx_pkts_nic();
-
-			case e_STAT_FRAMES_SENT_NIC:
-				return stats.tx_pkts_nic();
-
 			case e_STAT_BYTES_RCVD:
 				return stats.rx_bytes();
 
@@ -123,12 +117,19 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 			case e_STAT_BYTE_RECV_RATE:
 				return stats.rx_bps();
 
+#if 0
+			case e_STAT_FRAMES_RCVD_NIC:
+				return stats.rx_pkts_nic();
+
+			case e_STAT_FRAMES_SENT_NIC:
+				return stats.tx_pkts_nic();
+
 			case e_STAT_BYTES_RCVD_NIC:
 				return stats.rx_bytes_nic();
 
 			case e_STAT_BYTES_SENT_NIC:
 				return stats.tx_bytes_nic();
-
+#endif
 			default:
 				qWarning("%s: Unhandled stats id %d\n", __FUNCTION__,
 						index.row());
@@ -142,11 +143,39 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
 QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+#ifdef Q_OS_WIN32
+	// TODO(MED): The limitations should be the server's not the client's!
+	// Ideally we shd enhance the protocol to convey limitation(s), if any,
+	// from server to client
+	if (role == Qt::ToolTipRole)
+	{
+		if (orientation == Qt::Horizontal)
+		{
+			return QString("<b>Limitation(s)</b>"  
+					"<p><i>Frames/Bytes Receieved</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>" 
+					"<i>Frames/Bytes Sent</i>: Only Ostinato Tx pkts (Tx by others NOT included)</p>" 
+					"<p>Rx/Tx Rates are derived from the above and hence subject to same limitations</p>"
+					);
+		}
+		else
+			return QVariant();
+	}
+#endif
+
 	if (role != Qt::DisplayRole)
 		return QVariant();
 
 	if (orientation == Qt::Horizontal)
-		return QString("Port %1").arg(section);
+	{
+		uint portGroupIdx, portIdx;
+
+		getDomainIndexes(index(0, section), portGroupIdx, portIdx);	
+#ifdef Q_OS_WIN32
+		return QString("Port %1/%2 (*)").arg(portGroupIdx).arg(portIdx);
+#else
+		return QString("Port %1/%2").arg(portGroupIdx).arg(portIdx);
+#endif
+	}
 	else
 		return PortStatName.at(section);
 }
@@ -212,7 +241,6 @@ void PortStatsModel::when_portListChanged()
 
 void PortStatsModel::on_portStatsUpdate(int port, void*stats)
 {
-	// FIXME(MED): update only the changed port not all
 	QModelIndex topLeft = index(port, 0, QModelIndex());
 	QModelIndex bottomRight = index(port, e_STAT_MAX, QModelIndex());
 

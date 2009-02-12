@@ -9,14 +9,16 @@ typedef enum {
 	e_STAT_FRAMES_SENT,
 	e_STAT_FRAME_SEND_RATE,
 	e_STAT_FRAME_RECV_RATE,
-	e_STAT_FRAMES_RCVD_NIC,
-	e_STAT_FRAMES_SENT_NIC,
 	e_STAT_BYTES_RCVD,
 	e_STAT_BYTES_SENT,
 	e_STAT_BYTE_SEND_RATE,
 	e_STAT_BYTE_RECV_RATE,
+#if 0
+	e_STAT_FRAMES_RCVD_NIC,
+	e_STAT_FRAMES_SENT_NIC,
 	e_STAT_BYTES_RCVD_NIC,
 	e_STAT_BYTES_SENT_NIC,
+#endif
 	e_STAT_MAX
 } PortStat;
 
@@ -25,14 +27,16 @@ static QStringList PortStatName = (QStringList()
 	<< "Frames Sent"
 	<< "Frame Send Rate (fps)"
 	<< "Frame Receive Rate (fps)"
-	<< "Frames Received (NIC)"
-	<< "Frames Sent (NIC)"
 	<< "Bytes Received"
 	<< "Bytes Sent"
 	<< "Byte Send Rate (Bps)"
 	<< "Byte Receive Rate (Bps)"
+#if 0
+	<< "Frames Received (NIC)"
+	<< "Frames Sent (NIC)"
 	<< "Bytes Received (NIC)"
 	<< "Bytes Sent (NIC)"
+#endif
 );
 
 class PortGroupList;

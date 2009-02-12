@@ -4,13 +4,6 @@ PortStatsFilterDialog::PortStatsFilterDialog(QWidget *parent)
 {
 	setupUi(this);
 
-	// TODO(MED): Use ExtendedSelection and use "selected" instead of
-	// "current" for selecting in/out
-	// TODO(MED): Ensure items are READ-ONLY not editable
-	// TODO(MED): Enable "double-click" on items
-	lvUnselected->setSelectionMode(QAbstractItemView::SingleSelection);
-	lvSelected->setSelectionMode(QAbstractItemView::SingleSelection);
-
 	mUnselected.setSortRole(PositionRole);
 
 	lvUnselected->setModel(&mUnselected);
@@ -37,6 +30,10 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
 		
 		item = new QStandardItem(model->headerData(i, orientation).toString());
 		item->setData(i, PositionRole);
+		item->setFlags(Qt::ItemIsSelectable
+				| Qt::ItemIsDragEnabled
+				//| Qt::ItemIsDropEnabled
+				| Qt::ItemIsEnabled);
 
 		if (initial.contains(i))
 			mSelected.appendRow(item);
@@ -64,13 +61,43 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
 void PortStatsFilterDialog::on_tbSelectIn_clicked()
 {
 	QStandardItem	*item;
+	while (lvUnselected->selectionModel()->selectedIndexes().size())
+	{
+		item = mUnselected.takeItem(lvUnselected->selectionModel()->
+				selectedIndexes().at(0).row());
+		if (mUnselected.removeRow(lvUnselected->selectionModel()->
+				selectedIndexes().at(0).row()))
+			mSelected.appendRow(item);
+	}
+}
+
+void PortStatsFilterDialog::on_tbSelectOut_clicked()
+{
+	QStandardItem	*item;
+
+	while (lvSelected->selectionModel()->selectedIndexes().size())
+	{
+		item = mSelected.takeItem(lvSelected->selectionModel()->
+				selectedIndexes().at(0).row());
+		if (mSelected.removeRow(lvSelected->selectionModel()->
+				selectedIndexes().at(0).row()))
+		{
+			mUnselected.appendRow(item);
+			mUnselected.sort(0);
+		}
+	}
+}
+
+void PortStatsFilterDialog::on_lvUnselected_doubleClicked(const QModelIndex &index)
+{
+	QStandardItem	*item;
 
 	item = mUnselected.takeItem(lvUnselected->currentIndex().row());
 	if (mUnselected.removeRow(lvUnselected->currentIndex().row()))
 		mSelected.appendRow(item);
 }
 
-void PortStatsFilterDialog::on_tbSelectOut_clicked()
+void PortStatsFilterDialog::on_lvSelected_doubleClicked(const QModelIndex &index)
 {
 	QStandardItem	*item;
 

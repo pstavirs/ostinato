@@ -15,9 +15,6 @@
   <layout class="QVBoxLayout" >
    <item>
     <widget class="QFrame" name="frame" >
-     <property name="toolTip" >
-      <string>Clear All</string>
-     </property>
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -28,7 +25,7 @@
       <item>
        <widget class="QToolButton" name="tbStartTransmit" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Start Tx</string>
         </property>
         <property name="statusTip" >
          <string>Starts transmit on selected port(s)</string>
@@ -44,7 +41,7 @@
       <item>
        <widget class="QToolButton" name="tbStopTransmit" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Stop Tx</string>
         </property>
         <property name="statusTip" >
          <string>Stops transmit on selected port(s)</string>
@@ -60,7 +57,7 @@
       <item>
        <widget class="QToolButton" name="tbClear" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Clear Selected Port Stats</string>
         </property>
         <property name="statusTip" >
          <string>Clears statistics of the selected port(s)</string>
@@ -73,7 +70,7 @@
       <item>
        <widget class="QToolButton" name="tbClearAll" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Clear All Ports Stats</string>
         </property>
         <property name="statusTip" >
          <string>Clears statistics of all ports</string>
@@ -86,7 +83,7 @@
       <item>
        <widget class="QToolButton" name="tbStartCapture" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Start Capture</string>
         </property>
         <property name="statusTip" >
          <string>Captures packets on the selected port(s)</string>
@@ -102,7 +99,7 @@
       <item>
        <widget class="QToolButton" name="tbStopCapture" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>Stop Capture</string>
         </property>
         <property name="statusTip" >
          <string>End capture on selecteed port(s)</string>
@@ -118,7 +115,7 @@
       <item>
        <widget class="QToolButton" name="tbViewCapture" >
         <property name="toolTip" >
-         <string>Clear All</string>
+         <string>View Capture Buffer</string>
         </property>
         <property name="statusTip" >
          <string>View captured packets on selected port(s)</string>
@@ -133,9 +130,6 @@
       </item>
       <item>
        <widget class="Line" name="line" >
-        <property name="toolTip" >
-         <string>Clear All</string>
-        </property>
         <property name="orientation" >
          <enum>Qt::Vertical</enum>
         </property>
@@ -143,9 +137,6 @@
       </item>
       <item>
        <spacer>
-        <property name="toolTip" >
-         <string>Clear All</string>
-        </property>
         <property name="orientation" >
          <enum>Qt::Horizontal</enum>
         </property>
@@ -159,9 +150,6 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbFilter" >
-        <property name="toolTip" >
-         <string>Clear All</string>
-        </property>
         <property name="statusTip" >
          <string>Select which ports to view</string>
         </property>
@@ -177,11 +165,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="tvPortStats" >
-     <property name="toolTip" >
-      <string>Clear All</string>
-     </property>
-    </widget>
+    <widget class="QTableView" name="tvPortStats" />
    </item>
   </layout>
  </widget>

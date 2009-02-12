@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>588</width>
-    <height>298</height>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -17,8 +17,20 @@
     <layout class="QHBoxLayout" >
      <item>
       <widget class="QListView" name="lvUnselected" >
+       <property name="acceptDrops" >
+        <bool>false</bool>
+       </property>
+       <property name="dragEnabled" >
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode" >
+        <enum>QAbstractItemView::NoDragDrop</enum>
+       </property>
        <property name="selectionMode" >
         <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="movement" >
+        <enum>QListView::Static</enum>
        </property>
       </widget>
      </item>
@@ -68,6 +80,18 @@
      </item>
      <item>
       <widget class="QListView" name="lvSelected" >
+       <property name="acceptDrops" >
+        <bool>true</bool>
+       </property>
+       <property name="dragEnabled" >
+        <bool>true</bool>
+       </property>
+       <property name="dragDropOverwriteMode" >
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode" >
+        <enum>QAbstractItemView::InternalMove</enum>
+       </property>
        <property name="selectionMode" >
         <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
@@ -75,50 +99,6 @@
         <enum>QListView::Free</enum>
        </property>
       </widget>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" >
-       <item>
-        <spacer>
-         <property name="orientation" >
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" >
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton" >
-         <property name="text" >
-          <string>U</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_2" >
-         <property name="text" >
-          <string>D</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer>
-         <property name="orientation" >
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" >
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
      </item>
     </layout>
    </item>

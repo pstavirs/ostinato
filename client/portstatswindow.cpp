@@ -13,11 +13,11 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
 	this->pgl = pgl;
 	model = pgl->getPortStatsModel();
 	tvPortStats->setModel(model);
-	tvPortStats->horizontalHeader()->setMovable(true);
 
 	tvPortStats->verticalHeader()->setHighlightSections(false);
 	tvPortStats->verticalHeader()->setDefaultSectionSize(
 		tvPortStats->verticalHeader()->minimumSectionSize());
+
 }
 
 PortStatsWindow::~PortStatsWindow()
@@ -109,7 +109,17 @@ void PortStatsWindow::on_tbFilter_clicked()
 
 	newColumns = dialog.getItemList(&ok, model, Qt::Horizontal, currentColumns);
 
-	if(ok)
+	if (ok)
+	{
+		// hide/show sections first ...
 		for(int i = 0; i < model->columnCount(); i++)
 			tvPortStats->setColumnHidden(i, !newColumns.contains(i));
+
+		// ... then for the 'shown' columns, set the visual index
+		for(int i = 0; i < newColumns.size(); i++)
+		{
+			tvPortStats->horizontalHeader()->moveSection(tvPortStats->
+					horizontalHeader()->visualIndex(newColumns.at(i)), i);
+		}
+	}
 }
