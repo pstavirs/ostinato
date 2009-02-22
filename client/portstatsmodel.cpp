@@ -12,7 +12,7 @@ PortStatsModel::PortStatsModel(PortGroupList *p, QObject *parent)
 
 	timer = new QTimer();
 	connect(timer, SIGNAL(timeout()), this, SLOT(updateStats()));
-	timer->start(2000);
+	timer->start(1000);
 }
 
 int PortStatsModel::rowCount(const QModelIndex &parent) const

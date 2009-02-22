@@ -54,7 +54,7 @@ void PortStatsWindow::on_tbStopTransmit_clicked()
 	for (int i = 0; i < pgpl.size(); i++)
 	{
 		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
-			startTx(&pgpl[i].portList);
+			stopTx(&pgpl[i].portList);
 	}
 }
 

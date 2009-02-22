@@ -4,6 +4,7 @@
 
 /* NOTE: All code borrowed from WinPcap */
 
+#ifndef Q_OS_WIN32
 int pcap_setmode(pcap_t *p, int mode)
 {
 	// no STAT mode in libpcap, so just return 0 to indicate success
@@ -58,13 +59,36 @@ int pcap_sendqueue_queue (pcap_send_queue *queue,
 
 	return 0;
 }
+#endif
 
-u_int pcap_sendqueue_transmit (pcap_t *p, pcap_send_queue *queue, int sync)
+u_int ost_pcap_sendqueue_list_transmit(pcap_t *p, 
+		QList<ost_pcap_send_queue> sendQueueList, int sync,
+		int *p_stop, quint64* p_pkts, quint64* p_bytes,
+		void (*pf_usleep)(ulong))
+{
+	uint ret = 0;
+
+	foreach(ost_pcap_send_queue sq, sendQueueList)
+	{
+		ret += ost_pcap_sendqueue_transmit(p, sq.sendQueue, sync,
+				p_stop, p_pkts, p_bytes, pf_usleep);
+
+		// TODO(HI): Timing between subsequent sendQueues
+	}
+
+	return ret;
+}
+
+u_int ost_pcap_sendqueue_transmit(pcap_t *p,
+		pcap_send_queue *queue, int sync,
+		int *p_stop, quint64* p_pkts, quint64* p_bytes,
+		void (*pf_usleep)(ulong))
 {
 	char*	PacketBuff = queue->buffer;
 	int		Size = queue->len;
 
     struct	pcap_pkthdr *winpcap_hdr;
+	struct  timeval		ts;
     char*	EndOfUserBuff = (char *)PacketBuff + Size;
     int		ret;
 
@@ -78,7 +102,13 @@ u_int pcap_sendqueue_transmit (pcap_t *p, pcap_send_queue *queue, int sync)
         return 0;
     }
 
+	if (sync)
+		ts = winpcap_hdr->ts;
+
     while( true ){
+
+		if (*p_stop)
+			return (char*)winpcap_hdr - (char*)PacketBuff;
 
         if(winpcap_hdr->caplen ==0 || winpcap_hdr->caplen > 65536)
         {
@@ -96,6 +126,9 @@ u_int pcap_sendqueue_transmit (pcap_t *p, pcap_send_queue *queue, int sync)
             return (char*)winpcap_hdr - (char*)PacketBuff;
         }
 
+		if (p_pkts) (*p_pkts)++;
+		if (p_bytes) (*p_bytes) += winpcap_hdr->caplen;
+
         // Step to the next packet in the buffer
         //(char*)winpcap_hdr += winpcap_hdr->caplen + sizeof(struct pcap_pkthdr);
         winpcap_hdr = (struct pcap_pkthdr*) ((char*)winpcap_hdr + 
@@ -106,6 +139,18 @@ u_int pcap_sendqueue_transmit (pcap_t *p, pcap_send_queue *queue, int sync)
         {
                 return (char*)winpcap_hdr - (char*)PacketBuff;
         }
+
+		if (sync)
+		{
+			long usec = (winpcap_hdr->ts.tv_sec-ts.tv_sec)*1000000 +
+				(winpcap_hdr->ts.tv_usec - ts.tv_usec);
+
+			if (usec)
+			{
+				(*pf_usleep)(usec);
+				ts = winpcap_hdr->ts;
+			}
+		}
     }
 }
 

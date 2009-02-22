@@ -558,8 +558,7 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	resetStats();
 
 	// We'll create sendqueue later when required
-	sendQueue = NULL;
-	pcapExtra.sendQueueCumLen.clear();
+	sendQueueList.clear();
 	pcapExtra.txPkts = 0;
 	pcapExtra.txBytes = 0;
 	isSendQueueDirty=true;
@@ -571,17 +570,21 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 
 void PortInfo::update()
 {
-	uchar		pktBuf[2000];
-	pcap_pkthdr	pktHdr;
+	uchar				pktBuf[2000];
+	pcap_pkthdr			pktHdr;
+	ost_pcap_send_queue	sendQ;
 
 	qDebug("In %s", __FUNCTION__);
 
-	if (sendQueue)
-		pcap_sendqueue_destroy(sendQueue);
+	if (sendQueueList.size())
+	{
+		foreach(sendQ, sendQueueList)
+			pcap_sendqueue_destroy(sendQ.sendQueue);
+	}
 
 	// TODO(LOW): calculate sendqueue size
-	sendQueue = pcap_sendqueue_alloc(1*MB);
-	pcapExtra.sendQueueCumLen.clear();
+	sendQ.sendQueue = pcap_sendqueue_alloc(1*MB);
+	sendQ.sendQueueCumLen.clear();
 	
 	// First sort the streams by ordinalValue
 	qSort(streamList);
@@ -590,32 +593,36 @@ void PortInfo::update()
 	{
 		if (streamList[i].d.core().is_enabled())
 		{
-			int	numPackets, numBursts;
-			long ipg;
+			long numPackets, numBursts;
+			long ibg, ipg;
 
 			switch (streamList[i].d.control().unit())
 			{
 			case OstProto::StreamControl::e_su_bursts:
 				numBursts = streamList[i].d.control().num_bursts();
 				numPackets = streamList[i].d.control().packets_per_burst();
+				ibg = 1000000/streamList[i].d.control().bursts_per_sec();
+				ipg = 0;
 				break;
 			case OstProto::StreamControl::e_su_packets:
 				numBursts = 1;
 				numPackets = streamList[i].d.control().num_packets();
+				ibg = 0;
 				ipg = 1000000/streamList[i].d.control().packets_per_sec();
-				qDebug("ipg = %ld\n", ipg);
 				break;
 			default:
 				qWarning("Unhandled stream control unit %d",
 					streamList[i].d.control().unit());
 				continue;
 			}
+			qDebug("numBursts = %ld, numPackets = %ld\n",
+					numBursts, numPackets);
+			qDebug("ibg = %ld, ipg = %ld\n", ibg, ipg);
 
 			pktHdr.ts.tv_sec = 0;
 			pktHdr.ts.tv_usec = 0;
 			for (int j = 0; j < numBursts; j++)
 			{
-				// FIXME(HI): IBG rate (bursts_per_sec)
 				for (int k = 0; k < numPackets; k++)
 				{
 					int len;
@@ -632,19 +639,44 @@ void PortInfo::update()
 							pktHdr.ts.tv_usec -= 1000000;
 						}
 
-						if (-1 == pcap_sendqueue_queue(sendQueue, &pktHdr, 
+						// Not enough space? Alloc another one!
+						if ((sendQ.sendQueue->len + len + sizeof(pcap_pkthdr)) 
+							 > sendQ.sendQueue->maxlen)
+						{
+							sendQueueList.append(sendQ);
+
+							// TODO(LOW): calculate sendqueue size
+							sendQ.sendQueue = pcap_sendqueue_alloc(1*MB);
+							sendQ.sendQueueCumLen.clear();
+
+#if 0
+							pktHdr.ts.tv_sec = 0;
+							pktHdr.ts.tv_usec = 0;
+#endif
+						}
+
+						if (-1 == pcap_sendqueue_queue(sendQ.sendQueue, &pktHdr, 
 									(u_char*) pktBuf))
 						{
 							qDebug("[port %d] sendqueue_queue() failed for "
 									"streamidx %d\n", id(), i);
 						}
 						else
-							pcapExtra.sendQueueCumLen.append(sendQueue->len);
+							sendQ.sendQueueCumLen.append(sendQ.sendQueue->len);
 					}
+				}
+				pktHdr.ts.tv_usec += ibg;
+				if (pktHdr.ts.tv_usec > 1000000)
+				{
+					pktHdr.ts.tv_sec++;
+					pktHdr.ts.tv_usec -= 1000000;
 				}
 			}
 		}
 	}
+
+	// The last alloc'ed sendQ appended here
+	sendQueueList.append(sendQ);
 
 	isSendQueueDirty = false;
 }
@@ -656,6 +688,7 @@ void PortInfo::startTransmit()
 
 void PortInfo::stopTransmit()
 {
+	transmitter.stop();
 }
 
 void PortInfo::resetStats()
@@ -1012,52 +1045,32 @@ PortInfo::PortTransmitter::PortTransmitter(PortInfo *port)
 
 void PortInfo::PortTransmitter::run()
 {
-	uint bytes, pkts;
-
 	// TODO(HI): Stream Mode - one pass/continuous
-	// NOTE: Transmit on the Rx Handle so that we can receive it back
+
+	// NOTE1: We can't use pcap_sendqueue_transmit() directly even on Win32
+	// 'coz of 2 reasons - there's no way of stopping it before all packets
+	// in the sendQueue are sent out and secondly, stats are available only
+	// when all packets have been sent - no periodic updates
+	// 
+	// NOTE2: Transmit on the Rx Handle so that we can receive it back
 	// on the Tx Handle to do stats
-	bytes = pcap_sendqueue_transmit(port->devHandleRx, port->sendQueue, true);
-	if (bytes < port->sendQueue->len)
-	{	
-		qDebug("port %d: sent (%d/%d) error %s. TxStats may be inconsistent", 
-				port->id(), bytes, port->sendQueue->len, 
-				pcap_geterr(port->devHandleTx));
-
-		// parse sendqueue using 'bytes' to get actual pkts sent
-#if 0
-		// FIXME(LOW): Get this working
-		pkts = qUpperBound(pcapExtra.sendQueueCumLen, bytes);
-#else
-		for (int i = 0; i < port->pcapExtra.sendQueueCumLen.size(); i++)
-		{
-			if (port->pcapExtra.sendQueueCumLen.at(i) > bytes)
-			{
-				pkts = i;
-				break;
-			}
-		}
-#endif
-	}
-	else
-	{
-		qDebug("port %d: sent (%d/%d) bytes\n", port->id(), bytes, 
-				port->sendQueue->len);
-		pkts = port->pcapExtra.sendQueueCumLen.size();
-	}
-
-	// pcap_sendqueue_transmit() returned 'bytes' includes size of pcap_pkthdr
-	// - adjust for it
-	if (bytes)
-		bytes -= pkts * sizeof(pcap_pkthdr);
-#ifdef Q_OS_WIN32
-	// Update pcapExtra counters - port TxStats will be updated in the
+	//
+	// NOTE3: Update pcapExtra counters - port TxStats will be updated in the
 	// 'stats callback' function so that both Rx and Tx stats are updated
 	// together
-	port->pcapExtra.txPkts += pkts;
-	port->pcapExtra.txBytes += bytes;
-#endif
+
+	m_stop = 0;
+	ost_pcap_sendqueue_list_transmit(port->devHandleRx, port->sendQueueList, 
+			true, &m_stop, &port->pcapExtra.txPkts, &port->pcapExtra.txBytes,
+			QThread::usleep);
+	m_stop = 0;
 }
+
+void PortInfo::PortTransmitter::stop()
+{
+	m_stop = 1;
+}
+
 
 /*--------------- MyService ---------------*/
 
@@ -1455,11 +1468,14 @@ const ::OstProto::PortIdList* request,
 		s = response->add_port_stats();
 		s->mutable_port_id()->set_id(request->port_id(i).id());
 
+#if 0
 		if (portidx == 2)
 		{
 			qDebug("<%llu", portInfo[portidx]->epochStats.rxPkts);
 			qDebug(">%llu", portInfo[portidx]->stats.rxPkts);
 		}
+#endif
+
 		s->set_rx_pkts(portInfo[portidx]->stats.rxPkts -
 				portInfo[portidx]->epochStats.rxPkts);
 		s->set_rx_bytes(portInfo[portidx]->stats.rxBytes -

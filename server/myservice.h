@@ -87,11 +87,13 @@ class PortInfo
 	{
 		friend class PortInfo;
 
-		PortInfo			*port;
+		PortInfo	*port;
+		int			m_stop;
 
 	public:
 		PortTransmitter(PortInfo *port);
 		void run();
+		void stop();
 	};
 
 	OstProto::Port			d;
@@ -115,24 +117,22 @@ class PortInfo
 
 	//! \todo Need lock for stats access/update
 
+
 	//! Stuff we need to maintain since PCAP doesn't as of now. As and when
 	// PCAP supports it, we'll remove from here
 	struct PcapExtra
 	{
-		//! Used to track num of packets (and their sizes) in the
-		// send queue. Also used to find out actual num of pkts sent 
-		// in case of partial send in pcap_sendqueue_transmit()
-		QList<uint> 	sendQueueCumLen;
 
 		//! PCAP doesn't do any tx stats
 		quint64		txPkts;
 		quint64		txBytes;
+
 	};
 
 	pcap_if_t				*dev;
 	pcap_t					*devHandleRx;
 	pcap_t					*devHandleTx;
-	pcap_send_queue*		sendQueue;
+	QList<ost_pcap_send_queue> sendQueueList;
 	bool					isSendQueueDirty;
 	PcapExtra				pcapExtra;
 	PortMonitorRx			monitorRx;

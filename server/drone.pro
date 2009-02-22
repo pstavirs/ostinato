@@ -12,6 +12,6 @@ FORMS += drone.ui
 SOURCES += drone_main.cpp drone.cpp 
 SOURCES += myservice.cpp 
 
-unix:SOURCES += pcapextra.cpp 
+SOURCES += pcapextra.cpp 
 
 SOURCES += "..\common\protocol.pb.cc"

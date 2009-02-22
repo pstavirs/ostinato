@@ -227,8 +227,8 @@ message StreamControl {
 	optional uint32		num_bursts = 4 [default = 1];
 	optional uint32		packets_per_burst = 5 [default = 10];
 	optional NextWhat	next = 6 [default = e_nw_goto_next];
-	optional uint32		packets_per_sec = 7;
-	optional uint32		bursts_per_sec = 8;
+	optional uint32		packets_per_sec = 7 [default = 1];
+	optional uint32		bursts_per_sec = 8 [default = 1];
 
 	// TODO: Gaps?
 
