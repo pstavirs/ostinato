@@ -1,6 +1,7 @@
 #ifndef _STREAM_MODEL_H
 #define _STREAM_MODEL_H
 
+#include <QStringList>
 #include <QAbstractTableModel>
 #include "port.h"
 
@@ -9,14 +10,6 @@ class PortGroupList;
 class StreamModel : public QAbstractTableModel
 {
 	Q_OBJECT
-
-	enum StreamFields {
-		StreamIcon = 0,
-		StreamName,
-		StreamStatus,
-
-		StreamMaxFields
-	};
 
 	Port			*mCurrentPort;
 	PortGroupList	*pgl;
@@ -42,6 +35,19 @@ class StreamModel : public QAbstractTableModel
 		QList<Stream>* currentPortStreamList() 
 			{ return &mCurrentPort->mStreams; }
 #endif
+
+	public:
+	enum StreamFields {
+		StreamIcon = 0,
+		StreamName,
+		StreamStatus,
+		StreamNextWhat,
+
+		StreamMaxFields
+	};
+
+	static QStringList	nextWhatOptionList()
+		{ return QStringList() << "Stop" << "Next" << "Goto first"; }
 
 	public slots:
 		void setCurrentPortIndex(const QModelIndex &current);

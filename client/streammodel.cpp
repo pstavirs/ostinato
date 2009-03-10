@@ -1,3 +1,4 @@
+#include "stream.h"
 #include "streammodel.h"
 #include "portgrouplist.h"
 #include "qicon.h"
@@ -38,17 +39,19 @@ Qt::ItemFlags StreamModel::flags(const QModelIndex &index) const
 		flags |= Qt::ItemIsEditable;
 		break;
 	case StreamStatus:
-#if 0
-		flags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
-#endif
+		flags |= Qt::ItemIsUserCheckable;
+		break;
+	case StreamNextWhat:
 		flags |= Qt::ItemIsEditable;
 		break;
 	default:
+		//qFatal("Missed case in switch!");
 		break;
 	}
 
 	return flags;
 }
+
 QVariant StreamModel::data(const QModelIndex &index, int role) const
 {
 	// Check for a valid index
@@ -72,10 +75,6 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		{
 			if (role == Qt::DecorationRole)
 				return QIcon(":/icons/stream_edit.png");
-#if 0
-			else if ((role == Qt::DisplayRole))
-				return QString("EDIT");
-#endif
 			else
 				return QVariant();
 			break;
@@ -90,12 +89,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		}
 		case StreamStatus:
 		{
-			if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
-				return mCurrentPort->streamByIndex(index.row()).isEnabled();
-			else
-				return QVariant();
-	#if 0
-			if ((role == Qt::CheckStateRole) || (role == Qt::EditRole))
+			if ((role == Qt::CheckStateRole))
 			{
 				if (mCurrentPort->streamByIndex(index.row()).isEnabled())
 					return Qt::Checked;
@@ -104,11 +98,23 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 			}
 			else
 				return QVariant();
-	#endif
+			break;
+		}
+		case StreamNextWhat:
+		{
+			int val = mCurrentPort->streamByIndex(index.row()).nextWhat();
+
+			if (role == Qt::DisplayRole)
+				return nextWhatOptionList().at(val);
+			else if	(role == Qt::EditRole)
+				return val;
+			else
+				return QVariant();
+
 			break;
 		}
 		default:
-			qDebug("-------------UNHANDLED STREAM FIELD----------------");
+			qFatal("-------------UNHANDLED STREAM FIELD----------------");
 	}
 
 	return QVariant();
@@ -119,24 +125,35 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
 	if (mCurrentPort == NULL)
 		return false;
 
-	if (index.isValid() && role == Qt::EditRole) 
+	if (index.isValid()) 
 	{
-		// Edit Supported Fields
 		switch (index.column())
 		{
+		// Edit Supported Fields
 		case StreamName:
 			mCurrentPort->streamByIndex(index.row()).setName(value.toString());
+			emit(dataChanged(index, index));
 			return true;
-			break;
+
 		case StreamStatus:
 			mCurrentPort->streamByIndex(index.row()).setIsEnabled(value.toBool());
+			emit(dataChanged(index, index));
 			return true;
-			break;
+
+		case StreamNextWhat:
+			if (role == Qt::EditRole)
+			{	
+				mCurrentPort->streamByIndex(index.row()).setNextWhat(
+						(Stream::NextWhat)value.toInt());
+				emit(dataChanged(index, index));
+				return true;
+			}
+			else 
+				return false;
 
 		// Edit Not Supported Fields
 		case StreamIcon:
 			return false;
-			break;
 
 		// Unhandled Stream Field
 		default:
@@ -144,6 +161,7 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
 			break;
 		}
 	}
+
 	return false;
 }
 
@@ -157,13 +175,16 @@ QVariant StreamModel::headerData(int section, Qt::Orientation orientation, int r
 		switch(section)
 		{
 		case StreamIcon:
-			return QString("Icon");
+			return QString("");
 			break;
 		case StreamName:
 			return QString("Name");
 			break;
 		case StreamStatus:
-			return QString("Enabled");
+			return QString("");
+			break;
+		case StreamNextWhat:
+			return QString("Goto");
 			break;
 		default:
 			qDebug("-------------UNHANDLED STREAM FIELD----------------");

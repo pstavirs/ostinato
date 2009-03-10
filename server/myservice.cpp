@@ -559,6 +559,7 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 
 	// We'll create sendqueue later when required
 	sendQueueList.clear();
+	returnToQIdx = -1;
 	pcapExtra.txPkts = 0;
 	pcapExtra.txBytes = 0;
 	isSendQueueDirty=true;
@@ -581,6 +582,8 @@ void PortInfo::update()
 		foreach(sendQ, sendQueueList)
 			pcap_sendqueue_destroy(sendQ.sendQueue);
 	}
+	sendQueueList.clear();
+	returnToQIdx = -1;
 
 	// TODO(LOW): calculate sendqueue size
 	sendQ.sendQueue = pcap_sendqueue_alloc(1*MB);
@@ -589,8 +592,11 @@ void PortInfo::update()
 	// First sort the streams by ordinalValue
 	qSort(streamList);
 
+	pktHdr.ts.tv_sec = 0;
+	pktHdr.ts.tv_usec = 0;
 	for (int i = 0; i < streamList.size(); i++)
 	{
+//_restart:
 		if (streamList[i].d.core().is_enabled())
 		{
 			long numPackets, numBursts;
@@ -619,8 +625,6 @@ void PortInfo::update()
 					numBursts, numPackets);
 			qDebug("ibg = %ld, ipg = %ld\n", ibg, ipg);
 
-			pktHdr.ts.tv_sec = 0;
-			pktHdr.ts.tv_usec = 0;
 			for (int j = 0; j < numBursts; j++)
 			{
 				for (int k = 0; k < numPackets; k++)
@@ -655,6 +659,9 @@ void PortInfo::update()
 #endif
 						}
 
+						qDebug("q(%d, %d, %d) sec = %lu usec = %lu",
+								i, j, k, pktHdr.ts.tv_sec, pktHdr.ts.tv_usec);
+
 						if (-1 == pcap_sendqueue_queue(sendQ.sendQueue, &pktHdr, 
 									(u_char*) pktBuf))
 						{
@@ -664,17 +671,48 @@ void PortInfo::update()
 						else
 							sendQ.sendQueueCumLen.append(sendQ.sendQueue->len);
 					}
-				}
+				} // for (numPackets)
 				pktHdr.ts.tv_usec += ibg;
 				if (pktHdr.ts.tv_usec > 1000000)
 				{
 					pktHdr.ts.tv_sec++;
 					pktHdr.ts.tv_usec -= 1000000;
 				}
-			}
-		}
-	}
+			} // for (numBursts)
 
+			switch(streamList[i].d.control().next())
+			{
+				case ::OstProto::StreamControl::e_nw_stop:
+					goto _stop_no_more_pkts;
+
+				case ::OstProto::StreamControl::e_nw_goto_id:
+					// TODO(MED): define and use 
+					// streamList[i].d.control().goto_stream_id();
+
+					// TODO(MED): assumes goto Id is less than current!!!! 
+					// To support goto to any id, do
+					// if goto_id > curr_id then 
+					//     i = goto_id;
+					//     goto restart;
+				    // else
+					//     returnToQIdx = 0;
+
+					returnToQIdx=0;
+					goto _stop_no_more_pkts;
+
+				case ::OstProto::StreamControl::e_nw_goto_next:
+					break;
+
+				default:
+					qFatal("---------- %s: Unhandled case (%d) -----------",
+							__FUNCTION__, streamList[i].d.control().next() );
+					break;
+			}
+
+		} // if (stream is enabled)
+	} // for (numStreams)
+
+_stop_no_more_pkts:
 	// The last alloc'ed sendQ appended here
 	sendQueueList.append(sendQ);
 
@@ -1061,8 +1099,9 @@ void PortInfo::PortTransmitter::run()
 
 	m_stop = 0;
 	ost_pcap_sendqueue_list_transmit(port->devHandleRx, port->sendQueueList, 
-			true, &m_stop, &port->pcapExtra.txPkts, &port->pcapExtra.txBytes,
-			QThread::usleep);
+		port->returnToQIdx, true, &m_stop,
+		&port->pcapExtra.txPkts, &port->pcapExtra.txBytes,
+		QThread::usleep);
 	m_stop = 0;
 }
 

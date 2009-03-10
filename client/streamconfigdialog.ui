@@ -1915,6 +1915,9 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
           </item>
           <item>
            <widget class="QLineEdit" name="leBurstsPerSec" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
             <property name="alignment" >
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>

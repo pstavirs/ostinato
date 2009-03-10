@@ -1,18 +1,20 @@
 #include "portswindow.h"
+#include "streamlistdelegate.h"
 #include "streamconfigdialog.h"
 #include <QInputDialog>
 #include <QItemSelectionModel>
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 {
+	StreamListDelegate *delegate = new StreamListDelegate;
 	//slm = new StreamListModel();
 	//plm = new PortGroupList();
 	plm = pgl;
 
 	setupUi(this);
 
-	tvStreamList->horizontalHeader()->resizeSections(
-			QHeaderView::ResizeToContents);
+	tvStreamList->setItemDelegate(delegate);
+
 	tvStreamList->verticalHeader()->setDefaultSectionSize(
 			tvStreamList->verticalHeader()->minimumSectionSize());
 
@@ -52,6 +54,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		plm->getStreamModel(), SLOT(setCurrentPortIndex(const QModelIndex&)));
 #endif
+
+	tvStreamList->resizeColumnToContents(StreamModel::StreamIcon);
+	tvStreamList->resizeColumnToContents(StreamModel::StreamStatus);
 
 	// Initially we don't have any ports/streams - so send signal triggers
 	when_portView_currentChanged(QModelIndex(), QModelIndex());

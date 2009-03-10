@@ -17,7 +17,7 @@ struct ost_pcap_send_queue
 
 // Common for all OS - *nix or Win32
 u_int ost_pcap_sendqueue_list_transmit(pcap_t *p, 
-		QList<ost_pcap_send_queue> sendQueueList, int sync,
+		QList<ost_pcap_send_queue> sendQueueList, int returnToQIdx, int sync,
 		int *p_stop, quint64* p_pkts, quint64* p_bytes,
 		void (*pf_usleep)(ulong));
 

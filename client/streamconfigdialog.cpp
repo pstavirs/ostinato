@@ -173,7 +173,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	pbPrev->setDisabled(true);
 	pbNext->setDisabled(true);
 	//! \todo Support Goto Stream Id
-	rbActionGotoStream->setDisabled(true);
+	leStreamId->setDisabled(true);
+	disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
 	//! \todo Support Continuous Mode
 	rbModeContinuous->setDisabled(true);
 }
@@ -824,10 +825,11 @@ void StreamConfigDialog::LoadCurrentStream()
 
 		leNumPackets->setText(QString().setNum(pStream->numPackets()));
 		leNumBursts->setText(QString().setNum(pStream->numBursts()));
-		lePacketsPerBurst->setText(QString().setNum(
-					pStream->burstSize()));
+		lePacketsPerBurst->setText(QString().setNum(pStream->burstSize()));
 		lePacketsPerSec->setText(QString().setNum(pStream->packetRate()));
 		leBurstsPerSec->setText(QString().setNum(pStream->burstRate()));
+		// TODO(MED): Change this when we support goto to specific stream
+		leStreamId->setText(QString("0"));
 	}
 }
 

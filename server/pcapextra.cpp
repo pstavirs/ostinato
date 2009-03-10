@@ -62,18 +62,30 @@ int pcap_sendqueue_queue (pcap_send_queue *queue,
 #endif
 
 u_int ost_pcap_sendqueue_list_transmit(pcap_t *p, 
-		QList<ost_pcap_send_queue> sendQueueList, int sync,
+		QList<ost_pcap_send_queue> sendQueueList, int returnToQIdx, int sync,
 		int *p_stop, quint64* p_pkts, quint64* p_bytes,
 		void (*pf_usleep)(ulong))
 {
-	uint ret = 0;
+	uint i, ret = 0;
+	ost_pcap_send_queue sq;
 
-	foreach(ost_pcap_send_queue sq, sendQueueList)
+	for(i = 0; i < sendQueueList.size(); i++)
 	{
+_restart:
+		sq = sendQueueList.at(i);
 		ret += ost_pcap_sendqueue_transmit(p, sq.sendQueue, sync,
 				p_stop, p_pkts, p_bytes, pf_usleep);
 
+		if (*p_stop)
+			return ret;
+
 		// TODO(HI): Timing between subsequent sendQueues
+	}
+
+	if (returnToQIdx >= 0)
+	{
+		i = returnToQIdx;
+		goto _restart;
 	}
 
 	return ret;

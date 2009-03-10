@@ -133,6 +133,7 @@ class PortInfo
 	pcap_t					*devHandleRx;
 	pcap_t					*devHandleTx;
 	QList<ost_pcap_send_queue> sendQueueList;
+	int						returnToQIdx; // FIXME(MED): combine with sendQList
 	bool					isSendQueueDirty;
 	PcapExtra				pcapExtra;
 	PortMonitorRx			monitorRx;

@@ -20,6 +20,7 @@ HEADERS += \
 	portstatswindow.h \
 	portswindow.h \
 	streamconfigdialog.h \
+	streamlistdelegate.h \
 	streammodel.h 
 
 FORMS += \
@@ -45,6 +46,7 @@ SOURCES += \
 	portstatswindow.cpp \
 	portswindow.cpp \
 	streamconfigdialog.cpp \
+	streamlistdelegate.cpp \
 	streammodel.cpp 
 
 # Protocol Buffer Sources
