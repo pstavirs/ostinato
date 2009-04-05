@@ -34,6 +34,12 @@ private:
 	PacketModel		*mpPacketModel;
 	ModelTest		*mpPacketModelTester;
 
+	// The following static variables are used to track the "selected" tab
+    // for the various tab widgets so that it can be restored when the dialog
+	// is opened the next time
+	static int		lastTopLevelTabIndex;
+	static int		lastProtoTabIndex;
+
 	void setupUiExtra();
 	void LoadCurrentStream();
 	void StoreCurrentStream();

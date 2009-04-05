@@ -5,12 +5,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>320</height>
+    <width>319</width>
+    <height>193</height>
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>Dialog</string>
+   <string>Select Ports</string>
   </property>
   <layout class="QVBoxLayout" >
    <item>

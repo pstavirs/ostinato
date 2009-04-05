@@ -4,6 +4,9 @@
 
 #include "modeltest.h"
 
+int StreamConfigDialog::lastTopLevelTabIndex = 0;
+int StreamConfigDialog::lastProtoTabIndex = 0;
+
 // TODO(HI): Write HexLineEdit::setNum() and num() and use it in 
 // Load/Store stream methods
 
@@ -177,6 +180,11 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
 	//! \todo Support Continuous Mode
 	rbModeContinuous->setDisabled(true);
+
+	// Finally, restore the saved last selected tab for the various tab widgets
+	twTopLevel->setCurrentIndex(lastTopLevelTabIndex);
+	if (twProto->isTabEnabled(lastProtoTabIndex))
+		twProto->setCurrentIndex(lastProtoTabIndex);
 }
 
 void StreamConfigDialog::setupUiExtra()
@@ -230,8 +238,6 @@ void StreamConfigDialog::setupUiExtra()
 	connect(rbModeContinuous, SIGNAL(toggled(bool)), 
 		this, SLOT(update_NumPacketsAndNumBursts()));
 
-	// Show "Packet Config" page by default
-	twTopLevel->setCurrentIndex(0);
 }
 
 StreamConfigDialog::~StreamConfigDialog()
@@ -1115,6 +1121,8 @@ void StreamConfigDialog::on_pbOk_clicked()
 	// Store dialog contents into stream
 	StoreCurrentStream();
 	qDebug("stream stored");
+	lastTopLevelTabIndex = twTopLevel->currentIndex();
+	lastProtoTabIndex = twProto->currentIndex();
 }
 
 //Junk Line for introducing a compiler error

@@ -33,6 +33,9 @@ public:
 	void getConfig(::google::protobuf::Message *msg)
 		{ msg->CopyFrom(data()); }
 
+	bool setProtoData(::google::protobuf::Message *msg)
+		{ data().MergeFrom(*msg); return true; }
+
 	virtual QString protocolName()
 		{ return QString("AbstractProtocol"); }
 	virtual QString protocolShortName()

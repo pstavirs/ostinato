@@ -171,9 +171,9 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
 
 		getDomainIndexes(index(0, section), portGroupIdx, portIdx);	
 #ifdef Q_OS_WIN32
-		return QString("Port %1/%2 (*)").arg(portGroupIdx).arg(portIdx);
+		return QString("Port %1-%2 (*)").arg(portGroupIdx).arg(portIdx);
 #else
-		return QString("Port %1/%2").arg(portGroupIdx).arg(portIdx);
+		return QString("Port %1-%2").arg(portGroupIdx).arg(portIdx);
 #endif
 	}
 	else

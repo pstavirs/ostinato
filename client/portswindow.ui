@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>689</width>
-    <height>320</height>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -28,11 +28,11 @@
      </widget>
      <widget class="QStackedWidget" name="swDetail" >
       <property name="currentIndex" >
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="portDetail" >
-       <layout class="QVBoxLayout" >
-        <item>
+       <layout class="QGridLayout" >
+        <item row="0" column="0" >
          <layout class="QHBoxLayout" >
           <item>
            <spacer>
@@ -56,64 +56,59 @@
           </item>
          </layout>
         </item>
-        <item>
-         <layout class="QGridLayout" >
-          <item rowspan="2" row="0" column="0" >
-           <spacer>
-            <property name="orientation" >
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" >
-             <size>
-              <width>31</width>
-              <height>41</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="0" column="1" >
-           <widget class="QLabel" name="label" >
-            <property name="text" >
-             <string>Capacity</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2" >
-           <widget class="QLineEdit" name="lineEdit_3" />
-          </item>
-          <item row="0" column="3" >
-           <widget class="QLabel" name="label_3" >
-            <property name="text" >
-             <string>Aggr fps</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="4" >
-           <widget class="QLineEdit" name="lineEdit" />
-          </item>
-          <item row="1" column="1" >
-           <widget class="QLabel" name="label_2" >
-            <property name="text" >
-             <string>% age</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2" >
-           <widget class="QLineEdit" name="lineEdit_4" />
-          </item>
-          <item row="1" column="3" >
-           <widget class="QLabel" name="label_4" >
-            <property name="text" >
-             <string>Aggr bps</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4" >
-           <widget class="QLineEdit" name="lineEdit_2" />
-          </item>
-         </layout>
+        <item row="1" column="0" >
+         <widget class="QFrame" name="frAggregate" >
+          <property name="frameShape" >
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow" >
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QGridLayout" >
+           <item row="0" column="0" >
+            <widget class="QLabel" name="label" >
+             <property name="text" >
+              <string>Capacity</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" >
+            <widget class="QLineEdit" name="lineEdit_3" />
+           </item>
+           <item row="0" column="2" >
+            <widget class="QLabel" name="label_3" >
+             <property name="text" >
+              <string>Aggr fps</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3" >
+            <widget class="QLineEdit" name="lineEdit" />
+           </item>
+           <item row="1" column="0" >
+            <widget class="QLabel" name="label_2" >
+             <property name="text" >
+              <string>% age</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" >
+            <widget class="QLineEdit" name="lineEdit_4" />
+           </item>
+           <item row="1" column="2" >
+            <widget class="QLabel" name="label_4" >
+             <property name="text" >
+              <string>Aggr bps</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3" >
+            <widget class="QLineEdit" name="lineEdit_2" />
+           </item>
+          </layout>
+         </widget>
         </item>
-        <item>
+        <item row="2" column="0" >
          <widget class="QTabWidget" name="tabWidget" >
           <property name="currentIndex" >
            <number>0</number>
@@ -147,7 +142,10 @@
         <item>
          <widget class="QLabel" name="label_5" >
           <property name="text" >
-           <string>Port Group Detail</string>
+           <string>Select a port to configure streams</string>
+          </property>
+          <property name="alignment" >
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>

@@ -85,6 +85,9 @@ _restart:
 	if (returnToQIdx >= 0)
 	{
 		i = returnToQIdx;
+
+		// FIXME: 1s fixed; Change this to ipg of last stream
+		(*pf_usleep)(1000000);
 		goto _restart;
 	}
 

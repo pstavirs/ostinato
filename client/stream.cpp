@@ -15,6 +15,7 @@ QString PayloadProtocol::fieldTextValue(int index)
 
 	if (parentStream)
 	{
+		qDebug("phs = %d", parentStream->protocolHeaderSize());
 		len = parentStream->frameLen() - parentStream->protocolHeaderSize();
 		pat = parentStream->pattern();
 	}
@@ -48,6 +49,7 @@ QByteArray PayloadProtocol::fieldRawValue(int index)
 
 	if (parentStream)
 	{
+		qDebug("phs = %d", parentStream->protocolHeaderSize());
 		len = parentStream->frameLen() - parentStream->protocolHeaderSize();
 		pat = parentStream->pattern();
 	}
@@ -1015,7 +1017,8 @@ bool Stream::update(OstProto::Stream	*stream)
 		mIp->update(stream->ip());
 		mArp->update(stream->arp());
 
-		mTcp->update(stream->tcp());
+		//mTcp->update(stream->tcp());
+		mTcp->setProtoData(stream->mutable_tcp());
 		mUdp->update(stream->udp());
 		mIcmp->update(stream->icmp());
 		mIgmp->update(stream->igmp());

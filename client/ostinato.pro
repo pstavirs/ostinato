@@ -24,6 +24,7 @@ HEADERS += \
 	streammodel.h 
 
 FORMS += \
+	about.ui \
 	mainwindow.ui \
 	portstatsfilter.ui \
 	portstatswindow.ui \

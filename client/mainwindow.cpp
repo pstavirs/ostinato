@@ -1,8 +1,7 @@
-#include <QtGui>
 #include "mainwindow.h"
-#include "portswindow.h"
-#include "portstatswindow.h"
 #include "portgrouplist.h"
+
+#include "ui_about.h"
 
 PortGroupList	*pgl;
 
@@ -11,20 +10,38 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	pgl = new PortGroupList;
 
-	PortsWindow *portsWindow = new PortsWindow(pgl, this);
-	PortStatsWindow *statsWindow = new PortStatsWindow(pgl, this);
-	QDockWidget *dock = new QDockWidget(tr("Ports"), this);
-	QDockWidget *dock2 = new QDockWidget(tr("Stats"), this);
+	portsWindow = new PortsWindow(pgl, this);
+	statsWindow = new PortStatsWindow(pgl, this);
+	portsDock = new QDockWidget(tr("Ports"), this);
+	statsDock = new QDockWidget(tr("Stats"), this);
 
 	setupUi(this);
 
-	dock2->setWidget(statsWindow);
-    addDockWidget(Qt::BottomDockWidgetArea, dock2);
-	dock->setWidget(portsWindow);
-    addDockWidget(Qt::TopDockWidgetArea, dock);
+	statsDock->setWidget(statsWindow);
+    addDockWidget(Qt::BottomDockWidgetArea, statsDock);
+	portsDock->setWidget(portsWindow);
+    addDockWidget(Qt::TopDockWidgetArea, portsDock);
+
+	connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
 }
 
-void MainWindow::on_actionPreferences_triggered()
+MainWindow::~MainWindow()
 {
+	delete statsDock;
+	delete portsDock;
+	delete statsWindow;
+	delete portsWindow;
+}
+
+void MainWindow::on_actionHelpAbout_triggered()
+{
+	QDialog *aboutDialog = new QDialog;
+
+	Ui::About about;
+	about.setupUi(aboutDialog);
+
+	aboutDialog->exec();
+
+	delete aboutDialog;
 }
 

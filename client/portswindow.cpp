@@ -61,6 +61,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 	// Initially we don't have any ports/streams - so send signal triggers
 	when_portView_currentChanged(QModelIndex(), QModelIndex());
 	when_streamView_currentChanged(QModelIndex(), QModelIndex());
+
+	//! \todo Hide the Aggregate Box till we add support
+	frAggregate->setHidden(true);
 }
 
 PortsWindow::~PortsWindow()

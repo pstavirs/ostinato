@@ -13,7 +13,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>Dialog</string>
+   <string>Edit Stream</string>
   </property>
   <property name="styleSheet" >
    <string>QLineEdit:enabled[inputMask = "HH; "],&#xd;
