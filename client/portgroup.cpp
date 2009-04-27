@@ -1,5 +1,4 @@
 #include "portgroup.h"
-#include "../common/protocol.h"
 
 #include <vector>
 
@@ -400,7 +399,7 @@ _request:
 		OstProto::StreamId	*s;
 
 		s = streamIdList.add_stream_id();
-		s->set_id(mPorts[portIndex].streamByIndex(j).id());
+		s->set_id(mPorts[portIndex].streamByIndex(j)->id());
 	}
 	streamConfigList->Clear();
 

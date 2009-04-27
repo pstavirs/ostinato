@@ -32,7 +32,7 @@ void Port::updatePortConfig(OstProto::Port *port)
 void Port::updateStreamOrdinalsFromIndex()
 {
 	for (int i=0; i < mStreams.size(); i++)
-		mStreams[i].setOrdinal(i);
+		mStreams[i]->setOrdinal(i);
 }
 
 void Port::reorderStreamsByOrdinals()
@@ -42,12 +42,12 @@ void Port::reorderStreamsByOrdinals()
 
 bool Port::newStreamAt(int index)
 {
-	Stream	s;
+	Stream	*s = new Stream;
 
 	if (index > mStreams.size())
 		return false;
 
-	s.setId(newStreamId());
+	s->setId(newStreamId());
 	mStreams.insert(index, s);
 	updateStreamOrdinalsFromIndex();
 
@@ -59,7 +59,7 @@ bool Port::deleteStreamAt(int index)
 	if (index >= mStreams.size())
 		return false;
 
-	mStreams.removeAt(index);
+	delete mStreams.takeAt(index);
 	updateStreamOrdinalsFromIndex();
 
 	return true;
@@ -67,9 +67,9 @@ bool Port::deleteStreamAt(int index)
 
 bool Port::insertStream(uint streamId)
 {
-	Stream	s;
+	Stream	*s = new Stream;
 
-	s.setId(streamId);
+	s->setId(streamId);
 
 	// FIXME(MED): If a stream with id already exists, what do we do?
 	mStreams.append(s);
@@ -88,7 +88,7 @@ bool Port::updateStream(uint streamId, OstProto::Stream *stream)
 
 	for (i = 0; i < mStreams.size(); i++)
 	{
-		if (streamId == mStreams[i].id())
+		if (streamId == mStreams[i]->id())
 			goto _found;
 	}
 
@@ -98,7 +98,7 @@ bool Port::updateStream(uint streamId, OstProto::Stream *stream)
 _found:
 	streamIndex = i;
 
-	mStreams[streamIndex].update(stream);
+	mStreams[streamIndex]->update(stream);
 	reorderStreamsByOrdinals();
 
 	return true;
@@ -114,7 +114,7 @@ void Port::getDeletedStreamsSinceLastSync(
 
 		for (j = 0; j < mStreams.size(); j++)
 		{
-			if (mLastSyncStreamList[i] == mStreams[j].id())
+			if (mLastSyncStreamList[i] == mStreams[j]->id())
 				break;
 		}
 
@@ -140,7 +140,7 @@ void Port::getNewStreamsSinceLastSync(
 	streamIdList.clear_stream_id();
 	for (int i = 0; i < mStreams.size(); i++)
 	{
-		if (mLastSyncStreamList.contains(mStreams[i].id()))
+		if (mLastSyncStreamList.contains(mStreams[i]->id()))
 		{
 			// existing stream!
 			continue;
@@ -151,7 +151,7 @@ void Port::getNewStreamsSinceLastSync(
 			OstProto::StreamId	*s;
 
 			s = streamIdList.add_stream_id();
-			s->set_id(mStreams[i].id());
+			s->set_id(mStreams[i]->id());
 		}
 	}
 }
@@ -167,8 +167,9 @@ void Port::getModifiedStreamsSinceLastSync(
 		OstProto::Stream	*s;
 
 		s = streamConfigList.add_stream();
-		mStreams[i].getConfig(mPortId, s);
+		mStreams[i]->getConfig(mPortId, *s);
 	}
+	qDebug("Done %s", __FUNCTION__);
 }
 
 void Port::when_syncComplete()
@@ -177,7 +178,7 @@ void Port::when_syncComplete()
 
 	mLastSyncStreamList.clear();
 	for (int i=0; i<mStreams.size(); i++)
-		mLastSyncStreamList.append(mStreams[i].id());
+		mLastSyncStreamList.append(mStreams[i]->id());
 }
 
 void Port::updateStats(OstProto::PortStats *portStats)

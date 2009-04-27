@@ -1,5 +1,5 @@
 all:
-	$(MAKE) -C rpc install
+	$(MAKE) -C rpc
 	$(MAKE) -C common
 	$(MAKE) -C server
 	$(MAKE) -C client
@@ -11,4 +11,7 @@ clean:
 	$(MAKE) -C client $@
 
 qmake:
-	for %%d in (rpc common server client) cd %%d; qmake; cd..;	
+	cd rpc && qmake && cd ..
+	cd common && qmake && cd ..
+	cd server && qmake && cd ..
+	cd client && qmake && cd ..

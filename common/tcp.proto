@@ -1,0 +1,27 @@
+import "protocol.proto";
+
+package OstProto;
+// Tcp
+message Tcp {
+
+	optional bool is_override_hdrlen = 1;	
+	optional bool is_override_cksum = 2;	
+
+	optional uint32		src_port = 3 [default = 8902];
+	optional uint32		dst_port = 4 [default = 80];
+
+	optional uint32		seq_num = 5 [default = 129018];
+	optional uint32		ack_num = 6;
+
+	optional uint32		hdrlen_rsvd = 7 [default = 0x50];
+	optional uint32		flags = 8;
+
+	optional uint32		window = 9 [default = 1024];
+	optional uint32		cksum = 10;
+	optional uint32		urg_ptr = 11;
+}
+
+extend Stream {
+	optional Tcp tcp = 140;
+}
+

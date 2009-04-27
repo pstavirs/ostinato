@@ -23,7 +23,7 @@ private:
 	QString		mUserAlias;			// user defined
 
 	QList<quint32>	mLastSyncStreamList;
-	QList<Stream>	mStreams;		// sorted by stream's ordinal value
+	QList<Stream*>	mStreams;		// sorted by stream's ordinal value
 
 	uint newStreamId();
 	void updateStreamOrdinalsFromIndex();
@@ -65,7 +65,7 @@ public:
 	//void setExclusive(bool flag);
 
 	int numStreams() { return mStreams.size(); }
-	Stream& streamByIndex(int index)
+	Stream* streamByIndex(int index)
 	{
 		Q_ASSERT(index < mStreams.size());
 		return mStreams[index];

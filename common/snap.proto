@@ -1,0 +1,12 @@
+import "protocol.proto";
+
+package OstProto;
+
+message Snap {
+	optional uint32			oui = 1;
+	//optional uint32			type = 2;
+}
+
+extend Stream {
+	optional Snap snap = 124;
+}

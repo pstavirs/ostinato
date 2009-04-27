@@ -1,0 +1,69 @@
+<ui version="4.0" >
+ <class>payload</class>
+ <widget class="QWidget" name="payload" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>142</width>
+    <height>98</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" >
+   <item>
+    <widget class="QGroupBox" name="groupBox_6" >
+     <property name="title" >
+      <string>Data Pattern</string>
+     </property>
+     <layout class="QVBoxLayout" >
+      <item>
+       <widget class="QComboBox" name="cmbPatternMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed Word</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Byte</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Byte</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lePattern" >
+        <property name="inputMask" >
+         <string>HH HH HH HH; </string>
+        </property>
+        <property name="text" >
+         <string>   </string>
+        </property>
+        <property name="maxLength" >
+         <number>11</number>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

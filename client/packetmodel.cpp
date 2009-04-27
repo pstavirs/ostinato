@@ -1,26 +1,36 @@
 #include <QHostAddress>
 #include "packetmodel.h"
 
-PacketModel::PacketModel(Stream *pStream, QObject *parent)
+PacketModel::PacketModel(const QList<AbstractProtocol*> &selectedProtocols, 
+		QObject *parent)
 {
-	mpStream = pStream;
+	mSelectedProtocols = selectedProtocols;
+}
+
+void PacketModel::setSelectedProtocols(
+		const QList<AbstractProtocol*> &selectedProtocols)
+{
+	mSelectedProtocols = selectedProtocols;
+	reset();
 }
 
 int PacketModel::rowCount(const QModelIndex &parent) const
 {
 	IndexId		parentId;
 
+	// qDebug("in %s", __FUNCTION__);
+
 	// Parent == Invalid i.e. Invisible Root.
 	// ==> Children are Protocol (Top Level) Items
 	if (!parent.isValid())
-		return mpStream->numProtocols();
+		return mSelectedProtocols.size();
 
 	// Parent - Valid Item
 	parentId.w = parent.internalId();
 	switch(parentId.ws.type)
 	{
 	case  ITYP_PROTOCOL:
-		return mpStream->protocol(parentId.ws.protocol)->numFields();
+		return mSelectedProtocols.at(parentId.ws.protocol)->frameFieldCount();
 	case  ITYP_FIELD: 
 		return 0;
 	default:
@@ -125,16 +135,37 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 		switch(id.ws.type)
 		{
 		case  ITYP_PROTOCOL:
-			return QByteArray();
+			qDebug("*** %d/%d", id.ws.protocol, mSelectedProtocols.size());
+			return	mSelectedProtocols.at(id.ws.protocol)->
+				protocolFrameValue();
 
 		case  ITYP_FIELD: 
-			return	mpStream->protocol(id.ws.protocol)->fieldRawValue(
-					index.row());
+			return	mSelectedProtocols.at(id.ws.protocol)->fieldData(
+				index.row(), AbstractProtocol::FieldFrameValue);
 
 		default:
 			qWarning("%s: Unhandled ItemType", __FUNCTION__);
 		}
 		return QByteArray(); 
+	}
+
+	// FIXME: Use a new enum here instead of UserRole
+	if (role == (Qt::UserRole+1))
+	{
+		switch(id.ws.type)
+		{
+		case  ITYP_PROTOCOL:
+			return	mSelectedProtocols.at(id.ws.protocol)->
+				protocolFrameValue().size();
+
+		case  ITYP_FIELD: 
+			return	mSelectedProtocols.at(id.ws.protocol)->fieldData(
+				index.row(), AbstractProtocol::FieldBitSize);
+
+		default:
+			qWarning("%s: Unhandled ItemType", __FUNCTION__);
+		}
+		return QVariant(); 
 	}
 
 	if (role != Qt::DisplayRole)
@@ -144,13 +175,14 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 	{
 	case  ITYP_PROTOCOL:
 		return QString("%1 (%2)")
-			.arg(mpStream->protocol(id.ws.protocol)->protocolShortName())
-			.arg(mpStream->protocol(id.ws.protocol)->protocolName());
+			.arg(mSelectedProtocols.at(id.ws.protocol)->shortName())
+			.arg(mSelectedProtocols.at(id.ws.protocol)->name());
 
 	case  ITYP_FIELD: 
-		return	mpStream->protocol(id.ws.protocol)->fieldName(index.row()) +
-				QString(" : ") +
-				mpStream->protocol(id.ws.protocol)->fieldTextValue(index.row());
+		return	mSelectedProtocols.at(id.ws.protocol)->fieldData(index.row(),
+				AbstractProtocol::FieldName).toString() + QString(" : ") +
+				mSelectedProtocols.at(id.ws.protocol)->fieldData(index.row(),
+				AbstractProtocol::FieldTextValue).toString();
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);

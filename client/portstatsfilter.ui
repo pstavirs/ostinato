@@ -12,6 +12,9 @@
   <property name="windowTitle" >
    <string>Select Ports</string>
   </property>
+  <property name="windowIcon" >
+   <iconset resource="ostinato.qrc" >:/icons/portstats_filter.png</iconset>
+  </property>
   <layout class="QVBoxLayout" >
    <item>
     <layout class="QHBoxLayout" >
@@ -121,7 +124,9 @@
   <tabstop>lvSelected</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

@@ -1,10 +1,13 @@
 TEMPLATE = app
 CONFIG += qt debug
 QT += network
-INCLUDEPATH += "../rpc/"
+INCLUDEPATH += "../rpc/" "../common/"
 LIBS += -lprotobuf
+win32:LIBS += -L"../common/debug" -lostproto
+unix: LIBS += -L"../common" -lostproto
 win32:LIBS += -L"../rpc/debug" -lpbrpc
 unix:LIBS += -L"../rpc" -lpbrpc
+POST_TARGETDEPS += "../common/debug/libostproto.a" "../rpc/debug/libpbrpc.a"
 RESOURCES += ostinato.qrc 
 HEADERS += \
 	dumpview.h \
@@ -49,11 +52,6 @@ SOURCES += \
 	streamconfigdialog.cpp \
 	streamlistdelegate.cpp \
 	streammodel.cpp 
-
-# Protocol Buffer Sources
-
-SOURCES += \
-	..\common\protocol.pb.cc
 
 # TODO(LOW): Test only
 include(modeltest.pri)

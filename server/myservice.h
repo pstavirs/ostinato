@@ -8,6 +8,7 @@
 #endif
 
 #include "../common/protocol.pb.h"
+#include "../common/abstractprotocol.h"
 #include "abstracthost.h"
 #include <pcap.h>
 #include <QtGlobal>
@@ -34,9 +35,17 @@ class StreamInfo
 	friend class MyService;
 	friend class PortInfo;
 
-	OstProto::Stream	d;
+	OstProto::StreamId			mStreamId;
+	OstProto::StreamCore		mCore;
+	OstProto::StreamControl		mControl;
+	QList<AbstractProtocol*>	mProtocolList;
 
-	StreamInfo() { PbHelper pbh; pbh.ForceSetSingularDefault(&d); }
+public:
+	StreamInfo();
+	~StreamInfo();
+
+private:
+	AbstractProtocol* protocolById(int id);
 
 	quint32 pseudoHdrCksumPartial(quint32 srcIp, quint32 dstIp, 
 		quint8 protocol, quint16 len);
@@ -45,7 +54,7 @@ class StreamInfo
 	int makePacket(uchar *buf, int bufMaxSize, int n);
 public:
 	bool operator < (const StreamInfo &s) const
-		{ return(d.core().ordinal() < s.d.core().ordinal()); }
+		{ return(mCore.ordinal() < s.mCore.ordinal()); }
 };
 
 
@@ -146,7 +155,7 @@ class PortInfo
 	struct timeval			lastTsTx;	//! used for Rate Stats calculations
 
 	/*! StreamInfo::d::stream_id and index into streamList[] are NOT same! */
-	QList<StreamInfo>		streamList;
+	QList<StreamInfo*>		streamList;
 
 public:
 	PortInfo(uint id, pcap_if_t *dev);

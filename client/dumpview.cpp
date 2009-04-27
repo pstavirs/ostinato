@@ -1,6 +1,7 @@
 #include "dumpview.h"
 
-//public:
+//! \todo Enable Scrollbars
+
 DumpView::DumpView(QWidget *parent)
 {
 	int w, h;
@@ -78,8 +79,8 @@ QModelIndex DumpView::indexAt( const QPoint &point ) const
 _exit:
 	// Clear existing selection
 	selrow = -1;
-#endif
 
+#endif
 	return QModelIndex();
 }
 
@@ -148,55 +149,73 @@ void DumpView::selectionChanged( const QItemSelection &selected,
 void DumpView::populateDump(QByteArray &dump, int &selOfs, int &selSize, 
 		QModelIndex parent)
 {
-	// TODO(LOW): Assumption - only single selection - enforce/ensure this
+	// FIXME: Use new enum instead of Qt::UserRole
+	//! \todo (low): generalize this for any model not just our pkt model
+
+	Q_ASSERT(!parent.isValid());
+
+	qDebug("!!!! %d $$$$", dump.size());
 
 	for(int i = 0; i < model()->rowCount(parent); i++)
 	{
 		QModelIndex index = model()->index(i, 0, parent);
 
-		if (model()->hasChildren(index))
-		{
-			// Non Leaf
+		Q_ASSERT(index.isValid());
 
-			// A non-leaf has no dump data of its own but is rather a 
-			// container for its children. So we calculate ofs/size based
-			// on this fact
-			if (selectionModel()->isSelected(index))
+		// Assumption: protocol data is in bytes (not bits)
+		qDebug("%d: %d bytes", i, model()->data(index, Qt::UserRole).toByteArray().size());
+		dump.append(model()->data(index, Qt::UserRole).toByteArray());
+
+	}
+
+	if (selectionModel()->selectedIndexes().size())
+	{
+		int j, bits;
+		QModelIndex	index;
+
+		Q_ASSERT(selectionModel()->selectedIndexes().size() == 1);
+		index = selectionModel()->selectedIndexes().at(0);
+
+		if (index.parent().isValid())
+		{
+			// Field
+
+			// SelOfs = SUM(protocol sizes before selected field's protocol) +
+			// SUM(field sizes before selected field)
+
+			selOfs = 0;
+			j = index.parent().row() - 1;
+			while (j >= 0)
 			{
-				selOfs = dump.size();
-				populateDump(dump, selOfs, selSize, index);
-				selSize = dump.size() - selOfs;
+				selOfs += model()->data(index.parent().sibling(j,0), 
+						Qt::UserRole).toByteArray().size();
+				j--;
 			}
-			else
+
+			bits = 0;
+			j = index.row() - 1;
+			while (j >= 0)
 			{
-				populateDump(dump, selOfs, selSize, index);
+				bits += model()->data(index.sibling(j,0), Qt::UserRole+1).
+					toInt();
+				j--;
 			}
+			selOfs += bits/8;
+			selSize = model()->data(index, Qt::UserRole).toByteArray().size();
 		}
 		else
 		{
-			// Leaf
-			if (selectionModel()->isSelected(index))
+			// Protocol
+			selOfs = 0;
+			j = index.row() - 1;
+			while (j >= 0)
 			{
-				int size, j;
-
-				selOfs = dump.size();
-				size = model()->data(index, Qt::UserRole).toByteArray().size();
-				
-				// Take care of multiple indexes (2 or more) mapping onto 
-				// same dump byte(s)
-				j = i-1;
-				while ((size == 0) && (j >= 0))
-				{
-					size = model()->data(index.sibling(j,0), Qt::UserRole).
-						toByteArray().size();
-					selOfs -= size;
-					j++;
-				}
-				selSize = size;
+				selOfs += model()->data(index.sibling(j,0), Qt::UserRole).
+					toByteArray().size();
+				j--;
 			}
-			dump.append(model()->data(index, Qt::UserRole).toByteArray());
-		}	
-		// FIXME: Use RawValueRole instead of UserRole
+			selSize = model()->data(index, Qt::UserRole).toByteArray().size();
+		}
 	}
 }
 
@@ -208,7 +227,7 @@ void DumpView::paintEvent(QPaintEvent* event)
 	QRect			dumpRect = mDumpPaneTopRect;
 	QRect			asciiRect = mAsciiPaneTopRect;
 	QPalette		pal = palette();
-	QByteArray		data;
+	static QByteArray		data;
 	//QByteArray		ba;
 	int				selOfs = -1, selSize;
 	int				curSelOfs, curSelSize;
@@ -222,7 +241,10 @@ void DumpView::paintEvent(QPaintEvent* event)
 	painter.fillRect(rect(), QBrush(QColor(Qt::white))); 
 
 	if (model())
+	{
+		data.clear();
 		populateDump(data, selOfs, selSize);
+	}
 
 	// display the offset, dump and ascii panes 8 + 8 bytes on a line
 	for (int i = 0; i < data.size(); i+=16)
@@ -289,7 +311,8 @@ void DumpView::paintEvent(QPaintEvent* event)
 			QRect r;
 			QString selectedAsciiStr, selectedDumpStr;
 
-			qDebug("dumpview::paintEvent - Highlighted");
+			qDebug("dumpview::paintEvent - Highlighted (%d, %d)", 
+					curSelOfs, curSelSize);
 
 			// construct the dumpStr and asciiStr
 			for (int k = curSelOfs; (k < (curSelOfs + curSelSize)); k++)

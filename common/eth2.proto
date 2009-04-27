@@ -1,0 +1,12 @@
+import "protocol.proto";
+
+package OstProto;
+
+// Ethernet II
+message Eth2 {
+	optional uint32			type = 1;
+}
+
+extend Stream {
+	optional Eth2 eth2 = 121;
+}

@@ -4,6 +4,17 @@
 #include <qglobal.h>
 #include <qendian.h>
 
+#include "../common/mac.h"
+#include "../common/payload.h"
+
+#include "../common/eth2.h"	// FIXME: proto DB
+#include "../common/dot3.h"	// FIXME: proto DB
+#include "../common/llc.h"	// FIXME: proto DB
+#include "../common/snap.h"	// FIXME: proto DB
+#include "../common/ip4.h"	// FIXME: proto DB
+#include "../common/tcp.h"	// FIXME: proto DB
+#include "../common/udp.h"	// FIXME: proto DB
+
 #if 0
 #include <pcap-int.h>
 #include <Ntddndis.h>
@@ -11,6 +22,64 @@
 
 #define LOG(...)	{sprintf(logStr, __VA_ARGS__); host->Log(logStr);}
 #define MB			(1024*1024)
+
+StreamInfo::StreamInfo()
+{
+	PbHelper pbh;
+	
+	pbh.ForceSetSingularDefault(&mCore); 
+	pbh.ForceSetSingularDefault(&mControl); 
+
+	mProtocolList.append(new MacProtocol);
+	mProtocolList.append(new PayloadProtocol());
+
+	// FIXME: proto DB
+	mProtocolList.append(new Eth2Protocol);
+	mProtocolList.append(new Dot3Protocol);
+	mProtocolList.append(new LlcProtocol);
+	mProtocolList.append(new SnapProtocol);
+	mProtocolList.append(new Ip4Protocol);
+	mProtocolList.append(new TcpProtocol);
+	mProtocolList.append(new UdpProtocol);
+}
+
+StreamInfo::~StreamInfo()
+{
+	for (int i = 0; i < mProtocolList.size(); i++)
+		delete mProtocolList.at(i);
+}
+
+AbstractProtocol* StreamInfo::protocolById(int id)
+{
+	// FIXME BAD BAD VERY BAD!
+	switch(id) {
+		case 51:
+			return mProtocolList.at(0);
+		case 52:
+			return mProtocolList.at(1);
+		case 121:
+			return mProtocolList.at(2);
+		case 122:
+			return mProtocolList.at(3);
+		case 123:
+			return mProtocolList.at(4);
+		case 124:
+			return mProtocolList.at(5);
+			// case 125 (unused)
+#if 0 // todo VLAN
+		case 126:
+			return mProtocolList.at(x);
+#endif
+		case 130:
+			return mProtocolList.at(6);
+		case 140:
+			return mProtocolList.at(7);
+		case 141:
+			return mProtocolList.at(8);
+		default:
+			return NULL;
+	}
+}
 
 quint32 StreamInfo::pseudoHdrCksumPartial(quint32 srcIp, quint32 dstIp, 
 		quint8 protocol, quint16 len)
@@ -76,33 +145,29 @@ quint16 StreamInfo::ipv4Cksum(uchar *buf, int len, quint32 partialSum)
 
 int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 {
-	int		u, pktLen, dataLen, len = 0;
-	quint32 srcIp, dstIp;	// need it later for TCP/UDP cksum calculation
-	quint32 cumCksum = 0;	// cumulative cksum used to combine partial cksums
-	int tcpOfs, udpOfs;		// needed to fill in cksum later
-	uchar	scratch[8];
+	int		pktLen, len = 0;
 
 	// Decide a frame length based on length mode
-	switch(d.core().len_mode())
+	switch(mCore.len_mode())
 	{
 		case OstProto::StreamCore::e_fl_fixed:
-			pktLen = d.core().frame_len();
+			pktLen = mCore.frame_len();
 			break;
 		case OstProto::StreamCore::e_fl_inc:
-			pktLen = d.core().frame_len_min() + (n %
-				(d.core().frame_len_max() - d.core().frame_len_min() + 1));
+			pktLen = mCore.frame_len_min() + (n %
+				(mCore.frame_len_max() - mCore.frame_len_min() + 1));
 			break;
 		case OstProto::StreamCore::e_fl_dec:
-			pktLen = d.core().frame_len_max() - (n %
-				(d.core().frame_len_max() - d.core().frame_len_min() + 1));
+			pktLen = mCore.frame_len_max() - (n %
+				(mCore.frame_len_max() - mCore.frame_len_min() + 1));
 			break;
 		case OstProto::StreamCore::e_fl_random:
-			pktLen = d.core().frame_len_min() + (qrand() %
-				(d.core().frame_len_max() - d.core().frame_len_min() + 1));
+			pktLen = mCore.frame_len_min() + (qrand() %
+				(mCore.frame_len_max() - mCore.frame_len_min() + 1));
 			break;
 		default:
 			qWarning("Unhandled len mode %d. Using default 64", 
-					d.core().len_mode());
+					mCore.len_mode());
 			pktLen = 64;
 			break;
 	}
@@ -112,6 +177,31 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 
 	if ((pktLen < 0) || (pktLen > bufMaxSize))
 		return 0;
+
+	// FIXME: Calculated pktLen is an input to Payload Protocol
+
+	// FIXME: checksums!!!
+
+	for (int i = 0; i < mCore.frame_proto_size(); i++)
+	{
+		QByteArray 			ba;
+
+		ba = protocolById(mCore.frame_proto(i))->protocolFrameValue(n);
+		if (len + ba.size() < bufMaxSize)
+		{
+			memcpy(buf+len, ba.constData(), ba.size());
+		}
+		len += ba.size();
+	}
+
+	return pktLen;
+
+#if 0 // Proto FW
+	int		u, pktLen, dataLen, len = 0;
+	quint32 srcIp, dstIp;	// need it later for TCP/UDP cksum calculation
+	quint32 cumCksum = 0;	// cumulative cksum used to combine partial cksums
+	int tcpOfs, udpOfs;		// needed to fill in cksum later
+	uchar	scratch[8];
 
 	// We always have a Mac Header!
 	switch (d.mac().dst_mac_mode())
@@ -449,7 +539,9 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 		default:
 			qWarning("Unhandled data pattern %d", d.core().pattern_mode());
 	}
+#endif
 
+#if 0 // Proto FW
 	// Calculate TCP/UDP checksum over the data pattern/payload and fill in
 	switch (d.core().l4_proto())
 	{
@@ -473,8 +565,9 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 		// No cksum processing required
 		break;
 	}
-
 	return pktLen;
+#endif
+
 }
 
 
@@ -597,28 +690,28 @@ void PortInfo::update()
 	for (int i = 0; i < streamList.size(); i++)
 	{
 //_restart:
-		if (streamList[i].d.core().is_enabled())
+		if (streamList[i]->mCore.is_enabled())
 		{
 			long numPackets, numBursts;
 			long ibg, ipg;
 
-			switch (streamList[i].d.control().unit())
+			switch (streamList[i]->mControl.unit())
 			{
 			case OstProto::StreamControl::e_su_bursts:
-				numBursts = streamList[i].d.control().num_bursts();
-				numPackets = streamList[i].d.control().packets_per_burst();
-				ibg = 1000000/streamList[i].d.control().bursts_per_sec();
+				numBursts = streamList[i]->mControl.num_bursts();
+				numPackets = streamList[i]->mControl.packets_per_burst();
+				ibg = 1000000/streamList[i]->mControl.bursts_per_sec();
 				ipg = 0;
 				break;
 			case OstProto::StreamControl::e_su_packets:
 				numBursts = 1;
-				numPackets = streamList[i].d.control().num_packets();
+				numPackets = streamList[i]->mControl.num_packets();
 				ibg = 0;
-				ipg = 1000000/streamList[i].d.control().packets_per_sec();
+				ipg = 1000000/streamList[i]->mControl.packets_per_sec();
 				break;
 			default:
 				qWarning("Unhandled stream control unit %d",
-					streamList[i].d.control().unit());
+					streamList[i]->mControl.unit());
 				continue;
 			}
 			qDebug("numBursts = %ld, numPackets = %ld\n",
@@ -631,7 +724,7 @@ void PortInfo::update()
 				{
 					int len;
 
-					len = streamList[i].makePacket(pktBuf, sizeof(pktBuf), 
+					len = streamList[i]->makePacket(pktBuf, sizeof(pktBuf), 
 							j * numPackets + k);
 					if (len > 0)
 					{
@@ -680,7 +773,7 @@ void PortInfo::update()
 				}
 			} // for (numBursts)
 
-			switch(streamList[i].d.control().next())
+			switch(streamList[i]->mControl.next())
 			{
 				case ::OstProto::StreamControl::e_nw_stop:
 					goto _stop_no_more_pkts;
@@ -705,7 +798,7 @@ void PortInfo::update()
 
 				default:
 					qFatal("---------- %s: Unhandled case (%d) -----------",
-							__FUNCTION__, streamList[i].d.control().next() );
+							__FUNCTION__, streamList[i]->mControl.next() );
 					break;
 			}
 
@@ -1124,7 +1217,7 @@ int MyService::getStreamIndex(unsigned int portIdx,
 
 	for (i = 0; i < portInfo[portIdx]->streamList.size(); i++)
 	{
-		if (streamId == portInfo[portIdx]->streamList.at(i).d.stream_id().id())
+		if (streamId == portInfo[portIdx]->streamList.at(i)->mStreamId.id())
 			goto _found;
 	}
 
@@ -1247,12 +1340,10 @@ const ::OstProto::PortId* request,
 	response->mutable_port_id()->set_id(portIdx);
 	for (int j = 0; j < portInfo[portIdx]->streamList.size(); j++)
 	{
-		OstProto::StreamId	*s, *q;
-
-		q = portInfo[portIdx]->streamList[j].d.mutable_stream_id();
+		OstProto::StreamId	*s;
 
 		s = response->add_stream_id();
-		s->CopyFrom(*q);
+		s->CopyFrom(portInfo[portIdx]->streamList[j]->mStreamId);
 	}
 
 _exit:
@@ -1286,7 +1377,19 @@ const ::OstProto::StreamIdList* request,
 			continue;		// TODO(LOW): Partial status of RPC
 
 		s = response->add_stream();
-		s->CopyFrom(portInfo[portIdx]->streamList[streamIndex].d);
+
+		s->mutable_stream_id()->CopyFrom(
+			portInfo[portIdx]->streamList[streamIndex]->mStreamId);
+		s->mutable_core()->CopyFrom(
+			portInfo[portIdx]->streamList[streamIndex]->mCore);
+		s->mutable_control()->CopyFrom(
+			portInfo[portIdx]->streamList[streamIndex]->mControl);
+		for (int j=0; j < portInfo[portIdx]->streamList[streamIndex]->
+				mProtocolList.size(); j++)
+		{
+			portInfo[portIdx]->streamList[streamIndex]->
+				mProtocolList[j]->protoDataCopyInto(*s);
+		}
 	}
 
 _exit:
@@ -1312,7 +1415,7 @@ const ::OstProto::StreamIdList* request,
 	for (int i = 0; i < request->stream_id_size(); i++)
 	{
 		int	streamIndex;
-		StreamInfo		s;
+		StreamInfo		*s = new StreamInfo;
 
 		// If stream with same id as in request exists already ==> error!!
 		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
@@ -1322,7 +1425,7 @@ const ::OstProto::StreamIdList* request,
 		// Append a new "default" stream - actual contents of the new stream is
 		// expected in a subsequent "modifyStream" request - set the stream id
 		// now itself however!!!
-		s.d.mutable_stream_id()->CopyFrom(request->stream_id(i));
+		s->mStreamId.CopyFrom(request->stream_id(i));
 		portInfo[portIdx]->streamList.append(s);
 
 		// TODO(LOW): fill-in response "Ack"????
@@ -1357,7 +1460,7 @@ const ::OstProto::StreamIdList* request,
 		if (streamIndex < 0)
 			continue;		// TODO(LOW): Partial status of RPC
 
-		portInfo[portIdx]->streamList.removeAt(streamIndex);
+		delete portInfo[portIdx]->streamList.takeAt(streamIndex);
 
 		// TODO(LOW): fill-in response "Ack"????
 	}
@@ -1391,8 +1494,17 @@ const ::OstProto::StreamConfigList* request,
 		if (streamIndex < 0)
 			continue;		// TODO(LOW): Partial status of RPC
 
-		portInfo[portIdx]->streamList[streamIndex].d.MergeFrom(
-			request->stream(i));
+		portInfo[portIdx]->streamList[streamIndex]->mCore.clear_frame_proto();
+		portInfo[portIdx]->streamList[streamIndex]->mCore.MergeFrom(
+			request->stream(i).core());
+		portInfo[portIdx]->streamList[streamIndex]->mControl.MergeFrom(
+			request->stream(i).control());
+		for (int j=0; j < portInfo[portIdx]->streamList[streamIndex]->
+				mProtocolList.size(); j++)
+		{
+			portInfo[portIdx]->streamList[streamIndex]->
+				mProtocolList[j]->protoDataCopyFrom(request->stream(i));
+		}
 
 		// TODO(LOW): fill-in response "Ack"????
 	}

@@ -14,7 +14,7 @@
 
 /*
 ** TODO
-** - Improve HexStr handling
+** \todo Improve HexStr handling
 **
 */
 
@@ -31,8 +31,12 @@ private:
 
 	Port&			mPort;
 	uint			mCurrentStreamIndex;
+	Stream			*mpStream;
+	QList<int>		mSelectedProtocols;
+
 	PacketModel		*mpPacketModel;
 	ModelTest		*mpPacketModelTester;
+
 
 	// The following static variables are used to track the "selected" tab
     // for the various tab widgets so that it can be restored when the dialog
@@ -41,16 +45,12 @@ private:
 	static int		lastProtoTabIndex;
 
 	void setupUiExtra();
+	void updateSelectedProtocols();
 	void LoadCurrentStream();
-	void StoreCurrentStream();
+	void StoreCurrentStream(Stream *pStream);
 
 private slots:
-	void on_cmbPatternMode_currentIndexChanged(QString mode);
 	void on_cmbPktLenMode_currentIndexChanged(QString mode);
-	void on_cmbDstMacMode_currentIndexChanged(QString mode);
-	void on_cmbSrcMacMode_currentIndexChanged(QString mode);
-	void on_cmbIpSrcAddrMode_currentIndexChanged(QString mode);
-	void on_cmbIpDstAddrMode_currentIndexChanged(QString mode);
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
@@ -59,21 +59,20 @@ private slots:
 	void on_rbFt802Dot3Raw_toggled(bool checked);
 	void on_rbFt802Dot3Llc_toggled(bool checked);
 	void on_rbFtLlcSnap_toggled(bool checked);
-
 	void on_rbL3Ipv4_toggled(bool checked);
 	void on_rbL3Arp_toggled(bool checked);
-
 	void on_rbL4Icmp_toggled(bool checked);
 	void on_rbL4Igmp_toggled(bool checked);
 	void on_rbL4Tcp_toggled(bool checked);
 	void on_rbL4Udp_toggled(bool checked);
 
+	void on_twTopLevel_currentChanged(int index);
+	void on_twProto_currentChanged(int index);
+
 	void update_NumPacketsAndNumBursts();
 
 	void on_pbOk_clicked();
 };
-
-QString & uintToHexStr(quint64 num, QString &hexStr, quint8 octets);
 
 #endif
 

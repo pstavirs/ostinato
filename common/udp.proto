@@ -1,0 +1,18 @@
+import "protocol.proto";
+
+package OstProto;
+
+// UDP
+message Udp {
+	optional bool is_override_totlen = 1;	
+	optional bool is_override_cksum = 2;	
+
+	optional uint32		src_port = 3 [default = 8902];
+	optional uint32		dst_port = 4 [default = 80];
+	optional uint32		totlen = 5;
+	optional uint32		cksum = 6;
+}
+
+extend Stream {
+	optional Udp udp = 141;
+}

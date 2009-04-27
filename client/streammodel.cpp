@@ -82,7 +82,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		case StreamName:
 		{
 			if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
-				return mCurrentPort->streamByIndex(index.row()).name();
+				return mCurrentPort->streamByIndex(index.row())->name();
 			else
 				return QVariant();
 			break;
@@ -91,7 +91,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		{
 			if ((role == Qt::CheckStateRole))
 			{
-				if (mCurrentPort->streamByIndex(index.row()).isEnabled())
+				if (mCurrentPort->streamByIndex(index.row())->isEnabled())
 					return Qt::Checked;
 				else
 					return Qt::Unchecked;
@@ -102,7 +102,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
 		}
 		case StreamNextWhat:
 		{
-			int val = mCurrentPort->streamByIndex(index.row()).nextWhat();
+			int val = mCurrentPort->streamByIndex(index.row())->nextWhat();
 
 			if (role == Qt::DisplayRole)
 				return nextWhatOptionList().at(val);
@@ -131,19 +131,19 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
 		{
 		// Edit Supported Fields
 		case StreamName:
-			mCurrentPort->streamByIndex(index.row()).setName(value.toString());
+			mCurrentPort->streamByIndex(index.row())->setName(value.toString());
 			emit(dataChanged(index, index));
 			return true;
 
 		case StreamStatus:
-			mCurrentPort->streamByIndex(index.row()).setIsEnabled(value.toBool());
+			mCurrentPort->streamByIndex(index.row())->setIsEnabled(value.toBool());
 			emit(dataChanged(index, index));
 			return true;
 
 		case StreamNextWhat:
 			if (role == Qt::EditRole)
 			{	
-				mCurrentPort->streamByIndex(index.row()).setNextWhat(
+				mCurrentPort->streamByIndex(index.row())->setNextWhat(
 						(Stream::NextWhat)value.toInt());
 				emit(dataChanged(index, index));
 				return true;

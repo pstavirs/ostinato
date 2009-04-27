@@ -1,0 +1,12 @@
+import "protocol.proto";
+
+package OstProto;
+
+// 802.3
+message Dot3 {
+	optional uint32			length = 1;
+}
+
+extend Stream {
+	optional Dot3 dot3 = 122;
+}

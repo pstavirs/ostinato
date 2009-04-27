@@ -2,15 +2,16 @@
 #define _PACKET_MODEL_H
 
 #include <QAbstractItemModel>
-#include "stream.h"
-
-#define NEW_IMPL			// FIXME(HI) - Use this and remove old one
+#include "abstractprotocol.h"
 
 class PacketModel: public QAbstractItemModel
 {
 
 public:
-	PacketModel(Stream *pStream, QObject *parent = 0);
+	PacketModel(const QList<AbstractProtocol*> &selectedProtocols,
+			QObject *parent = 0);
+	void setSelectedProtocols(
+			const QList<AbstractProtocol*> &selectedProtocols);
 
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -33,89 +34,7 @@ private:
 		} ws;
 	} IndexId;
 
-	Stream	*mpStream;
-
-#ifdef NEW_IMPL
-// Nothing - required stuff is part of Stream Class
-#else
-	QList<uint> mPacketProtocols;
-
-	typedef struct
-	{
-		QString			name;
-		QString			abbr;
-		QString			textValue;
-	} FieldInfo;
-
-	typedef struct
-	{
-		uint				handle;
-		QString				name;
-		QString				abbr;
-		QList<FieldInfo>	fieldList;
-	} ProtocolInfo;
-
-	//! Contains registration info (name, size etc) for all protocols
-	// and fields within the protocol
-	QList<ProtocolInfo> mProtocols;
-	void registerProto(uint handle, char *name, char *abbr);
-	void registerField(uint protoHandle, char *name, char *abbr);
-
-	void registerFrameTypeProto();
-	void registerVlanProto();
-	void registerIpProto();
-	void registerArpProto();
-	void registerTcpProto();
-	void registerUdpProto();
-	void registerIcmpProto();
-	void registerIgmpProto();
-	void registerData();
-	void registerInvalidProto();
-
-	void populatePacketProtocols();
-
-	int protoCount() const;
-	int fieldCount(int protocol) const;
-	QString protoName(int protocol) const;
-	QString fieldName(int protocol, int field) const;
-	QVariant fieldTextValue(int protocol, int field) const;
-
-	QVariant ethField(int field, int role) const;
-	QVariant llcField(int field, int role) const;
-	QVariant snapField(int field, int role) const;
-	QVariant svlanField(int field, int role) const;
-	QVariant ipField(int field, int role) const;
-	QVariant tcpField(int field, int role) const;
-	QVariant udpField(int field, int role) const;
-
-// FIXME(HIGH): Is this how I want this?
-#define PTYP_L2_NONE		1
-#define PTYP_L2_ETH_2		2
-#define PTYP_L2_802_3_RAW	3
-
-#define PTYP_L2_802_3_LLC	4
-#define PTYP_L2_SNAP		5
-
-#define PTYP_SVLAN			10
-#define PTYP_CVLAN			11
-
-#define PTYP_L3_IP			30
-#define PTYP_L3_ARP			31
-
-#define PTYP_L4_TCP			40	
-#define PTYP_L4_UDP			41	
-#define PTYP_L4_ICMP		42
-#define PTYP_L4_IGMP		43
-
-#define PTYP_INVALID		0
-#define PTYP_DATA			0xFF
-
-#endif // NEW_IMPL
-
-#define FROL_NAME			1
-#define FROL_TEXT_VALUE		2
-
-#define BASE_HEX			16
+	QList<AbstractProtocol*> mSelectedProtocols;
 };
 #endif
 

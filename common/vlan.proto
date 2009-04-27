@@ -1,0 +1,17 @@
+import "protocol.proto";
+
+package OstProto;
+message Vlan {
+	// VLAN presence/absence
+	optional bool is_tpid_override = 10;
+
+	// VLAN values
+	optional uint32	ctpid = 13;
+	optional uint32	cvlan_tag = 14; // includes prio, cfi and cvlanid
+	optional uint32	stpid = 15;
+	optional uint32	svlan_tag = 16; // includes pcp, de and svlanid
+}
+
+extend Stream {
+	optional Vlan vlan = 126;
+}

@@ -39,15 +39,17 @@ void HexLineEdit::focusOutEvent( QFocusEvent *e )
     QLineEdit::focusOutEvent( e );
     emit focusOut();
 #else
+#define uintToHexStr(num, bytesize) \
+   	QString("%1").arg((num), (bytesize)*2 , 16, QChar('0'))
+
 	bool isOk;
 	ulong	num;
-	QString str;
 
 	qDebug("before = %s\n", text().toAscii().data());
 	num = text().remove(QChar(' ')).toULong(&isOk, 16);
-	setText(uintToHexStr(num, str, 4));
+	setText(uintToHexStr(num, 4));
 	qDebug("after = %s\n", text().toAscii().data());
-	qDebug("after2 = %s\n", str.toAscii().data());
+#undef uintToHexStr
 #endif
 }
 

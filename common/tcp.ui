@@ -1,0 +1,228 @@
+<ui version="4.0" >
+ <class>tcp</class>
+ <widget class="QWidget" name="tcp" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>447</width>
+    <height>194</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label_28" >
+     <property name="text" >
+      <string>Source Port</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="QLineEdit" name="leTcpSrcPort" />
+   </item>
+   <item rowspan="6" row="0" column="2" >
+    <widget class="Line" name="line_3" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" >
+    <widget class="QCheckBox" name="cbTcpCksumOverride" >
+     <property name="text" >
+      <string>Override Checksum</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4" >
+    <widget class="QLineEdit" name="leTcpCksum" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="inputMask" >
+      <string>HH HH; </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLabel" name="label_32" >
+     <property name="text" >
+      <string>Destination Port</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QLineEdit" name="leTcpDstPort" />
+   </item>
+   <item row="1" column="3" >
+    <widget class="QLabel" name="label_37" >
+     <property name="text" >
+      <string>Urgent Pointer</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4" >
+    <widget class="QLineEdit" name="leTcpUrgentPointer" />
+   </item>
+   <item row="2" column="0" >
+    <widget class="QLabel" name="label_33" >
+     <property name="text" >
+      <string>Sequence Number</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QLineEdit" name="leTcpSeqNum" />
+   </item>
+   <item rowspan="4" row="2" column="3" colspan="2" >
+    <widget class="QGroupBox" name="groupBox_10" >
+     <property name="title" >
+      <string>Flags</string>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QCheckBox" name="cbTcpFlagsUrg" >
+        <property name="text" >
+         <string>URG</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QCheckBox" name="cbTcpFlagsAck" >
+        <property name="text" >
+         <string>ACK</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QCheckBox" name="cbTcpFlagsPsh" >
+        <property name="text" >
+         <string>PSH</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QCheckBox" name="cbTcpFlagsRst" >
+        <property name="text" >
+         <string>RST</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QCheckBox" name="cbTcpFlagsSyn" >
+        <property name="text" >
+         <string>SYN</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QCheckBox" name="cbTcpFlagsFin" >
+        <property name="text" >
+         <string>FIN</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item rowspan="2" row="2" column="5" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>21</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="0" >
+    <widget class="QLabel" name="label_34" >
+     <property name="text" >
+      <string>Acknowledgement Number</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" >
+    <widget class="QLineEdit" name="leTcpAckNum" />
+   </item>
+   <item row="4" column="0" >
+    <widget class="QCheckBox" name="cbTcpHdrLenOverride" >
+     <property name="text" >
+      <string>Override Header Length (x4)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" >
+    <widget class="QLineEdit" name="leTcpHdrLen" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" >
+    <widget class="QLabel" name="label_36" >
+     <property name="text" >
+      <string>Window</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" >
+    <widget class="QLineEdit" name="leTcpWindow" />
+   </item>
+   <item row="6" column="2" colspan="2" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cbTcpHdrLenOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpHdrLen</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>141</x>
+     <y>123</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>187</x>
+     <y>123</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbTcpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>316</x>
+     <y>14</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>384</x>
+     <y>17</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

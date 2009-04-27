@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "portgrouplist.h"
 
+#if 0
+#include "dbgthread.h"
+#endif
+
 #include "ui_about.h"
 
 PortGroupList	*pgl;
@@ -23,14 +27,16 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
 	connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
+#if 0
+	{
+		DbgThread *dbg = new DbgThread(pgl);
+		dbg->start();
+	}
+#endif
 }
 
 MainWindow::~MainWindow()
 {
-	delete statsDock;
-	delete portsDock;
-	delete statsWindow;
-	delete portsWindow;
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
