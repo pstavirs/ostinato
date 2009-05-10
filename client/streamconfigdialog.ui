@@ -59,7 +59,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
        <item row="0" column="2" >
         <widget class="QGroupBox" name="gbFrameLength" >
          <property name="title" >
-          <string>Frame Length (including CRC)</string>
+          <string>Frame Length (including FCS)</string>
          </property>
          <layout class="QGridLayout" >
           <item row="0" column="0" >
@@ -159,164 +159,60 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
           </attribute>
           <layout class="QGridLayout" >
            <item rowspan="2" row="0" column="0" >
-            <widget class="QGroupBox" name="groupBox_4" >
+            <widget class="QGroupBox" name="gbFrameType" >
              <property name="title" >
               <string>Frame Type</string>
              </property>
-             <layout class="QHBoxLayout" >
+             <layout class="QVBoxLayout" >
               <item>
-               <layout class="QHBoxLayout" >
-                <item>
-                 <layout class="QVBoxLayout" >
-                  <item>
-                   <widget class="QRadioButton" name="rbFtNone" >
-                    <property name="text" >
-                     <string>None</string>
-                    </property>
-                    <property name="checked" >
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbFtEthernet2" >
-                    <property name="text" >
-                     <string>Ethernet II</string>
-                    </property>
-                    <property name="checked" >
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbFt802Dot3Raw" >
-                    <property name="text" >
-                     <string>802.3 Raw</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbFt802Dot3Llc" >
-                    <property name="text" >
-                     <string>802.3 LLC</string>
-                    </property>
-                    <property name="checked" >
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbFtLlcSnap" >
-                    <property name="text" >
-                     <string>LLC SNAP</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="Line" name="line" >
-                  <property name="orientation" >
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QGridLayout" >
-                  <item row="0" column="0" >
-                   <widget class="QLabel" name="lblDsap" >
-                    <property name="text" >
-                     <string>DSAP</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1" >
-                   <widget class="QLineEdit" name="leDsap" >
-                    <property name="enabled" >
-                     <bool>true</bool>
-                    </property>
-                    <property name="inputMask" >
-                     <string>HH; </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0" >
-                   <widget class="QLabel" name="lblSsap" >
-                    <property name="text" >
-                     <string>SSAP</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1" >
-                   <widget class="QLineEdit" name="leSsap" >
-                    <property name="enabled" >
-                     <bool>true</bool>
-                    </property>
-                    <property name="inputMask" >
-                     <string>HH; </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0" >
-                   <widget class="QLabel" name="lblControl" >
-                    <property name="text" >
-                     <string>Control</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1" >
-                   <widget class="QLineEdit" name="leControl" >
-                    <property name="enabled" >
-                     <bool>true</bool>
-                    </property>
-                    <property name="inputMask" >
-                     <string>HH; </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0" >
-                   <widget class="QLabel" name="lblOui" >
-                    <property name="text" >
-                     <string>OUI</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1" >
-                   <widget class="QLineEdit" name="leOui" >
-                    <property name="enabled" >
-                     <bool>true</bool>
-                    </property>
-                    <property name="inputMask" >
-                     <string>HH HH HH; </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0" >
-                   <widget class="QLabel" name="lblType" >
-                    <property name="text" >
-                     <string>Type</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1" >
-                   <widget class="QLineEdit" name="leType" >
-                    <property name="enabled" >
-                     <bool>true</bool>
-                    </property>
-                    <property name="inputMask" >
-                     <string>HH HH; </string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
+               <widget class="QRadioButton" name="rbFtNone" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFtEthernet2" >
+                <property name="text" >
+                 <string>Ethernet II</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFt802Dot3Raw" >
+                <property name="text" >
+                 <string>802.3 Raw</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFt802Dot3Llc" >
+                <property name="text" >
+                 <string>802.3 LLC</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFtLlcSnap" >
+                <property name="text" >
+                 <string>LLC SNAP</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
            </item>
            <item row="0" column="1" >
-            <widget class="QGroupBox" name="groupBox_8" >
+            <widget class="QGroupBox" name="gbL3Proto" >
              <property name="title" >
               <string>L3</string>
              </property>
@@ -358,7 +254,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
             </widget>
            </item>
            <item row="1" column="1" >
-            <widget class="QGroupBox" name="groupBox_9" >
+            <widget class="QGroupBox" name="gbL4Proto" >
              <property name="title" >
               <string>L4</string>
              </property>
@@ -416,7 +312,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="2" column="0" >
+           <item row="2" column="1" >
             <spacer>
              <property name="orientation" >
               <enum>Qt::Vertical</enum>

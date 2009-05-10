@@ -29,6 +29,10 @@ public:
 private: 
 	//QList<Stream>	*mpStreamList;
 
+	QButtonGroup	*bgFrameType;
+	QButtonGroup	*bgL3Proto;
+	QButtonGroup	*bgL4Proto;
+
 	Port&			mPort;
 	uint			mCurrentStreamIndex;
 	Stream			*mpStream;
@@ -45,7 +49,6 @@ private:
 	static int		lastProtoTabIndex;
 
 	void setupUiExtra();
-	void updateSelectedProtocols();
 	void LoadCurrentStream();
 	void StoreCurrentStream(Stream *pStream);
 
@@ -54,18 +57,7 @@ private slots:
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
-	void on_rbFtNone_toggled(bool checked);
-	void on_rbFtEthernet2_toggled(bool checked);
-	void on_rbFt802Dot3Raw_toggled(bool checked);
-	void on_rbFt802Dot3Llc_toggled(bool checked);
-	void on_rbFtLlcSnap_toggled(bool checked);
-	void on_rbL3Ipv4_toggled(bool checked);
-	void on_rbL3Arp_toggled(bool checked);
-	void on_rbL4Icmp_toggled(bool checked);
-	void on_rbL4Igmp_toggled(bool checked);
-	void on_rbL4Tcp_toggled(bool checked);
-	void on_rbL4Udp_toggled(bool checked);
-
+	void updateSelectedProtocols();
 	void on_twTopLevel_currentChanged(int index);
 	void on_twProto_currentChanged(int index);
 

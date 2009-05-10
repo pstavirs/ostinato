@@ -46,8 +46,10 @@ void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 }
 
 
-MacProtocol::MacProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+MacProtocol::MacProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new MacConfigForm;
@@ -55,6 +57,13 @@ MacProtocol::MacProtocol(Stream *parent)
 
 MacProtocol::~MacProtocol()
 {
+}
+
+AbstractProtocol* MacProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new MacProtocol(frameProtoList, streamCore);
 }
 
 void MacProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -174,13 +183,12 @@ QWidget* MacProtocol::configWidget()
 
 void MacProtocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
-	configForm->leDstMac->setText(uintToHexStr(data.dst_mac(), str, 6));
+	configForm->leDstMac->setText(uintToHexStr(data.dst_mac(), 6));
 	configForm->cmbDstMacMode->setCurrentIndex(data.dst_mac_mode());
 	configForm->leDstMacCount->setText(QString().setNum(data.dst_mac_count()));
 	configForm->leDstMacStep->setText(QString().setNum(data.dst_mac_step()));
 
-	configForm->leSrcMac->setText(uintToHexStr(data.src_mac(), QString(), 6));
+	configForm->leSrcMac->setText(uintToHexStr(data.src_mac(), 6));
 	configForm->cmbSrcMacMode->setCurrentIndex(data.src_mac_mode());
 	configForm->leSrcMacCount->setText(QString().setNum(data.src_mac_count()));
 	configForm->leSrcMacStep->setText(QString().setNum(data.src_mac_step()));

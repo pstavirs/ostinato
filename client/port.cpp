@@ -98,7 +98,7 @@ bool Port::updateStream(uint streamId, OstProto::Stream *stream)
 _found:
 	streamIndex = i;
 
-	mStreams[streamIndex]->update(stream);
+	mStreams[streamIndex]->protoDataCopyFrom(*stream);
 	reorderStreamsByOrdinals();
 
 	return true;
@@ -167,7 +167,7 @@ void Port::getModifiedStreamsSinceLastSync(
 		OstProto::Stream	*s;
 
 		s = streamConfigList.add_stream();
-		mStreams[i]->getConfig(mPortId, *s);
+		mStreams[i]->protoDataCopyInto(*s);
 	}
 	qDebug("Done %s", __FUNCTION__);
 }

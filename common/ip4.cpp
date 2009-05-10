@@ -44,15 +44,29 @@ void Ip4ConfigForm::on_cmbIpDstAddrMode_currentIndexChanged(int index)
 	}
 }
 
-Ip4Protocol::Ip4Protocol(Stream *parent)
-	: AbstractProtocol(parent)
+Ip4Protocol::Ip4Protocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
+#if 0
+	PbHelper pbh;
+
+	pbh.ForceSetSingularDefault(&data);
+#endif
 	if (configForm == NULL)
 		configForm = new Ip4ConfigForm;
 }
 
 Ip4Protocol::~Ip4Protocol()
 {
+}
+
+AbstractProtocol* Ip4Protocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new Ip4Protocol(frameProtoList, streamCore);
 }
 
 void Ip4Protocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -76,6 +90,19 @@ QString Ip4Protocol::name() const
 QString Ip4Protocol::shortName() const
 {
 	return QString("IPv4");
+}
+
+quint32 Ip4Protocol::protocolId(ProtocolIdType type) const
+{
+	switch(type)
+	{
+		case ProtocolIdLlc: return 0x060603;
+		case ProtocolIdEth: return 0x0800;
+		case ProtocolIdIp: return 0x04;
+		default:break;
+	}
+
+	return AbstractProtocol::protocolId(type);
 }
 
 int	Ip4Protocol::fieldCount() const
@@ -139,25 +166,42 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 			}
 			break;
 		case ip4_totLen:
+		{
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Total Length");
 				case FieldValue:
-					return data.totlen();
+				{
+					int totlen;
+					totlen = data.is_override_totlen() ? data.totlen() : 
+						(protocolFramePayloadSize() + 20);
+					return totlen;
+				}
 				case FieldFrameValue:
 				{
 					QByteArray fv;
+					int totlen;
+					totlen = data.is_override_totlen() ? data.totlen() : 
+						(protocolFramePayloadSize() + 20);
 					fv.resize(2);
-					qToBigEndian((quint16) data.totlen(), (uchar*) fv.data());
+					qToBigEndian((quint16) totlen, (uchar*) fv.data());
 					return fv;
 				}
 				case FieldTextValue:
-					return QString("%1").arg(data.totlen());
+				{
+					int totlen;
+					totlen = data.is_override_totlen() ? data.totlen() : 
+						(protocolFramePayloadSize() + 20);
+					return QString("%1").arg(totlen);
+				}
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_id:
 			switch(attrib)
 			{
@@ -244,42 +288,86 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 			}
 			break;
 		case ip4_proto:
+		{
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Protocol");
 				case FieldValue:
-					return data.proto();
+				{
+					unsigned char id = payloadProtocolId(ProtocolIdIp);
+					return id;
+				}
 				case FieldFrameValue:
-					return QByteArray(1, (char)data.proto());
+				{
+					unsigned char id = payloadProtocolId(ProtocolIdIp);
+					return QByteArray(1, (char) id);
+				}
 				case FieldTextValue:
+				{
+					unsigned char id = payloadProtocolId(ProtocolIdIp);
 					return  QString("0x%1").
-						arg(data.proto(), 2, BASE_HEX, QChar('0'));
+						arg(id, 2, BASE_HEX, QChar('0'));
+				}
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_cksum:
+		{
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Header Checksum");
 				case FieldValue:
-					return data.cksum();
+				{
+					quint16 cksum;
+
+					if (streamIndex < 0)
+						cksum = 0;
+					else if	(data.is_override_cksum())
+						cksum = data.cksum();
+					else
+						cksum = protocolFrameCksum().toUInt();
+					return cksum;
+				}
 				case FieldFrameValue:
 				{
 					QByteArray fv;
+					quint16 cksum;
+
+					if (streamIndex < 0)
+						cksum = 0;
+					else if	(data.is_override_cksum())
+						cksum = data.cksum();
+					else
+						cksum = protocolFrameCksum().toUInt();
 					fv.resize(2);
-					qToBigEndian((quint16) data.cksum(), (uchar*) fv.data());
+					qToBigEndian((quint16) cksum, (uchar*) fv.data());
 					return fv;
 				}
 				case FieldTextValue:
+				{
+					quint16 cksum;
+
+					if (streamIndex < 0)
+						cksum = 0;
+					else if	(data.is_override_cksum())
+						cksum = data.cksum();
+					else
+						cksum = protocolFrameCksum().toUInt();
 					return  QString("0x%1").
-						arg(data.cksum(), 4, BASE_HEX, QChar('0'));;
+						arg(cksum, 4, BASE_HEX, QChar('0'));;
+				}
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_srcAddr:
 			switch(attrib)
 			{
@@ -381,27 +469,27 @@ QWidget* Ip4Protocol::configWidget()
 
 void Ip4Protocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
 	configForm->leIpVersion->setText(QString().setNum(data.ver_hdrlen() >> 4));
 	configForm->cbIpVersionOverride->setChecked(data.is_override_ver());
 
 	configForm->leIpHdrLen->setText(QString().setNum(data.ver_hdrlen() & 0x0F));
 	configForm->cbIpHdrLenOverride->setChecked(data.is_override_hdrlen());
 	
-	configForm->leIpTos->setText(uintToHexStr(data.tos(), QString(), 1));
-
-	configForm->leIpLength->setText(QString().setNum(data.totlen()));
+	configForm->leIpTos->setText(uintToHexStr(data.tos(), 1));
+	configForm->leIpLength->setText(fieldData(ip4_totLen, FieldValue).toString());
 	configForm->cbIpLengthOverride->setChecked(data.is_override_totlen());
 
-	configForm->leIpId->setText(uintToHexStr(data.id(), QString(), 2));
+	configForm->leIpId->setText(uintToHexStr(data.id(), 2));
 	configForm->leIpFragOfs->setText(QString().setNum(data.frag_ofs()));
 	configForm->cbIpFlagsDf->setChecked((data.flags() & IP_FLAG_DF) > 0);
 	configForm->cbIpFlagsMf->setChecked((data.flags() & IP_FLAG_MF) > 0);
 
 	configForm->leIpTtl->setText(QString().setNum(data.ttl()));
-	configForm->leIpProto->setText(uintToHexStr(data.proto(), QString(), 1));
+	configForm->leIpProto->setText(uintToHexStr(
+		fieldData(ip4_proto, FieldValue).toUInt(), 1));
 
-	configForm->leIpCksum->setText(uintToHexStr(data.cksum(), QString(), 2));
+	configForm->leIpCksum->setText(uintToHexStr(
+		fieldData(ip4_cksum, FieldValue).toUInt(), 2));
 	configForm->cbIpCksumOverride->setChecked(data.is_override_cksum());
 
 	configForm->leIpSrcAddr->setText(QHostAddress(data.src_ip()).toString());

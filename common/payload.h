@@ -31,8 +31,13 @@ private:
 	};
 
 public:
-	PayloadProtocol(Stream *parent = 0);
+	PayloadProtocol(ProtocolList &frameProtoList, 
+		OstProto::StreamCore *parent = 0);
 	virtual ~PayloadProtocol();
+
+	static AbstractProtocol* createInstance(
+		ProtocolList &frameProtoList,
+		OstProto::StreamCore *streamCore = 0);
 
 	virtual void protoDataCopyInto(OstProto::Stream &stream);
 	virtual void protoDataCopyFrom(const OstProto::Stream &stream);

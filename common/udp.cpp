@@ -11,8 +11,10 @@ UdpConfigForm::UdpConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-UdpProtocol::UdpProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+UdpProtocol::UdpProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new UdpConfigForm;
@@ -20,6 +22,13 @@ UdpProtocol::UdpProtocol(Stream *parent)
 
 UdpProtocol::~UdpProtocol()
 {
+}
+
+AbstractProtocol* UdpProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new UdpProtocol(frameProtoList, streamCore);
 }
 
 void UdpProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -43,6 +52,17 @@ QString UdpProtocol::name() const
 QString UdpProtocol::shortName() const
 {
 	return QString("UDP");
+}
+
+quint32 UdpProtocol::protocolId(ProtocolIdType type) const
+{
+	switch(type)
+	{
+		case ProtocolIdIp: return 0x11;
+		default: break;
+	}
+
+	return AbstractProtocol::protocolId(type);
 }
 
 int	UdpProtocol::fieldCount() const
@@ -98,26 +118,47 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 			break;
 
 		case udp_totLen:
+		{
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Datagram Length");
 				case FieldValue:
-					return data.totlen();
-				case FieldTextValue:
-					return QString("%1").arg(data.totlen());
+				{
+					int totlen;
+
+					totlen = data.is_override_totlen() ? 
+						data.totlen() : 
+						(protocolFramePayloadSize() + 8);
+					return totlen;
+				}
 				case FieldFrameValue:
 				{
 					QByteArray fv;
+					int totlen;
+					totlen = data.is_override_totlen() ? 
+						data.totlen() : 
+						(protocolFramePayloadSize() + 8);
 					fv.resize(2);
-					qToBigEndian((quint16) data.totlen(), (uchar*) fv.data());
+					qToBigEndian((quint16) totlen, (uchar*) fv.data());
 					return fv;
 				}
+				case FieldTextValue:
+				{
+					int totlen;
+					totlen = data.is_override_totlen() ? 
+						data.totlen() : 
+						(protocolFramePayloadSize() + 8);
+					return QString("%1").arg(totlen);
+				}
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}
 			break;
-
+		}
 		case udp_cksum:
 			switch(attrib)
 			{
@@ -173,7 +214,6 @@ QWidget* UdpProtocol::configWidget()
 
 void UdpProtocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
 	configForm->leUdpSrcPort->setText(QString().setNum(data.src_port()));
 	configForm->leUdpDstPort->setText(QString().setNum(data.dst_port()));
 

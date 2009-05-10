@@ -8,7 +8,7 @@
 #endif
 
 #include "../common/protocol.pb.h"
-#include "../common/abstractprotocol.h"
+#include "../common/streambase.h"
 #include "abstracthost.h"
 #include <pcap.h>
 #include <QtGlobal>
@@ -30,31 +30,19 @@
 
 class MyService;
 
-class StreamInfo
+class StreamInfo : public StreamBase
 {
 	friend class MyService;
 	friend class PortInfo;
 
 	OstProto::StreamId			mStreamId;
-	OstProto::StreamCore		mCore;
-	OstProto::StreamControl		mControl;
-	QList<AbstractProtocol*>	mProtocolList;
 
 public:
 	StreamInfo();
 	~StreamInfo();
 
 private:
-	AbstractProtocol* protocolById(int id);
-
-	quint32 pseudoHdrCksumPartial(quint32 srcIp, quint32 dstIp, 
-		quint8 protocol, quint16 len);
-	quint32 ipv4CksumPartial(uchar *buf, int len);
-	quint16 ipv4Cksum(uchar *buf, int len, quint32 partialSum = 0);
 	int makePacket(uchar *buf, int bufMaxSize, int n);
-public:
-	bool operator < (const StreamInfo &s) const
-		{ return(mCore.ordinal() < s.mCore.ordinal()); }
 };
 
 

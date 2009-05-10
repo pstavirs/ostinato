@@ -126,7 +126,7 @@
         <bool>true</bool>
        </property>
        <property name="inputMask" >
-        <string>HH HH; </string>
+        <string>>HH HH; </string>
        </property>
        <property name="text" >
         <string> </string>

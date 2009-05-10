@@ -2,67 +2,26 @@
 #define _STREAM_H
 
 #include <QtGlobal>
-
 #include <QString>
 #include <QList>
+
 #include "../common/protocol.pb.h"
-#include "../common/abstractprotocol.h"
+#include "../common/streambase.h"
 
-// Convenience Defines FIXME
-#define IP_PROTO_ICMP	0x01
-#define IP_PROTO_IGMP	0x02
-#define IP_PROTO_TCP	0x06
-#define IP_PROTO_UDP	0x11
+class Stream : public StreamBase {
 
-class Stream {
-
-	quint32					mId;
-	OstProto::StreamCore	*mCore;
-	OstProto::StreamControl	*mControl;
-
-	QList<AbstractProtocol*> mProtocolList;
+	//quint32					mId;
 
 public:
-
-	void* core() { return mCore; } // FIXME(HI): Debug ONLY
 	void loadProtocolWidgets();
 	void storeProtocolWidgets();
 
 public:
-	enum FrameType {
-		e_ft_none,
-		e_ft_eth_2,
-		e_ft_802_3_raw,
-		e_ft_802_3_llc,
-		e_ft_snap
-	};
-
-	enum DataPatternMode {
-		e_dp_fixed_word,
-		e_dp_inc_byte,
-		e_dp_dec_byte,
-		e_dp_random
-	};
-
 	enum FrameLengthMode {
 		e_fl_fixed,
 		e_fl_inc,
 		e_fl_dec,
 		e_fl_random
-	};
-
-	enum L3Proto {
-		e_l3_none,
-		e_l3_ip,
-		e_l3_arp,
-	};
-
-	enum L4Proto {
-		e_l4_none,
-		e_l4_tcp,
-		e_l4_udp,
-		e_l4_icmp,
-		e_l4_igmp,
 	};
 
 	enum SendUnit {
@@ -87,19 +46,15 @@ public:
 	Stream();
 	~Stream();
 
-	void protoDataCopyFrom(Stream& stream);
+	// TODO: Below methods move to StreamBase???
 
 	bool operator < (const Stream &s) const
 		{ return(mCore->ordinal() < s.mCore->ordinal()); }
 
-
-	void getConfig(uint portId, OstProto::Stream &s);
-	bool update(OstProto::Stream *stream);
-
 	quint32	id()
-		{ return mId;}
+		{ return mStreamId->id();}
 	bool setId(quint32 id)
-		{ mId = id; return true;}
+		{ mStreamId->set_id(id); return true;}
 
 #if 0 // FIXME(HI): needed?
 	quint32	portId()
@@ -123,12 +78,7 @@ public:
 	bool setName(QString name) 
 		{ mCore->set_name(name.toStdString()); return true; }
 
-// TODO(HI) : ?????
-#if 0
-	quint16			dataStartOfs;
-#endif
-
-	// Frame Length (includes CRC)
+	// Frame Length (includes FCS)
 	FrameLengthMode	lenMode()
 		{ return (FrameLengthMode) mCore->len_mode(); }
 	bool setLenMode(FrameLengthMode	lenMode)
@@ -192,16 +142,6 @@ public:
 		{ return (quint32) mControl->bursts_per_sec(); }
 	bool setBurstRate(quint32 burstsPerSec)
 		{ mControl->set_bursts_per_sec(burstsPerSec); return true; }
-
-	//---------------------------------------------------------------
-	// Methods for use by Packet Model
-	//---------------------------------------------------------------
-	QList<int> frameProtocol();
-	void setFrameProtocol(QList<int> protocolList);
-
-	//! Includes ALL protocol headers excluding payload data
-	int protocolHeaderSize();
-	AbstractProtocol* protocolById(int id);
 };
 
 #endif

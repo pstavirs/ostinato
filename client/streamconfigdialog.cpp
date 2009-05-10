@@ -7,70 +7,37 @@
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
 int StreamConfigDialog::lastProtoTabIndex = 0;
 
-// TODO(HI): Write HexLineEdit::setNum() and num() and use it in 
-// Load/Store stream methods
-
 StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	QWidget *parent) : QDialog (parent), mPort(port)
 {
+	OstProto::Stream s;
 	mCurrentStreamIndex = streamIndex;
-
 	mpStream = new Stream;
-	mpStream->protoDataCopyFrom(*(mPort.streamByIndex(mCurrentStreamIndex)));
+	mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyInto(s);
+	mpStream->protoDataCopyFrom(s);
 
 	setupUi(this);
 	setupUiExtra();
 
-	// setupUi
+	connect(bgFrameType, SIGNAL(buttonClicked(int)),
+		this, SLOT(updateSelectedProtocols()));
+	connect(bgL3Proto, SIGNAL(buttonClicked(int)),
+		this, SLOT(updateSelectedProtocols()));
+	connect(bgL4Proto, SIGNAL(buttonClicked(int)),
+		this, SLOT(updateSelectedProtocols()));
 	
 	// Time to play match the signals and slots!
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
-
-	// Show/Hide FrameType related inputs for FT None
-	connect(rbFtNone, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
 
 	// Enable/Disable L3 Protocol Choices for FT None
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
 
-	// Show/Hide FrameType related inputs for FT Ethernet2
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
-
 	// Enable/Disable L3 Protocol Choices for FT Ethernet2
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
-
-	// Show/Hide FrameType related inputs for FT 802.3 Raw
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblDsap, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leDsap, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblSsap, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leSsap, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblControl, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leControl, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
 
 	// Force L3 = None if FT = 802.3 Raw
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
@@ -80,18 +47,6 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
 
-	// Show/Hide FrameType related inputs for FT 802.3 LLC
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblSsap, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leSsap, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblControl, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leControl, SLOT(setVisible(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblOui, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leOui, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), lblType, SLOT(setHidden(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), leType, SLOT(setHidden(bool)));
-
 	// Force L3 = None if FT = 802.3 LLC (to ensure a valid L3 is selected)
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
 
@@ -100,30 +55,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
 
-	// Show/Hide FrameType related inputs for FT 802.3 LLC SNAP
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leDsap, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblSsap, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leSsap, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblControl, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leControl, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblOui, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leOui, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblType, SLOT(setVisible(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leType, SLOT(setVisible(bool)));
-
 	// Enable/Disable L3 Protocol Choices for FT 802.3 LLC SNAP
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
-
-	// Enable/Disable FrameType related inputs for FT 802.3 LLC SNAP
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblDsap, SLOT(setDisabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leDsap, SLOT(setDisabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblSsap, SLOT(setDisabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leSsap, SLOT(setDisabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), lblControl, SLOT(setDisabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), leControl, SLOT(setDisabled(bool)));
 
 	// Enable/Disable L4 Protocol Choices for L3 Protocol None
 	connect(rbL3None, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
@@ -152,18 +87,6 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	// Force L4 Protocol = None if L3 Protocol is set to ARP
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
 
-	//TODO: remove if not needed
-#if 0
-	// This set of 'clicks' is a hack to trigger signals at dialog creation
-	// time so that a coherent 'set' is initialized
-	// Actual stream values will be initialized by LoadCurrentStream()
-	rbL3Ipv4->click();
-	rbL3None->click();
-	rbFtEthernet2->click();
-	rbFtNone->click();
-#endif
-
-	//mmpStreamList = streamList;
 	LoadCurrentStream();
 	mpPacketModel = new PacketModel(QList<AbstractProtocol*>(), this);
 	tvPacketTree->setModel(mpPacketModel);
@@ -173,6 +96,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
 	// TODO(MED):
+	//! \todo Implement then enable these protocols
+	rbL3Arp->setHidden(true);
+	rbL4Icmp->setHidden(true);
+	rbL4Igmp->setHidden(true);
 	//! \todo Enable navigation of streams
 	pbPrev->setDisabled(true);
 	pbNext->setDisabled(true);
@@ -181,6 +108,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
 	//! \todo Support Continuous Mode
 	rbModeContinuous->setDisabled(true);
+
 	// Finally, restore the saved last selected tab for the various tab widgets
 	twTopLevel->setCurrentIndex(lastTopLevelTabIndex);
 	if (twProto->isTabEnabled(lastProtoTabIndex))
@@ -199,27 +127,25 @@ void StreamConfigDialog::setupUiExtra()
 
 		layout = static_cast<QGridLayout*>(twTopLevel->widget(0)->layout());
 
-		layout->addWidget(mpStream->protocolById(52)->configWidget(), 0, 1);
-		qDebug("setupUi wgt = %p", mpStream->protocolById(52)->configWidget());
+		layout->addWidget(mpStream->protocol(52)->configWidget(), 0, 1);
+		qDebug("setupUi wgt = %p", mpStream->protocol(52)->configWidget());
 	}
 
 	// ---- Setup default stuff that cannot be done in designer ----
+	bgFrameType = new QButtonGroup();
+	foreach(QRadioButton *btn, gbFrameType->findChildren<QRadioButton*>())
+		bgFrameType->addButton(btn);
 
-	// Since the dialog defaults are FT = None, L3 = None, L4 = None;
-  	// hide associated input fields since it can't be done in Designer
-	lblDsap->setHidden(true);
-	leDsap->setHidden(true);
-	lblSsap->setHidden(true);
-	leSsap->setHidden(true);
-	lblControl->setHidden(true);
-	leControl->setHidden(true);
-	lblOui->setHidden(true);
-	leOui->setHidden(true);
-	lblType->setHidden(true);
-	leType->setHidden(true);
+	bgL3Proto = new QButtonGroup();
+	foreach(QRadioButton *btn, gbL3Proto->findChildren<QRadioButton*>())
+		bgL3Proto->addButton(btn);
 
-	twProto->setTabEnabled(2, FALSE);
-	twProto->setTabEnabled(3, FALSE);
+	bgL4Proto = new QButtonGroup();
+	foreach(QRadioButton *btn, gbL4Proto->findChildren<QRadioButton*>())
+		bgL4Proto->addButton(btn);
+
+	//twProto->setTabEnabled(2, FALSE);
+	//twProto->setTabEnabled(3, FALSE);
 
 	/*
 	** Setup Validators
@@ -263,18 +189,8 @@ StreamConfigDialog::~StreamConfigDialog()
 		QLayout *layout = twTopLevel->widget(0)->layout();
 		if (layout)
 		{
-			qDebug("dstrct wgt = %p", mpStream->protocolById(52)->configWidget());
-#if 0
-			int i = layout->indexOf(mpStream->protocolById(52)->configWidget());
-			if (i >= 0)
-			{
-				layout->takeAt(i);
-				mpStream->protocolById(52)->configWidget()->setParent(0);
-			}
-#endif
-			layout->removeWidget(mpStream->protocolById(52)->configWidget());
-			mpStream->protocolById(52)->configWidget()->setParent(0);
-
+			layout->removeWidget(mpStream->protocol(52)->configWidget());
+			mpStream->protocol(52)->configWidget()->setParent(0);
 		}
 	}
 
@@ -295,6 +211,10 @@ StreamConfigDialog::~StreamConfigDialog()
 			delete layout;
 		}
 	}
+
+	delete bgFrameType;
+	delete bgL3Proto;
+	delete bgL4Proto;
 
 	delete mpStream;
 }
@@ -340,6 +260,10 @@ void StreamConfigDialog::updateSelectedProtocols()
 
 	// Payload
 	mSelectedProtocols.append(52);
+
+	mpStream->setFrameProtocol(mSelectedProtocols);
+	mpStream->storeProtocolWidgets();
+	mpStream->loadProtocolWidgets();
 }
 
 
@@ -399,146 +323,6 @@ void StreamConfigDialog::on_pbNext_clicked()
 #endif
 }
 
-void StreamConfigDialog::on_rbFtNone_toggled(bool checked)
-{
-}
-
-void StreamConfigDialog::on_rbFtEthernet2_toggled(bool checked)
-{
-}
-
-void StreamConfigDialog::on_rbFt802Dot3Raw_toggled(bool checked)
-{
-}
-
-void StreamConfigDialog::on_rbFt802Dot3Llc_toggled(bool checked)
-{
-}
-
-void StreamConfigDialog::on_rbFtLlcSnap_toggled(bool checked)
-{
-	if (checked)
-	{
-		leDsap->setText("AA");
-		leSsap->setText("AA");
-		leControl->setText("03");
-	}
-}
-
-void StreamConfigDialog::on_rbL3Ipv4_toggled(bool checked)
-{
-	if (checked)
-	{
-		twProto->setTabEnabled(2, TRUE);
-		twProto->setTabText(2, "L3 (IPv4)");
-		leType->setText("08 00");
-
-		// FIXME: Hardcoding
-		mpStream->protocolById(121)->setFieldData(0 /* type */, 0x800);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(2, FALSE);
-		twProto->setTabText(2, "L3");
-	}
-}
-
-void StreamConfigDialog::on_rbL3Arp_toggled(bool checked)
-{
-	if (checked)
-	{
-		twProto->setTabEnabled(2, TRUE);
-		twProto->setTabText(2, "L3 (ARP)");
-		leType->setText("08 06");
-
-		// FIXME: Hardcoding
-		mpStream->protocolById(121)->setFieldData(0 /* type */, 0x806);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(2, FALSE);
-		twProto->setTabText(2, "L3");
-	}
-}
-
-void StreamConfigDialog::on_rbL4Icmp_toggled(bool checked)
-{
-	QString str;
-
-	if (checked)
-	{
-		twProto->setTabEnabled(3, TRUE);
-		twProto->setTabText(3, "L4 (ICMP)");
-		// FIXME: Hardcoding
-		mpStream->protocolById(130)->setFieldData(8 /* proto */, IP_PROTO_ICMP);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(3, FALSE);
-		twProto->setTabText(3, "L4");
-	}
-}
-
-void StreamConfigDialog::on_rbL4Igmp_toggled(bool checked)
-{
-	QString str;
-
-	if (checked)
-	{
-		twProto->setTabEnabled(3, TRUE);
-		twProto->setTabText(3, "L4 (IGMP)");
-		// FIXME: Hardcoding
-		mpStream->protocolById(130)->setFieldData(8 /* proto */, IP_PROTO_IGMP);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(3, FALSE);
-		twProto->setTabText(3, "L4");
-	}
-}
-
-void StreamConfigDialog::on_rbL4Tcp_toggled(bool checked)
-{
-	QString str;
-
-	if (checked)
-	{
-		twProto->setTabEnabled(3, TRUE);
-		twProto->setTabText(3, "L4 (TCP)");
-		// FIXME: Hardcoding
-		mpStream->protocolById(130)->setFieldData(8 /* proto */, IP_PROTO_TCP);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(3, FALSE);
-		twProto->setTabText(3, "L4");
-	}
-}
-
-void StreamConfigDialog::on_rbL4Udp_toggled(bool checked)
-{
-	QString str;
-
-	if (checked)
-	{
-		twProto->setTabEnabled(3, TRUE);
-		twProto->setTabText(3, "L4 (UDP)");
-		// FIXME: Hardcoding
-		mpStream->protocolById(130)->setFieldData(8 /* proto */, IP_PROTO_UDP);
-		mpStream->loadProtocolWidgets(); // FIXME: pass protocol as param
-	}
-	else
-	{
-		twProto->setTabEnabled(3, FALSE);
-		twProto->setTabText(3, "L4");
-	}
-}
-
 void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
 {
 	QList<AbstractProtocol*> protoList;
@@ -549,8 +333,8 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
 
 	updateSelectedProtocols();
 	foreach(int i, mSelectedProtocols)
-		if (mpStream->protocolById(i))
-			protoList.append(mpStream->protocolById(i));
+		if (mpStream->protocol(i))
+			protoList.append(mpStream->protocol(i));
 	
 	mpPacketModel->setSelectedProtocols(protoList);
 	StoreCurrentStream(mpStream);
@@ -583,42 +367,44 @@ void StreamConfigDialog::on_twProto_currentChanged(int index)
 	switch(index)
 	{
 		case 1: // L2
-			wl.append(mpStream->protocolById(51)->configWidget());
+			wl.append(mpStream->protocol("mac")->configWidget());
 			if (rbFtEthernet2->isChecked())
-				wl.append(mpStream->protocolById(121)->configWidget());
+				wl.append(mpStream->protocol("eth2")->configWidget());
 			else if (rbFt802Dot3Raw->isChecked())
-				wl.append(mpStream->protocolById(122)->configWidget());
+				wl.append(mpStream->protocol("dot3")->configWidget());
 			else if (rbFt802Dot3Llc->isChecked())
 			{
-				wl.append(mpStream->protocolById(122)->configWidget());
-				wl.append(mpStream->protocolById(123)->configWidget());
+				wl.append(mpStream->protocol("dot3")->configWidget());
+				wl.append(mpStream->protocol("llc")->configWidget());
 			}
 			else if (rbFtLlcSnap->isChecked())
 			{
-				wl.append(mpStream->protocolById(122)->configWidget());
-				wl.append(mpStream->protocolById(123)->configWidget());
-				wl.append(mpStream->protocolById(124)->configWidget());
+				wl.append(mpStream->protocol("dot3")->configWidget());
+				wl.append(mpStream->protocol("llc")->configWidget());
+				wl.append(mpStream->protocol("snap")->configWidget());
 			}
 			break;
 		case 2: // L3
 			if (rbL3Ipv4->isChecked())
-				wl.append(mpStream->protocolById(130)->configWidget());
+				wl.append(mpStream->protocol("ip4")->configWidget());
 			break;
 		case 3: // L4
 			if (rbL4Tcp->isChecked())
-				wl.append(mpStream->protocolById(140)->configWidget());
+				wl.append(mpStream->protocol("tcp")->configWidget());
 			else if (rbL4Udp->isChecked())
-				wl.append(mpStream->protocolById(141)->configWidget());
+				wl.append(mpStream->protocol("udp")->configWidget());
 			break;
 	}
 
-	if (wl.size())
+	if (wl.size()) 
+	{
 		layout = new QVBoxLayout;
 
-	for (int i=0; i < wl.size(); i++)
-		layout->addWidget(wl.at(i));
+		for (int i=0; i < wl.size(); i++)
+			layout->addWidget(wl.at(i));
 
-	twProto->widget(index)->setLayout(layout);
+		twProto->widget(index)->setLayout(layout);
+	}
 }
 
 void StreamConfigDialog::update_NumPacketsAndNumBursts()

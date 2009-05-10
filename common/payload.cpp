@@ -1,8 +1,10 @@
 #include <qendian.h>
 #include <QHostAddress>
 
-#include "../client/stream.h"
+//#include "../client/stream.h"
 #include "payload.h"
+
+#define SZ_FCS		4
 
 PayloadConfigForm *PayloadProtocol::configForm = NULL;
 
@@ -29,8 +31,10 @@ void PayloadConfigForm::on_cmbPatternMode_currentIndexChanged(int index)
 	}
 }
 
-PayloadProtocol::PayloadProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+PayloadProtocol::PayloadProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new PayloadConfigForm;
@@ -38,6 +42,13 @@ PayloadProtocol::PayloadProtocol(Stream *parent)
 
 PayloadProtocol::~PayloadProtocol()
 {
+}
+
+AbstractProtocol* PayloadProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new PayloadProtocol(frameProtoList, streamCore);
 }
 
 void PayloadProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -88,10 +99,8 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					int dataLen;
 
-					// FIXME: cannot use stream since it is only on client not 
-					// on server
-					//dataLen = stream->frameLen() - stream->protocolHeaderSize();
-					dataLen = 64;
+					dataLen = stream->frame_len() - protocolFrameOffset();
+					dataLen -= SZ_FCS;
 					fv.resize(dataLen+4);
 					switch(data.pattern_mode())
 					{
@@ -159,10 +168,8 @@ QWidget* PayloadProtocol::configWidget()
 
 void PayloadProtocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
-
 	configForm->cmbPatternMode->setCurrentIndex(data.pattern_mode());
-	configForm->lePattern->setText(uintToHexStr(data.pattern(), QString(), 4));
+	configForm->lePattern->setText(uintToHexStr(data.pattern(), 4));
 }
 
 void PayloadProtocol::storeConfigWidget()

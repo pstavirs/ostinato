@@ -26,8 +26,13 @@ private:
 	};
 
 public:
-	Dot3Protocol(Stream *parent = 0);
+	Dot3Protocol(ProtocolList &frameProtoList, 
+		OstProto::StreamCore *parent = 0);
 	virtual ~Dot3Protocol();
+
+	static AbstractProtocol* createInstance(
+		ProtocolList &frameProtoList,
+		OstProto::StreamCore *streamCore = 0);
 
 	virtual void protoDataCopyInto(OstProto::Stream &stream);
 	virtual void protoDataCopyFrom(const OstProto::Stream &stream);

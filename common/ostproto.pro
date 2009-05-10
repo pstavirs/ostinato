@@ -26,6 +26,9 @@ PROTOS += \
 	udp.proto
 HEADERS += \
 	abstractprotocol.h	\
+	protocolmanager.h \
+	protocolcollection.h \
+	streambase.h \
 	mac.h \
 	payload.h \
 	eth2.h \
@@ -37,6 +40,9 @@ HEADERS += \
 	udp.h
 SOURCES += \
 	abstractprotocol.cpp \
+	protocolmanager.cpp \
+	protocolcollection.cpp \
+	streambase.cpp \
 	mac.cpp \
 	payload.cpp \
 	eth2.cpp \

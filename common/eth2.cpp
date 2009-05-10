@@ -11,8 +11,10 @@ Eth2ConfigForm::Eth2ConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-Eth2Protocol::Eth2Protocol(Stream *parent)
-	: AbstractProtocol(parent)
+Eth2Protocol::Eth2Protocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new Eth2ConfigForm;
@@ -20,6 +22,13 @@ Eth2Protocol::Eth2Protocol(Stream *parent)
 
 Eth2Protocol::~Eth2Protocol()
 {
+}
+
+AbstractProtocol* Eth2Protocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new Eth2Protocol(frameProtoList, streamCore);
 }
 
 void Eth2Protocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -56,26 +65,31 @@ QVariant Eth2Protocol::fieldData(int index, FieldAttrib attrib,
 	switch (index)
 	{
 		case eth2_type:
+		{
+			quint16 type;
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Type");
 				case FieldValue:
-					return data.type();
+					type = payloadProtocolId(ProtocolIdEth);
+					return type;
 				case FieldTextValue:
-					return QString("%1").arg(data.type(), 16);
+					type = payloadProtocolId(ProtocolIdEth);
+					return QString("0x%1").arg(type, 4, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
 				{
 					QByteArray fv;
+					type = payloadProtocolId(ProtocolIdEth);
 					fv.resize(2);
-					qToBigEndian((quint16) data.type(), (uchar*) fv.data());
+					qToBigEndian((quint16) type, (uchar*) fv.data());
 					return fv;
 				}
 				default:
 					break;
 			}
 			break;
-
+		}
 		default:
 			break;
 	}
@@ -112,12 +126,8 @@ QWidget* Eth2Protocol::configWidget()
 
 void Eth2Protocol::loadConfigWidget()
 {
-#define uintToHexStr(num, bytesize) \
-   	QString("%1").arg((num), (bytesize)*2 , 16, QChar('0'))
-
-	configForm->leType->setText(uintToHexStr(data.type(), 2));
-
-#undef uintToHexStr
+	configForm->leType->setText(uintToHexStr(
+		fieldData(eth2_type, FieldValue).toUInt(), 2));
 }
 
 void Eth2Protocol::storeConfigWidget()

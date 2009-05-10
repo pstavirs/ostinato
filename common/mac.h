@@ -39,8 +39,13 @@ private:
 	};
 
 public:
-	MacProtocol(Stream *parent = 0);
+	MacProtocol(ProtocolList &frameProtoList, 
+		OstProto::StreamCore *parent = 0);
 	virtual ~MacProtocol();
+
+	static AbstractProtocol* createInstance(
+		ProtocolList &frameProtoList,
+		OstProto::StreamCore *streamCore = 0);
 
 	virtual void protoDataCopyInto(OstProto::Stream &stream);
 	virtual void protoDataCopyFrom(const OstProto::Stream &stream);

@@ -38,10 +38,10 @@
       <item>
        <widget class="QLineEdit" name="leDsap" >
         <property name="enabled" >
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="inputMask" >
-         <string>HH; </string>
+         <string>>HH; </string>
         </property>
        </widget>
       </item>
@@ -58,10 +58,10 @@
       <item>
        <widget class="QLineEdit" name="leSsap" >
         <property name="enabled" >
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="inputMask" >
-         <string>HH; </string>
+         <string>>HH; </string>
         </property>
        </widget>
       </item>
@@ -78,10 +78,10 @@
       <item>
        <widget class="QLineEdit" name="leControl" >
         <property name="enabled" >
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="inputMask" >
-         <string>HH; </string>
+         <string>>HH; </string>
         </property>
        </widget>
       </item>

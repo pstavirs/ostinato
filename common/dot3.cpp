@@ -3,6 +3,8 @@
 
 #include "Dot3.h"
 
+#define SZ_FCS		4
+
 Dot3ConfigForm *Dot3Protocol::configForm = NULL;
 
 Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
@@ -11,8 +13,10 @@ Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-Dot3Protocol::Dot3Protocol(Stream *parent)
-	: AbstractProtocol(parent)
+Dot3Protocol::Dot3Protocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new Dot3ConfigForm;
@@ -20,6 +24,13 @@ Dot3Protocol::Dot3Protocol(Stream *parent)
 
 Dot3Protocol::~Dot3Protocol()
 {
+}
+
+AbstractProtocol* Dot3Protocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new Dot3Protocol(frameProtoList, streamCore);
 }
 
 void Dot3Protocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -61,14 +72,27 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 				case FieldName:			
 					return QString("Length");
 				case FieldValue:
-					return data.length();
+				{
+					quint16 len;
+
+					len = stream->frame_len() - SZ_FCS;
+					return len;
+				}
 				case FieldTextValue:
-					return QString("%1").arg(data.length());
+				{
+					quint16 len;
+
+					len = stream->frame_len() - SZ_FCS;
+					return QString("%1").arg(len);
+				}
 				case FieldFrameValue:
 				{
+					quint16 len;
 					QByteArray fv;
+
+					len = stream->frame_len() - SZ_FCS;
 					fv.resize(2);
-					qToBigEndian((quint16) data.length(), (uchar*) fv.data());
+					qToBigEndian(len, (uchar*) fv.data());
 					return fv;
 				}
 				default:
@@ -98,7 +122,8 @@ QWidget* Dot3Protocol::configWidget()
 
 void Dot3Protocol::loadConfigWidget()
 {
-	configForm->leLength->setText(QString().setNum(data.length()));
+	configForm->leLength->setText(
+		fieldData(dot3_length, FieldValue).toString());
 }
 
 void Dot3Protocol::storeConfigWidget()

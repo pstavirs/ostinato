@@ -11,8 +11,10 @@ TcpConfigForm::TcpConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-TcpProtocol::TcpProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+TcpProtocol::TcpProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new TcpConfigForm;
@@ -20,6 +22,13 @@ TcpProtocol::TcpProtocol(Stream *parent)
 
 TcpProtocol::~TcpProtocol()
 {
+}
+
+AbstractProtocol* TcpProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new TcpProtocol(frameProtoList, streamCore);
 }
 
 void TcpProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -43,6 +52,17 @@ QString TcpProtocol::name() const
 QString TcpProtocol::shortName() const
 {
 	return QString("TCP");
+}
+
+quint32 TcpProtocol::protocolId(ProtocolIdType type) const
+{
+	switch(type)
+	{
+		case ProtocolIdIp: return 0x06;
+		default: break;
+	}
+
+	return AbstractProtocol::protocolId(type);
 }
 
 int	TcpProtocol::fieldCount() const
@@ -149,7 +169,7 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 				case FieldTextValue:
 					return QString("%1").arg((data.hdrlen_rsvd() >> 4) & 0x0F);
 				case FieldFrameValue:
-					return QByteArray(1, (char)((data.hdrlen_rsvd() >> 4) & 0x0F));
+					return QByteArray(1, (char)(data.hdrlen_rsvd() & 0xF0));
 				case FieldBitSize:
 					return 4;
 				default:
@@ -303,7 +323,6 @@ QWidget* TcpProtocol::configWidget()
 
 void TcpProtocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
 	configForm->leTcpSrcPort->setText(QString().setNum(data.src_port()));
 	configForm->leTcpDstPort->setText(QString().setNum(data.dst_port()));
 

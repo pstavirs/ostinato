@@ -43,7 +43,7 @@
       <bool>false</bool>
      </property>
      <property name="inputMask" >
-      <string>HH HH; </string>
+      <string>>HH HH; </string>
      </property>
     </widget>
    </item>

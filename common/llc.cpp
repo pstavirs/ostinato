@@ -11,8 +11,10 @@ LlcConfigForm::LlcConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-LlcProtocol::LlcProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+LlcProtocol::LlcProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new LlcConfigForm;
@@ -20,6 +22,13 @@ LlcProtocol::LlcProtocol(Stream *parent)
 
 LlcProtocol::~LlcProtocol()
 {
+}
+
+AbstractProtocol* LlcProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new LlcProtocol(frameProtoList, streamCore);
 }
 
 void LlcProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -53,6 +62,14 @@ int	LlcProtocol::fieldCount() const
 QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
 {
+	quint32 id;
+	quint8 dsap, ssap, ctl;
+
+	id = payloadProtocolId(ProtocolIdLlc);
+	dsap = (id >> 16) & 0xFF;
+	ssap = (id >> 8) & 0xFF;
+	ctl  = (id >> 0) & 0xFF;
+
 	switch (index)
 	{
 		case llc_dsap:
@@ -61,11 +78,11 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
 				case FieldName:			
 					return QString("DSAP");
 				case FieldValue:
-					return data.dsap();
+					return dsap;
 				case FieldTextValue:
-					return QString("%1").arg(data.dsap(), BASE_HEX);
+					return QString("%1").arg(dsap, 2, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.dsap()));
+					return QByteArray(1, (char)(dsap));
 				default:
 					break;
 			}
@@ -74,13 +91,13 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
 			switch(attrib)
 			{
 				case FieldName:			
-					return QString("DSAP");
+					return QString("SSAP");
 				case FieldValue:
-					return data.ssap();
+					return ssap;
 				case FieldTextValue:
-					return QString("%1").arg(data.ssap(), BASE_HEX);
+					return QString("%1").arg(ssap, 2, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.ssap()));
+					return QByteArray(1, (char)(ssap));
 				default:
 					break;
 			}
@@ -89,13 +106,13 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
 			switch(attrib)
 			{
 				case FieldName:			
-					return QString("DSAP");
+					return QString("Control");
 				case FieldValue:
-					return data.ctl();
+					return ctl;
 				case FieldTextValue:
-					return QString("%1").arg(data.ctl(), BASE_HEX);
+					return QString("%1").arg(ctl, 2, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.ctl()));
+					return QByteArray(1, (char)(ctl));
 				default:
 					break;
 			}
@@ -123,9 +140,16 @@ QWidget* LlcProtocol::configWidget()
 
 void LlcProtocol::loadConfigWidget()
 {
-	configForm->leDsap->setText(QString("%1").arg(data.dsap(), 2, BASE_HEX, QChar('0')));
-	configForm->leSsap->setText(QString("%1").arg(data.ssap(), 2, BASE_HEX, QChar('0')));
-	configForm->leControl->setText(QString("%1").arg(data.ctl(), 2, BASE_HEX, QChar('0')));
+#define uintToHexStr(num, bytes)	\
+	QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
+
+	configForm->leDsap->setText(uintToHexStr(
+		fieldData(llc_dsap, FieldValue).toUInt(), 1));
+	configForm->leSsap->setText(uintToHexStr(
+		fieldData(llc_ssap, FieldValue).toUInt(), 1));
+	configForm->leControl->setText(uintToHexStr(
+		fieldData(llc_ctl, FieldValue).toUInt(), 1));
+#undef uintToHexStr
 }
 
 void LlcProtocol::storeConfigWidget()

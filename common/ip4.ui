@@ -28,7 +28,7 @@
         <bool>false</bool>
        </property>
        <property name="text" >
-        <string>4</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -45,7 +45,7 @@
         <bool>false</bool>
        </property>
        <property name="text" >
-        <string>5</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -59,7 +59,7 @@
      <item row="2" column="1" >
       <widget class="QLineEdit" name="leIpTos" >
        <property name="inputMask" >
-        <string>HH; </string>
+        <string>>HH; </string>
        </property>
        <property name="text" >
         <string/>
@@ -100,7 +100,7 @@
      <item row="4" column="1" >
       <widget class="QLineEdit" name="leIpId" >
        <property name="inputMask" >
-        <string>HH HH; </string>
+        <string>>HH HH; </string>
        </property>
       </widget>
      </item>
@@ -149,7 +149,7 @@
      <item row="2" column="1" >
       <widget class="QLineEdit" name="leIpTtl" >
        <property name="text" >
-        <string>64</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -183,7 +183,7 @@
         <bool>false</bool>
        </property>
        <property name="inputMask" >
-        <string>HH HH; </string>
+        <string>>HH HH; </string>
        </property>
       </widget>
      </item>
@@ -291,8 +291,11 @@
         <property name="enabled" >
          <bool>false</bool>
         </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
         <property name="text" >
-         <string>255.255.255.255</string>
+         <string>...</string>
         </property>
        </widget>
       </item>
@@ -355,8 +358,11 @@
         <property name="enabled" >
          <bool>false</bool>
         </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
         <property name="text" >
-         <string>255.255.255.255</string>
+         <string>...</string>
         </property>
        </widget>
       </item>

@@ -32,10 +32,10 @@
       <item>
        <widget class="QLineEdit" name="leType" >
         <property name="enabled" >
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="inputMask" >
-         <string>HH HH; </string>
+         <string>>HH HH; </string>
         </property>
        </widget>
       </item>

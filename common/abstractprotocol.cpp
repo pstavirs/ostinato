@@ -1,3 +1,4 @@
+#include <qendian.h>
 #include "abstractprotocol.h" 
 
 /*!
@@ -18,19 +19,30 @@
   - metaFieldCount()
   - isMetaField()
 */
-AbstractProtocol::AbstractProtocol(Stream *parent)
+AbstractProtocol::AbstractProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+		: frameProtocols(frameProtoList)
 {
+	qDebug("%s: &frameproto = %p/%p (sz:%d)", __FUNCTION__, &frameProtocols, &frameProtoList, frameProtocols.size());
 	stream = parent;
 	metaCount = -1;
+	protoSize = -1;
 }
 
 AbstractProtocol::~AbstractProtocol()
 {
 }
 
+AbstractProtocol* AbstractProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return NULL;
+}
 
 /*!
-  \fn virtual void protoDataCopyInto(OstProto::Stream &stream) = 0;
+  \fn virtual void protoDataCopyInto(OstProto::OstProto::StreamCore &stream) = 0;
 
   Copy the protocol's protobuf into the passed in stream \n
   In the base class this is a pure virtual function. Subclasses should
@@ -38,7 +50,7 @@ AbstractProtocol::~AbstractProtocol()
   stream.AddExtension(<ExtId>)->CopyFrom(<protobuf_data>) */
 
 /*
-   \fn virtual void protoDataCopyFrom(const OstProto::Stream &stream) = 0;
+   \fn virtual void protoDataCopyFrom(const OstProto::OstProto::StreamCore &stream) = 0;
    FIXME */
 
 /*! Returns the full name of the protocol \n
@@ -114,6 +126,11 @@ int	AbstractProtocol::frameFieldCount() const
   the field's value e.g. a checksum field may include "(correct)" or 
   "(incorrect)" alongwith the actual checksum value. \n
   The default implementation returns FIXME
+
+  \note If a subclass uses any of the below functions to derive 
+  FieldFrameValue, the subclass should handle and return a value for 
+  FieldBitSize to prevent endless recrusion -
+  - protocolFrameCksum()
   */
 QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
@@ -150,6 +167,81 @@ bool AbstractProtocol::setFieldData(int index, const QVariant &value,
 {
 	return false;
 }
+
+quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
+{
+	return 0;
+}
+
+quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
+{
+	quint32 id = 0xFFFFFFFF;
+	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	if (iter.findNext(this))
+	{
+		if (iter.hasNext())
+			id = iter.next()->protocolId(type);
+	}
+
+	qDebug("%s: payloadProtocolId = %u", __FUNCTION__, id);
+	return id;
+}
+
+int AbstractProtocol::protocolFrameSize() const
+{
+	if (protoSize < 0)
+	{
+		int bitsize = 0;
+
+		for (int i = 0; i < fieldCount(); i++)
+		{
+			if (!fieldData(i, FieldIsMeta).toBool())
+				bitsize += fieldData(i, FieldBitSize).toUInt();
+		}
+		protoSize = (bitsize+7)/8;
+	}
+
+	qDebug("%s: protoSize = %d", __FUNCTION__, protoSize);
+	return protoSize;
+}
+
+int AbstractProtocol::protocolFrameOffset() const
+{
+	int size = 0;
+	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	if (iter.findNext(this))
+	{
+		iter.previous();
+		while (iter.hasPrevious())
+			size += iter.previous()->protocolFrameSize();
+	}
+	else
+		return -1;
+
+	qDebug("%s: ofs = %d", __FUNCTION__, size);
+	return size;
+}
+
+int AbstractProtocol::protocolFramePayloadSize() const
+{
+	int size = 0;
+
+	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	if (iter.findNext(this))
+	{
+		while (iter.hasNext())
+			size += iter.next()->protocolFrameSize();
+	}
+	else
+		return -1;
+
+	qDebug("%s: payloadSize = %d", __FUNCTION__, size);
+	return size;
+}
+
 
 /*! Returns a byte array encoding the protocol (and its fields) which can be
   inserted into the stream's frame
@@ -221,5 +313,55 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex) const
 	}
 
 	return proto;
+}
+
+QVariant AbstractProtocol::protocolFrameCksum() const
+{
+	QByteArray fv;
+	quint16 *ip;
+	quint32 len, sum = 0;
+
+	fv = protocolFrameValue(-1);
+	ip = (quint16*) fv.constData();
+	len = fv.size();
+
+	while(len > 1)
+	{
+		sum += *ip;
+		if(sum & 0x80000000)
+			sum = (sum & 0xFFFF) + (sum >> 16);
+		ip++;
+		len -= 2;
+	}
+
+	if (len)
+		sum += (unsigned short) *(unsigned char *)ip;
+
+	while(sum>>16)
+		sum = (sum & 0xFFFF) + (sum >> 16);
+
+	return qFromBigEndian((quint16) ~sum);
+}
+
+QVariant AbstractProtocol::protocolFramePayloadCksum() const
+{
+	int cksum = 0;
+	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	if (iter.findNext(this))
+	{
+		while (iter.hasNext())
+			cksum += iter.next()->protocolFrameCksum().toUInt(); // TODO: chg to partial
+	}
+	else
+		return -1;
+#if 0
+	while(cksum>>16)
+		cksum = (cksum & 0xFFFF) + (cksum >> 16);
+
+	return (quint16) ~cksum;
+#endif
+
+	return cksum;
 }
 

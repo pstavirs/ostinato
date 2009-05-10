@@ -21,19 +21,26 @@ private:
 	enum snapfield
 	{
 		snap_oui = 0,
+		snap_type,
 
 		snap_fieldCount
 	};
 
 public:
-	SnapProtocol(Stream *parent = 0);
+	SnapProtocol(ProtocolList &frameProtoList, 
+		OstProto::StreamCore *parent = 0);
 	virtual ~SnapProtocol();
+
+	static AbstractProtocol* createInstance(
+		ProtocolList &frameProtoList,
+		OstProto::StreamCore *streamCore = 0);
 
 	virtual void protoDataCopyInto(OstProto::Stream &stream);
 	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
 
 	virtual QString name() const;
 	virtual QString shortName() const;
+	virtual quint32 protocolId(ProtocolIdType type) const;
 
 	virtual int	fieldCount() const;
 

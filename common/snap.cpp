@@ -11,8 +11,10 @@ SnapConfigForm::SnapConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-SnapProtocol::SnapProtocol(Stream *parent)
-	: AbstractProtocol(parent)
+SnapProtocol::SnapProtocol(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *parent)
+	: AbstractProtocol(frameProtoList, parent)
 {
 	if (configForm == NULL)
 		configForm = new SnapConfigForm;
@@ -20,6 +22,13 @@ SnapProtocol::SnapProtocol(Stream *parent)
 
 SnapProtocol::~SnapProtocol()
 {
+}
+
+AbstractProtocol* SnapProtocol::createInstance(
+	ProtocolList &frameProtoList,
+	OstProto::StreamCore *streamCore)
+{
+	return new SnapProtocol(frameProtoList, streamCore);
 }
 
 void SnapProtocol::protoDataCopyInto(OstProto::Stream &stream)
@@ -43,6 +52,17 @@ QString SnapProtocol::name() const
 QString SnapProtocol::shortName() const
 {
 	return QString("SNAP");
+}
+
+quint32 SnapProtocol::protocolId(ProtocolIdType type) const
+{
+	switch(type)
+	{
+		case ProtocolIdLlc: return 0xAAAA03;
+		default: break;
+	}
+
+	return AbstractProtocol::protocolId(type);
 }
 
 int	SnapProtocol::fieldCount() const
@@ -76,7 +96,33 @@ QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
 					break;
 			}
 			break;
+		case snap_type:
+		{
+			quint16 type;
 
+			switch(attrib)
+			{
+				case FieldName:			
+					return QString("Type");
+				case FieldValue:
+					type = payloadProtocolId(ProtocolIdEth);
+					return type;
+				case FieldTextValue:
+					type = payloadProtocolId(ProtocolIdEth);
+					return QString("%1").arg(type, 4, BASE_HEX, QChar('0'));
+				case FieldFrameValue:
+				{
+					QByteArray fv;
+					fv.resize(2);
+					type = payloadProtocolId(ProtocolIdEth);
+					qToBigEndian(type, (uchar*) fv.data());
+					return fv;
+				}
+				default:
+					break;
+			}
+			break;
+		}
 		default:
 			break;
 	}
@@ -99,14 +145,17 @@ QWidget* SnapProtocol::configWidget()
 
 void SnapProtocol::loadConfigWidget()
 {
-#define uintToHexStr(num, str, size) QString().setNum(num, 16)
-	configForm->leOui->setText(uintToHexStr(data.oui(), str, 3));
+	configForm->leOui->setText(uintToHexStr(
+		fieldData(snap_oui, FieldValue).toUInt(), 3));
+	configForm->leType->setText(uintToHexStr(
+		fieldData(snap_type, FieldValue).toUInt(), 2));
 }
 
 void SnapProtocol::storeConfigWidget()
 {
 	bool isOk;
 
-	data.set_oui(configForm->leOui->text().remove(QChar(' ')).toULong(&isOk, 16));
+	data.set_oui(configForm->leOui->text().toULong(&isOk, BASE_HEX));
+	data.set_type(configForm->leType->text().toULong(&isOk, BASE_HEX));
 }
 

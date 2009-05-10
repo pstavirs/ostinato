@@ -46,7 +46,7 @@
       <item>
        <widget class="QLineEdit" name="lePattern" >
         <property name="inputMask" >
-         <string>HH HH HH HH; </string>
+         <string>>HH HH HH HH; </string>
         </property>
         <property name="text" >
          <string>   </string>

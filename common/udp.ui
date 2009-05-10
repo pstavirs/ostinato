@@ -62,7 +62,7 @@
         <bool>false</bool>
        </property>
        <property name="inputMask" >
-        <string>HH HH; </string>
+        <string>>HH HH; </string>
        </property>
       </widget>
      </item>
@@ -97,5 +97,38 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>cbUdpLengthOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>59</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>149</x>
+     <y>63</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUdpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>55</x>
+     <y>106</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>158</x>
+     <y>106</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
