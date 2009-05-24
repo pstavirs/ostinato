@@ -6,6 +6,7 @@
 #include <QByteArray>
 #include <QWidget>
 #include <QLinkedList>
+#include <QFlags>
 
 //#include "../rpc/pbhelper.h"
 #include "../common/protocol.pb.h"
@@ -35,19 +36,33 @@ protected:
 	ProtocolList			&frameProtocols;
 
 public:
+	enum FieldFlag {
+		FieldIsNormal = 0x0,
+		FieldIsMeta   = 0x1,
+		FieldIsCksum  = 0x2
+	};
+	Q_DECLARE_FLAGS(FieldFlags, FieldFlag);
+
 	enum FieldAttrib {
 		FieldName,			//! name
 		FieldValue,			//! value in host byte order (user editable)
 		FieldTextValue,		//! value as text
 		FieldFrameValue,	//! frame encoded value in network byte order
 		FieldBitSize,		//! size in bits
-		FieldIsMeta			//! bool indicating if field is meta
 	};
 
 	enum ProtocolIdType {
 		ProtocolIdLlc,
 		ProtocolIdEth,
 		ProtocolIdIp,
+	};
+
+	enum CksumType {
+		CksumIp,
+		CksumIpPseudo,
+		CksumTcpUdp,
+
+		CksumMax
 	};
 
 	AbstractProtocol(ProtocolList &frameProtoList, 
@@ -71,22 +86,30 @@ public:
 	virtual int	metaFieldCount() const;
 	int	frameFieldCount() const;
 
+	virtual FieldFlags fieldFlags(int index) const;
 	virtual QVariant fieldData(int index, FieldAttrib attrib,
-		   	int streamIndex = 0) const;
+		int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 
-			FieldAttrib attrib = FieldValue);
+		FieldAttrib attrib = FieldValue);
 
-	QByteArray protocolFrameValue(int streamIndex = 0) const;
-	int protocolFrameSize() const;
+	QByteArray protocolFrameValue(int streamIndex = 0,
+		bool forCksum = false) const;
+	virtual int protocolFrameSize() const;
 	int protocolFrameOffset() const;
 	int protocolFramePayloadSize() const;
 
-	virtual QVariant protocolFrameCksum() const;
-	QVariant protocolFramePayloadCksum() const;
+	virtual quint32 protocolFrameCksum(int streamIndex = 0,
+		CksumType cksumType = CksumIp) const;
+	quint32 protocolFrameHeaderCksum(int streamIndex = 0,
+		CksumType cksumType = CksumIp) const;
+	quint32 protocolFramePayloadCksum(int streamIndex = 0,
+		CksumType cksumType = CksumIp) const;
 
 	virtual QWidget* configWidget() = 0;
 	virtual void loadConfigWidget() = 0;
 	virtual void storeConfigWidget() = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
 
 #endif

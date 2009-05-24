@@ -70,6 +70,35 @@ int	UdpProtocol::fieldCount() const
 	return udp_fieldCount;
 }
 
+AbstractProtocol::FieldFlags UdpProtocol::fieldFlags(int index) const
+{
+	AbstractProtocol::FieldFlags flags;
+
+	flags = AbstractProtocol::fieldFlags(index);
+
+	switch (index)
+	{
+		case udp_srcPort:
+		case udp_dstPort:
+		case udp_totLen:
+			break;
+
+		case udp_cksum:
+			flags |= FieldIsCksum;
+			break;
+
+		case udp_isOverrideTotLen:
+		case udp_isOverrideCksum:
+			flags |= FieldIsMeta;
+			break;
+
+		default:
+			break;
+	}
+
+	return flags;
+}
+
 QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
 {
@@ -160,26 +189,49 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 			break;
 		}
 		case udp_cksum:
+		{
+			quint16 cksum;
+
+			switch(attrib)
+			{
+				case FieldValue:
+				case FieldFrameValue:
+				case FieldTextValue:
+				{
+					if (data.is_override_cksum())
+						cksum = data.cksum();
+					else
+						cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
+					qDebug("UDP cksum = %hu", cksum);
+				}
+				default:
+					break;
+			}
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Checksum");
 				case FieldValue:
-					return data.cksum();
-				case FieldTextValue:
-					return QString("%1").arg(data.cksum());
+					return cksum;
 				case FieldFrameValue:
 				{
 					QByteArray fv;
+
 					fv.resize(2);
-					qToBigEndian((quint16) data.cksum(), (uchar*) fv.data());
+					qToBigEndian(cksum, (uchar*) fv.data());
 					return fv;
 				}
+				case FieldTextValue:
+					return  QString("0x%1").
+						arg(cksum, 4, BASE_HEX, QChar('0'));;
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}
 			break;
-
+		}
 		// Meta fields
 		case udp_isOverrideTotLen:
 		case udp_isOverrideCksum:
@@ -214,13 +266,14 @@ QWidget* UdpProtocol::configWidget()
 
 void UdpProtocol::loadConfigWidget()
 {
-	configForm->leUdpSrcPort->setText(QString().setNum(data.src_port()));
-	configForm->leUdpDstPort->setText(QString().setNum(data.dst_port()));
+	configForm->leUdpSrcPort->setText(fieldData(udp_srcPort, FieldValue).toString());
+	configForm->leUdpDstPort->setText(fieldData(udp_dstPort, FieldValue).toString());
 
-	configForm->leUdpLength->setText(QString().setNum(data.totlen()));
+	configForm->leUdpLength->setText(fieldData(udp_totLen, FieldValue).toString());
 	configForm->cbUdpLengthOverride->setChecked(data.is_override_totlen());
 
-	configForm->leUdpCksum->setText(QString().setNum(data.cksum()));
+	configForm->leUdpCksum->setText(QString("%1").arg(
+		fieldData(udp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
 	configForm->cbUdpCksumOverride->setChecked(data.is_override_cksum());
 }
 
@@ -234,7 +287,7 @@ void UdpProtocol::storeConfigWidget()
 	data.set_totlen(configForm->leUdpLength->text().toULong(&isOk));
 	data.set_is_override_totlen(configForm->cbUdpLengthOverride->isChecked());
 
-	data.set_cksum(configForm->leUdpCksum->text().remove(QChar(' ')).toULong(&isOk));
+	data.set_cksum(configForm->leUdpCksum->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));
 	data.set_is_override_cksum(configForm->cbUdpCksumOverride->isChecked());
 }
 

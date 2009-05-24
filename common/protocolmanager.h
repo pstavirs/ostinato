@@ -6,6 +6,7 @@
 class ProtocolManager
 {
 public:
+	//! \todo Make these data structures private/protected
 	static QMap<QString, int>	nameToNumberMap;
 	static QMap<int, void*>		factory;
 

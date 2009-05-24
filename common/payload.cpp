@@ -74,9 +74,34 @@ QString PayloadProtocol::shortName() const
 	return QString("DATA");
 }
 
+int	PayloadProtocol::protocolFrameSize() const
+{
+	return (stream->frame_len() - protocolFrameOffset() - SZ_FCS);
+}
+
 int	PayloadProtocol::fieldCount() const
 {
 	return payload_fieldCount;
+}
+
+AbstractProtocol::FieldFlags PayloadProtocol::fieldFlags(int index) const
+{
+	AbstractProtocol::FieldFlags flags;
+
+	flags = AbstractProtocol::fieldFlags(index);
+
+	switch (index)
+	{
+		case payload_dataPattern:
+			break;
+
+		// Meta fields
+		case payload_dataPatternMode:
+			flags |= FieldIsMeta;
+			break;
+	}
+
+	return flags;
 }
 
 QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
@@ -118,6 +143,7 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 								fv[i] = 0xFF - (i % (0xFF + 1));
 							break;
 						case OstProto::Payload::e_dp_random:
+							//! \todo cksum will be incorrect for random pattern
 							for (int i = 0; i < dataLen; i++)
 								fv[i] =  qrand() % (0xFF + 1);
 							break;
@@ -136,15 +162,6 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 		// Meta fields
 
 		case payload_dataPatternMode:
-			switch(attrib)
-			{
-				case FieldIsMeta:
-					return true;
-				default:
-					break;
-			}
-			break;
-
 		default:
 			break;
 	}

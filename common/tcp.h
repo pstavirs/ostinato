@@ -6,12 +6,12 @@
 #include "tcp.pb.h"
 #include "ui_tcp.h"
 
-#define TCP_FLAG_URG	0x01
-#define TCP_FLAG_ACK	0x02
-#define TCP_FLAG_PSH	0x04
-#define TCP_FLAG_RST	0x08
-#define TCP_FLAG_SYN	0x10
-#define TCP_FLAG_FIN	0x20
+#define TCP_FLAG_URG	0x20
+#define TCP_FLAG_ACK	0x10
+#define TCP_FLAG_PSH	0x08
+#define TCP_FLAG_RST	0x04
+#define TCP_FLAG_SYN	0x02
+#define TCP_FLAG_FIN	0x01
 
 class TcpConfigForm : public QWidget, public Ui::tcp
 {
@@ -62,6 +62,7 @@ public:
 
 	virtual int	fieldCount() const;
 
+	virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
 	virtual QVariant fieldData(int index, FieldAttrib attrib,
 		   	int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 

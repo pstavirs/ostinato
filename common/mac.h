@@ -55,6 +55,7 @@ public:
 
 	virtual int	fieldCount() const;
 
+	virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
 	virtual QVariant fieldData(int index, FieldAttrib attrib,
 		   	int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 

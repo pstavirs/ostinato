@@ -6,9 +6,9 @@
 #include "ip4.pb.h"
 #include "ui_ip4.h"
 
-#define IP_FLAG_UNUSED	0x1
+#define IP_FLAG_MF		0x1
 #define IP_FLAG_DF		0x2
-#define IP_FLAG_MF		0x4
+#define IP_FLAG_UNUSED	0x4
 
 
 class Ip4ConfigForm : public QWidget, public Ui::ip4
@@ -74,10 +74,13 @@ public:
 	virtual quint32 protocolId(ProtocolIdType type) const;
 	virtual int	fieldCount() const;
 
+	virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
 	virtual QVariant fieldData(int index, FieldAttrib attrib,
 		   	int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 
 			FieldAttrib attrib = FieldValue);
+	virtual quint32 protocolFrameCksum(int streamIndex = 0,
+		CksumType cksumType = CksumIp) const;
 
 	virtual QWidget* configWidget();
 	virtual void loadConfigWidget();

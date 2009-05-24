@@ -92,7 +92,7 @@ int	AbstractProtocol::fieldCount() const
 
 /*! Returns the number of meta fields \n
   The default implementation counts and returns the number of fields for which
-  fieldData(index, FieldIsMeta) return true\n
+  the FieldIsMeta flag is set\n
   The default implementation caches the count on its first invocation
   and subsequently returns the cached count */
 int	AbstractProtocol::metaFieldCount() const
@@ -101,7 +101,7 @@ int	AbstractProtocol::metaFieldCount() const
 	{
 		int c = 0;
 		for (int i = 0; i < fieldCount() ; i++) 
-			if (fieldData(i, FieldIsMeta).toBool())
+			if (fieldFlags(i).testFlag(FieldIsMeta))
 				c++;
 		metaCount = c;
 	}
@@ -115,6 +115,11 @@ int	AbstractProtocol::frameFieldCount() const
 {
 	//qDebug("%s:%d, %d", __FUNCTION__, fieldCount(), metaFieldCount());
 	return (fieldCount() - metaFieldCount());
+}
+
+AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
+{
+	return FieldIsNormal;
 }
 
 /*! Returns the requested field attribute data \n
@@ -140,6 +145,9 @@ QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
 		case FieldName:
 			return QString();
 		case FieldBitSize:
+			Q_ASSERT_X(!fieldFlags(index).testFlag(FieldIsCksum),
+				"AbstractProtocol::fieldData()",
+				"FieldBitSize for checksum fields need to be handled by the subclass");
 			return fieldData(index, FieldFrameValue, streamIndex).
 				toByteArray().size() * 8;
 		case FieldValue:
@@ -148,8 +156,6 @@ QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
 			return QByteArray();
 		case FieldTextValue:
 			return QString();
-		case FieldIsMeta:
-			return false;
 
 		default:
 			qFatal("%s:%d: unhandled case %d\n", __FUNCTION__, __LINE__,
@@ -196,7 +202,7 @@ int AbstractProtocol::protocolFrameSize() const
 
 		for (int i = 0; i < fieldCount(); i++)
 		{
-			if (!fieldData(i, FieldIsMeta).toBool())
+			if (!fieldFlags(i).testFlag(FieldIsMeta))
 				bitsize += fieldData(i, FieldBitSize).toUInt();
 		}
 		protoSize = (bitsize+7)/8;
@@ -248,23 +254,30 @@ int AbstractProtocol::protocolFramePayloadSize() const
   The default implementation forms and returns an ordered concatenation of 
   the FrameValue of all the 'frame' fields of the protocol taking care of fields
   which are not an integral number of bytes\n */
-QByteArray AbstractProtocol::protocolFrameValue(int streamIndex) const
+QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) const
 {
 	QByteArray proto, field;
-	int bits, lastbitpos = 0;
+	uint bits, lastbitpos = 0;
+	FieldFlags flags;
 
 	for (int i=0; i < fieldCount() ; i++) 
 	{
-		if (!fieldData(i, FieldIsMeta).toBool())
+		flags = fieldFlags(i);
+		if (!flags.testFlag(FieldIsMeta))
 		{
-			field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
 			bits = fieldData(i, FieldBitSize, streamIndex).toUInt();
-			if (bits == 0)
-				continue;
+			Q_ASSERT(bits > 0);
 
-			qDebug("<<< %d, %d >>>>", proto.size(), field.size());
+			if (forCksum && flags.testFlag(FieldIsCksum))
+			{
+				field.resize((bits+7)/8);
+				field.fill('\0');
+			}
+			else
+				field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
+			qDebug("<<< %d, %d/%d >>>>", proto.size(), bits, field.size());
 
-			if (bits == field.size() * 8)
+			if (bits == (uint) field.size() * 8)
 			{
 				if (lastbitpos == 0)
 					proto.append(field);
@@ -279,28 +292,44 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex) const
 								field.at(j+1) >> lastbitpos);
 				}
 			}
-			else if (bits < field.size() * 8)
+			else if (bits < (uint) field.size() * 8)
 			{
-				int u, v;
+				uchar c;
+				uint v;
 
-				u = bits / 8;
-				v = bits % 8;
+				v = (field.size()*8) - bits;
+
+				Q_ASSERT(v < 8);
+
 				if (lastbitpos == 0)
 				{
-					proto.append(field.left(u+1));
-					char c = proto[proto.size() - 1];
-					proto[proto.size() - 1] = c & (0xFF << (8 - v));
-					lastbitpos = v;
+					for (int j = 0; j < field.size(); j++)
+					{
+						c = field.at(j) << v;
+						if ((j+1) < field.size())
+							c |= ((uchar)field.at(j+1) >> (8-v));
+						proto.append(c);
+					}
+
+					lastbitpos = (lastbitpos + bits) % 8;
 				}
 				else
 				{
-					char c = proto[proto.size() - 1];
-					proto[proto.size() - 1] = c | (field.at(0) >> lastbitpos);
-					for (int j = 0; j < (u - 1); j++)
-						proto.append(field.at(j) << lastbitpos |
-								field.at(j+1) >> lastbitpos);
-					if (u)
-						proto.append( field.at(u) & (0xFF << (8 - v)) );
+					Q_ASSERT(proto.size() > 0);
+
+					for (int j = 0; j < field.size(); j++)
+					{
+						uchar d;
+
+						c = field.at(j) << v;
+						if ((j+1) < field.size())
+							c |= ((uchar) field.at(j+1) >> (8-v));
+						d = proto[proto.size() - 1];
+						proto[proto.size() - 1] = d | ((uchar) c >> lastbitpos);
+						if (bits > (8*j + (8 - v)))
+							proto.append(c << (8-lastbitpos));
+					}
+
 					lastbitpos = (lastbitpos + bits) % 8;
 				}
 			}
@@ -315,53 +344,124 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex) const
 	return proto;
 }
 
-QVariant AbstractProtocol::protocolFrameCksum() const
+/*!
+  \note If a subclass uses protocolFrameCksum() from within fieldData() to
+  derive a cksum field, it MUST handle and return the 'FieldBitSize'
+  attribute also for that particular field instead of using the default
+  AbstractProtocol implementation for 'FieldBitSize' - this is required 
+  to prevent infinite recursion
+  */
+quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
+	CksumType cksumType) const
 {
-	QByteArray fv;
-	quint16 *ip;
-	quint32 len, sum = 0;
+	static int recursionCount = 0;
+	quint32 cksum = 0;
 
-	fv = protocolFrameValue(-1);
-	ip = (quint16*) fv.constData();
-	len = fv.size();
+	recursionCount++;
+	Q_ASSERT_X(recursionCount < 10, "protocolFrameCksum", "potential infinite recursion - does a protocol checksum field not implement FieldBitSize?");
 
-	while(len > 1)
+	switch(cksumType)
 	{
-		sum += *ip;
-		if(sum & 0x80000000)
-			sum = (sum & 0xFFFF) + (sum >> 16);
-		ip++;
-		len -= 2;
+		case CksumIp:
+		{
+			QByteArray fv;
+			quint16 *ip;
+			quint32 len, sum = 0;
+
+			fv = protocolFrameValue(streamIndex, true);
+			ip = (quint16*) fv.constData();
+			len = fv.size();
+
+			while(len > 1)
+			{
+				sum += *ip;
+				if(sum & 0x80000000)
+					sum = (sum & 0xFFFF) + (sum >> 16);
+				ip++;
+				len -= 2;
+			}
+
+			if (len)
+				sum += (unsigned short) *(unsigned char *)ip;
+
+			while(sum>>16)
+				sum = (sum & 0xFFFF) + (sum >> 16);
+
+			cksum = qFromBigEndian((quint16) ~sum);
+			break;
+		}
+
+		case CksumTcpUdp:
+		{
+			quint16 cks;
+			quint32 sum = 0;
+
+			cks = protocolFrameCksum(streamIndex, CksumIp);
+			sum += (quint16) ~cks;
+			cks = protocolFramePayloadCksum(streamIndex, CksumIp);
+			sum += (quint16) ~cks;
+			cks = protocolFrameHeaderCksum(streamIndex, CksumIpPseudo);
+			sum += (quint16) ~cks;
+
+			while(sum>>16)
+				sum = (sum & 0xFFFF) + (sum >> 16);
+
+			cksum = (~sum) & 0xFFFF;
+			break;
+		}	
+		default:
+			break;
 	}
 
-	if (len)
-		sum += (unsigned short) *(unsigned char *)ip;
+	recursionCount--;
+	return cksum;
+}
+
+quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex, 
+	CksumType cksumType) const
+{
+	quint32 sum = 0xFFFF;
+	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	Q_ASSERT(cksumType == CksumIpPseudo);
+
+	if (iter.findNext(this))
+	{
+		iter.previous();
+		if (iter.hasPrevious())
+			sum = iter.previous()->protocolFrameCksum(streamIndex,
+				CksumIpPseudo);
+	}
 
 	while(sum>>16)
 		sum = (sum & 0xFFFF) + (sum >> 16);
 
-	return qFromBigEndian((quint16) ~sum);
+	return (quint16) ~sum;
 }
 
-QVariant AbstractProtocol::protocolFramePayloadCksum() const
+quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
+	CksumType cksumType) const
 {
-	int cksum = 0;
+	quint32 sum = 0;
+	quint16 cksum;
 	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+
+	Q_ASSERT(cksumType == CksumIp);
 
 	if (iter.findNext(this))
 	{
 		while (iter.hasNext())
-			cksum += iter.next()->protocolFrameCksum().toUInt(); // TODO: chg to partial
+		{
+			cksum = iter.next()->protocolFrameCksum(streamIndex, CksumIp);
+			sum += (quint16) ~cksum;
+		}
 	}
 	else
-		return -1;
-#if 0
-	while(cksum>>16)
-		cksum = (cksum & 0xFFFF) + (cksum >> 16);
+		return 0;
 
-	return (quint16) ~cksum;
-#endif
+	while(sum>>16)
+		sum = (sum & 0xFFFF) + (sum >> 16);
 
-	return cksum;
+	return (quint16) ~sum;
 }
 

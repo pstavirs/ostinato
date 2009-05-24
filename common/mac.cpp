@@ -94,26 +94,73 @@ int	MacProtocol::fieldCount() const
 	return mac_fieldCount;
 }
 
+AbstractProtocol::FieldFlags MacProtocol::fieldFlags(int index) const
+{
+	AbstractProtocol::FieldFlags flags;
+
+	flags = AbstractProtocol::fieldFlags(index);
+
+	switch (index)
+	{
+		case mac_dstAddr:
+		case mac_srcAddr:
+			break;
+
+		case mac_dstMacMode:
+		case mac_dstMacCount:
+		case mac_dstMacStep:
+		case mac_srcMacMode:
+		case mac_srcMacCount:
+		case mac_srcMacStep:
+			flags |= FieldIsMeta;
+			break;
+	}
+
+	return flags;
+}
+
 QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
 {
 	switch (index)
 	{
 		case mac_dstAddr:
+		{
+			int u;
+			quint64 dstMac = 0;
+
+			switch (data.dst_mac_mode())
+			{
+				case OstProto::Mac::e_mm_fixed:
+					dstMac = data.dst_mac();
+					break;
+				case OstProto::Mac::e_mm_inc:
+					u = (streamIndex % data.dst_mac_count()) * 
+						data.dst_mac_step(); 
+					dstMac = data.dst_mac() + u;
+					break;
+				case OstProto::Mac::e_mm_dec:
+					u = (streamIndex % data.dst_mac_count()) * 
+						data.dst_mac_step(); 
+					dstMac = data.dst_mac() - u;
+					break;
+				default:
+					qWarning("Unhandled dstMac_mode %d", data.dst_mac_mode());
+			}
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Desination");
 				case FieldValue:
-					return data.dst_mac();
+					return dstMac;
 				case FieldTextValue:
-					return QString("%1").arg(data.dst_mac(), 12, BASE_HEX, 
-						QChar('0'));
+					return uintToHexStr(dstMac, 6);
 				case FieldFrameValue:
 				{
 					QByteArray fv;
 					fv.resize(8);
-					qToBigEndian((quint64) data.dst_mac(), (uchar*) fv.data());
+					qToBigEndian(dstMac, (uchar*) fv.data());
 					fv.remove(0, 2);
 					return fv;
 				}
@@ -121,22 +168,44 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 					break;
 			}
 			break;
-
+		}
 		case mac_srcAddr:
+		{
+			int u;
+			quint64 srcMac = 0;
+
+			switch (data.src_mac_mode())
+			{
+				case OstProto::Mac::e_mm_fixed:
+					srcMac = data.src_mac();
+					break;
+				case OstProto::Mac::e_mm_inc:
+					u = (streamIndex % data.src_mac_count()) * 
+						data.src_mac_step(); 
+					srcMac = data.src_mac() + u;
+					break;
+				case OstProto::Mac::e_mm_dec:
+					u = (streamIndex % data.src_mac_count()) * 
+						data.src_mac_step(); 
+					srcMac = data.src_mac() - u;
+					break;
+				default:
+					qWarning("Unhandled srcMac_mode %d", data.src_mac_mode());
+			}
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Source");
 				case FieldValue:
-					return data.src_mac();
+					return srcMac;
 				case FieldTextValue:
-					return QString("%1").arg(data.src_mac(), 12, BASE_HEX, 
-						QChar('0'));
+					return uintToHexStr(srcMac, 6);
 				case FieldFrameValue:
 				{
 					QByteArray fv;
 					fv.resize(8);
-					qToBigEndian((quint64) data.src_mac(), (uchar*) fv.data());
+					qToBigEndian(srcMac, (uchar*) fv.data());
 					fv.remove(0, 2);
 					return fv;
 				}
@@ -144,7 +213,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 					break;
 			}
 			break;
-
+		}
 		// Meta fields
 		case mac_dstMacMode:
 		case mac_dstMacCount:
@@ -152,15 +221,6 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 		case mac_srcMacMode:
 		case mac_srcMacCount:
 		case mac_srcMacStep:
-			switch(attrib)
-			{
-				case FieldIsMeta:
-					return true;
-				default:
-					break;
-			}
-			break;
-
 		default:
 			break;
 	}

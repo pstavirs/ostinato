@@ -7,6 +7,7 @@
 #include "dot3.h"	
 #include "llc.h"	
 #include "snap.h"	
+#include "vlan.h"	
 #include "ip4.h"	
 #include "tcp.h"	
 #include "udp.h"	
@@ -24,6 +25,7 @@ ProtocolManager::ProtocolManager()
 	registerProtocol(122, QString("dot3"), (void*) Dot3Protocol::createInstance);
 	registerProtocol(123, QString("llc"),  (void*) LlcProtocol::createInstance);
 	registerProtocol(124, QString("snap"), (void*) SnapProtocol::createInstance);
+	registerProtocol(126, QString("vlan"), (void*) VlanProtocol::createInstance);
 	registerProtocol(130, QString("ip4"),  (void*) Ip4Protocol::createInstance);
 	registerProtocol(140, QString("tcp"),  (void*) TcpProtocol::createInstance);
 	registerProtocol(141, QString("udp"),  (void*) UdpProtocol::createInstance);

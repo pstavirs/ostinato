@@ -10,8 +10,11 @@ PacketModel::PacketModel(const QList<AbstractProtocol*> &selectedProtocols,
 void PacketModel::setSelectedProtocols(
 		const QList<AbstractProtocol*> &selectedProtocols)
 {
-	mSelectedProtocols = selectedProtocols;
-	reset();
+	if (mSelectedProtocols != selectedProtocols)
+	{
+		mSelectedProtocols = selectedProtocols;
+		reset();
+	}
 }
 
 int PacketModel::rowCount(const QModelIndex &parent) const

@@ -49,15 +49,17 @@ private:
 	static int		lastProtoTabIndex;
 
 	void setupUiExtra();
+	void updateSelectedProtocols();
 	void LoadCurrentStream();
-	void StoreCurrentStream(Stream *pStream);
+	void StoreCurrentStream();
 
 private slots:
 	void on_cmbPktLenMode_currentIndexChanged(QString mode);
 	void on_pbPrev_clicked();
 	void on_pbNext_clicked();
 
-	void updateSelectedProtocols();
+	void updateContents();
+
 	void on_twTopLevel_currentChanged(int index);
 	void on_twProto_currentChanged(int index);
 

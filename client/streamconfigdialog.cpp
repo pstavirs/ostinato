@@ -19,14 +19,24 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	setupUi(this);
 	setupUiExtra();
 
-	connect(bgFrameType, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateSelectedProtocols()));
+	connect(bgFrameType, SIGNAL(buttonClicked(int)), 
+		this, SLOT(updateContents()));
 	connect(bgL3Proto, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateSelectedProtocols()));
+		this, SLOT(updateContents()));
 	connect(bgL4Proto, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateSelectedProtocols()));
+		this, SLOT(updateContents()));
 	
+	//! \todo causes a crash!
+#if 0	
+	connect(lePktLen, SIGNAL(textEdited(QString)),
+		this, SLOT(updateContents()));
+#endif
+
 	// Time to play match the signals and slots!
+
+	// Enable VLAN Choices only if FT = Eth2 or SNAP
+	connect(rbFtNone, SIGNAL(toggled(bool)), gbVlan, SLOT(setDisabled(bool)));
+
 	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setChecked(bool)));
 
 	// Enable/Disable L3 Protocol Choices for FT None
@@ -96,8 +106,11 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
 	// TODO(MED):
-	//! \todo Implement then enable these protocols
+
+	//! \todo Implement then enable these protocols - SVLAN, ARP, ICMP, IGMP
+	cbSVlan->setHidden(true);
 	rbL3Arp->setHidden(true);
+	rbL3Ipv6->setHidden(true);
 	rbL4Icmp->setHidden(true);
 	rbL4Igmp->setHidden(true);
 	//! \todo Enable navigation of streams
@@ -132,6 +145,8 @@ void StreamConfigDialog::setupUiExtra()
 	}
 
 	// ---- Setup default stuff that cannot be done in designer ----
+	gbVlan->setDisabled(true);
+
 	bgFrameType = new QButtonGroup();
 	foreach(QRadioButton *btn, gbFrameType->findChildren<QRadioButton*>())
 		bgFrameType->addButton(btn);
@@ -151,7 +166,8 @@ void StreamConfigDialog::setupUiExtra()
 	** Setup Validators
 	*/	
 	// Meta Data
-	lePktLen->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN, this));
+	//! \todo - doesn't seem to work -  range validator needs a spinbox?
+	//lePktLen->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN, this));
 	
 	// L2 Ethernet
 #if 0 // Proto FW
@@ -228,6 +244,9 @@ void StreamConfigDialog::updateSelectedProtocols()
 	// Mac
 	mSelectedProtocols.append(51);
 
+	if (cbCVlan->isEnabled() && cbCVlan->isChecked())
+		mSelectedProtocols.append(126);
+
 	if (rbFtEthernet2->isChecked())
 		mSelectedProtocols.append(121);
 	else if (rbFt802Dot3Raw->isChecked())
@@ -260,12 +279,13 @@ void StreamConfigDialog::updateSelectedProtocols()
 
 	// Payload
 	mSelectedProtocols.append(52);
-
-	mpStream->setFrameProtocol(mSelectedProtocols);
-	mpStream->storeProtocolWidgets();
-	mpStream->loadProtocolWidgets();
 }
 
+void StreamConfigDialog::updateContents()
+{
+	StoreCurrentStream();
+	LoadCurrentStream();
+}
 
 void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
 {
@@ -331,13 +351,12 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
 	if (index != 2)
 		return;
 
-	updateSelectedProtocols();
+	updateContents();
 	foreach(int i, mSelectedProtocols)
 		if (mpStream->protocol(i))
 			protoList.append(mpStream->protocol(i));
 	
 	mpPacketModel->setSelectedProtocols(protoList);
-	StoreCurrentStream(mpStream);
 }
 
 void StreamConfigDialog::on_twProto_currentChanged(int index)
@@ -368,6 +387,8 @@ void StreamConfigDialog::on_twProto_currentChanged(int index)
 	{
 		case 1: // L2
 			wl.append(mpStream->protocol("mac")->configWidget());
+			if (cbCVlan->isEnabled() && cbCVlan->isChecked())
+				wl.append(mpStream->protocol("vlan")->configWidget());
 			if (rbFtEthernet2->isChecked())
 				wl.append(mpStream->protocol("eth2")->configWidget());
 			else if (rbFt802Dot3Raw->isChecked())
@@ -383,27 +404,62 @@ void StreamConfigDialog::on_twProto_currentChanged(int index)
 				wl.append(mpStream->protocol("llc")->configWidget());
 				wl.append(mpStream->protocol("snap")->configWidget());
 			}
+
+			{
+				int i, r = 0, c = 0;
+				QGridLayout *layout = new QGridLayout;
+
+				Q_ASSERT(wl.size() > 0);
+
+				// We use a 2 column layout for the L2 Tab
+
+				layout->addWidget(wl.at(0), r, c, 1, -1);
+				r++;
+				for (i=1; i < wl.size(); i++)
+				{
+					layout->addWidget(wl.at(i), r, c);
+					if ((i % 2) == 0)
+						r++;	
+					c = (c+1) % 2;
+
+				}
+				if ((i % 2) == 0)
+					r++;	
+				layout->setRowStretch(r, 10);
+
+				twProto->widget(index)->setLayout(layout);
+			}
 			break;
 		case 2: // L3
 			if (rbL3Ipv4->isChecked())
 				wl.append(mpStream->protocol("ip4")->configWidget());
+
+			if (wl.size()) 
+			{
+				QVBoxLayout *layout = new QVBoxLayout;
+
+				for (int i=0; i < wl.size(); i++)
+					layout->addWidget(wl.at(i));
+
+				twProto->widget(index)->setLayout(layout);
+			}
 			break;
 		case 3: // L4
 			if (rbL4Tcp->isChecked())
 				wl.append(mpStream->protocol("tcp")->configWidget());
 			else if (rbL4Udp->isChecked())
 				wl.append(mpStream->protocol("udp")->configWidget());
+
+			if (wl.size()) 
+			{
+				QVBoxLayout *layout = new QVBoxLayout;
+
+				for (int i=0; i < wl.size(); i++)
+					layout->addWidget(wl.at(i));
+
+				twProto->widget(index)->setLayout(layout);
+			}
 			break;
-	}
-
-	if (wl.size()) 
-	{
-		layout = new QVBoxLayout;
-
-		for (int i=0; i < wl.size(); i++)
-			layout->addWidget(wl.at(i));
-
-		twProto->widget(index)->setLayout(layout);
 	}
 }
 
@@ -464,6 +520,13 @@ void StreamConfigDialog::LoadCurrentStream()
 		Q_ASSERT(mSelectedProtocols.at(i) == 51); // Mac
 		i++;
 
+		// VLAN
+		if (mSelectedProtocols.at(i) == 126) // VLAN
+		{
+			cbCVlan->setChecked(true);
+			i++;
+		}
+
 		if (mSelectedProtocols.at(i) == 52) // Payload
 		{
 			i++;
@@ -499,6 +562,7 @@ void StreamConfigDialog::LoadCurrentStream()
 		}
 		else
 			rbFtNone->setChecked(true);
+
 
 		// L3
 		if (mSelectedProtocols.at(i) == 52) // Payload
@@ -611,10 +675,11 @@ _proto_parse_done:
 	}
 }
 
-void StreamConfigDialog::StoreCurrentStream(Stream *pStream)
+void StreamConfigDialog::StoreCurrentStream()
 {
 	QString	str;
 	bool	isOk;
+	Stream	*pStream = mpStream;
 
 	qDebug("storing pStream %p", pStream);
 
@@ -660,9 +725,15 @@ void StreamConfigDialog::StoreCurrentStream(Stream *pStream)
 
 void StreamConfigDialog::on_pbOk_clicked()
 {
+	OstProto::Stream	s;
+
 	// Store dialog contents into stream
-	StoreCurrentStream(mPort.streamByIndex(mCurrentStreamIndex));
+	//updateSelectedProtocols();
+	StoreCurrentStream();
+	mpStream->protoDataCopyInto(s);
+	mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyFrom(s);;
 	qDebug("stream stored");
+
 	lastTopLevelTabIndex = twTopLevel->currentIndex();
 	lastProtoTabIndex = twProto->currentIndex();
 }

@@ -70,6 +70,43 @@ int	TcpProtocol::fieldCount() const
 	return tcp_fieldCount;
 }
 
+AbstractProtocol::FieldFlags TcpProtocol::fieldFlags(int index) const
+{
+	AbstractProtocol::FieldFlags flags;
+
+	flags = AbstractProtocol::fieldFlags(index);
+
+	switch (index)
+	{
+		case tcp_src_port:
+		case tcp_dst_port:
+		case tcp_seq_num:
+		case tcp_ack_num:
+		case tcp_hdrlen:
+		case tcp_rsvd:
+		case tcp_flags:
+		case tcp_window:
+			break;
+
+		case tcp_cksum:
+			flags |= FieldIsCksum;
+			break;
+
+		case tcp_urg_ptr:
+			break;
+
+		case tcp_is_override_hdrlen:
+		case tcp_is_override_cksum:
+			flags |= FieldIsMeta;
+			break;
+
+		default:
+			break;
+	}
+
+	return flags;
+}
+
 QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
 {
@@ -142,7 +179,7 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 			switch(attrib)
 			{
 				case FieldName:			
-					return QString("Sequence Number");
+					return QString("Acknowledgement Number");
 				case FieldValue:
 					return data.ack_num();
 				case FieldTextValue:
@@ -165,11 +202,22 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 				case FieldName:			
 					return QString("Header Length");
 				case FieldValue:
-					return ((data.hdrlen_rsvd() >> 4) & 0x0F);
+					if (data.is_override_hdrlen())
+						return ((data.hdrlen_rsvd() >> 4) & 0x0F);
+					else
+						return 5;
 				case FieldTextValue:
-					return QString("%1").arg((data.hdrlen_rsvd() >> 4) & 0x0F);
+					if (data.is_override_hdrlen())
+						return QString("%1 bytes").arg(
+							4 * ((data.hdrlen_rsvd() >> 4) & 0x0F));
+					else
+						return QString("20 bytes");
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.hdrlen_rsvd() & 0xF0));
+					if (data.is_override_hdrlen())
+						return QByteArray(1,
+							(char)((data.hdrlen_rsvd() >> 4) & 0x0F));
+					else
+						return QByteArray(1, (char) 0x05);
 				case FieldBitSize:
 					return 4;
 				default:
@@ -253,16 +301,43 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 				case FieldName:			
 					return QString("Checksum");
 				case FieldValue:
-					return data.cksum();
+				{
+					quint16 cksum;
+
+					if (data.is_override_cksum())
+						cksum = data.cksum();
+					else 
+						cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
+
+					return cksum;
+				}
 				case FieldTextValue:
-					return QString("%1").arg(data.cksum());
+				{
+					quint16 cksum;
+
+					if (data.is_override_cksum())
+						cksum = data.cksum();
+					else 
+						cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
+
+					return QString("0x%1").arg(cksum, 4, BASE_HEX, QChar('0'));
+				}
 				case FieldFrameValue:
 				{
+					quint16 cksum;
+
+					if (data.is_override_cksum())
+						cksum = data.cksum();
+					else 
+						cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
+
 					QByteArray fv;
 					fv.resize(2);
-					qToBigEndian((quint16) data.cksum(), (uchar*) fv.data());
+					qToBigEndian(cksum, (uchar*) fv.data());
 					return fv;
 				}
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}
@@ -292,15 +367,6 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 		// Meta fields
 		case tcp_is_override_hdrlen:
 		case tcp_is_override_cksum:
-			switch(attrib)
-			{
-				case FieldIsMeta:
-					return true;
-				default:
-					break;
-			}
-			break;
-
 		default:
 			break;
 	}
@@ -329,12 +395,13 @@ void TcpProtocol::loadConfigWidget()
 	configForm->leTcpSeqNum->setText(QString().setNum(data.seq_num()));
 	configForm->leTcpAckNum->setText(QString().setNum(data.ack_num()));
 
-	configForm->leTcpHdrLen->setText(QString().setNum((data.hdrlen_rsvd() >> 4) & 0x0F));
+	configForm->leTcpHdrLen->setText(fieldData(tcp_hdrlen, FieldValue).toString());
 	configForm->cbTcpHdrLenOverride->setChecked(data.is_override_hdrlen());
 
 	configForm->leTcpWindow->setText(QString().setNum(data.window()));
 
-	configForm->leTcpCksum->setText(QString().setNum(data.cksum()));
+	configForm->leTcpCksum->setText(QString("%1").arg(
+		fieldData(tcp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
 	configForm->cbTcpCksumOverride->setChecked(data.is_override_cksum());
 
 	configForm->leTcpUrgentPointer->setText(QString().setNum(data.urg_ptr()));
@@ -363,7 +430,7 @@ void TcpProtocol::storeConfigWidget()
 
 	data.set_window(configForm->leTcpWindow->text().toULong(&isOk));
 
-	data.set_cksum(configForm->leTcpCksum->text().remove(QChar(' ')).toULong(&isOk));
+	data.set_cksum(configForm->leTcpCksum->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));
 	data.set_is_override_cksum(configForm->cbTcpCksumOverride->isChecked());
 
 	data.set_urg_ptr(configForm->leTcpUrgentPointer->text().toULong(&isOk));

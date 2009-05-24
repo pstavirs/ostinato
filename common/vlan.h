@@ -1,51 +1,50 @@
-#ifndef _UDP_H
-#define _UDP_H
+#ifndef _Vlan_H
+#define _Vlan_H
 
 #include "abstractprotocol.h"
 
-#include "udp.pb.h"
-#include "ui_udp.h"
+#include "vlan.pb.h"
+#include "ui_vlan.h"
 
-class UdpConfigForm : public QWidget, public Ui::udp
+class VlanConfigForm : public QWidget, public Ui::Vlan
 {
 	Q_OBJECT
 public:
-	UdpConfigForm(QWidget *parent = 0);
+	VlanConfigForm(QWidget *parent = 0);
 };
 
-class UdpProtocol : public AbstractProtocol
+class VlanProtocol : public AbstractProtocol
 {
 private:
-	OstProto::Udp	data;
-	static UdpConfigForm	*configForm;
-	enum udpfield
+	OstProto::Vlan	data;
+	static VlanConfigForm	*configForm;
+	enum Vlanfield
 	{
-		udp_srcPort = 0,
-		udp_dstPort,
-		udp_totLen,
-		udp_cksum,
+		vlan_tpid,
+		vlan_prio,
+		vlan_cfiDei,
+		vlan_vlanId,
 
-		udp_isOverrideTotLen,
-		udp_isOverrideCksum,
+		// meta-fields
+		vlan_isOverrideTpid,
 
-		udp_fieldCount
+		vlan_fieldCount
 	};
 
 public:
-	UdpProtocol(ProtocolList &frameProtoList,
-			OstProto::StreamCore *parent = 0);
-	virtual ~UdpProtocol();
+	VlanProtocol(ProtocolList &frameProtoList, 
+		OstProto::StreamCore *parent = 0);
+	virtual ~VlanProtocol();
 
 	static AbstractProtocol* createInstance(
-			ProtocolList &frameProtoList,
-			OstProto::StreamCore *streamCore = 0);
+		ProtocolList &frameProtoList,
+		OstProto::StreamCore *streamCore = 0);
 
 	virtual void protoDataCopyInto(OstProto::Stream &stream);
 	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
 
 	virtual QString name() const;
 	virtual QString shortName() const;
-	virtual quint32 protocolId(ProtocolIdType type) const;
 
 	virtual int	fieldCount() const;
 

@@ -10,10 +10,12 @@ Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
 {
 	setupUi(this);
 
+	leIpVersion->setValidator(new QIntValidator(0, 15, this));
+
 	connect(cmbIpSrcAddrMode, SIGNAL(currentIndexChanged(int)),
-			this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));
+		this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));
 	connect(cmbIpDstAddrMode, SIGNAL(currentIndexChanged(int)),
-			this, SLOT(on_cmbIpDstAddrMode_currentIndexChanged(int)));
+		this, SLOT(on_cmbIpDstAddrMode_currentIndexChanged(int)));
 }
 
 void Ip4ConfigForm::on_cmbIpSrcAddrMode_currentIndexChanged(int index)
@@ -110,45 +112,104 @@ int	Ip4Protocol::fieldCount() const
 	return ip4_fieldCount;
 }
 
+AbstractProtocol::FieldFlags Ip4Protocol::fieldFlags(int index) const
+{
+	AbstractProtocol::FieldFlags flags;
+
+	flags = AbstractProtocol::fieldFlags(index);
+
+	switch (index)
+	{
+		case ip4_ver:
+		case ip4_hdrLen:
+		case ip4_tos:
+		case ip4_totLen:
+		case ip4_id:
+		case ip4_flags:
+		case ip4_fragOfs:
+		case ip4_ttl:
+		case ip4_proto:
+			break;
+
+		case ip4_cksum:
+			flags |= FieldIsCksum;
+			break;
+
+		case ip4_srcAddr:
+		case ip4_dstAddr:
+			break;
+
+		case ip4_isOverrideVer:
+		case ip4_isOverrideHdrLen:
+		case ip4_isOverrideTotLen:
+		case ip4_isOverrideCksum:
+		case ip4_srcAddrMode:
+		case ip4_srcAddrCount:
+		case ip4_srcAddrMask:
+		case ip4_dstAddrMode:
+		case ip4_dstAddrCount:
+		case ip4_dstAddrMask:
+			flags |= FieldIsMeta;
+			break;
+
+		default:
+			break;
+	}
+
+	return flags;
+}
+
 QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
 {
 	switch (index)
 	{
 		case ip4_ver:
+		{
+			int ver;
+
+			ver = data.is_override_ver() ? (data.ver_hdrlen() >> 4) & 0x0F : 4;
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Version");
 				case FieldValue:
-					return (data.ver_hdrlen() >> 4) & 0x0F;
+					return ver;
 				case FieldTextValue:
-					return QString("%1").arg((data.ver_hdrlen() >> 4) & 0x0F);
+					return QString("%1").arg(ver, 1, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.ver_hdrlen() & 0xF0));
+					return QByteArray(1, (char) ver);
 				case FieldBitSize:
 					return 4;
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_hdrLen:
+		{
+			int hdrlen;
+
+			hdrlen = data.is_override_hdrlen() ? data.ver_hdrlen() & 0x0F : 5;
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Header Length");
 				case FieldValue:
-					return data.ver_hdrlen() & 0x0F;
+					return hdrlen;
 				case FieldTextValue:
-					return QString("%1").arg(data.ver_hdrlen() & 0x0F);
+					return QString("%1").arg(hdrlen, 1, BASE_HEX, QChar('0'));
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.ver_hdrlen() << 4));
+					return QByteArray(1, (char) hdrlen);
 				case FieldBitSize:
 					return 4;
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_tos:
 			switch(attrib)
 			{
@@ -261,11 +322,12 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					// FIXME need to shift for 13 bits
 					fv.resize(2);
-					qToBigEndian((quint16) data.frag_ofs(), (uchar*) fv.data());
+					qToBigEndian((quint16) (data.frag_ofs()),
+						(uchar*) fv.data());
 					return fv;
 				}
 				case FieldTextValue:
-					return QString("%1").arg(data.frag_ofs());
+					return QString("%1").arg(data.frag_ofs()*8);
 				case FieldBitSize:
 					return 13;
 				default:
@@ -316,7 +378,6 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 		}
 		case ip4_cksum:
 		{
-
 			switch(attrib)
 			{
 				case FieldName:			
@@ -325,12 +386,10 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					quint16 cksum;
 
-					if (streamIndex < 0)
-						cksum = 0;
-					else if	(data.is_override_cksum())
+					if (data.is_override_cksum())
 						cksum = data.cksum();
 					else
-						cksum = protocolFrameCksum().toUInt();
+						cksum = protocolFrameCksum(streamIndex, CksumIp);
 					return cksum;
 				}
 				case FieldFrameValue:
@@ -338,12 +397,11 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					quint16 cksum;
 
-					if (streamIndex < 0)
-						cksum = 0;
-					else if	(data.is_override_cksum())
+					if (data.is_override_cksum())
 						cksum = data.cksum();
 					else
-						cksum = protocolFrameCksum().toUInt();
+						cksum = protocolFrameCksum(streamIndex, CksumIp);
+
 					fv.resize(2);
 					qToBigEndian((quint16) cksum, (uchar*) fv.data());
 					return fv;
@@ -352,12 +410,10 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					quint16 cksum;
 
-					if (streamIndex < 0)
-						cksum = 0;
-					else if	(data.is_override_cksum())
+					if (data.is_override_cksum())
 						cksum = data.cksum();
 					else
-						cksum = protocolFrameCksum().toUInt();
+						cksum = protocolFrameCksum(streamIndex, CksumIp);
 					return  QString("0x%1").
 						arg(cksum, 4, BASE_HEX, QChar('0'));;
 				}
@@ -369,46 +425,111 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 			break;
 		}
 		case ip4_srcAddr:
+		{
+			int		u;
+			quint32	subnet, host, srcIp = 0;
+
+			switch(data.src_ip_mode())
+			{
+				case OstProto::Ip4::e_im_fixed:
+					srcIp = data.src_ip();
+					break;
+				case OstProto::Ip4::e_im_inc_host:
+					u = streamIndex % data.src_ip_count();
+					subnet = data.src_ip() & data.src_ip_mask();
+					host = (((data.src_ip() & ~data.src_ip_mask()) + u) &
+						~data.src_ip_mask());
+					srcIp = subnet | host;
+					break;
+				case OstProto::Ip4::e_im_dec_host:
+					u = streamIndex % data.src_ip_count();
+					subnet = data.src_ip() & data.src_ip_mask();
+					host = (((data.src_ip() & ~data.src_ip_mask()) - u) &
+						~data.src_ip_mask());
+					srcIp = subnet | host;
+					break;
+				case OstProto::Ip4::e_im_random_host:
+					subnet = data.src_ip() & data.src_ip_mask();
+					host = (qrand() & ~data.src_ip_mask());
+					srcIp = subnet | host;
+					break;
+				default:
+					qWarning("Unhandled src_ip_mode = %d", data.src_ip_mode());
+			}
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Source");
 				case FieldValue:
-					return data.src_ip();
+					return srcIp;
 				case FieldFrameValue:
 				{
 					QByteArray fv;
 					fv.resize(4);
-					qToBigEndian((quint32) data.src_ip(), (uchar*) fv.data());
+					qToBigEndian(srcIp, (uchar*) fv.data());
 					return fv;
 				}
 				case FieldTextValue:
-					return QHostAddress(data.src_ip()).toString();
+					return QHostAddress(srcIp).toString();
 				default:
 					break;
 			}
 			break;
+		}
 		case ip4_dstAddr:
+		{
+			int		u;
+			quint32	subnet, host, dstIp = 0;
+
+			switch(data.dst_ip_mode())
+			{
+				case OstProto::Ip4::e_im_fixed:
+					dstIp = data.dst_ip();
+					break;
+				case OstProto::Ip4::e_im_inc_host:
+					u = streamIndex % data.dst_ip_count();
+					subnet = data.dst_ip() & data.dst_ip_mask();
+					host = (((data.dst_ip() & ~data.dst_ip_mask()) + u) &
+						~data.dst_ip_mask());
+					dstIp = subnet | host;
+					break;
+				case OstProto::Ip4::e_im_dec_host:
+					u = streamIndex % data.dst_ip_count();
+					subnet = data.dst_ip() & data.dst_ip_mask();
+					host = (((data.dst_ip() & ~data.dst_ip_mask()) - u) &
+						~data.dst_ip_mask());
+					dstIp = subnet | host;
+					break;
+				case OstProto::Ip4::e_im_random_host:
+					subnet = data.dst_ip() & data.dst_ip_mask();
+					host = (qrand() & ~data.dst_ip_mask());
+					dstIp = subnet | host;
+					break;
+				default:
+					qWarning("Unhandled dst_ip_mode = %d", data.dst_ip_mode());
+			}
+
 			switch(attrib)
 			{
 				case FieldName:			
 					return QString("Destination");
 				case FieldValue:
-					return data.dst_ip();
+					return dstIp;
 				case FieldFrameValue:
 				{
 					QByteArray fv;
 					fv.resize(4);
-					qToBigEndian((quint32) data.dst_ip(), (uchar*) fv.data());
+					qToBigEndian((quint32) dstIp, (uchar*) fv.data());
 					return fv;
 				}
 				case FieldTextValue:
-					return QHostAddress(data.dst_ip()).toString();
+					return QHostAddress(dstIp).toString();
 				default:
 					break;
 			}
 			break;
-
+		}
 		// Meta fields
 
 		case ip4_isOverrideVer:
@@ -423,15 +544,6 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 		case ip4_dstAddrMode:
 		case ip4_dstAddrCount:
 		case ip4_dstAddrMask:
-			switch(attrib)
-			{
-				case FieldIsMeta:
-					return true;
-				default:
-					break;
-			}
-			break;
-
 		default:
 			break;
 	}
@@ -461,6 +573,34 @@ bool Ip4Protocol::setFieldData(int index, const QVariant &value,
 	return isOk;
 }
 
+quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
+	CksumType cksumType) const
+{
+	switch (cksumType)
+	{
+		case CksumIpPseudo:
+		{
+			quint32 sum;
+
+			sum = fieldData(ip4_srcAddr, FieldValue, streamIndex).toUInt() >> 16;
+			sum += fieldData(ip4_srcAddr, FieldValue, streamIndex).toUInt() & 0xFFFF;
+			sum += fieldData(ip4_dstAddr, FieldValue, streamIndex).toUInt() >> 16;
+			sum += fieldData(ip4_dstAddr, FieldValue, streamIndex).toUInt() & 0xFFFF;
+
+			sum += fieldData(ip4_proto, FieldValue, streamIndex).toUInt() & 0x00FF;
+			sum += (fieldData(ip4_totLen, FieldValue, streamIndex).toUInt() & 0xFFFF) - 20;
+
+			// Above calculation done assuming 'big endian' 
+			// - so convert to host order
+			//return qFromBigEndian(sum);
+			return sum;
+		}
+		default:
+			break;
+	}
+
+	return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+}
 
 QWidget* Ip4Protocol::configWidget()
 {
@@ -469,15 +609,16 @@ QWidget* Ip4Protocol::configWidget()
 
 void Ip4Protocol::loadConfigWidget()
 {
-	configForm->leIpVersion->setText(QString().setNum(data.ver_hdrlen() >> 4));
 	configForm->cbIpVersionOverride->setChecked(data.is_override_ver());
+	configForm->leIpVersion->setText(fieldData(ip4_ver, FieldValue).toString());
 
-	configForm->leIpHdrLen->setText(QString().setNum(data.ver_hdrlen() & 0x0F));
 	configForm->cbIpHdrLenOverride->setChecked(data.is_override_hdrlen());
+	configForm->leIpHdrLen->setText(fieldData(ip4_hdrLen, FieldValue).toString());
 	
 	configForm->leIpTos->setText(uintToHexStr(data.tos(), 1));
-	configForm->leIpLength->setText(fieldData(ip4_totLen, FieldValue).toString());
+
 	configForm->cbIpLengthOverride->setChecked(data.is_override_totlen());
+	configForm->leIpLength->setText(fieldData(ip4_totLen, FieldValue).toString());
 
 	configForm->leIpId->setText(uintToHexStr(data.id(), 2));
 	configForm->leIpFragOfs->setText(QString().setNum(data.frag_ofs()));
@@ -488,9 +629,9 @@ void Ip4Protocol::loadConfigWidget()
 	configForm->leIpProto->setText(uintToHexStr(
 		fieldData(ip4_proto, FieldValue).toUInt(), 1));
 
+	configForm->cbIpCksumOverride->setChecked(data.is_override_cksum());
 	configForm->leIpCksum->setText(uintToHexStr(
 		fieldData(ip4_cksum, FieldValue).toUInt(), 2));
-	configForm->cbIpCksumOverride->setChecked(data.is_override_cksum());
 
 	configForm->leIpSrcAddr->setText(QHostAddress(data.src_ip()).toString());
 	configForm->cmbIpSrcAddrMode->setCurrentIndex(data.src_ip_mode());
@@ -528,8 +669,8 @@ void Ip4Protocol::storeConfigWidget()
 	data.set_ttl(configForm->leIpTtl->text().toULong(&isOk));
 	data.set_proto(configForm->leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16));
 	
-	data.set_cksum(configForm->leIpCksum->text().remove(QChar(' ')).toULong(&isOk));
 	data.set_is_override_cksum(configForm->cbIpCksumOverride->isChecked());
+	data.set_cksum(configForm->leIpCksum->text().remove(QChar(' ')).toULong(&isOk));
 
 	data.set_src_ip(QHostAddress(configForm->leIpSrcAddr->text()).toIPv4Address());
 	data.set_src_ip_mode((OstProto::Ip4_IpAddrMode)configForm->cmbIpSrcAddrMode->currentIndex());
@@ -539,5 +680,6 @@ void Ip4Protocol::storeConfigWidget()
 	data.set_dst_ip(QHostAddress(configForm->leIpDstAddr->text()).toIPv4Address());
 	data.set_dst_ip_mode((OstProto::Ip4_IpAddrMode)configForm->cmbIpDstAddrMode->currentIndex());
 	data.set_dst_ip_count(configForm->leIpDstAddrCount->text().toULong(&isOk));
+	data.set_dst_ip_mask(QHostAddress(configForm->leIpDstAddrMask->text()).toIPv4Address());
 }
 

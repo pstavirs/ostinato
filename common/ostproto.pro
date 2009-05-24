@@ -10,6 +10,7 @@ FORMS += \
 	dot3.ui \
 	llc.ui \
 	snap.ui \
+	vlan.ui \
 	ip4.ui \
 	tcp.ui \
 	udp.ui
@@ -21,6 +22,7 @@ PROTOS += \
 	dot3.proto \
 	llc.proto \
 	snap.proto \
+	vlan.proto \
 	ip4.proto \
 	tcp.proto \
 	udp.proto
@@ -35,6 +37,7 @@ HEADERS += \
 	dot3.h \
 	llc.h \
 	snap.h \
+	vlan.h \
 	ip4.h \
 	tcp.h \
 	udp.h
@@ -49,6 +52,7 @@ SOURCES += \
 	dot3.cpp \
 	llc.cpp \
 	snap.cpp \
+	vlan.cpp \
 	ip4.cpp \
 	tcp.cpp \
 	udp.cpp
