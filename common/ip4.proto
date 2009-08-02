@@ -42,6 +42,6 @@ message Ip4 {
 	// TODO: Options
 }
 
-extend Stream {
+extend Protocol {
 	optional Ip4 ip4 = 130;
 }

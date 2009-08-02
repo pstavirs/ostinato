@@ -24,7 +24,7 @@ class TcpProtocol : public AbstractProtocol
 {
 private:
 	OstProto::Tcp	data;
-	static TcpConfigForm	*configForm;
+	TcpConfigForm	*configForm;
 	enum tcpfield
 	{
 		tcp_src_port = 0,
@@ -45,16 +45,14 @@ private:
 	};
 
 public:
-	TcpProtocol(ProtocolList &frameProtoList,
-		OstProto::StreamCore *parent = 0);
+	TcpProtocol(StreamBase *stream);
 	virtual ~TcpProtocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList, 
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream);
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
 	virtual QString name() const;
 	virtual QString shortName() const;

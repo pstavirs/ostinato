@@ -3,45 +3,44 @@
 
 #include "llc.h"
 
-LlcConfigForm *LlcProtocol::configForm = NULL;
-
 LlcConfigForm::LlcConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-LlcProtocol::LlcProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+LlcProtocol::LlcProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new LlcConfigForm;
+	configForm = NULL;
 }
 
 LlcProtocol::~LlcProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* LlcProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* LlcProtocol::createInstance(StreamBase *stream)
 {
-	return new LlcProtocol(frameProtoList, streamCore);
+	return new LlcProtocol(stream);
 }
 
-void LlcProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 LlcProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::llc)->CopyFrom(data);
+	return OstProto::Protocol::kLlcFieldNumber;
 }
 
-void LlcProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void LlcProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::llc))
-		data.MergeFrom(stream.GetExtension(OstProto::llc));
+	protocol.MutableExtension(OstProto::llc)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void LlcProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::llc))
+		data.MergeFrom(protocol.GetExtension(OstProto::llc));
 }
 
 QString LlcProtocol::name() const
@@ -135,6 +134,8 @@ bool LlcProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* LlcProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new LlcConfigForm;
 	return configForm;
 }
 
@@ -142,6 +143,8 @@ void LlcProtocol::loadConfigWidget()
 {
 #define uintToHexStr(num, bytes)	\
 	QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
+
+	configWidget();
 
 	configForm->leDsap->setText(uintToHexStr(
 		fieldData(llc_dsap, FieldValue).toUInt(), 1));
@@ -155,6 +158,8 @@ void LlcProtocol::loadConfigWidget()
 void LlcProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_dsap(configForm->leDsap->text().toULong(&isOk, BASE_HEX));
 	data.set_ssap(configForm->leSsap->text().toULong(&isOk, BASE_HEX));

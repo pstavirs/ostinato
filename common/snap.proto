@@ -7,6 +7,6 @@ message Snap {
 	optional uint32			type = 2;
 }
 
-extend Stream {
+extend Protocol {
 	optional Snap snap = 124;
 }

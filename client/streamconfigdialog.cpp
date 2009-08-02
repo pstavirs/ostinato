@@ -1,8 +1,15 @@
 #include <QHostAddress>
+
 #include "streamconfigdialog.h"
 #include "stream.h"
+#include "abstractprotocol.h"
+#include "protocollistiterator.h"
 
 #include "modeltest.h"
+
+// FIXME(HI) - remove
+#include "../common/protocolmanager.h"
+extern ProtocolManager OstProtocolManager;
 
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
 int StreamConfigDialog::lastProtoTabIndex = 0;
@@ -15,6 +22,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	mpStream = new Stream;
 	mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyInto(s);
 	mpStream->protoDataCopyFrom(s);
+	_iter = mpStream->createProtocolListIterator();
 
 	setupUi(this);
 	setupUiExtra();
@@ -97,8 +105,12 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	// Force L4 Protocol = None if L3 Protocol is set to ARP
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setChecked(bool)));
 
+	mpAvailableProtocolsModel = new QStringListModel(
+		OstProtocolManager.protocolDatabase(), this);
+	lvAllProtocols->setModel(mpAvailableProtocolsModel);
+
 	LoadCurrentStream();
-	mpPacketModel = new PacketModel(QList<AbstractProtocol*>(), this);
+	mpPacketModel = new PacketModel(this);
 	tvPacketTree->setModel(mpPacketModel);
 	mpPacketModelTester = new ModelTest(mpPacketModel);
 	tvPacketTree->header()->hide();
@@ -134,6 +146,7 @@ void StreamConfigDialog::setupUiExtra()
 	QRegExp reHex4B("[0-9,a-f,A-F]{1,8}");
 	QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
+#if 0 // MPS - temp mask
 	// Add the Payload widget to the dialog
 	{
 		QGridLayout		*layout;
@@ -143,6 +156,7 @@ void StreamConfigDialog::setupUiExtra()
 		layout->addWidget(mpStream->protocol(52)->configWidget(), 0, 1);
 		qDebug("setupUi wgt = %p", mpStream->protocol(52)->configWidget());
 	}
+#endif
 
 	// ---- Setup default stuff that cannot be done in designer ----
 	gbVlan->setDisabled(true);
@@ -199,6 +213,7 @@ StreamConfigDialog::~StreamConfigDialog()
 	delete mpPacketModelTester;
 	delete mpPacketModel;
 
+#if 0 // MPS - temp mask
 	// Remove payload data widget so that it is not deleted when this object
 	// is destroyed
 	{
@@ -209,6 +224,7 @@ StreamConfigDialog::~StreamConfigDialog()
 			mpStream->protocol(52)->configWidget()->setParent(0);
 		}
 	}
+#endif
 
 	// Remove any existing widget on the L2-L4 Tabs lest they are deleted
 	// when this object is destoryed
@@ -232,53 +248,95 @@ StreamConfigDialog::~StreamConfigDialog()
 	delete bgL3Proto;
 	delete bgL4Proto;
 
+	delete _iter;
 	delete mpStream;
 }
 
 void StreamConfigDialog::updateSelectedProtocols()
 {
-	mSelectedProtocols.clear();
+#define CHKINS(p)	\
+{ \
+	if (_iter->hasNext() && (_iter->peekNext()->protocolNumber() == OstProto::Protocol::k##p##FieldNumber))  \
+		_iter->next(); \
+	else \
+		_iter->insert(OstProtocolManager.createProtocol(OstProto::Protocol::k##p##FieldNumber, mpStream)); \
+}
 
-	// FIXME: Hardcoded numbers!
+	_iter->toFront();
+#if 1
+	qDebug("Before Update");
+	while (_iter->hasNext())
+	{
+		AbstractProtocol* p;
+	   
+		p = _iter->next();
+		qDebug("%p:[%d]", p, p->protocolNumber());
+	}
+
+	_iter->toFront();
+#endif
 
 	// Mac
-	mSelectedProtocols.append(51);
+	CHKINS(Mac)
 
 	if (cbCVlan->isEnabled() && cbCVlan->isChecked())
-		mSelectedProtocols.append(126);
+		CHKINS(Vlan);
 
 	if (rbFtEthernet2->isChecked())
-		mSelectedProtocols.append(121);
+		CHKINS(Eth2)
 	else if (rbFt802Dot3Raw->isChecked())
-		mSelectedProtocols.append(122);
+		CHKINS(Dot3)
 	else if (rbFt802Dot3Llc->isChecked())
 	{
-		mSelectedProtocols.append(122);
-		mSelectedProtocols.append(123);
+		CHKINS(Dot3);
+		CHKINS(Llc);
 	}
 	else if (rbFtLlcSnap->isChecked())
 	{
-		mSelectedProtocols.append(122);
-		mSelectedProtocols.append(123);
-		mSelectedProtocols.append(124);
+		CHKINS(Dot3);
+		CHKINS(Llc);
+		CHKINS(Snap);
 	}
 
 	if (rbL3Ipv4->isChecked())
-		mSelectedProtocols.append(130);
+		CHKINS(Ip4)
 	else if (rbL3Arp->isChecked())
-		mSelectedProtocols.append(131);
+		CHKINS(Arp)
 
 	if (rbL4Tcp->isChecked())
-		mSelectedProtocols.append(140);
+		CHKINS(Tcp)
 	else if (rbL4Udp->isChecked())
-		mSelectedProtocols.append(141);
+		CHKINS(Udp)
 	else if (rbL4Icmp->isChecked())
-		mSelectedProtocols.append(142);
+		CHKINS(Icmp)
 	else if (rbL4Igmp->isChecked())
-		mSelectedProtocols.append(143);
+		CHKINS(Igmp)
 
 	// Payload
-	mSelectedProtocols.append(52);
+	CHKINS(Payload)
+
+	// Remove all protocols, if any, beyond payload
+	while (_iter->hasNext())
+	{
+		_iter->next();
+		_iter->remove();
+	}
+
+
+#if 1
+	qDebug("After Update");
+	_iter->toFront();
+	while (_iter->hasNext())
+	{
+		AbstractProtocol* p;
+	   
+		p = _iter->next();
+		qDebug("%p:[%d]", p, p->protocolNumber());
+	}
+#endif
+
+#undef CHKINS
+
 }
 
 void StreamConfigDialog::updateContents()
@@ -345,22 +403,17 @@ void StreamConfigDialog::on_pbNext_clicked()
 
 void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
 {
-	QList<AbstractProtocol*> protoList;
-
 	// We only process the "Packet View" tab
 	if (index != 2)
 		return;
 
 	updateContents();
-	foreach(int i, mSelectedProtocols)
-		if (mpStream->protocol(i))
-			protoList.append(mpStream->protocol(i));
-	
-	mpPacketModel->setSelectedProtocols(protoList);
+	mpPacketModel->setSelectedProtocols(*_iter);
 }
 
 void StreamConfigDialog::on_twProto_currentChanged(int index)
 {
+#if 0 // MPS - temp mask
 	QLayout *layout;
 	QList<QWidget*> wl;
 
@@ -461,6 +514,39 @@ void StreamConfigDialog::on_twProto_currentChanged(int index)
 			}
 			break;
 	}
+#else
+	int selTab;
+
+	qDebug("In %s (tab index = %d)", __FUNCTION__, index);
+	// We need to process only index 4 i.e. the Protocol Data tab
+	if (index != 4)
+		return;
+
+	// Hide the ToolBox before modifying it - otherwise we have a crash !!!
+	tbProtocolData->hide();
+
+	selTab = tbProtocolData->currentIndex();
+
+	// Remove any existing widget on the activated tab
+	while (tbProtocolData->count() > 0)
+	{
+		QWidget* w = tbProtocolData->widget(0);
+		tbProtocolData->removeItem(0);
+		w->setParent(0);
+	}
+
+	_iter->toFront();
+	while (_iter->hasNext())
+	{
+		AbstractProtocol* p = _iter->next();
+		tbProtocolData->addItem(p->configWidget(), p->name());
+	}
+
+	if (selTab < tbProtocolData->count())
+		tbProtocolData->setCurrentIndex(selTab);
+
+	tbProtocolData->show();
+#endif
 }
 
 void StreamConfigDialog::update_NumPacketsAndNumBursts()
@@ -504,6 +590,7 @@ void StreamConfigDialog::LoadCurrentStream()
 		lePktLenMax->setText(str.setNum(mpStream->frameLenMax()));
 	}
 
+#if 0 // MPS - temp mask
 	// Protocols
 	{
 		int i;
@@ -620,9 +707,130 @@ void StreamConfigDialog::LoadCurrentStream()
 
 _proto_parse_done:
 		Q_ASSERT(i == mSelectedProtocols.size());
-
 		mpStream->loadProtocolWidgets();
 	}
+#else
+	// Protocols
+	{
+		qDebug("Loading - current list");
+		_iter->toFront();
+		while(_iter->hasNext())
+		{
+			AbstractProtocol* p = _iter->next();
+			qDebug("%p -- %d", p, p->protocolNumber());
+		}
+		_iter->toFront();
+
+#define CHK(p) (_iter->hasNext() && _iter->peekNext()->protocolNumber() == p)
+
+		Q_ASSERT(CHK(51)); // Mac
+		_iter->next();
+
+		// VLAN
+		if (CHK(126)) // VLAN
+		{
+			cbCVlan->setChecked(true);
+			_iter->next();
+		}
+
+		if (CHK(52)) // Payload
+		{
+			_iter->next();
+			goto _proto_parse_done;
+		}
+		else if (CHK(121)) // Eth2
+		{
+			rbFtEthernet2->setChecked(true);
+			_iter->next();
+		}
+		else if (CHK(122)) // 802.3 RAW
+		{
+			_iter->next();
+			if (CHK(123)) // 802.3 LLC
+			{
+				_iter->next();
+				if (CHK(124)) // SNAP
+				{
+					rbFtLlcSnap->setChecked(true);
+					_iter->next();
+				}
+				else
+				{
+					rbFt802Dot3Llc->setChecked(true);
+				}
+			}
+			else
+			{
+				rbFt802Dot3Raw->setChecked(true);
+			}
+		}
+		else
+			rbFtNone->setChecked(true);
+
+
+		// L3
+		if (CHK(52)) // Payload
+		{
+			_iter->next();	
+			goto _proto_parse_done;
+		}
+		else if (CHK(130)) // IP4
+		{
+			rbL3Ipv4->setChecked(true);
+			_iter->next();
+		}
+	   	else if (CHK(131)) // ARP
+		{
+			rbL3Arp->setChecked(true);
+			_iter->next();
+		}
+		else
+			rbL3None->setChecked(true);
+
+		if (!_iter->hasNext())
+			goto _proto_parse_done;
+
+		// L4
+		if (CHK(52)) // Payload
+		{
+			_iter->next();
+			goto _proto_parse_done;
+		}
+		else if (CHK(140)) // TCP
+		{
+			rbL4Tcp->setChecked(true);
+			_iter->next();
+		}
+		else if (CHK(141)) // UDP
+		{
+			rbL4Udp->setChecked(true);
+			_iter->next();
+		}
+		else if (CHK(142)) // ICMP
+		{
+			rbL4Icmp->setChecked(true);
+			_iter->next();
+		}
+		else if (CHK(143)) // IGMP
+		{
+			rbL4Igmp->setChecked(true);
+			_iter->next();
+		}
+		else
+			rbL4None->setChecked(true);
+
+		Q_ASSERT(CHK(52)); // Payload
+		_iter->next();
+
+_proto_parse_done:
+		Q_ASSERT(!_iter->hasNext());
+		mpStream->loadProtocolWidgets();
+
+#undef CHK
+	}
+
+
+#endif
 
 	// Stream Control
 	{
@@ -673,6 +881,7 @@ _proto_parse_done:
 		// TODO(MED): Change this when we support goto to specific stream
 		leStreamId->setText(QString("0"));
 	}
+	qDebug("loading stream done");
 }
 
 void StreamConfigDialog::StoreCurrentStream()
@@ -692,7 +901,7 @@ void StreamConfigDialog::StoreCurrentStream()
 	// Protocols
 	{
 		updateSelectedProtocols();
-		pStream->setFrameProtocol(mSelectedProtocols);
+		//pStream->setFrameProtocol(mSelectedProtocols);
 		pStream->storeProtocolWidgets();
 	}
 

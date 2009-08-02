@@ -9,7 +9,7 @@
 #include <QFlags>
 
 //#include "../rpc/pbhelper.h"
-#include "../common/protocol.pb.h"
+#include "protocol.pb.h"
 
 #define BASE_BIN (2)
 #define BASE_OCT (8)
@@ -19,10 +19,7 @@
 #define uintToHexStr(num, bytes)	\
 	QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
 
-class OstProto::StreamCore;
-class AbstractProtocol;
-
-typedef QLinkedList<const AbstractProtocol*> ProtocolList;
+class StreamBase;
 
 class AbstractProtocol
 {
@@ -32,8 +29,7 @@ private:
 	mutable QString protoAbbr;
 
 protected:
-	OstProto::StreamCore	*stream;
-	ProtocolList			&frameProtocols;
+	StreamBase		*mpStream;
 
 public:
 	enum FieldFlag {
@@ -65,16 +61,14 @@ public:
 		CksumMax
 	};
 
-	AbstractProtocol(ProtocolList &frameProtoList, 
-		OstProto::StreamCore *parent = 0);
+	AbstractProtocol(StreamBase *stream);
 	virtual ~AbstractProtocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList,
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream) = 0;
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream) = 0;
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const = 0;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol) = 0;
 
 	virtual QString name() const;
 	virtual QString shortName() const;
@@ -109,7 +103,6 @@ public:
 	virtual void loadConfigWidget() = 0;
 	virtual void storeConfigWidget() = 0;
 };
-
 Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
 
 #endif

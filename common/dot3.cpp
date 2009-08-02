@@ -1,11 +1,10 @@
 #include <qendian.h>
 #include <QHostAddress>
 
-#include "Dot3.h"
+#include "dot3.h"
+#include "streambase.h"
 
 #define SZ_FCS		4
-
-Dot3ConfigForm *Dot3Protocol::configForm = NULL;
 
 Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
 	: QWidget(parent)
@@ -13,37 +12,38 @@ Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-Dot3Protocol::Dot3Protocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+Dot3Protocol::Dot3Protocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new Dot3ConfigForm;
+	configForm = NULL;
 }
 
 Dot3Protocol::~Dot3Protocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* Dot3Protocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* Dot3Protocol::createInstance(StreamBase *stream)
 {
-	return new Dot3Protocol(frameProtoList, streamCore);
+	return new Dot3Protocol(stream);
 }
 
-void Dot3Protocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 Dot3Protocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::dot3)->CopyFrom(data);
+	return OstProto::Protocol::kDot3FieldNumber;
 }
 
-void Dot3Protocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void Dot3Protocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::dot3))
-		data.MergeFrom(stream.GetExtension(OstProto::dot3));
+	protocol.MutableExtension(OstProto::dot3)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void Dot3Protocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::dot3))
+		data.MergeFrom(protocol.GetExtension(OstProto::dot3));
 }
 
 QString Dot3Protocol::name() const
@@ -75,14 +75,14 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					quint16 len;
 
-					len = stream->frame_len() - SZ_FCS;
+					len = mpStream->frameLen() - SZ_FCS;
 					return len;
 				}
 				case FieldTextValue:
 				{
 					quint16 len;
 
-					len = stream->frame_len() - SZ_FCS;
+					len = mpStream->frameLen() - SZ_FCS;
 					return QString("%1").arg(len);
 				}
 				case FieldFrameValue:
@@ -90,7 +90,7 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 					quint16 len;
 					QByteArray fv;
 
-					len = stream->frame_len() - SZ_FCS;
+					len = mpStream->frameLen() - SZ_FCS;
 					fv.resize(2);
 					qToBigEndian(len, (uchar*) fv.data());
 					return fv;
@@ -117,11 +117,15 @@ bool Dot3Protocol::setFieldData(int index, const QVariant &value,
 
 QWidget* Dot3Protocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new Dot3ConfigForm;
 	return configForm;
 }
 
 void Dot3Protocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leLength->setText(
 		fieldData(dot3_length, FieldValue).toString());
 }
@@ -129,6 +133,8 @@ void Dot3Protocol::loadConfigWidget()
 void Dot3Protocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_length(configForm->leLength->text().toULong(&isOk));
 }

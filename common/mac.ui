@@ -6,13 +6,13 @@
     <x>0</x>
     <y>0</y>
     <width>512</width>
-    <height>98</height>
+    <height>104</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" >
+  <layout class="QVBoxLayout" >
    <item>
     <widget class="QGroupBox" name="groupBox" >
      <property name="title" >
@@ -81,10 +81,10 @@
          <bool>false</bool>
         </property>
         <property name="text" >
-         <string>1</string>
+         <string/>
         </property>
         <property name="cursorPosition" >
-         <number>1</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
@@ -101,10 +101,10 @@
          <bool>false</bool>
         </property>
         <property name="text" >
-         <string>1</string>
+         <string/>
         </property>
         <property name="cursorPosition" >
-         <number>1</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
@@ -164,7 +164,7 @@
          <bool>false</bool>
         </property>
         <property name="text" >
-         <string>1</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -181,15 +181,28 @@
          <bool>false</bool>
         </property>
         <property name="text" >
-         <string>1</string>
+         <string/>
         </property>
         <property name="cursorPosition" >
-         <number>1</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

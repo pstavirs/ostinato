@@ -17,7 +17,7 @@ class VlanProtocol : public AbstractProtocol
 {
 private:
 	OstProto::Vlan	data;
-	static VlanConfigForm	*configForm;
+	VlanConfigForm	*configForm;
 	enum Vlanfield
 	{
 		vlan_tpid,
@@ -32,16 +32,14 @@ private:
 	};
 
 public:
-	VlanProtocol(ProtocolList &frameProtoList, 
-		OstProto::StreamCore *parent = 0);
+	VlanProtocol(StreamBase *stream);
 	virtual ~VlanProtocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList,
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream);
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
 	virtual QString name() const;
 	virtual QString shortName() const;

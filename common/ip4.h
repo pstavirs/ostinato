@@ -16,6 +16,7 @@ class Ip4ConfigForm : public QWidget, public Ui::ip4
 	Q_OBJECT
 public:
 	Ip4ConfigForm(QWidget *parent = 0);
+	~Ip4ConfigForm();
 private slots:
 	void on_cmbIpSrcAddrMode_currentIndexChanged(int index);
 	void on_cmbIpDstAddrMode_currentIndexChanged(int index);
@@ -25,7 +26,7 @@ class Ip4Protocol : public AbstractProtocol
 {
 private:
 	OstProto::Ip4	data;
-	static Ip4ConfigForm	*configForm;
+	Ip4ConfigForm	*configForm;
 	enum ip4field
 	{
 		ip4_ver = 0,
@@ -58,16 +59,14 @@ private:
 	};
 
 public:
-	Ip4Protocol(ProtocolList &frameProtoList, 
-		OstProto::StreamCore *parent = 0);
+	Ip4Protocol(StreamBase *stream);
 	virtual ~Ip4Protocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList,
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream);
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
 	virtual QString name() const;
 	virtual QString shortName() const;

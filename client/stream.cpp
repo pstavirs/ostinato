@@ -2,16 +2,14 @@
 #include <QHostAddress>
 
 #include "stream.h"
+//#include "../common/protocollist.h"
+#include "../common/protocollistiterator.h"
+#include "../common/abstractprotocol.h"
 
 Stream::Stream()
 {
 	//mId = 0xFFFFFFFF;
-	mCore->set_is_enabled(true);
-
-	QList<int> protoList;
-	protoList.append(51);
-	protoList.append(52);
-	setFrameProtocol(protoList);
+	setEnabled(true);
 }
 
 Stream::~Stream()
@@ -20,10 +18,43 @@ Stream::~Stream()
 
 void Stream::loadProtocolWidgets()
 {
-	protocols.loadConfigWidgets();
+#if 0
+	//protocols.loadConfigWidgets();
+	foreach(AbstractProtocol* proto, *currentFrameProtocols)
+	{
+		proto->loadConfigWidget();
+	}
+#else
+	ProtocolListIterator	*iter;
+
+	iter = createProtocolListIterator();
+	while (iter->hasNext())
+	{
+		AbstractProtocol* p = iter->next();
+		p->loadConfigWidget();
+	}
+	delete iter;
+#endif
 }
 
 void Stream::storeProtocolWidgets()
 {
-	protocols.storeConfigWidgets();
+#if 0
+	//protocols.storeConfigWidgets();
+	foreach(const AbstractProtocol* proto, frameProtocol())
+	{
+		proto->storeConfigWidget();
+		_iter->toFront();
+	}
+#else
+	ProtocolListIterator	*iter;
+
+	iter = createProtocolListIterator();
+	while (iter->hasNext())
+	{
+		AbstractProtocol* p = iter->next();
+		p->storeConfigWidget();
+	}
+	delete iter;
+#endif
 }

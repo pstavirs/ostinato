@@ -27,20 +27,21 @@ public:
 	~StreamConfigDialog();
 
 private: 
-	//QList<Stream>	*mpStreamList;
 
 	QButtonGroup	*bgFrameType;
 	QButtonGroup	*bgL3Proto;
 	QButtonGroup	*bgL4Proto;
 
+	QStringListModel *mpAvailableProtocolsModel;
+
 	Port&			mPort;
 	uint			mCurrentStreamIndex;
-	Stream			*mpStream;
-	QList<int>		mSelectedProtocols;
+
+	Stream					*mpStream;
+	ProtocolListIterator	*_iter;
 
 	PacketModel		*mpPacketModel;
 	ModelTest		*mpPacketModelTester;
-
 
 	// The following static variables are used to track the "selected" tab
     // for the various tab widgets so that it can be restored when the dialog

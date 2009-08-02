@@ -17,6 +17,6 @@ message Payload {
 	//optional uint32				data_start_ofs = 13;
 }
 
-extend Stream {
+extend Protocol {
 	optional Payload payload = 52;
 }

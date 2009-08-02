@@ -3,45 +3,44 @@
 
 #include "eth2.h"
 
-Eth2ConfigForm *Eth2Protocol::configForm = NULL;
-
 Eth2ConfigForm::Eth2ConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-Eth2Protocol::Eth2Protocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+Eth2Protocol::Eth2Protocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new Eth2ConfigForm;
+	configForm = NULL;
 }
 
 Eth2Protocol::~Eth2Protocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* Eth2Protocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* Eth2Protocol::createInstance(StreamBase *stream)
 {
-	return new Eth2Protocol(frameProtoList, streamCore);
+	return new Eth2Protocol(stream);
 }
 
-void Eth2Protocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 Eth2Protocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::eth2)->CopyFrom(data);
+	return OstProto::Protocol::kEth2FieldNumber;
 }
 
-void Eth2Protocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void Eth2Protocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::eth2))
-		data.MergeFrom(stream.GetExtension(OstProto::eth2));
+	protocol.MutableExtension(OstProto::eth2)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void Eth2Protocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::eth2))
+		data.MergeFrom(protocol.GetExtension(OstProto::eth2));
 }
 
 QString Eth2Protocol::name() const
@@ -121,11 +120,15 @@ bool Eth2Protocol::setFieldData(int index, const QVariant &value,
 
 QWidget* Eth2Protocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new Eth2ConfigForm;
 	return configForm;
 }
 
 void Eth2Protocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leType->setText(uintToHexStr(
 		fieldData(eth2_type, FieldValue).toUInt(), 2));
 }
@@ -133,6 +136,8 @@ void Eth2Protocol::loadConfigWidget()
 void Eth2Protocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_type(configForm->leType->text().remove(QChar(' ')).toULong(&isOk, 16));
 }

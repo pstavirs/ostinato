@@ -3,8 +3,6 @@
 
 #include "mac.h"
 
-MacConfigForm *MacProtocol::configForm = NULL;
-
 MacConfigForm::MacConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
@@ -15,6 +13,11 @@ MacConfigForm::MacConfigForm(QWidget *parent)
 	leSrcMac->setValidator(new QRegExpValidator(reMac, this));
 	leDstMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
 	leSrcMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
+}
+
+MacConfigForm::~MacConfigForm()
+{
+	qDebug("In MacConfigForm destructor");
 }
 
 void MacConfigForm::on_cmbDstMacMode_currentIndexChanged(int index)
@@ -46,37 +49,38 @@ void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 }
 
 
-MacProtocol::MacProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+MacProtocol::MacProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new MacConfigForm;
+	configForm = NULL;
 }
 
 MacProtocol::~MacProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* MacProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* MacProtocol::createInstance(StreamBase *stream)
 {
-	return new MacProtocol(frameProtoList, streamCore);
+	return new MacProtocol(stream);
 }
 
-void MacProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 MacProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::mac)->CopyFrom(data);
+	return OstProto::Protocol::kMacFieldNumber;
 }
 
-void MacProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void MacProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::mac))
-		data.MergeFrom(stream.GetExtension(OstProto::mac));
+	protocol.MutableExtension(OstProto::mac)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void MacProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() && 
+			protocol.HasExtension(OstProto::mac))
+		data.MergeFrom(protocol.GetExtension(OstProto::mac));
 }
 
 QString MacProtocol::name() const
@@ -238,11 +242,15 @@ bool MacProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* MacProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new MacConfigForm;
 	return configForm;
 }
 
 void MacProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leDstMac->setText(uintToHexStr(data.dst_mac(), 6));
 	configForm->cmbDstMacMode->setCurrentIndex(data.dst_mac_mode());
 	configForm->leDstMacCount->setText(QString().setNum(data.dst_mac_count()));
@@ -257,6 +265,8 @@ void MacProtocol::loadConfigWidget()
 void MacProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_dst_mac(configForm->leDstMac->text().remove(QChar(' ')).
 			toULongLong(&isOk, 16));

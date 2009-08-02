@@ -136,7 +136,7 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
 			return true;
 
 		case StreamStatus:
-			mCurrentPort->streamByIndex(index.row())->setIsEnabled(value.toBool());
+			mCurrentPort->streamByIndex(index.row())->setEnabled(value.toBool());
 			emit(dataChanged(index, index));
 			return true;
 

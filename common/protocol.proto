@@ -28,7 +28,7 @@ message StreamCore {
 	optional uint32				frame_len_max = 17 [default = 1518];
 
 	// Currently Selected Protocols
-	repeated uint32				frame_proto = 20;
+	//repeated uint32				frame_proto = 20;
 }
 
 message StreamControl {
@@ -61,14 +61,45 @@ message StreamControl {
 
 }
 
+message ProtocolId {
+	required uint32 id = 1;
+}
+
+message Protocol {
+
+	required ProtocolId protocol_id = 1;
+
+	extensions 51 to 100;	// Reserved for Ostinato Use
+	extensions 101 to 200;	// Available for use by protocols
+
+	enum k {
+		kMacFieldNumber = 51;
+		kPayloadFieldNumber = 52;
+
+		kEth2FieldNumber = 121;
+		kDot3FieldNumber = 122;
+		kLlcFieldNumber = 123;
+		kSnapFieldNumber = 124;
+
+		kVlanFieldNumber = 126;
+
+		kIp4FieldNumber = 130;
+		kArpFieldNumber = 131;
+
+		kTcpFieldNumber = 140;
+		kUdpFieldNumber = 141;
+		kIcmpFieldNumber = 142;
+		kIgmpFieldNumber = 143;
+	}
+}
+
 message Stream {
 
 	required StreamId stream_id = 1;
 	optional StreamCore core = 2;
 	optional StreamControl control = 3;
 
-	extensions 51 to 100;	// Reserved for Ostinato Use
-	extensions 101 to 200;	// Available for use by protocols
+	repeated Protocol protocol = 4;
 }
 
 message Void {

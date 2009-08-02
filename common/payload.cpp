@@ -3,10 +3,9 @@
 
 //#include "../client/stream.h"
 #include "payload.h"
+#include "streambase.h"
 
 #define SZ_FCS		4
-
-PayloadConfigForm *PayloadProtocol::configForm = NULL;
 
 PayloadConfigForm::PayloadConfigForm(QWidget *parent)
 	: QWidget(parent)
@@ -31,37 +30,38 @@ void PayloadConfigForm::on_cmbPatternMode_currentIndexChanged(int index)
 	}
 }
 
-PayloadProtocol::PayloadProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+PayloadProtocol::PayloadProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new PayloadConfigForm;
+	configForm = NULL;
 }
 
 PayloadProtocol::~PayloadProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* PayloadProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* PayloadProtocol::createInstance(StreamBase *stream)
 {
-	return new PayloadProtocol(frameProtoList, streamCore);
+	return new PayloadProtocol(stream);
 }
 
-void PayloadProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 PayloadProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::payload)->CopyFrom(data);
+	return OstProto::Protocol::kPayloadFieldNumber;
 }
 
-void PayloadProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void PayloadProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::payload))
-		data.MergeFrom(stream.GetExtension(OstProto::payload));
+	protocol.MutableExtension(OstProto::payload)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void PayloadProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::payload))
+		data.MergeFrom(protocol.GetExtension(OstProto::payload));
 }
 
 QString PayloadProtocol::name() const
@@ -76,7 +76,7 @@ QString PayloadProtocol::shortName() const
 
 int	PayloadProtocol::protocolFrameSize() const
 {
-	return (stream->frame_len() - protocolFrameOffset() - SZ_FCS);
+	return (mpStream->frameLen() - protocolFrameOffset() - SZ_FCS);
 }
 
 int	PayloadProtocol::fieldCount() const
@@ -124,7 +124,7 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					int dataLen;
 
-					dataLen = stream->frame_len() - protocolFrameOffset();
+					dataLen = mpStream->frameLen() - protocolFrameOffset();
 					dataLen -= SZ_FCS;
 					fv.resize(dataLen+4);
 					switch(data.pattern_mode())
@@ -179,12 +179,15 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* PayloadProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new PayloadConfigForm;
 	return configForm;
-	//return new PayloadConfigForm;
 }
 
 void PayloadProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->cmbPatternMode->setCurrentIndex(data.pattern_mode());
 	configForm->lePattern->setText(uintToHexStr(data.pattern(), 4));
 }
@@ -192,6 +195,8 @@ void PayloadProtocol::loadConfigWidget()
 void PayloadProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_pattern_mode((OstProto::Payload::DataPatternMode) 
 		configForm->cmbPatternMode->currentIndex());

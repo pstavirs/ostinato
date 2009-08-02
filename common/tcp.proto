@@ -21,7 +21,7 @@ message Tcp {
 	optional uint32		urg_ptr = 11;
 }
 
-extend Stream {
+extend Protocol {
 	optional Tcp tcp = 140;
 }
 

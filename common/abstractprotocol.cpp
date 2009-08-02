@@ -1,5 +1,8 @@
 #include <qendian.h>
+
 #include "abstractprotocol.h" 
+#include "streambase.h"
+#include "protocollistiterator.h"
 
 /*!
   \class AbstractProtocol
@@ -19,13 +22,9 @@
   - metaFieldCount()
   - isMetaField()
 */
-AbstractProtocol::AbstractProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-		: frameProtocols(frameProtoList)
+AbstractProtocol::AbstractProtocol(StreamBase *stream)
 {
-	qDebug("%s: &frameproto = %p/%p (sz:%d)", __FUNCTION__, &frameProtocols, &frameProtoList, frameProtocols.size());
-	stream = parent;
+	mpStream = stream;
 	metaCount = -1;
 	protoSize = -1;
 }
@@ -34,11 +33,15 @@ AbstractProtocol::~AbstractProtocol()
 {
 }
 
-AbstractProtocol* AbstractProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream)
 {
 	return NULL;
+}
+
+quint32 AbstractProtocol::protocolNumber() const
+{
+	qDebug("Something wrong!!!");
+	return 0xFFFFFFFF;
 }
 
 /*!
@@ -182,13 +185,14 @@ quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
 quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
 {
 	quint32 id = 0xFFFFFFFF;
-	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
 
-	if (iter.findNext(this))
+	if (iter->findNext(this))
 	{
-		if (iter.hasNext())
-			id = iter.next()->protocolId(type);
+		if (iter->hasNext())
+			id = iter->next()->protocolId(type);
 	}
+	delete iter;
 
 	qDebug("%s: payloadProtocolId = %u", __FUNCTION__, id);
 	return id;
@@ -215,16 +219,17 @@ int AbstractProtocol::protocolFrameSize() const
 int AbstractProtocol::protocolFrameOffset() const
 {
 	int size = 0;
-	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
 
-	if (iter.findNext(this))
+	if (iter->findNext(this))
 	{
-		iter.previous();
-		while (iter.hasPrevious())
-			size += iter.previous()->protocolFrameSize();
+		iter->previous();
+		while (iter->hasPrevious())
+			size += iter->previous()->protocolFrameSize();
 	}
 	else
 		return -1;
+	delete iter;
 
 	qDebug("%s: ofs = %d", __FUNCTION__, size);
 	return size;
@@ -234,15 +239,16 @@ int AbstractProtocol::protocolFramePayloadSize() const
 {
 	int size = 0;
 
-	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
 
-	if (iter.findNext(this))
+	if (iter->findNext(this))
 	{
-		while (iter.hasNext())
-			size += iter.next()->protocolFrameSize();
+		while (iter->hasNext())
+			size += iter->next()->protocolFrameSize();
 	}
 	else
 		return -1;
+	delete iter;
 
 	qDebug("%s: payloadSize = %d", __FUNCTION__, size);
 	return size;
@@ -421,17 +427,18 @@ quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex,
 	CksumType cksumType) const
 {
 	quint32 sum = 0xFFFF;
-	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
 
 	Q_ASSERT(cksumType == CksumIpPseudo);
 
-	if (iter.findNext(this))
+	if (iter->findNext(this))
 	{
-		iter.previous();
-		if (iter.hasPrevious())
-			sum = iter.previous()->protocolFrameCksum(streamIndex,
+		iter->previous();
+		if (iter->hasPrevious())
+			sum = iter->previous()->protocolFrameCksum(streamIndex,
 				CksumIpPseudo);
 	}
+	delete iter;
 
 	while(sum>>16)
 		sum = (sum & 0xFFFF) + (sum >> 16);
@@ -444,20 +451,21 @@ quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
 {
 	quint32 sum = 0;
 	quint16 cksum;
-	QLinkedListIterator<const AbstractProtocol*> iter(frameProtocols);
+	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
 
 	Q_ASSERT(cksumType == CksumIp);
 
-	if (iter.findNext(this))
+	if (iter->findNext(this))
 	{
-		while (iter.hasNext())
+		while (iter->hasNext())
 		{
-			cksum = iter.next()->protocolFrameCksum(streamIndex, CksumIp);
+			cksum = iter->next()->protocolFrameCksum(streamIndex, CksumIp);
 			sum += (quint16) ~cksum;
 		}
 	}
 	else
 		return 0;
+	delete iter;
 
 	while(sum>>16)
 		sum = (sum & 0xFFFF) + (sum >> 16);

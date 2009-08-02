@@ -3,45 +3,44 @@
 
 #include "snap.h"
 
-SnapConfigForm *SnapProtocol::configForm = NULL;
-
 SnapConfigForm::SnapConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-SnapProtocol::SnapProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+SnapProtocol::SnapProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new SnapConfigForm;
+	configForm = NULL;
 }
 
 SnapProtocol::~SnapProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* SnapProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* SnapProtocol::createInstance(StreamBase *stream)
 {
-	return new SnapProtocol(frameProtoList, streamCore);
+	return new SnapProtocol(stream);
 }
 
-void SnapProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 SnapProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::snap)->CopyFrom(data);
+	return OstProto::Protocol::kSnapFieldNumber;
 }
 
-void SnapProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void SnapProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::snap))
-		data.MergeFrom(stream.GetExtension(OstProto::snap));
+	protocol.MutableExtension(OstProto::snap)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void SnapProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::snap))
+		data.MergeFrom(protocol.GetExtension(OstProto::snap));
 }
 
 QString SnapProtocol::name() const
@@ -140,11 +139,15 @@ bool SnapProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* SnapProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new SnapConfigForm;
 	return configForm;
 }
 
 void SnapProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leOui->setText(uintToHexStr(
 		fieldData(snap_oui, FieldValue).toUInt(), 3));
 	configForm->leType->setText(uintToHexStr(
@@ -154,6 +157,8 @@ void SnapProtocol::loadConfigWidget()
 void SnapProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_oui(configForm->leOui->text().toULong(&isOk, BASE_HEX));
 	data.set_type(configForm->leType->text().toULong(&isOk, BASE_HEX));

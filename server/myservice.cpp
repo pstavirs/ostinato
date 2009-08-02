@@ -1,8 +1,12 @@
-#include "myservice.h"
-#include "qdebug.h"
 
 #include <qglobal.h>
 #include <qendian.h>
+#include "qdebug.h"
+
+#include "myservice.h"
+#include "../common/protocollist.h"
+#include "../common/abstractprotocol.h"
+
 
 #if 0
 #include <pcap-int.h>
@@ -26,50 +30,31 @@ StreamInfo::~StreamInfo()
 {
 }
 
-#if 0
-quint32 StreamInfo::pseudoHdrCksumPartial(quint32 srcIp, quint32 dstIp, 
-		quint8 protocol, quint16 len)
-{
-	quint32 sum;
-
-	sum = srcIp >> 16;
-	sum += srcIp & 0xFFFF;
-	sum += dstIp >> 16;
-	sum += dstIp & 0xFFFF;
-	sum += (quint16) (protocol);
-	sum += len;
-
-	// Above calculation done assuming 'big endian' - so convert to host order
-	return qFromBigEndian(sum);
-}
-#endif
-
-
 int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 {
 	int		pktLen, len = 0;
 
 	// Decide a frame length based on length mode
-	switch(mCore->len_mode())
+	switch(lenMode())
 	{
 		case OstProto::StreamCore::e_fl_fixed:
-			pktLen = mCore->frame_len();
+			pktLen = frameLen();
 			break;
 		case OstProto::StreamCore::e_fl_inc:
-			pktLen = mCore->frame_len_min() + (n %
-				(mCore->frame_len_max() - mCore->frame_len_min() + 1));
+			pktLen = frameLenMin() + (n %
+				(frameLenMax() - frameLenMin() + 1));
 			break;
 		case OstProto::StreamCore::e_fl_dec:
-			pktLen = mCore->frame_len_max() - (n %
-				(mCore->frame_len_max() - mCore->frame_len_min() + 1));
+			pktLen = frameLenMax() - (n %
+				(frameLenMax() - frameLenMin() + 1));
 			break;
 		case OstProto::StreamCore::e_fl_random:
-			pktLen = mCore->frame_len_min() + (qrand() %
-				(mCore->frame_len_max() - mCore->frame_len_min() + 1));
+			pktLen = frameLenMin() + (qrand() %
+				(frameLenMax() - frameLenMin() + 1));
 			break;
 		default:
 			qWarning("Unhandled len mode %d. Using default 64", 
-					mCore->len_mode());
+					lenMode());
 			pktLen = 64;
 			break;
 	}
@@ -81,11 +66,11 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 		return 0;
 
 	// FIXME: Calculated pktLen is an input to Payload Protocol
-	for (int i = 0; i < mCore->frame_proto_size(); i++)
+	foreach(const AbstractProtocol* proto, *currentFrameProtocols)
 	{
 		QByteArray 			ba;
 
-		ba = protocol(mCore->frame_proto(i))->protocolFrameValue(n);
+		ba = proto->protocolFrameValue(n);
 		if (len + ba.size() < bufMaxSize)
 		{
 			memcpy(buf+len, ba.constData(), ba.size());
@@ -94,379 +79,6 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 	}
 
 	return pktLen;
-
-#if 0 // Proto FW
-	int		u, pktLen, dataLen, len = 0;
-	quint32 srcIp, dstIp;	// need it later for TCP/UDP cksum calculation
-	quint32 cumCksum = 0;	// cumulative cksum used to combine partial cksums
-	int tcpOfs, udpOfs;		// needed to fill in cksum later
-	uchar	scratch[8];
-
-	// We always have a Mac Header!
-	switch (d.mac().dst_mac_mode())
-	{
-		case OstProto::Mac::e_mm_fixed:
-			qToBigEndian((quint64) d.mac().dst_mac(), scratch);
-			break;
-		case OstProto::Mac::e_mm_inc:
-			u = (n % d.mac().dst_mac_count()) * d.mac().dst_mac_step(); 
-			qToBigEndian((quint64) d.mac().dst_mac() + u, scratch);
-			break;
-		case OstProto::Mac::e_mm_dec:
-			u = (n % d.mac().dst_mac_count()) * d.mac().dst_mac_step(); 
-			qToBigEndian((quint64) d.mac().dst_mac() - u, scratch);
-			break;
-		default:
-			qWarning("Unhandled dstMac_mode %d", d.mac().dst_mac_mode());
-	}
-	memcpy((buf + len), scratch + 2, 6);
-	len += 6;
-
-	switch (d.mac().src_mac_mode())
-	{
-		case OstProto::Mac::e_mm_fixed:
-			qToBigEndian((quint64) d.mac().src_mac(), scratch);
-			break;
-		case OstProto::Mac::e_mm_inc:
-			u = (n % d.mac().src_mac_count()) * d.mac().src_mac_step(); 
-			qToBigEndian((quint64) d.mac().src_mac() + u, scratch);
-			break;
-		case OstProto::Mac::e_mm_dec:
-			u = (n % d.mac().src_mac_count()) * d.mac().src_mac_step(); 
-			qToBigEndian((quint64) d.mac().src_mac() - u, scratch);
-			break;
-		default:
-			qWarning("Unhandled srcMac_mode %d", d.mac().src_mac_mode());
-	}
-	memcpy((buf + len), scratch + 2, 6);
-	len += 6;
-
-
-	// Frame Type - Part 1 (pre VLAN info)
-	switch(d.core().ft())
-	{
-	case OstProto::StreamCore::e_ft_none:
-	case OstProto::StreamCore::e_ft_eth_2:
-		break;
-	case OstProto::StreamCore::e_ft_802_3_raw:
-		qToBigEndian((quint16) pktLen, buf+len);
-		len += 2;
-		break;
-	case OstProto::StreamCore::e_ft_802_3_llc:
-		qToBigEndian((quint16) pktLen, buf+len);
-		len += 2;
-		buf[len+0] = (quint8) d.llc().dsap();
-		buf[len+1] = (quint8) d.llc().ssap();
-		buf[len+2] = (quint8) d.llc().ctl();
-		len +=3;
-		break;
-	case OstProto::StreamCore::e_ft_snap:
-		qToBigEndian((quint16) pktLen, buf+len);
-		len += 2;
-		buf[len+0] = (quint8) d.llc().dsap();
-		buf[len+1] = (quint8) d.llc().ssap();
-		buf[len+2] = (quint8) d.llc().ctl();
-		len +=3;
-		qToBigEndian((quint32) d.snap().oui(), scratch);
-		memcpy((buf + len), scratch + 2, 3);
-		len += 3;
-		break;
-	default:
-		qWarning("Unhandled frame type %d\n", d.core().ft());
-	}
-
-	// VLAN
-	if (d.vlan().is_svlan_tagged())
-	{
-		if (d.vlan().is_stpid_override())
-			qToBigEndian((quint16) d.vlan().stpid(), buf+len);
-		else
-			qToBigEndian((quint16) 0x88a8, buf+len);
-		len += 2 ;
-
-		qToBigEndian((quint16) d.vlan().svlan_tag(), buf+len);
-		len += 2 ;
-	}
-
-	if (d.vlan().is_cvlan_tagged())
-	{
-		if (d.vlan().is_ctpid_override())
-			qToBigEndian((quint16) d.vlan().ctpid(), buf+len);
-		else
-			qToBigEndian((quint16) 0x8100, buf+len);
-		len += 2 ;
-
-		qToBigEndian((quint16) d.vlan().cvlan_tag(), buf+len);
-		len += 2 ;
-	}
-
-	// Frame Type - Part 2 (post VLAN info)
-	switch(d.core().ft())
-	{
-	case OstProto::StreamCore::e_ft_none:
-		break;
-	case OstProto::StreamCore::e_ft_eth_2:
-		qToBigEndian((quint16) d.eth2().type(), buf+len);
-		len += 2;
-		break;
-	case OstProto::StreamCore::e_ft_802_3_raw:
-	case OstProto::StreamCore::e_ft_802_3_llc:
-		break;
-	case OstProto::StreamCore::e_ft_snap:
-		qToBigEndian((quint16) d.eth2().type(), buf+len);
-		len += 2;
-		break;
-	default:
-		qWarning("Unhandled frame type %d\n", d.core().ft());
-	}
-
-	// L3
-	switch (d.core().l3_proto())
-	{
-	case OstProto::StreamCore::e_l3_none:
-		break;
-	case OstProto::StreamCore::e_l3_ip:
-	{
-		quint32 subnet, host;
-		int ipOfs = len;
-
-		buf[len+0] = (quint8) (d.ip().ver_hdrlen());
-		buf[len+1] = (quint8) (d.ip().tos());
-		len += 2;
-
-		if (d.ip().is_override_totlen())
-			qToBigEndian((quint16) d.ip().tot_len(), buf+len);
-		else
-			qToBigEndian((quint16) (pktLen - ipOfs), buf+len);
-		len += 2;
-
-		qToBigEndian((quint16) d.ip().id(), buf+len);
-		len += 2;
-
-		qToBigEndian((quint16) (( (d.ip().flags() & 0x3) << 13) | 
-					(d.ip().frag_ofs() & 0x1FFF)), buf+len);
-		len += 2;
-
-		buf[len+0] = (quint8) (d.ip().ttl());
-		buf[len+1] = (quint8) (d.ip().proto());
-		len += 2;
-
-		// cksum calculated after filling in the rest
-		qToBigEndian((quint16) 0, buf+len);
-		len += 2;
-
-		// Get Src/Dst IP for this packet using respective IpMode
-		switch(d.ip().src_ip_mode())
-		{
-			case OstProto::Ip::e_im_fixed:
-				srcIp = (quint32) d.ip().src_ip();
-				qToBigEndian(srcIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_inc_host:
-				u = n % d.ip().src_ip_count();
-				subnet = d.ip().src_ip() & d.ip().src_ip_mask();
-				host = (((d.ip().src_ip() & ~d.ip().src_ip_mask()) + u) &
-					~d.ip().src_ip_mask());
-				srcIp = (quint32) (subnet | host);
-				qToBigEndian(srcIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_dec_host:
-				u = n % d.ip().src_ip_count();
-				subnet = d.ip().src_ip() & d.ip().src_ip_mask();
-				host = (((d.ip().src_ip() & ~d.ip().src_ip_mask()) - u) &
-					~d.ip().src_ip_mask());
-				srcIp = (quint32) (subnet | host);
-				qToBigEndian(srcIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_random_host:
-				subnet = d.ip().src_ip() & d.ip().src_ip_mask();
-				host = (qrand() & ~d.ip().src_ip_mask());
-				srcIp = (quint32) (subnet | host);
-				qToBigEndian(srcIp, buf+len);
-				break;
-			default:
-				qWarning("Unhandled src_ip_mode = %d", d.ip().src_ip_mode());
-		}
-		len +=4;
-
-		switch(d.ip().dst_ip_mode())
-		{
-			case OstProto::Ip::e_im_fixed:
-				dstIp = (quint32) d.ip().dst_ip();
-				qToBigEndian(dstIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_inc_host:
-				u = n % d.ip().dst_ip_count();
-				subnet = d.ip().dst_ip() & d.ip().dst_ip_mask();
-				host = (((d.ip().dst_ip() & ~d.ip().dst_ip_mask()) + u) &
-					~d.ip().dst_ip_mask());
-				dstIp = (quint32) (subnet | host);
-				qToBigEndian(dstIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_dec_host:
-				u = n % d.ip().dst_ip_count();
-				subnet = d.ip().dst_ip() & d.ip().dst_ip_mask();
-				host = (((d.ip().dst_ip() & ~d.ip().dst_ip_mask()) - u) &
-					~d.ip().dst_ip_mask());
-				dstIp = (quint32) (subnet | host);
-				qToBigEndian(dstIp, buf+len);
-				break;
-			case OstProto::Ip::e_im_random_host:
-				subnet = d.ip().dst_ip() & d.ip().dst_ip_mask();
-				host = (qrand() & ~d.ip().dst_ip_mask());
-				dstIp = (quint32) (subnet | host);
-				qToBigEndian(dstIp, buf+len);
-				break;
-			default:
-				qWarning("Unhandled dst_ip_mode = %d", d.ip().dst_ip_mode());
-		}
-		len +=4;
-
-		// Calculate and fill in cksum (unless overridden)
-		if (d.ip().is_override_cksum())
-			qToBigEndian((quint16) d.ip().cksum(), buf+ipOfs+10);
-		else
-			*((quint16*)(buf + ipOfs + 10)) = ipv4Cksum(buf + ipOfs, len-ipOfs);
-		break;
-
-	}
-	case OstProto::StreamCore::e_l3_arp:
-		// TODO(LOW)
-		break;
-	default:
-		qWarning("Unhandled l3 proto %d\n", d.core().l3_proto());
-	}
-
-	switch (d.core().l4_proto())
-	{
-	case OstProto::StreamCore::e_l4_none:
-		break;
-	case OstProto::StreamCore::e_l4_tcp:
-	{
-		tcpOfs = len;
-
-		cumCksum = pseudoHdrCksumPartial(srcIp, dstIp, 6, pktLen - len);
-
-		qToBigEndian((quint16) d.tcp().src_port(), buf+len);
-		len += 2;
-		qToBigEndian((quint16) d.tcp().dst_port(), buf+len);
-		len += 2;
-
-		qToBigEndian((quint32) d.tcp().seq_num(), buf+len);
-		len += 4;
-		qToBigEndian((quint32) d.tcp().ack_num(), buf+len);
-		len += 4;
-
-		if (d.tcp().is_override_hdrlen())
-			buf[len+0] = (quint8) d.tcp().hdrlen_rsvd();
-		else
-			buf[len+0] = (quint8) 0x50; // FIXME(LOW): Hardcoding
-		buf[len+1] = (quint8) d.tcp().flags();
-		len += 2;
-
-		qToBigEndian((quint16) d.tcp().window(), buf+len);
-		len +=2;
-
-		// Fill in cksum as 0 for cksum calculation, actual cksum filled later
-		qToBigEndian((quint16) 0, buf+len);
-		len +=2;
-
-		qToBigEndian((quint16) d.tcp().urg_ptr(), buf+len);
-		len +=2;
-
-		// Accumulate cumulative cksum
-		cumCksum += ipv4CksumPartial(buf + tcpOfs, len - tcpOfs);
-
-		break;
-	}
-	case OstProto::StreamCore::e_l4_udp:
-	{
-		udpOfs = len;
-
-		cumCksum = pseudoHdrCksumPartial(srcIp, dstIp, 17, pktLen - len);
-
-		qToBigEndian((quint16) d.udp().src_port(), buf+len);
-		len += 2;
-		qToBigEndian((quint16) d.udp().dst_port(), buf+len);
-		len += 2;
-
-		if (d.udp().is_override_totlen())
-			qToBigEndian((quint16) d.udp().totlen(), buf+len);
-		else
-			qToBigEndian((quint16) (pktLen - udpOfs), buf+len);
-		len +=2;
-
-		// Fill in cksum as 0 for cksum calculation, actual cksum filled later
-		qToBigEndian((quint16) 0, buf+len);
-		len +=2;
-
-		// Accumulate cumulative cksum
-		cumCksum += ipv4CksumPartial(buf + udpOfs, len - udpOfs);
-
-		break;
-	}
-	case OstProto::StreamCore::e_l4_icmp:
-		// TODO(LOW)
-		break;
-	case OstProto::StreamCore::e_l4_igmp:
-		// TODO(LOW)
-		break;
-	default:
-		qWarning("Unhandled l4 proto %d\n", d.core().l4_proto());
-	}
-
-	// Fill-in the data pattern
-	dataLen = pktLen - len;
-	switch(d.core().pattern_mode())
-	{
-		case OstProto::StreamCore::e_dp_fixed_word:
-			for (int i = 0; i < (dataLen/4)+1; i++)
-				qToBigEndian((quint32) d.core().pattern(), buf+len+(i*4));
-			break;
-		case OstProto::StreamCore::e_dp_inc_byte:
-			for (int i = 0; i < dataLen; i++)
-				buf[len + i] = i % (0xFF + 1);
-			break;
-		case OstProto::StreamCore::e_dp_dec_byte:
-			for (int i = 0; i < dataLen; i++)
-				buf[len + i] = 0xFF - (i % (0xFF + 1));
-			break;
-		case OstProto::StreamCore::e_dp_random:
-			for (int i = 0; i < dataLen; i++)
-				buf[len + i] =  qrand() % (0xFF + 1);
-			break;
-		default:
-			qWarning("Unhandled data pattern %d", d.core().pattern_mode());
-	}
-#endif
-
-#if 0 // Proto FW
-	// Calculate TCP/UDP checksum over the data pattern/payload and fill in
-	switch (d.core().l4_proto())
-	{
-	case OstProto::StreamCore::e_l4_tcp:
-		if (d.tcp().is_override_cksum())
-			qToBigEndian((quint16) d.tcp().cksum(), buf + tcpOfs + 16);
-		else
-			*((quint16*)(buf + tcpOfs + 16)) = 
-				ipv4Cksum(buf + len, dataLen, cumCksum);
-		break;
-	case OstProto::StreamCore::e_l4_udp:
-		if (d.udp().is_override_cksum())
-			qToBigEndian((quint16) d.udp().cksum(), buf + udpOfs + 6);
-		else
-			*((quint16*)(buf + udpOfs + 6)) = 
-				ipv4Cksum(buf + len, dataLen, cumCksum);
-		break;
-	case OstProto::StreamCore::e_l4_none:
-	case OstProto::StreamCore::e_l4_icmp:
-	case OstProto::StreamCore::e_l4_igmp:
-		// No cksum processing required
-		break;
-	}
-	return pktLen;
-#endif
-
 }
 
 
@@ -589,28 +201,28 @@ void PortInfo::update()
 	for (int i = 0; i < streamList.size(); i++)
 	{
 //_restart:
-		if (streamList[i]->mCore->is_enabled())
+		if (streamList[i]->isEnabled())
 		{
 			long numPackets, numBursts;
 			long ibg, ipg;
 
-			switch (streamList[i]->mControl->unit())
+			switch (streamList[i]->sendUnit())
 			{
 			case OstProto::StreamControl::e_su_bursts:
-				numBursts = streamList[i]->mControl->num_bursts();
-				numPackets = streamList[i]->mControl->packets_per_burst();
-				ibg = 1000000/streamList[i]->mControl->bursts_per_sec();
+				numBursts = streamList[i]->numBursts();
+				numPackets = streamList[i]->burstSize();
+				ibg = 1000000/streamList[i]->burstRate();
 				ipg = 0;
 				break;
 			case OstProto::StreamControl::e_su_packets:
 				numBursts = 1;
-				numPackets = streamList[i]->mControl->num_packets();
+				numPackets = streamList[i]->numPackets();
 				ibg = 0;
-				ipg = 1000000/streamList[i]->mControl->packets_per_sec();
+				ipg = 1000000/streamList[i]->packetRate();
 				break;
 			default:
 				qWarning("Unhandled stream control unit %d",
-					streamList[i]->mControl->unit());
+					streamList[i]->sendUnit());
 				continue;
 			}
 			qDebug("numBursts = %ld, numPackets = %ld\n",
@@ -672,7 +284,7 @@ void PortInfo::update()
 				}
 			} // for (numBursts)
 
-			switch(streamList[i]->mControl->next())
+			switch(streamList[i]->nextWhat())
 			{
 				case ::OstProto::StreamControl::e_nw_stop:
 					goto _stop_no_more_pkts;
@@ -697,7 +309,7 @@ void PortInfo::update()
 
 				default:
 					qFatal("---------- %s: Unhandled case (%d) -----------",
-							__FUNCTION__, streamList[i]->mControl->next() );
+							__FUNCTION__, streamList[i]->nextWhat() );
 					break;
 			}
 

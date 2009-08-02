@@ -3,45 +3,44 @@
 
 #include "tcp.h"
 
-TcpConfigForm *TcpProtocol::configForm = NULL;
-
 TcpConfigForm::TcpConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-TcpProtocol::TcpProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+TcpProtocol::TcpProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new TcpConfigForm;
+	configForm = NULL;
 }
 
 TcpProtocol::~TcpProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* TcpProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* TcpProtocol::createInstance(StreamBase *stream)
 {
-	return new TcpProtocol(frameProtoList, streamCore);
+	return new TcpProtocol(stream);
 }
 
-void TcpProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 TcpProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::tcp)->CopyFrom(data);
+	return OstProto::Protocol::kTcpFieldNumber;
 }
 
-void TcpProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void TcpProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::tcp))
-		data.MergeFrom(stream.GetExtension(OstProto::tcp));
+	protocol.MutableExtension(OstProto::tcp)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void TcpProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::tcp))
+		data.MergeFrom(protocol.GetExtension(OstProto::tcp));
 }
 
 QString TcpProtocol::name() const
@@ -384,11 +383,15 @@ bool TcpProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* TcpProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new TcpConfigForm;
 	return configForm;
 }
 
 void TcpProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leTcpSrcPort->setText(QString().setNum(data.src_port()));
 	configForm->leTcpDstPort->setText(QString().setNum(data.dst_port()));
 
@@ -418,6 +421,8 @@ void TcpProtocol::storeConfigWidget()
 {
 	bool isOk;
 	int ff = 0;
+
+	configWidget();
 
 	data.set_src_port(configForm->leTcpSrcPort->text().toULong(&isOk));
 	data.set_dst_port(configForm->leTcpDstPort->text().toULong(&isOk));

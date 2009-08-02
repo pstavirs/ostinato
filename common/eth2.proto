@@ -7,6 +7,6 @@ message Eth2 {
 	optional uint32			type = 1;
 }
 
-extend Stream {
+extend Protocol {
 	optional Eth2 eth2 = 121;
 }

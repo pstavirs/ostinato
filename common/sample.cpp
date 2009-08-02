@@ -3,46 +3,44 @@
 
 #include "sample.h"
 
-SampleConfigForm *SampleProtocol::configForm = NULL;
-
 SampleConfigForm::SampleConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
-
 }
 
-SampleProtocol::SampleProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+SampleProtocol::SampleProtocol(StreamBase *stream);
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new SampleConfigForm;
+	configForm = NULL;
 }
 
 SampleProtocol::~SampleProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* SampleProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* SampleProtocol::createInstance(StreamBase *stream)
 {
 	return new SampleProtocol(frameProtoList, streamCore);
 }
 
-void SampleProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 SampleProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::sample)->CopyFrom(data);
+	return OstProto::Protocol::kSampleFieldNumber;
 }
 
-void SampleProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void SampleProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::sample))
-		data.MergeFrom(stream.GetExtension(OstProto::sample));
+	protocol.MutableExtension(OstProto::sample)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber())
+}
+
+void SampleProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id()->id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::sample))
+		data.MergeFrom(protocol.GetExtension(OstProto::sample));
 }
 
 QString SampleProtocol::name() const
@@ -156,15 +154,21 @@ bool SampleProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* SampleProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configFrom = new SampleConfigForm;
+
 	return configForm;
 }
 
 void SampleProtocol::loadConfigWidget()
 {
+	configWidget();
 }
 
 void SampleProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 }
 

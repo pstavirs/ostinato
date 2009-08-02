@@ -29,7 +29,8 @@ PROTOS += \
 HEADERS += \
 	abstractprotocol.h	\
 	protocolmanager.h \
-	protocolcollection.h \
+	protocollist.h \
+	protocollistiterator.h \
 	streambase.h \
 	mac.h \
 	payload.h \
@@ -44,7 +45,8 @@ HEADERS += \
 SOURCES += \
 	abstractprotocol.cpp \
 	protocolmanager.cpp \
-	protocolcollection.cpp \
+	protocollist.cpp \
+	protocollistiterator.cpp \
 	streambase.cpp \
 	mac.cpp \
 	payload.cpp \

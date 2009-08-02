@@ -3,45 +3,44 @@
 
 #include "udp.h"
 
-UdpConfigForm *UdpProtocol::configForm = NULL;
-
 UdpConfigForm::UdpConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-UdpProtocol::UdpProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+UdpProtocol::UdpProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new UdpConfigForm;
+	configForm = NULL;
 }
 
 UdpProtocol::~UdpProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* UdpProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* UdpProtocol::createInstance(StreamBase *stream)
 {
-	return new UdpProtocol(frameProtoList, streamCore);
+	return new UdpProtocol(stream);
 }
 
-void UdpProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 UdpProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::udp)->CopyFrom(data);
+	return OstProto::Protocol::kUdpFieldNumber;
 }
 
-void UdpProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void UdpProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::udp))
-		data.MergeFrom(stream.GetExtension(OstProto::udp));
+	protocol.MutableExtension(OstProto::udp)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void UdpProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::udp))
+		data.MergeFrom(protocol.GetExtension(OstProto::udp));
 }
 
 QString UdpProtocol::name() const
@@ -261,11 +260,15 @@ bool UdpProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* UdpProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new UdpConfigForm;
 	return configForm;
 }
 
 void UdpProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leUdpSrcPort->setText(fieldData(udp_srcPort, FieldValue).toString());
 	configForm->leUdpDstPort->setText(fieldData(udp_dstPort, FieldValue).toString());
 
@@ -280,6 +283,8 @@ void UdpProtocol::loadConfigWidget()
 void UdpProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_src_port(configForm->leUdpSrcPort->text().toULong(&isOk));
 	data.set_dst_port(configForm->leUdpDstPort->text().toULong(&isOk));

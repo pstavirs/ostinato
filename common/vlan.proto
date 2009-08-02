@@ -10,6 +10,6 @@ message Vlan {
 	optional uint32	vlan_tag = 3; // includes prio, cfi and vlanid
 }
 
-extend Stream {
+extend Protocol {
 	optional Vlan vlan = 126;
 }

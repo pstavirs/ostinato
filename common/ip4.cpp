@@ -3,8 +3,6 @@
 
 #include "ip4.h"
 
-Ip4ConfigForm *Ip4Protocol::configForm = NULL;
-
 Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
@@ -16,6 +14,11 @@ Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
 		this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));
 	connect(cmbIpDstAddrMode, SIGNAL(currentIndexChanged(int)),
 		this, SLOT(on_cmbIpDstAddrMode_currentIndexChanged(int)));
+}
+
+Ip4ConfigForm::~Ip4ConfigForm()
+{
+	qDebug("IPv4 Config Form destructor called");
 }
 
 void Ip4ConfigForm::on_cmbIpSrcAddrMode_currentIndexChanged(int index)
@@ -46,42 +49,38 @@ void Ip4ConfigForm::on_cmbIpDstAddrMode_currentIndexChanged(int index)
 	}
 }
 
-Ip4Protocol::Ip4Protocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+Ip4Protocol::Ip4Protocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-#if 0
-	PbHelper pbh;
-
-	pbh.ForceSetSingularDefault(&data);
-#endif
-	if (configForm == NULL)
-		configForm = new Ip4ConfigForm;
+	configForm = NULL;
 }
 
 Ip4Protocol::~Ip4Protocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* Ip4Protocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* Ip4Protocol::createInstance(StreamBase *stream)
 {
-	return new Ip4Protocol(frameProtoList, streamCore);
+	return new Ip4Protocol(stream);
 }
 
-void Ip4Protocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 Ip4Protocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::ip4)->CopyFrom(data);
+	return OstProto::Protocol::kIp4FieldNumber;
 }
 
-void Ip4Protocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void Ip4Protocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::ip4))
-		data.MergeFrom(stream.GetExtension(OstProto::ip4));
+	protocol.MutableExtension(OstProto::ip4)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void Ip4Protocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::ip4))
+		data.MergeFrom(protocol.GetExtension(OstProto::ip4));
 }
 
 QString Ip4Protocol::name() const
@@ -604,11 +603,15 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
 
 QWidget* Ip4Protocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new Ip4ConfigForm;
 	return configForm;
 }
 
 void Ip4Protocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->cbIpVersionOverride->setChecked(data.is_override_ver());
 	configForm->leIpVersion->setText(fieldData(ip4_ver, FieldValue).toString());
 
@@ -648,6 +651,8 @@ void Ip4Protocol::storeConfigWidget()
 {
 	uint ff = 0;
 	bool isOk;
+
+	configWidget();
 
 	data.set_is_override_ver(configForm->cbIpVersionOverride->isChecked());
 	data.set_ver_hdrlen(((configForm->leIpVersion->text().toULong(&isOk) & 0x0F) << 4) |

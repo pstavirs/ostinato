@@ -24,6 +24,6 @@ message Mac {
 	optional uint32			src_mac_step = 8 [default = 1];
 }
 
-extend Stream {
+extend Protocol {
 	optional Mac mac = 51;
 }

@@ -1,5 +1,9 @@
 #include "protocolmanager.h"
 
+// FIXME(HI): remove
+#include "protocol.pb.h"
+#include "abstractprotocol.h"
+
 #include "mac.h"
 #include "payload.h"
 
@@ -11,9 +15,6 @@
 #include "ip4.h"	
 #include "tcp.h"	
 #include "udp.h"	
-
-QMap<int, void*>	ProtocolManager::factory;
-QMap<QString, int>	ProtocolManager::nameToNumberMap;
 
 ProtocolManager OstProtocolManager;
 
@@ -36,5 +37,33 @@ void ProtocolManager::registerProtocol(int protoNumber, QString protoName,
 {
 	// TODO: validate incoming params for duplicates with existing
 	nameToNumberMap.insert(protoName, protoNumber);
+	numberToNameMap.insert(protoNumber, protoName);
 	factory.insert(protoNumber, protoInstanceCreator);
+}
+
+AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
+	StreamBase *stream)
+{
+	AbstractProtocol* (*pc)(StreamBase*);
+	AbstractProtocol* p;
+
+	pc = (AbstractProtocol* (*)(StreamBase*))
+		factory.value(protoNumber);
+	
+	Q_ASSERT(pc != NULL);
+
+	p = (*pc)(stream);
+
+	return p;
+}
+
+AbstractProtocol* ProtocolManager::createProtocol(QString protoName,
+	StreamBase *stream)
+{
+	return createProtocol(nameToNumberMap.value(protoName), stream);
+}
+
+QStringList ProtocolManager::protocolDatabase()
+{
+	return numberToNameMap.values();
 }

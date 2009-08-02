@@ -17,7 +17,7 @@ class Dot3Protocol : public AbstractProtocol
 {
 private:
 	OstProto::Dot3	data;
-	static Dot3ConfigForm	*configForm;
+	Dot3ConfigForm	*configForm;
 	enum Dot3field
 	{
 		dot3_length,
@@ -26,16 +26,14 @@ private:
 	};
 
 public:
-	Dot3Protocol(ProtocolList &frameProtoList, 
-		OstProto::StreamCore *parent = 0);
+	Dot3Protocol(StreamBase *stream);
 	virtual ~Dot3Protocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList,
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream);
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
 	virtual QString name() const;
 	virtual QString shortName() const;

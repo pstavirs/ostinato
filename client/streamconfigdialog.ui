@@ -12,6 +12,12 @@
     <height>589</height>
    </rect>
   </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle" >
    <string>Edit Stream</string>
   </property>
@@ -56,7 +62,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          </property>
         </spacer>
        </item>
-       <item row="0" column="2" >
+       <item row="0" column="1" >
         <widget class="QGroupBox" name="gbFrameLength" >
          <property name="title" >
           <string>Frame Length (including FCS)</string>
@@ -157,10 +163,10 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          </layout>
         </widget>
        </item>
-       <item row="1" column="0" colspan="3" >
+       <item row="1" column="0" colspan="2" >
         <widget class="QTabWidget" name="twProto" >
          <property name="currentIndex" >
-          <number>0</number>
+          <number>4</number>
          </property>
          <widget class="QWidget" name="tab_7" >
           <attribute name="title" >
@@ -515,6 +521,20 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <string>L4</string>
           </attribute>
           <layout class="QHBoxLayout" />
+         </widget>
+         <widget class="QWidget" name="tab" >
+          <attribute name="title" >
+           <string>Protocol Data</string>
+          </attribute>
+          <layout class="QHBoxLayout" >
+           <item>
+            <widget class="QToolBox" name="tbProtocolData" >
+             <property name="currentIndex" >
+              <number>-1</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>

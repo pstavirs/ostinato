@@ -2,16 +2,16 @@
 #define _PACKET_MODEL_H
 
 #include <QAbstractItemModel>
-#include "abstractprotocol.h"
+
+class ProtocolListIterator;
+class AbstractProtocol;
 
 class PacketModel: public QAbstractItemModel
 {
 
 public:
-	PacketModel(const QList<AbstractProtocol*> &selectedProtocols,
-			QObject *parent = 0);
-	void setSelectedProtocols(
-			const QList<AbstractProtocol*> &selectedProtocols);
+	PacketModel(QObject *parent = 0);
+	void setSelectedProtocols(ProtocolListIterator &iter);
 
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -34,7 +34,7 @@ private:
 		} ws;
 	} IndexId;
 
-	QList<AbstractProtocol*> mSelectedProtocols;
+	QList<const AbstractProtocol*> mSelectedProtocols;
 };
 #endif
 

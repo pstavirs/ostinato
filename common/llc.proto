@@ -8,6 +8,6 @@ message Llc {
 	optional uint32			ctl = 3;
 }
 
-extend Stream {
+extend Protocol {
 	optional Llc llc = 123;
 }

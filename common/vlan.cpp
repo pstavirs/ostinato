@@ -2,45 +2,44 @@
 
 #include "vlan.h"
 
-VlanConfigForm *VlanProtocol::configForm = NULL;
-
 VlanConfigForm::VlanConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 }
 
-VlanProtocol::VlanProtocol(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *parent)
-	: AbstractProtocol(frameProtoList, parent)
+VlanProtocol::VlanProtocol(StreamBase *stream)
+	: AbstractProtocol(stream)
 {
-	if (configForm == NULL)
-		configForm = new VlanConfigForm;
+	configForm = NULL;
 }
 
 VlanProtocol::~VlanProtocol()
 {
+	delete configForm;
 }
 
-AbstractProtocol* VlanProtocol::createInstance(
-	ProtocolList &frameProtoList,
-	OstProto::StreamCore *streamCore)
+AbstractProtocol* VlanProtocol::createInstance(StreamBase *stream)
 {
-	return new VlanProtocol(frameProtoList, streamCore);
+	return new VlanProtocol(stream);
 }
 
-void VlanProtocol::protoDataCopyInto(OstProto::Stream &stream)
+quint32 VlanProtocol::protocolNumber() const
 {
-	// FIXME: multiple headers
-	stream.MutableExtension(OstProto::vlan)->CopyFrom(data);
+	return OstProto::Protocol::kVlanFieldNumber;
 }
 
-void VlanProtocol::protoDataCopyFrom(const OstProto::Stream &stream)
+void VlanProtocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	// FIXME: multiple headers
-	if (stream.HasExtension(OstProto::vlan))
-		data.MergeFrom(stream.GetExtension(OstProto::vlan));
+	protocol.MutableExtension(OstProto::vlan)->CopyFrom(data);
+	protocol.mutable_protocol_id()->set_id(protocolNumber());
+}
+
+void VlanProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
+{
+	if (protocol.protocol_id().id() == protocolNumber() &&
+			protocol.HasExtension(OstProto::vlan))
+		data.MergeFrom(protocol.GetExtension(OstProto::vlan));
 }
 
 QString VlanProtocol::name() const
@@ -203,21 +202,26 @@ bool VlanProtocol::setFieldData(int index, const QVariant &value,
 
 QWidget* VlanProtocol::configWidget()
 {
+	if (configForm == NULL)
+		configForm = new VlanConfigForm;
 	return configForm;
 }
 
 void VlanProtocol::loadConfigWidget()
 {
+	configWidget();
+
 	configForm->leTpid->setText(uintToHexStr(fieldData(vlan_tpid, FieldValue).toUInt(), 2));
 	configForm->cmbPrio->setCurrentIndex(fieldData(vlan_prio, FieldValue).toUInt());
 	configForm->cmbCfiDei->setCurrentIndex(fieldData(vlan_cfiDei, FieldValue).toUInt());
 	configForm->leVlanId->setText(fieldData(vlan_vlanId, FieldValue).toString());
-
 }
 
 void VlanProtocol::storeConfigWidget()
 {
 	bool isOk;
+
+	configWidget();
 
 	data.set_is_override_tpid(configForm->cbTpidOverride->isChecked());
 	data.set_tpid(configForm->leTpid->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));

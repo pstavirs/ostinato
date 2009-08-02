@@ -13,6 +13,6 @@ message Udp {
 	optional uint32		cksum = 6;
 }
 
-extend Stream {
+extend Protocol {
 	optional Udp udp = 141;
 }

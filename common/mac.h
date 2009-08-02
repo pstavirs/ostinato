@@ -13,6 +13,7 @@ class MacConfigForm : public QWidget, public Ui::mac
 	Q_OBJECT
 public:
 	MacConfigForm(QWidget *parent = 0);
+	virtual ~MacConfigForm();
 private slots:
 	void on_cmbDstMacMode_currentIndexChanged(int index);
 	void on_cmbSrcMacMode_currentIndexChanged(int index);
@@ -22,7 +23,7 @@ class MacProtocol : public AbstractProtocol
 {
 private:
 	OstProto::Mac	data;
-	static MacConfigForm	*configForm;
+	MacConfigForm	*configForm;
 	enum macfield
 	{
 		mac_dstAddr = 0,
@@ -39,16 +40,14 @@ private:
 	};
 
 public:
-	MacProtocol(ProtocolList &frameProtoList, 
-		OstProto::StreamCore *parent = 0);
+	MacProtocol(StreamBase *stream);
 	virtual ~MacProtocol();
 
-	static AbstractProtocol* createInstance(
-		ProtocolList &frameProtoList,
-		OstProto::StreamCore *streamCore = 0);
+	static AbstractProtocol* createInstance(StreamBase *stream);
+	virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Stream &stream);
-	virtual void protoDataCopyFrom(const OstProto::Stream &stream);
+	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
 	virtual QString name() const;
 	virtual QString shortName() const;

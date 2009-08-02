@@ -1,18 +1,24 @@
 #include <QHostAddress>
-#include "packetmodel.h"
 
-PacketModel::PacketModel(const QList<AbstractProtocol*> &selectedProtocols, 
-		QObject *parent)
+#include "packetmodel.h"
+#include "../common/protocollistiterator.h"
+#include "../common/abstractprotocol.h"
+
+PacketModel::PacketModel(QObject *parent)
 {
-	mSelectedProtocols = selectedProtocols;
 }
 
-void PacketModel::setSelectedProtocols(
-		const QList<AbstractProtocol*> &selectedProtocols)
+void PacketModel::setSelectedProtocols(ProtocolListIterator &iter)
 {
-	if (mSelectedProtocols != selectedProtocols)
+	QList<const AbstractProtocol*> currentProtocols;
+
+	iter.toFront();
+	while (iter.hasNext())
+		currentProtocols.append(iter.next());
+
+	if (mSelectedProtocols != currentProtocols)
 	{
-		mSelectedProtocols = selectedProtocols;
+		mSelectedProtocols = currentProtocols;
 		reset();
 	}
 }
