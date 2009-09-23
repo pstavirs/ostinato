@@ -155,7 +155,10 @@ bool SampleProtocol::setFieldData(int index, const QVariant &value,
 QWidget* SampleProtocol::configWidget()
 {
 	if (configForm == NULL)
-		configFrom = new SampleConfigForm;
+	{
+		configForm = new SampleConfigForm;
+		loadConfigWidget();
+	}
 
 	return configForm;
 }

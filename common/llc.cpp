@@ -135,7 +135,10 @@ bool LlcProtocol::setFieldData(int index, const QVariant &value,
 QWidget* LlcProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new LlcConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

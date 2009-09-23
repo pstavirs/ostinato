@@ -28,6 +28,7 @@ PROTOS += \
 	udp.proto
 HEADERS += \
 	abstractprotocol.h	\
+	comboprotocol.h	\
 	protocolmanager.h \
 	protocollist.h \
 	protocollistiterator.h \

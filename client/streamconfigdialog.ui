@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>636</width>
-    <height>589</height>
+    <width>524</width>
+    <height>458</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -35,8 +35,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
   <property name="modal" >
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" >
-   <item>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
     <widget class="QTabWidget" name="twTopLevel" >
      <property name="toolTip" >
       <string/>
@@ -46,7 +46,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
      </property>
      <widget class="QWidget" name="packetConfigTab" >
       <attribute name="title" >
-       <string>Packet Config</string>
+       <string>Protocol Selection</string>
       </attribute>
       <layout class="QGridLayout" >
        <item row="0" column="0" >
@@ -56,7 +56,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          </property>
          <property name="sizeHint" >
           <size>
-           <width>171</width>
+           <width>241</width>
            <height>20</height>
           </size>
          </property>
@@ -164,237 +164,366 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
         </widget>
        </item>
        <item row="1" column="0" colspan="2" >
-        <widget class="QTabWidget" name="twProto" >
+        <widget class="QToolBox" name="tbSelectProtocols" >
          <property name="currentIndex" >
-          <number>4</number>
+          <number>0</number>
          </property>
-         <widget class="QWidget" name="tab_7" >
-          <attribute name="title" >
-           <string>Protocols</string>
+         <widget class="QWidget" name="page" >
+          <property name="geometry" >
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>465</width>
+            <height>226</height>
+           </rect>
+          </property>
+          <attribute name="label" >
+           <string>Simple</string>
+          </attribute>
+          <layout class="QGridLayout" >
+           <item rowspan="2" row="0" column="0" >
+            <widget class="QGroupBox" name="gbFrameType" >
+             <property name="title" >
+              <string>Frame Type</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbFtNone" >
+                <property name="text" >
+                 <string>None (Mac Only)</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFtEthernet2" >
+                <property name="text" >
+                 <string>Ethernet II</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFt802Dot3Raw" >
+                <property name="text" >
+                 <string>802.3 Raw</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFt802Dot3Llc" >
+                <property name="text" >
+                 <string>802.3 LLC</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFtLlcSnap" >
+                <property name="text" >
+                 <string>802.3 LLC SNAP</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFtOther" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="1" >
+            <widget class="QGroupBox" name="gbVlan" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>VLAN</string>
+             </property>
+             <property name="checkable" >
+              <bool>false</bool>
+             </property>
+             <property name="checked" >
+              <bool>false</bool>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbVlanNone" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbVlanSingle" >
+                <property name="text" >
+                 <string>Single Tag</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbVlanDouble" >
+                <property name="text" >
+                 <string>Double Tag</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="2" colspan="2" >
+            <widget class="QGroupBox" name="gbL3Proto" >
+             <property name="title" >
+              <string>L3</string>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QRadioButton" name="rbL3None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QRadioButton" name="rbL3Ipv4" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IPv4</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QRadioButton" name="rbL3Ipv6" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IPv6</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QRadioButton" name="rbL3Arp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>ARP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QRadioButton" name="rbL3Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="2" >
+            <widget class="QGroupBox" name="gbL4Proto" >
+             <property name="title" >
+              <string>L4</string>
+             </property>
+             <layout class="QGridLayout" >
+              <item row="0" column="0" >
+               <widget class="QRadioButton" name="rbL4None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" >
+               <widget class="QRadioButton" name="rbL4Icmp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>ICMP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
+               <widget class="QRadioButton" name="rbL4Igmp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IGMP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" >
+               <widget class="QRadioButton" name="rbL4Tcp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>TCP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" >
+               <widget class="QRadioButton" name="rbL4Udp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>UDP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" >
+               <widget class="QRadioButton" name="rbL4Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="3" >
+            <widget class="QGroupBox" name="gbPayloadProto" >
+             <property name="title" >
+              <string>Payload</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbPayloadPattern" >
+                <property name="text" >
+                 <string>Pattern</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbPayloadOther" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="1" >
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>107</width>
+               <height>24</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_2" >
+          <property name="geometry" >
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>250</width>
+            <height>135</height>
+           </rect>
+          </property>
+          <attribute name="label" >
+           <string>Advanced</string>
           </attribute>
           <layout class="QHBoxLayout" >
            <item>
             <layout class="QVBoxLayout" >
              <item>
-              <widget class="QGroupBox" name="gbFrameType" >
-               <property name="title" >
-                <string>Frame Type</string>
+              <widget class="QLabel" name="label" >
+               <property name="text" >
+                <string>Available Protocols</string>
                </property>
-               <layout class="QGridLayout" >
-                <item row="0" column="0" >
-                 <widget class="QRadioButton" name="rbFtNone" >
-                  <property name="text" >
-                   <string>None</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0" >
-                 <widget class="QRadioButton" name="rbFtEthernet2" >
-                  <property name="text" >
-                   <string>Ethernet II</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" >
-                 <widget class="QRadioButton" name="rbFt802Dot3Raw" >
-                  <property name="text" >
-                   <string>802.3 Raw</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0" >
-                 <widget class="QRadioButton" name="rbFt802Dot3Llc" >
-                  <property name="text" >
-                   <string>802.3 LLC</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1" >
-                 <widget class="QRadioButton" name="rbFtLlcSnap" >
-                  <property name="text" >
-                   <string>LLC SNAP</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </widget>
              </item>
              <item>
-              <widget class="QGroupBox" name="gbVlan" >
-               <property name="enabled" >
+              <widget class="QListView" name="lvAllProtocols" >
+               <property name="dragEnabled" >
                 <bool>true</bool>
                </property>
-               <property name="title" >
-                <string>VLAN</string>
+               <property name="selectionMode" >
+                <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
-               <property name="checkable" >
-                <bool>false</bool>
+               <property name="selectionBehavior" >
+                <enum>QAbstractItemView::SelectRows</enum>
                </property>
-               <property name="checked" >
-                <bool>false</bool>
-               </property>
-               <layout class="QHBoxLayout" >
-                <item>
-                 <widget class="QCheckBox" name="cbCVlan" >
-                  <property name="enabled" >
-                   <bool>true</bool>
-                  </property>
-                  <property name="text" >
-                   <string>CVLAN</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="cbSVlan" >
-                  <property name="enabled" >
-                   <bool>true</bool>
-                  </property>
-                  <property name="text" >
-                   <string>SVLAN</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </widget>
              </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" >
              <item>
-              <widget class="QGroupBox" name="gbL3Proto" >
-               <property name="title" >
-                <string>L3</string>
+              <spacer>
+               <property name="orientation" >
+                <enum>Qt::Vertical</enum>
                </property>
-               <layout class="QGridLayout" >
-                <item row="0" column="0" >
-                 <widget class="QRadioButton" name="rbL3None" >
-                  <property name="text" >
-                   <string>None</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1" >
-                 <widget class="QRadioButton" name="rbL3Ipv4" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>IPv4</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2" >
-                 <widget class="QRadioButton" name="rbL3Ipv6" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>IPv6</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0" >
-                 <widget class="QRadioButton" name="rbL3Arp" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>ARP</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" >
-                 <widget class="QRadioButton" name="rbL3Other" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>Other</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
+               <property name="sizeHint" >
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item>
-              <widget class="QGroupBox" name="gbL4Proto" >
-               <property name="title" >
-                <string>L4</string>
+              <widget class="QToolButton" name="tbAdd" >
+               <property name="enabled" >
+                <bool>false</bool>
                </property>
-               <layout class="QGridLayout" >
-                <item row="0" column="0" >
-                 <widget class="QRadioButton" name="rbL4None" >
-                  <property name="text" >
-                   <string>None</string>
-                  </property>
-                  <property name="checked" >
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1" >
-                 <widget class="QRadioButton" name="rbL4Icmp" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>ICMP</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2" >
-                 <widget class="QRadioButton" name="rbL4Igmp" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>IGMP</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0" >
-                 <widget class="QRadioButton" name="rbL4Tcp" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>TCP</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" >
-                 <widget class="QRadioButton" name="rbL4Udp" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>UDP</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="2" >
-                 <widget class="QRadioButton" name="rbL4Other" >
-                  <property name="enabled" >
-                   <bool>false</bool>
-                  </property>
-                  <property name="text" >
-                   <string>Other</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+               <property name="text" >
+                <string>></string>
+               </property>
+               <property name="icon" >
+                <iconset resource="ostinato.qrc" >:/icons/arrow_right.png</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -404,8 +533,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                </property>
                <property name="sizeHint" >
                 <size>
-                 <width>182</width>
-                 <height>16</height>
+                 <width>20</width>
+                 <height>40</height>
                 </size>
                </property>
               </spacer>
@@ -413,129 +542,95 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
             </layout>
            </item>
            <item>
-            <widget class="QGroupBox" name="groupBox" >
-             <property name="title" >
-              <string>Advanced Protocol Selection</string>
-             </property>
-             <property name="checkable" >
-              <bool>true</bool>
-             </property>
-             <property name="checked" >
-              <bool>false</bool>
-             </property>
-             <layout class="QHBoxLayout" >
-              <item>
-               <layout class="QHBoxLayout" >
-                <item>
-                 <layout class="QVBoxLayout" >
-                  <item>
-                   <widget class="QLabel" name="label" >
-                    <property name="text" >
-                     <string>Available Protocols</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QListView" name="lvAllProtocols" />
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" >
-                  <item>
-                   <spacer>
-                    <property name="orientation" >
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" >
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QToolButton" name="toolButton" >
-                    <property name="text" >
-                     <string>></string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QToolButton" name="toolButton_2" >
-                    <property name="text" >
-                     <string>&lt;</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer>
-                    <property name="orientation" >
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" >
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" >
-                  <item>
-                   <widget class="QLabel" name="label_2" >
-                    <property name="text" >
-                     <string>Selected Protocols</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QListView" name="lvSelectedProtocols" />
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
+            <layout class="QVBoxLayout" >
+             <item>
+              <widget class="QLabel" name="label_2" >
+               <property name="text" >
+                <string>Selected Protocols</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" >
+               <item>
+                <widget class="QToolButton" name="tbUp" >
+                 <property name="enabled" >
+                  <bool>false</bool>
+                 </property>
+                 <property name="text" >
+                  <string>^</string>
+                 </property>
+                 <property name="icon" >
+                  <iconset resource="ostinato.qrc" >:/icons/arrow_up.png</iconset>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="tbDown" >
+                 <property name="enabled" >
+                  <bool>false</bool>
+                 </property>
+                 <property name="text" >
+                  <string>v</string>
+                 </property>
+                 <property name="icon" >
+                  <iconset resource="ostinato.qrc" >:/icons/arrow_down.png</iconset>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="tbDelete" >
+                 <property name="enabled" >
+                  <bool>false</bool>
+                 </property>
+                 <property name="text" >
+                  <string>-</string>
+                 </property>
+                 <property name="icon" >
+                  <iconset resource="ostinato.qrc" >:/icons/delete.png</iconset>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QListView" name="lvSelectedProtocols" >
+               <property name="selectionBehavior" >
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_4" >
-          <attribute name="title" >
-           <string>L2</string>
-          </attribute>
-          <layout class="QGridLayout" />
-         </widget>
-         <widget class="QWidget" name="tab_8" >
-          <attribute name="title" >
-           <string>L3</string>
-          </attribute>
-         </widget>
-         <widget class="QWidget" name="tab_6" >
-          <attribute name="title" >
-           <string>L4</string>
-          </attribute>
-          <layout class="QHBoxLayout" />
-         </widget>
-         <widget class="QWidget" name="tab" >
-          <attribute name="title" >
-           <string>Protocol Data</string>
-          </attribute>
-          <layout class="QHBoxLayout" >
-           <item>
-            <widget class="QToolBox" name="tbProtocolData" >
-             <property name="currentIndex" >
-              <number>-1</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2" >
+      <attribute name="title" >
+       <string>Protocol Data</string>
+      </attribute>
+      <layout class="QHBoxLayout" >
+       <item>
+        <widget class="QToolBox" name="tbProtocolData" >
+         <property name="currentIndex" >
+          <number>-1</number>
+         </property>
         </widget>
        </item>
       </layout>
@@ -925,7 +1020,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
      </widget>
     </widget>
    </item>
-   <item>
+   <item row="1" column="0" >
     <layout class="QHBoxLayout" >
      <item>
       <widget class="QPushButton" name="pbPrev" >
@@ -989,7 +1084,55 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
   <tabstop>lePktLen</tabstop>
   <tabstop>lePktLenMin</tabstop>
   <tabstop>lePktLenMax</tabstop>
-  <tabstop>twProto</tabstop>
+  <tabstop>rbFtNone</tabstop>
+  <tabstop>rbFtEthernet2</tabstop>
+  <tabstop>rbFt802Dot3Raw</tabstop>
+  <tabstop>rbFt802Dot3Llc</tabstop>
+  <tabstop>rbFtLlcSnap</tabstop>
+  <tabstop>rbFtOther</tabstop>
+  <tabstop>rbVlanNone</tabstop>
+  <tabstop>rbVlanSingle</tabstop>
+  <tabstop>rbVlanDouble</tabstop>
+  <tabstop>rbL3None</tabstop>
+  <tabstop>rbL3Ipv4</tabstop>
+  <tabstop>rbL3Ipv6</tabstop>
+  <tabstop>rbL3Arp</tabstop>
+  <tabstop>rbL3Other</tabstop>
+  <tabstop>rbL4None</tabstop>
+  <tabstop>rbL4Icmp</tabstop>
+  <tabstop>rbL4Igmp</tabstop>
+  <tabstop>rbL4Tcp</tabstop>
+  <tabstop>rbL4Udp</tabstop>
+  <tabstop>rbL4Other</tabstop>
+  <tabstop>rbPayloadPattern</tabstop>
+  <tabstop>rbPayloadOther</tabstop>
+  <tabstop>pbPrev</tabstop>
+  <tabstop>pbNext</tabstop>
+  <tabstop>pbOk</tabstop>
+  <tabstop>pbCancel</tabstop>
+  <tabstop>rbSendBursts</tabstop>
+  <tabstop>leNumPackets</tabstop>
+  <tabstop>leNumBursts</tabstop>
+  <tabstop>lePacketsPerBurst</tabstop>
+  <tabstop>rbActionStop</tabstop>
+  <tabstop>rbActionGotoNext</tabstop>
+  <tabstop>rbActionGotoStream</tabstop>
+  <tabstop>leStreamId</tabstop>
+  <tabstop>rbModeFixed</tabstop>
+  <tabstop>rbModeContinuous</tabstop>
+  <tabstop>lePacketsPerSec</tabstop>
+  <tabstop>leBurstsPerSec</tabstop>
+  <tabstop>leGapIsg</tabstop>
+  <tabstop>leGapIpg</tabstop>
+  <tabstop>leGapIbg</tabstop>
+  <tabstop>tvPacketTree</tabstop>
+  <tabstop>tbDown</tabstop>
+  <tabstop>tbDelete</tabstop>
+  <tabstop>lvSelectedProtocols</tabstop>
+  <tabstop>rbSendPackets</tabstop>
+  <tabstop>tbUp</tabstop>
+  <tabstop>lvAllProtocols</tabstop>
+  <tabstop>tbAdd</tabstop>
  </tabstops>
  <resources>
   <include location="ostinato.qrc" />

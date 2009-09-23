@@ -604,7 +604,10 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
 QWidget* Ip4Protocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new Ip4ConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

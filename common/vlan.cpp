@@ -203,7 +203,10 @@ bool VlanProtocol::setFieldData(int index, const QVariant &value,
 QWidget* VlanProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new VlanConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 
@@ -211,6 +214,7 @@ void VlanProtocol::loadConfigWidget()
 {
 	configWidget();
 
+	configForm->cbTpidOverride->setChecked(data.is_override_tpid());
 	configForm->leTpid->setText(uintToHexStr(fieldData(vlan_tpid, FieldValue).toUInt(), 2));
 	configForm->cmbPrio->setCurrentIndex(fieldData(vlan_prio, FieldValue).toUInt());
 	configForm->cmbCfiDei->setCurrentIndex(fieldData(vlan_cfiDei, FieldValue).toUInt());

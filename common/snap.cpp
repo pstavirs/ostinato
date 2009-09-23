@@ -140,7 +140,10 @@ bool SnapProtocol::setFieldData(int index, const QVariant &value,
 QWidget* SnapProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new SnapConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

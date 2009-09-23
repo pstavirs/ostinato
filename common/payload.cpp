@@ -126,6 +126,11 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 
 					dataLen = mpStream->frameLen() - protocolFrameOffset();
 					dataLen -= SZ_FCS;
+
+					// FIXME: Hack! Bad! Bad! Very Bad!!!
+					if (dataLen <= 0)
+						dataLen = 1;
+
 					fv.resize(dataLen+4);
 					switch(data.pattern_mode())
 					{
@@ -180,7 +185,10 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 QWidget* PayloadProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new PayloadConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

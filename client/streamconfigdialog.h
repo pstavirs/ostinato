@@ -29,16 +29,21 @@ public:
 private: 
 
 	QButtonGroup	*bgFrameType;
+	QButtonGroup	*bgVlan;
 	QButtonGroup	*bgL3Proto;
 	QButtonGroup	*bgL4Proto;
+	QButtonGroup	*bgPayloadProto;
 
 	QStringListModel *mpAvailableProtocolsModel;
+	QStringListModel *mpSelectedProtocolsModel;
 
 	Port&			mPort;
 	uint			mCurrentStreamIndex;
 
 	Stream					*mpStream;
 	ProtocolListIterator	*_iter;
+
+	bool			isUpdateInProgress;
 
 	PacketModel		*mpPacketModel;
 	ModelTest		*mpPacketModelTester;
@@ -47,7 +52,6 @@ private:
     // for the various tab widgets so that it can be restored when the dialog
 	// is opened the next time
 	static int		lastTopLevelTabIndex;
-	static int		lastProtoTabIndex;
 
 	void setupUiExtra();
 	void updateSelectedProtocols();
@@ -56,15 +60,37 @@ private:
 
 private slots:
 	void on_cmbPktLenMode_currentIndexChanged(QString mode);
-	void on_pbPrev_clicked();
-	void on_pbNext_clicked();
-
-	void updateContents();
+	void update_NumPacketsAndNumBursts();
 
 	void on_twTopLevel_currentChanged(int index);
-	void on_twProto_currentChanged(int index);
+	void on_tbSelectProtocols_currentChanged(int index);
 
-	void update_NumPacketsAndNumBursts();
+	// "Simple" Protocol Selection related
+	bool skipProtocols(int layer);
+
+	void updateFrameTypeProtocol(int id);
+	void updateVlanProtocol(int id);
+	void updateL3Protocol(int id);
+	void updateL4Protocol(int id);
+	void updatePayloadProtocol(int id);
+
+	void updateSelectProtocolsSimpleWidget();
+
+	// "Advanced" Protocol Selection related
+	void when_lvAllProtocols_selectionChanged(
+		const QItemSelection &selected, const QItemSelection &deselected);
+	void when_lvSelectedProtocols_currentChanged(
+		const QModelIndex &current, const QModelIndex &previous);
+
+	void on_tbAdd_clicked();
+	void on_tbDelete_clicked();
+	void on_tbUp_clicked();
+	void on_tbDown_clicked();
+
+	void updateSelectProtocolsAdvancedWidget();
+
+	void on_pbPrev_clicked();
+	void on_pbNext_clicked();
 
 	void on_pbOk_clicked();
 };

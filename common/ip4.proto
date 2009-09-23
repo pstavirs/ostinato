@@ -31,13 +31,13 @@ message Ip4 {
 	optional fixed32	src_ip = 14;
 	optional IpAddrMode	src_ip_mode = 15 [default = e_im_fixed];
 	optional uint32		src_ip_count = 16 [default = 16];
-	optional fixed32	src_ip_mask = 17 [default = 0xFFFFFFFF];
+	optional fixed32	src_ip_mask = 17 [default = 0xFFFFFF00];
 	
 	// Destination IP
 	optional fixed32	dst_ip = 18;
 	optional IpAddrMode	dst_ip_mode = 19 [default = e_im_fixed];
 	optional uint32		dst_ip_count = 20 [default = 16];
-	optional fixed32	dst_ip_mask = 21 [default = 0xFFFFFFFF];
+	optional fixed32	dst_ip_mask = 21 [default = 0xFFFFFF00];
 
 	// TODO: Options
 }

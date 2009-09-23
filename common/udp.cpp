@@ -261,7 +261,10 @@ bool UdpProtocol::setFieldData(int index, const QVariant &value,
 QWidget* UdpProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new UdpConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

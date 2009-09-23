@@ -243,7 +243,10 @@ bool MacProtocol::setFieldData(int index, const QVariant &value,
 QWidget* MacProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new MacConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

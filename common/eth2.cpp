@@ -121,7 +121,10 @@ bool Eth2Protocol::setFieldData(int index, const QVariant &value,
 QWidget* Eth2Protocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new Eth2ConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

@@ -384,7 +384,10 @@ bool TcpProtocol::setFieldData(int index, const QVariant &value,
 QWidget* TcpProtocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new TcpConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 

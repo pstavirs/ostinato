@@ -118,7 +118,10 @@ bool Dot3Protocol::setFieldData(int index, const QVariant &value,
 QWidget* Dot3Protocol::configWidget()
 {
 	if (configForm == NULL)
+	{
 		configForm = new Dot3ConfigForm;
+		loadConfigWidget();
+	}
 	return configForm;
 }
 
