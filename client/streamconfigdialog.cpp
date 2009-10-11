@@ -27,7 +27,9 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	setupUi(this);
 	setupUiExtra();
 
-	connect(bgFrameType, SIGNAL(buttonClicked(int)), 
+	connect(bgL1Proto, SIGNAL(buttonClicked(int)), 
+		this, SLOT(updateL1Protocol(int)));
+	connect(bgL2Proto, SIGNAL(buttonClicked(int)), 
 		this, SLOT(updateFrameTypeProtocol(int)));
 	connect(bgVlan, SIGNAL(buttonClicked(int)),
 		this, SLOT(updateVlanProtocol(int)));
@@ -47,9 +49,17 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	// Time to play match the signals and slots!
 
 	// Enable VLAN Choices only if FT = Eth2 or SNAP
+#if 0
 	connect(rbFtNone, SIGNAL(toggled(bool)), gbVlan, SLOT(setDisabled(bool)));
 	connect(rbFtOther, SIGNAL(toggled(bool)), gbVlan, SLOT(setDisabled(bool)));
 	connect(rbFtNone, SIGNAL(clicked(bool)), rbVlanNone, SLOT(click()));
+#endif
+
+	// Force all protocols = None if L1 = None
+	connect(rbL1None, SIGNAL(clicked(bool)), rbVlanNone, SLOT(click()));
+	connect(rbL1None, SIGNAL(clicked(bool)), rbFtNone, SLOT(click()));
+	connect(rbL1None, SIGNAL(clicked(bool)), rbPayloadNone, SLOT(click()));
+
 	connect(rbFtNone, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
 
 	// Enable/Disable L3 Protocol Choices for FT None
@@ -173,36 +183,43 @@ void StreamConfigDialog::setupUiExtra()
 	QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
 	// ---- Setup default stuff that cannot be done in designer ----
+#if 0
 	gbVlan->setDisabled(true);
+#endif
 
-	bgFrameType = new QButtonGroup();
+	bgL1Proto = new QButtonGroup();
+	bgL1Proto->addButton(rbL1None, ButtonIdNone);
+	bgL1Proto->addButton(rbL1Mac, OstProto::Protocol::kMacFieldNumber);
+	bgL1Proto->addButton(rbL1Other, ButtonIdOther);
+
+	bgL2Proto = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbFrameType->findChildren<QRadioButton*>())
-		bgFrameType->addButton(btn);
+		bgL2Proto->addButton(btn);
 #else
-	bgFrameType->addButton(rbFtNone, 0);
-	bgFrameType->addButton(rbFtEthernet2, 121);
-	bgFrameType->addButton(rbFt802Dot3Raw, 122);
-	bgFrameType->addButton(rbFt802Dot3Llc, 123);
-	bgFrameType->addButton(rbFtLlcSnap, 124);
-	bgFrameType->addButton(rbFtOther, -1);
+	bgL2Proto->addButton(rbFtNone, ButtonIdNone);
+	bgL2Proto->addButton(rbFtEthernet2, OstProto::Protocol::kEth2FieldNumber);
+	bgL2Proto->addButton(rbFt802Dot3Raw, OstProto::Protocol::kDot3FieldNumber);
+	bgL2Proto->addButton(rbFt802Dot3Llc, OstProto::Protocol::kDot2LlcFieldNumber);
+	bgL2Proto->addButton(rbFtLlcSnap, OstProto::Protocol::kDot2SnapFieldNumber);
+	bgL2Proto->addButton(rbFtOther, ButtonIdOther);
 #endif
 
 	bgVlan = new QButtonGroup();
-	bgVlan->addButton(rbVlanNone, 0);
-	bgVlan->addButton(rbVlanSingle, 126);
-	bgVlan->addButton(rbVlanDouble, 127);
+	bgVlan->addButton(rbVlanNone, ButtonIdNone);
+	bgVlan->addButton(rbVlanSingle, OstProto::Protocol::kVlanFieldNumber);
+	bgVlan->addButton(rbVlanDouble, OstProto::Protocol::kVlanStackFieldNumber);
 
 	bgL3Proto = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbL3Proto->findChildren<QRadioButton*>())
 		bgL3Proto->addButton(btn);
 #else
-	bgL3Proto->addButton(rbL3None, 0);
-	bgL3Proto->addButton(rbL3Ipv4, 130);
-	bgL3Proto->addButton(rbL3Ipv6, -1);
-	bgL3Proto->addButton(rbL3Arp, -1);
-	bgL3Proto->addButton(rbL3Other, -1);
+	bgL3Proto->addButton(rbL3None, ButtonIdNone);
+	bgL3Proto->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
+	bgL3Proto->addButton(rbL3Ipv6, 0xFFFF);
+	bgL3Proto->addButton(rbL3Arp, 0xFFFF);
+	bgL3Proto->addButton(rbL3Other, ButtonIdOther);
 #endif
 
 	bgL4Proto = new QButtonGroup();
@@ -211,11 +228,11 @@ void StreamConfigDialog::setupUiExtra()
 		bgL4Proto->addButton(btn);
 #else
 	bgL4Proto->addButton(rbL4None, 0);
-	bgL4Proto->addButton(rbL4Tcp, 140);
-	bgL4Proto->addButton(rbL4Udp, 141);
-	bgL4Proto->addButton(rbL4Icmp, -1);
-	bgL4Proto->addButton(rbL4Igmp, -1);
-	bgL4Proto->addButton(rbL4Other, -1);
+	bgL4Proto->addButton(rbL4Tcp, OstProto::Protocol::kTcpFieldNumber);
+	bgL4Proto->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
+	bgL4Proto->addButton(rbL4Icmp, 0xFFFF);
+	bgL4Proto->addButton(rbL4Igmp, 0xFFFF);
+	bgL4Proto->addButton(rbL4Other, ButtonIdOther);
 #endif
 
 	bgPayloadProto = new QButtonGroup();
@@ -223,8 +240,9 @@ void StreamConfigDialog::setupUiExtra()
 	foreach(QRadioButton *btn, gbPayloadProto->findChildren<QRadioButton*>())
 		bgPayloadProto->addButton(btn);
 #else
-	bgPayloadProto->addButton(rbPayloadPattern, 52);
-	bgPayloadProto->addButton(rbPayloadOther, -1);
+	bgPayloadProto->addButton(rbPayloadNone, ButtonIdNone);
+	bgPayloadProto->addButton(rbPayloadPattern, OstProto::Protocol::kPayloadFieldNumber);
+	bgPayloadProto->addButton(rbPayloadOther, ButtonIdOther);
 #endif
 	/*
 	** Setup Validators
@@ -252,7 +270,8 @@ StreamConfigDialog::~StreamConfigDialog()
 	delete mpPacketModelTester;
 	delete mpPacketModel;
 
-	delete bgFrameType;
+	delete bgL1Proto;
+	delete bgL2Proto;
 	delete bgVlan;
 	delete bgL3Proto;
 	delete bgL4Proto;
@@ -573,91 +592,93 @@ void StreamConfigDialog::on_lePattern_editingFinished()
 }
 #endif
 
+/*! 
+Skip protocols upto and including the layer specified.
+	0 - L1
+	1 - VLAN
+	2 - L2
+	3 - L3
+	4 - L4
+TODO: Convert the above values to enum??
+*/
 bool StreamConfigDialog::skipProtocols(int layer)
 {
-#define CHK(p) (_iter->hasNext() && _iter->peekNext()->protocolNumber() == p)
+	int id;
+	QAbstractButton *btn;
 
 	_iter->toFront();
 
-	// Check and skip 'mac'
-	if (CHK(51))
-		_iter->next();
-	else
-		goto _unexpected_proto;
+	// Skip L1
+	if (_iter->hasNext())
+	{
+		id = _iter->next()->protocolNumber();
+		btn = bgL1Proto->button(id);
+		if (btn == NULL)
+			_iter->previous();
+	}
 
 	if (layer == 0)
 		goto _done;
 
-	// Skip VLANs
-	while (CHK(126))
-		_iter->next();
+	// Skip VLAN
+	if(_iter->hasNext())
+	{
+		id = _iter->next()->protocolNumber();
+		btn = bgVlan->button(id);
+		if (btn == NULL)
+			_iter->previous();
+	}
 
 	if (layer == 1)
 		goto _done;
 
-	// Skip L2 (FrameType)
-	if (CHK(121)) // Eth2
-		_iter->next();
-	else if (CHK(122)) // 802.3 RAW
+	// Skip L2
+	if(_iter->hasNext())
 	{
-		_iter->next();
-		if (CHK(123)) // 802.3 LLC
-		{
-			_iter->next();
-			if (CHK(124)) // SNAP
-				_iter->next();
-		}
+		id = _iter->next()->protocolNumber();
+		btn = bgL2Proto->button(id);
+		if (btn == NULL)
+			_iter->previous();
 	}
-	else
-		goto _unexpected_proto;
 
 	if (layer == 2)
 		goto _done;
 
 	// Skip L3
-	if (CHK(130)) // IP4
-		_iter->next();
-	else if (CHK(131)) // ARP
-		_iter->next();
-	else
-		goto _unexpected_proto;
+	if (_iter->hasNext())
+	{
+		id = _iter->next()->protocolNumber();
+		btn = bgL3Proto->button(id);
+		if (btn == NULL)
+			_iter->previous();
+	}
 
 	if (layer == 3)
 		goto _done;
 
 	// Skip L4
-	if (CHK(140)) // TCP
-		_iter->next();
-	else if (CHK(141)) // UDP
-		_iter->next();
-	else if (CHK(142)) // ICMP
-		_iter->next();
-	else if (CHK(143)) // IGMP
-		_iter->next();
-	else
-		goto _unexpected_proto;
+	if(_iter->hasNext())
+	{
+		id = _iter->next()->protocolNumber();
+		btn = bgL4Proto->button(id);
+		if (btn == NULL)
+			_iter->previous();
+	}
 
 	if (layer == 4)
 		goto _done;
 
-	goto _unexpected_proto;
+	return false;
 
 _done:
 	return true;
-
-_unexpected_proto:
-	qWarning("%s: unexpected protocol", __FUNCTION__);
-	return false;
-
-#undef CHK
 }
 
-void StreamConfigDialog::updateFrameTypeProtocol(int newId)
+void StreamConfigDialog::updateL1Protocol(int newId)
 {
-	static int oldId = 0;
-	AbstractProtocol *p;
+	static int oldId;
 
-	qDebug("%s:old id = %d new id = %d, upd? = %d", __FUNCTION__, oldId, newId,
+	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
 			isUpdateInProgress);
 
 	if (oldId == newId)
@@ -665,111 +686,41 @@ void StreamConfigDialog::updateFrameTypeProtocol(int newId)
 
 	if (!isUpdateInProgress)
 	{
-		Q_ASSERT(newId != -1);
+		AbstractProtocol *p;
 
-		if (!skipProtocols(1))
-			goto _error;
+		_iter->toFront();
+
+		Q_ASSERT(newId != ButtonIdOther);
 		
-		// Delete old Id
 		switch (oldId)
 		{
-			case 0:
-				break;
-			case -1:
-				// Blindly remove the current protocol
-				p =_iter->next();
-				_iter->remove();
-				delete p;
+			case ButtonIdNone:
+				_iter->insert(OstProtocolManager.createProtocol(
+						newId, mpStream));
 				break;
 
-			case 121: // ethernet
-			case 122: // dot3
-				p =_iter->next();
-				if (p->protocolNumber() != (quint32) oldId)
-					goto _error;
-
-				_iter->remove();
-				delete p;
-				break;
-			case 123: // dot3 llc
-				p =_iter->next();
-				if (p->protocolNumber() != 122)
-					goto _error;
-				_iter->remove();
-				delete p;
-
-				p =_iter->next();
-				if (p->protocolNumber() != 123)
-					goto _error;
-				_iter->remove();
-				delete p;
-				break;
-			case 124: // dot3 llc snap
-				p =_iter->next();
-				if (p->protocolNumber() != 122)
-					goto _error;
-				_iter->remove();
-				delete p;
-
-				p =_iter->next();
-				if (p->protocolNumber() != 123)
-					goto _error;
-				_iter->remove();
-				delete p;
-
-				p =_iter->next();
-				if (p->protocolNumber() != 124)
-					goto _error;
-				_iter->remove();
-				delete p;
-				break;
+			case ButtonIdOther:
 			default:
-				goto _error;
-		}
+				Q_ASSERT(_iter->hasNext());
+				p =_iter->next();
 
-		// Insert new Id
-		switch (newId)
-		{
-			case 0:
+				if (newId)
+					_iter->setValue(OstProtocolManager.createProtocol(
+							newId, mpStream));
+				else
+					_iter->remove();
+				delete p;
 				break;
-			case 121: // ethernet
-				_iter->insert(OstProtocolManager.createProtocol(
-					newId, mpStream));
-				break;
-			case 122: // dot3
-				_iter->insert(OstProtocolManager.createProtocol(
-					newId, mpStream));
-				break;
-			case 123: // dot3 llc
-				_iter->insert(OstProtocolManager.createProtocol(
-					122, mpStream));
-				_iter->insert(OstProtocolManager.createProtocol(
-					newId, mpStream));
-				break;
-			case 124: // dot3 llc snap
-				_iter->insert(OstProtocolManager.createProtocol(
-					122, mpStream));
-				_iter->insert(OstProtocolManager.createProtocol(
-					123, mpStream));
-				_iter->insert(OstProtocolManager.createProtocol(
-					newId, mpStream));
-				break;
-			default:
-				goto _error;
 		}
 	}
 
 	oldId = newId;
 	return;
-
-_error:
-	qFatal("%s: unexpected incident", __FUNCTION__);
 }
 
 void StreamConfigDialog::updateVlanProtocol(int newId)
 {
-	static int oldId = 0;
-	AbstractProtocol *p;
+	static int oldId;
 
 	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
 			isUpdateInProgress);
@@ -779,101 +730,90 @@ void StreamConfigDialog::updateVlanProtocol(int newId)
 
 	if (!isUpdateInProgress)
 	{
-		Q_ASSERT(newId != -1);
+		int ret;
+		AbstractProtocol *p;
 
-		if (!skipProtocols(0))
-			goto _error;
+		ret = skipProtocols(0);
+
+		Q_ASSERT(ret == true);
+		Q_ASSERT(oldId != ButtonIdOther);
+		Q_ASSERT(newId != ButtonIdOther);
 		
-		// Delete oldId proto
 		switch (oldId)
 		{
-			case 0:
-				switch (newId)
-				{
-					case 127:
-						_iter->insert(OstProtocolManager.createProtocol(
-								126, mpStream));
-						// No 'break'; fallthrough - by design!
-					case 126:
-						_iter->insert(OstProtocolManager.createProtocol(
-								126, mpStream));
-						break;
-					default:
-						goto _error;
-				}
+			case ButtonIdNone:
+				_iter->insert(OstProtocolManager.createProtocol(
+						newId, mpStream));
 				break;
 
-			case 126:
-				if (!_iter->hasNext())
-					goto _error;
-				p =_iter->next();
-				if (p->protocolNumber() != 126)
-					goto _error;
-				switch (newId)
-				{
-					case 0:
-						_iter->remove();
-						delete p;
-						break;
-
-					case 127:
-						_iter->insert(OstProtocolManager.createProtocol(
-								126, mpStream));
-						break;
-					default:
-						goto _error;
-				}
-				break;
-
-			case 127:
-				if (!_iter->hasNext())
-					goto _error;
-				p =_iter->next();
-				if (p->protocolNumber() != 126)
-					goto _error;
-				p =_iter->next();
-				if (p->protocolNumber() != 126)
-					goto _error;
-				switch (newId)
-				{
-					case 0:
-						_iter->previous();
-						_iter->previous();
-						p =_iter->next();
-						_iter->remove();
-						delete p;
-						p =_iter->next();
-						_iter->remove();
-						delete p;
-						break;
-
-					case 126:
-						_iter->previous();
-						_iter->previous();
-						p =_iter->next();
-						_iter->remove();
-						delete p;
-						break;
-					default:
-						goto _error;
-				}
-				break;
+			case ButtonIdOther:
 			default:
-				goto _error;
+				Q_ASSERT(_iter->hasNext());
+				p =_iter->next();
+
+				if (newId)
+					_iter->setValue(OstProtocolManager.createProtocol(
+							newId, mpStream));
+				else
+					_iter->remove();
+				delete p;
+				break;
 		}
 	}
-		
+
 	oldId = newId;
 	return;
+}
 
-_error:
-	qFatal("%s: unexpected incident", __FUNCTION__);
+void StreamConfigDialog::updateFrameTypeProtocol(int newId)
+{
+	static int oldId;
+
+	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
+			isUpdateInProgress);
+
+	if (oldId == newId)
+		return; // Nothing to be done
+
+	if (!isUpdateInProgress)
+	{
+		int ret;
+		AbstractProtocol *p;
+
+		ret = skipProtocols(1);
+
+		Q_ASSERT(ret == true);
+		Q_ASSERT(newId != ButtonIdOther);
+		
+		switch (oldId)
+		{
+			case ButtonIdNone:
+				_iter->insert(OstProtocolManager.createProtocol(
+						newId, mpStream));
+				break;
+
+			case ButtonIdOther:
+			default:
+				Q_ASSERT(_iter->hasNext());
+				p =_iter->next();
+
+				if (newId)
+					_iter->setValue(OstProtocolManager.createProtocol(
+							newId, mpStream));
+				else
+					_iter->remove();
+				delete p;
+				break;
+		}
+	}
+
+	oldId = newId;
+	return;
 }
 
 void StreamConfigDialog::updateL3Protocol(int newId)
 {
-	static int oldId = 0;
-	AbstractProtocol *p;
+	static int oldId;
 
 	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
 			isUpdateInProgress);
@@ -883,27 +823,25 @@ void StreamConfigDialog::updateL3Protocol(int newId)
 
 	if (!isUpdateInProgress)
 	{
-		Q_ASSERT(newId != -1);
+		int ret;
+		AbstractProtocol *p;
 
-		if (!skipProtocols(2))
-			goto _error;
+		ret = skipProtocols(2);
+
+		Q_ASSERT(ret == true);
+		Q_ASSERT(newId != ButtonIdOther);
 		
 		switch (oldId)
 		{
-			case 0:
+			case ButtonIdNone:
 				_iter->insert(OstProtocolManager.createProtocol(
 						newId, mpStream));
 				break;
 
-			case -1:
+			case ButtonIdOther:
 			default:
-				if (!_iter->hasNext())
-					goto _error;
-
+				Q_ASSERT(_iter->hasNext());
 				p =_iter->next();
-
-				if ((oldId != -1) && (p->protocolNumber() == (quint32) newId))
-					goto _error;
 
 				if (newId)
 					_iter->setValue(OstProtocolManager.createProtocol(
@@ -917,15 +855,11 @@ void StreamConfigDialog::updateL3Protocol(int newId)
 
 	oldId = newId;
 	return;
-
-_error:
-	qFatal("%s: unexpected incident", __FUNCTION__);
 }
 
 void StreamConfigDialog::updateL4Protocol(int newId)
 {
-	static int oldId = 0;
-	AbstractProtocol *p;
+	static int oldId;
 
 	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
 			isUpdateInProgress);
@@ -935,27 +869,25 @@ void StreamConfigDialog::updateL4Protocol(int newId)
 
 	if (!isUpdateInProgress)
 	{
-		Q_ASSERT(newId != -1);
+		int ret;
+		AbstractProtocol *p;
 
-		if (!skipProtocols(3))
-			goto _error;
+		ret = skipProtocols(3);
+
+		Q_ASSERT(ret == true);
+		Q_ASSERT(newId != ButtonIdOther);
 		
 		switch (oldId)
 		{
-			case 0:
+			case ButtonIdNone:
 				_iter->insert(OstProtocolManager.createProtocol(
 						newId, mpStream));
 				break;
 
-			case -1:
+			case ButtonIdOther:
 			default:
-				if (!_iter->hasNext())
-					goto _error;
-
+				Q_ASSERT(_iter->hasNext());
 				p =_iter->next();
-
-				if ((oldId != -1) && (p->protocolNumber() == (quint32) newId))
-					goto _error;
 
 				if (newId)
 					_iter->setValue(OstProtocolManager.createProtocol(
@@ -969,15 +901,11 @@ void StreamConfigDialog::updateL4Protocol(int newId)
 
 	oldId = newId;
 	return;
-
-_error:
-	qFatal("%s: unexpected incident", __FUNCTION__);
 }
 
 void StreamConfigDialog::updatePayloadProtocol(int newId)
 {
-	static int oldId = 52;
-	AbstractProtocol *p;
+	static int oldId;
 
 	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
 			isUpdateInProgress);
@@ -987,219 +915,189 @@ void StreamConfigDialog::updatePayloadProtocol(int newId)
 
 	if (!isUpdateInProgress)
 	{
-		Q_ASSERT(newId != 0);
-		Q_ASSERT(newId != -1);
+		int ret;
+		AbstractProtocol *p;
 
-		if (!skipProtocols(4))
-			goto _error;
+		ret = skipProtocols(4);
+
+		Q_ASSERT(ret == true);
+		Q_ASSERT(newId != ButtonIdOther);
 		
-		if (!_iter->hasNext())
-			goto _error;
-
-		p =_iter->next();
-
-		_iter->setValue(OstProtocolManager.createProtocol(
-				newId, mpStream));
-		delete p;
-		while (_iter->hasNext())
+		switch (oldId)
 		{
+			case ButtonIdNone:
+				_iter->insert(OstProtocolManager.createProtocol(
+						newId, mpStream));
+				break;
 
-			p = _iter->next();
-			_iter->remove();
-			delete p;
+			case ButtonIdOther:
+			default:
+				Q_ASSERT(_iter->hasNext());
+				p =_iter->next();
+
+				if (newId)
+					_iter->setValue(OstProtocolManager.createProtocol(
+							newId, mpStream));
+				else
+					_iter->remove();
+				delete p;
+				while (_iter->hasNext())
+				{
+
+					p = _iter->next();
+					_iter->remove();
+					delete p;
+				}
+				break;
 		}
 	}
 
 	oldId = newId;
 	return;
-
-_error:
-	qFatal("%s: unexpected incident", __FUNCTION__);
 }
 
 void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
 {
-#define CHK(p) (_iter->hasNext() && _iter->peekNext()->protocolNumber() == p)
+	quint32			id;
+	QAbstractButton *btn;
 
 	qDebug("%s", __FUNCTION__);
 
 	isUpdateInProgress = true;
 
+	// Reset to default state
+	rbL1None->setChecked(true);
+	rbVlanNone->setChecked(true);
+	rbFtNone->setChecked(true);
+	rbL3None->setChecked(true);
+	rbL4None->setChecked(true);
+	rbPayloadNone->setChecked(true);
+
 	_iter->toFront();
 
-	//
-	// We expect first protocol to be 'mac' usually
-	//
-	if (CHK(51)) // Mac
-	{
-		_iter->next();
-	}
+	// L1 (optional if followed by Payload)
+	if (!_iter->hasNext()) // No protocols at all?
+		goto _done;
+
+	id = _iter->next()->protocolNumber();
+	btn = bgL1Proto->button(id);
+
+	if (btn && btn->isEnabled())
+		btn->click();
 	else
 	{
-		rbFtOther->setChecked(true);
-		goto _done;
-	}
-
-
-	//
-	// Check for "VLAN"
-	//
-	if (CHK(126)) // VLAN
-	{
-		_iter->next();
-		if (CHK(126)) // VLAN
-		{
-			rbVlanDouble->setChecked(true);
-			updateVlanProtocol(127);
-			_iter->next();
-		}
+		btn = bgPayloadProto->button(id);
+		if (btn && btn->isEnabled())
+			goto _payload;
 		else
-		{
-			rbVlanSingle->setChecked(true);
-			updateVlanProtocol(126);
-		}
-	}
-	else
-	{
-		rbVlanNone->setChecked(true);
-		updateVlanProtocol(0);
+			goto _otherL1;
 	}
 
-
-	//
-	// Identify and set "FrameType"
-	//
-	if (CHK(52)) // Payload
-	{
-		rbFtNone->click();
-		goto _payload;
-	}
-	else if (CHK(121)) // Eth2
-	{
-		rbFtEthernet2->click();
-		_iter->next();
-	}
-	else if (CHK(122)) // 802.3 RAW
-	{
-		_iter->next();
-		if (CHK(123)) // 802.3 LLC
-		{
-			_iter->next();
-			if (CHK(124)) // SNAP
-			{
-				rbFtLlcSnap->click();
-				_iter->next();
-			}
-			else
-			{
-				rbFt802Dot3Llc->click();
-			}
-		}
-		else
-		{
-			rbFt802Dot3Raw->click();
-		}
-	}
-	else
-	{
-		rbFtOther->setChecked(true);
-		goto _done;
-	}
-
-
-	// 
-	// --- L3 ---
-	//
-	if (CHK(130)) // IP4
-	{
-		rbL3Ipv4->click();
-		_iter->next();
-	}
-	else if (CHK(131)) // ARP
-	{
-		rbL3Arp->click();
-		_iter->next();
-	}
-	else if (CHK(52)) // Payload
-	{
-		rbL3None->click();
-		goto _payload;
-	}
-	else
-	{
-		rbL3Other->setChecked(true);
-		goto _done;
-	}
-
-	//
-	// --- L4 ---
-	//
+	// VLAN (optional)
 	if (!_iter->hasNext())
-	{
-		rbL4Other->setChecked(true);
 		goto _done;
-	}
-	else if (CHK(140)) // TCP
-	{
-		rbL4Tcp->click();
-		_iter->next();
-	}
-	else if (CHK(141)) // UDP
-	{
-		rbL4Udp->click();
-		_iter->next();
-	}
-	else if (CHK(142)) // ICMP
-	{
-		rbL4Icmp->click();
-		_iter->next();
-	}
-	else if (CHK(143)) // IGMP
-	{
-		rbL4Igmp->click();
-		_iter->next();
-	}
-	else if (CHK(52)) // Payload
-	{
-		rbL4None->click();
-		goto _payload;
-	}
+
+	id = _iter->next()->protocolNumber();
+	btn = bgVlan->button(id);
+
+	if (btn && btn->isEnabled())
+		btn->click();
+	else
+		_iter->previous();
+
+	// L2 (optional if followed by Payload)
+	if (!_iter->hasNext())
+		goto _done;
+
+	id = _iter->next()->protocolNumber();
+	btn = bgL2Proto->button(id);
+
+	if (btn && btn->isEnabled())
+		btn->click();
 	else
 	{
-		rbL4Other->setChecked(true);
-		goto _done;
+		btn = bgPayloadProto->button(id);
+		if (btn && btn->isEnabled())
+			goto _payload;
+		else
+			goto _otherL2;
 	}
+
+	// L3 (optional if followed by Payload)
+	if (!_iter->hasNext())
+		goto _done;
+
+	id = _iter->next()->protocolNumber();
+	btn = bgL3Proto->button(id);
+
+	if (btn && btn->isEnabled())
+		btn->click();
+	else
+	{
+		btn = bgPayloadProto->button(id);
+		if (btn && btn->isEnabled())
+			goto _payload;
+		else
+			goto _otherL3;
+	}
+
+	// L4 (optional if followed by Payload)
+	if (!_iter->hasNext())
+		goto _done;
+
+	id = _iter->next()->protocolNumber();
+	btn = bgL4Proto->button(id);
+
+	if (btn && btn->isEnabled())
+		btn->click();
+	else
+	{
+		btn = bgPayloadProto->button(id);
+		if (btn && btn->isEnabled())
+			goto _payload;
+		else
+			goto _otherL4;
+	}
+
+	// Payload Data
+	if (!_iter->hasNext())
+		goto _done;
+
+	id = _iter->next()->protocolNumber();
+	btn = bgPayloadProto->button(id);
 
 _payload:
-	//
-	// Payload
-	//
-	if (CHK(52)) // Payload
-	{
-		rbPayloadPattern->click();
-		_iter->next();
-	}
+	if (btn && btn->isEnabled())
+		btn->click();
+	else
+		goto _otherPayload;
 
-	// If there is any protocol beyond "data pattern" ...
+	// If more protocol(s) beyond payload ...
 	if (_iter->hasNext())
-		rbPayloadOther->setChecked(true);
+		goto _otherPayload;
+
+	goto _done;
+
+_otherL1:
+	bgL1Proto->button(ButtonIdOther)->setChecked(true);
+	updateL1Protocol(ButtonIdOther);
+_otherL2:
+	bgL2Proto->button(ButtonIdOther)->setChecked(true);
+	updateFrameTypeProtocol(ButtonIdOther);
+_otherL3:
+	bgL3Proto->button(ButtonIdOther)->setChecked(true);
+	updateL3Protocol(ButtonIdOther);
+_otherL4:
+	bgL4Proto->button(ButtonIdOther)->setChecked(true);
+	updateL4Protocol(ButtonIdOther);
+_otherPayload:
+	bgPayloadProto->button(ButtonIdOther)->setChecked(true);
+	updatePayloadProtocol(ButtonIdOther);
 
 _done:
-	// If any "other" protocols are checked, QButtonGroup signals
-	// are not triggered since the "other" radioButton's are disabled
-    //	- so update manually
-	if (rbFtOther->isChecked())
-		updateFrameTypeProtocol(-1);
-	if (rbL3Other->isChecked())
-		updateL3Protocol(-1);
-	if (rbL4Other->isChecked())
-		updateL4Protocol(-1);
-	if (rbPayloadOther->isChecked())
-		updatePayloadProtocol(-1);
 	isUpdateInProgress = false;
 
 	return;
-#undef CHK
 }
 
 void StreamConfigDialog::LoadCurrentStream()
