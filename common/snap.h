@@ -27,10 +27,11 @@ private:
 	};
 
 public:
-	SnapProtocol(StreamBase *stream);
+	SnapProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
 	virtual ~SnapProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream);
+	static AbstractProtocol* createInstance(StreamBase *stream,
+		AbstractProtocol *parent = 0);
 	virtual quint32 protocolNumber() const;
 
 	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;

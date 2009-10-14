@@ -28,11 +28,25 @@ public:
 
 private: 
 
-	QButtonGroup	*bgFrameType;
-	QButtonGroup	*bgVlan;
-	QButtonGroup	*bgL3Proto;
-	QButtonGroup	*bgL4Proto;
-	QButtonGroup	*bgPayloadProto;
+	enum ButtonId
+	{
+		ButtonIdNone = 0,
+		ButtonIdOther = -2
+	};
+
+	enum ProtoButtonGroup
+	{
+		ProtoMin,
+		ProtoL1 = 0,
+		ProtoVlan = 1,
+		ProtoL2 = 2,
+		ProtoL3 = 3,
+		ProtoL4 = 4,
+		ProtoPayload = 5,
+		ProtoMax
+	};
+
+	QButtonGroup	*bgProto[ProtoMax];
 
 	QStringListModel *mpAvailableProtocolsModel;
 	QStringListModel *mpSelectedProtocolsModel;
@@ -68,11 +82,11 @@ private slots:
 	// "Simple" Protocol Selection related
 	bool skipProtocols(int layer);
 
-	void updateFrameTypeProtocol(int id);
-	void updateVlanProtocol(int id);
-	void updateL3Protocol(int id);
-	void updateL4Protocol(int id);
-	void updatePayloadProtocol(int id);
+	void disableProtocols(QButtonGroup *protocolGroup, bool checked);
+	void forceProtocolNone(bool checked);
+
+	void updateProtocol(int newId);
+	void __updateProtocol(int level, int newId);
 
 	void updateSelectProtocolsSimpleWidget();
 

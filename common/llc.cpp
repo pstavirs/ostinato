@@ -9,8 +9,8 @@ LlcConfigForm::LlcConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-LlcProtocol::LlcProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+LlcProtocol::LlcProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ LlcProtocol::~LlcProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* LlcProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* LlcProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new LlcProtocol(stream);
+	return new LlcProtocol(stream, parent);
 }
 
 quint32 LlcProtocol::protocolNumber() const

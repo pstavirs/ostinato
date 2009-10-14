@@ -46,7 +46,7 @@ int PacketModel::rowCount(const QModelIndex &parent) const
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
 
-	Q_ASSERT(1 == 1);	// Unreachable code
+	Q_ASSERT(1 == 0);	// Unreachable code
 	qWarning("%s: Catch all - need to investigate", __FUNCTION__);
 	return 0; // catch all
 }
@@ -86,13 +86,14 @@ QModelIndex PacketModel::index(int row, int col, const QModelIndex &parent) cons
 		goto _exit;
 
 	case  ITYP_FIELD: 
+		Q_ASSERT(1 == 0);	// Unreachable code
 		goto _exit;
 
 	default:
 		qWarning("%s: Unhandled ItemType", __FUNCTION__);
 	}
 
-	Q_ASSERT(1 == 1);	// Unreachable code
+	Q_ASSERT(1 == 0);	// Unreachable code
 
 _exit:
 	return index;

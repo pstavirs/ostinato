@@ -49,8 +49,8 @@ void Ip4ConfigForm::on_cmbIpDstAddrMode_currentIndexChanged(int index)
 	}
 }
 
-Ip4Protocol::Ip4Protocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+Ip4Protocol::Ip4Protocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -60,9 +60,10 @@ Ip4Protocol::~Ip4Protocol()
 	delete configForm;
 }
 
-AbstractProtocol* Ip4Protocol::createInstance(StreamBase *stream)
+AbstractProtocol* Ip4Protocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new Ip4Protocol(stream);
+	return new Ip4Protocol(stream, parent);
 }
 
 quint32 Ip4Protocol::protocolNumber() const
@@ -592,7 +593,7 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
 			// Above calculation done assuming 'big endian' 
 			// - so convert to host order
 			//return qFromBigEndian(sum);
-			return sum;
+			return ~sum;
 		}
 		default:
 			break;

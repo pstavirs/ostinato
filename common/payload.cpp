@@ -30,8 +30,8 @@ void PayloadConfigForm::on_cmbPatternMode_currentIndexChanged(int index)
 	}
 }
 
-PayloadProtocol::PayloadProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+PayloadProtocol::PayloadProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -41,9 +41,10 @@ PayloadProtocol::~PayloadProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* PayloadProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* PayloadProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new PayloadProtocol(stream);
+	return new PayloadProtocol(stream, parent);
 }
 
 quint32 PayloadProtocol::protocolNumber() const

@@ -14,6 +14,7 @@
 #include <QtGlobal>
 #include <QList>
 #include <QThread>
+#include <QTemporaryFile>
 
 #include "../rpc/pbhelper.h"
 #include "pcapextra.h"
@@ -93,6 +94,22 @@ class PortInfo
 		void stop();
 	};
 
+	class PortCapture: public QThread
+	{
+		friend class PortInfo;
+
+		PortInfo		*port;
+		pcap_t			*capHandle;
+		pcap_dumper_t	*dumpHandle;
+		QTemporaryFile	capFile;
+
+	public:
+		PortCapture(PortInfo *port);
+		void run();
+		void stop();
+		void view();
+	};
+
 	OstProto::Port			d;
 
 	struct PortStats
@@ -136,6 +153,7 @@ class PortInfo
 	PortMonitorRx			monitorRx;
 	PortMonitorTx			monitorTx;
 	PortTransmitter			transmitter;
+	PortCapture				capturer;
 
 	struct PortStats		epochStats;
 	struct PortStats		stats;
@@ -153,6 +171,9 @@ public:
 	void update();
 	void startTransmit();
 	void stopTransmit();
+	void startCapture();
+	void stopCapture();
+	void viewCapture();
 	void resetStats();
 };
 

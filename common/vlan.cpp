@@ -8,8 +8,8 @@ VlanConfigForm::VlanConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-VlanProtocol::VlanProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+VlanProtocol::VlanProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -19,9 +19,10 @@ VlanProtocol::~VlanProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* VlanProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* VlanProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new VlanProtocol(stream);
+	return new VlanProtocol(stream, parent);
 }
 
 quint32 VlanProtocol::protocolNumber() const

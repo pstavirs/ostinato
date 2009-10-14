@@ -81,7 +81,11 @@ message Protocol {
 		kLlcFieldNumber = 123;
 		kSnapFieldNumber = 124;
 
+		kVlanStackFieldNumber = 125;
 		kVlanFieldNumber = 126;
+
+		kDot2LlcFieldNumber = 127;
+		kDot2SnapFieldNumber = 128;
 
 		kIp4FieldNumber = 130;
 		kArpFieldNumber = 131;

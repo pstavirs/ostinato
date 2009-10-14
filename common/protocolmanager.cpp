@@ -11,7 +11,10 @@
 #include "dot3.h"	
 #include "llc.h"	
 #include "snap.h"	
+#include "dot2llc.h"
+#include "dot2snap.h"
 #include "vlan.h"	
+#include "vlanstack.h"	
 #include "ip4.h"	
 #include "tcp.h"	
 #include "udp.h"	
@@ -20,16 +23,32 @@ ProtocolManager OstProtocolManager;
 
 ProtocolManager::ProtocolManager()
 {
-	registerProtocol(51, QString("mac"),  (void*) MacProtocol::createInstance);
-	registerProtocol(52, QString("payload"), (void*) PayloadProtocol::createInstance);
-	registerProtocol(121, QString("eth2"), (void*) Eth2Protocol::createInstance);
-	registerProtocol(122, QString("dot3"), (void*) Dot3Protocol::createInstance);
-	registerProtocol(123, QString("llc"),  (void*) LlcProtocol::createInstance);
-	registerProtocol(124, QString("snap"), (void*) SnapProtocol::createInstance);
-	registerProtocol(126, QString("vlan"), (void*) VlanProtocol::createInstance);
-	registerProtocol(130, QString("ip4"),  (void*) Ip4Protocol::createInstance);
-	registerProtocol(140, QString("tcp"),  (void*) TcpProtocol::createInstance);
-	registerProtocol(141, QString("udp"),  (void*) UdpProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kMacFieldNumber,
+			QString("mac"),  (void*) MacProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
+		   	QString("payload"), (void*) PayloadProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kEth2FieldNumber,
+		   	QString("eth2"), (void*) Eth2Protocol::createInstance);
+	registerProtocol(OstProto::Protocol::kDot3FieldNumber,
+		   	QString("dot3"), (void*) Dot3Protocol::createInstance);
+	registerProtocol(OstProto::Protocol::kLlcFieldNumber,
+		   	QString("llc"),  (void*) LlcProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kSnapFieldNumber,
+		   	QString("snap"), (void*) SnapProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kDot2LlcFieldNumber,
+			QString("dot2Llc"), (void*) Dot2LlcProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
+			QString("dot2Snap"), (void*) Dot2SnapProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kVlanFieldNumber,
+		   	QString("vlan"), (void*) VlanProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
+			QString("vlanstack"), (void*) VlanStackProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kIp4FieldNumber,
+		   	QString("ip4"),  (void*) Ip4Protocol::createInstance);
+	registerProtocol(OstProto::Protocol::kTcpFieldNumber,
+		   	QString("tcp"),  (void*) TcpProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kUdpFieldNumber,
+		   	QString("udp"),  (void*) UdpProtocol::createInstance);
 }
 
 void ProtocolManager::registerProtocol(int protoNumber, QString protoName,
@@ -42,25 +61,25 @@ void ProtocolManager::registerProtocol(int protoNumber, QString protoName,
 }
 
 AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
-	StreamBase *stream)
+	StreamBase *stream, AbstractProtocol *parent)
 {
-	AbstractProtocol* (*pc)(StreamBase*);
+	AbstractProtocol* (*pc)(StreamBase*, AbstractProtocol*);
 	AbstractProtocol* p;
 
-	pc = (AbstractProtocol* (*)(StreamBase*))
+	pc = (AbstractProtocol* (*)(StreamBase*, AbstractProtocol*))
 		factory.value(protoNumber);
 	
 	Q_ASSERT(pc != NULL);
 
-	p = (*pc)(stream);
+	p = (*pc)(stream, parent);
 
 	return p;
 }
 
 AbstractProtocol* ProtocolManager::createProtocol(QString protoName,
-	StreamBase *stream)
+	StreamBase *stream, AbstractProtocol *parent)
 {
-	return createProtocol(nameToNumberMap.value(protoName), stream);
+	return createProtocol(nameToNumberMap.value(protoName), stream, parent);
 }
 
 QStringList ProtocolManager::protocolDatabase()

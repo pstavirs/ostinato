@@ -49,8 +49,8 @@ void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 }
 
 
-MacProtocol::MacProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+MacProtocol::MacProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -60,9 +60,10 @@ MacProtocol::~MacProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* MacProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* MacProtocol::createInstance(StreamBase *stream
+	, AbstractProtocol *parent)
 {
-	return new MacProtocol(stream);
+	return new MacProtocol(stream, parent);
 }
 
 quint32 MacProtocol::protocolNumber() const

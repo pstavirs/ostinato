@@ -32,10 +32,11 @@ private:
 	};
 
 public:
-	UdpProtocol(StreamBase *stream);
+	UdpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
 	virtual ~UdpProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream);
+	static AbstractProtocol* createInstance(StreamBase *stream,
+		AbstractProtocol *parent = 0);
 	virtual quint32 protocolNumber() const;
 
 	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;

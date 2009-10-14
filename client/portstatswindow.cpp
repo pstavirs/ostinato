@@ -61,16 +61,52 @@ void PortStatsWindow::on_tbStopTransmit_clicked()
 void PortStatsWindow::on_tbStartCapture_clicked()
 {
 	// TODO(MED)
+	QList<PortStatsModel::PortGroupAndPortList>	pgpl;
+
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	pgpl);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < pgpl.size(); i++)
+	{
+		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
+			startCapture(&pgpl[i].portList);
+	}
 }
 
 void PortStatsWindow::on_tbStopCapture_clicked()
 {
 	// TODO(MED)
+	QList<PortStatsModel::PortGroupAndPortList>	pgpl;
+
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	pgpl);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < pgpl.size(); i++)
+	{
+		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
+			stopCapture(&pgpl[i].portList);
+	}
 }
 
 void PortStatsWindow::on_tbViewCapture_clicked()
 {
 	// TODO(MED)
+	QList<PortStatsModel::PortGroupAndPortList>	pgpl;
+
+	// Get selected ports
+	model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
+		   	pgpl);
+
+	// Clear selected ports, portgroup by portgroup
+	for (int i = 0; i < pgpl.size(); i++)
+	{
+		pgl->portGroupByIndex(pgpl.at(i).portGroupId).
+			viewCapture(&pgpl[i].portList);
+	}
 }
 
 void PortStatsWindow::on_tbClear_clicked()

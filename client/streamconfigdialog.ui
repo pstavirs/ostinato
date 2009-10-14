@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>524</width>
-    <height>458</height>
+    <width>569</width>
+    <height>464</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -173,7 +173,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>465</width>
+            <width>527</width>
             <height>226</height>
            </rect>
           </property>
@@ -181,16 +181,58 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <string>Simple</string>
           </attribute>
           <layout class="QGridLayout" >
-           <item rowspan="2" row="0" column="0" >
-            <widget class="QGroupBox" name="gbFrameType" >
+           <item row="0" column="0" >
+            <widget class="QGroupBox" name="gbL1Proto" >
              <property name="title" >
-              <string>Frame Type</string>
+              <string>L1</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbL1None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL1Mac" >
+                <property name="text" >
+                 <string>Mac</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL1Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item rowspan="3" row="0" column="1" >
+            <widget class="QGroupBox" name="gbFrameType" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>L2</string>
              </property>
              <layout class="QVBoxLayout" >
               <item>
                <widget class="QRadioButton" name="rbFtNone" >
                 <property name="text" >
-                 <string>None (Mac Only)</string>
+                 <string>None</string>
                 </property>
                 <property name="checked" >
                  <bool>true</bool>
@@ -244,50 +286,11 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="0" column="1" >
-            <widget class="QGroupBox" name="gbVlan" >
+           <item row="0" column="2" >
+            <widget class="QGroupBox" name="gbL3Proto" >
              <property name="enabled" >
               <bool>true</bool>
              </property>
-             <property name="title" >
-              <string>VLAN</string>
-             </property>
-             <property name="checkable" >
-              <bool>false</bool>
-             </property>
-             <property name="checked" >
-              <bool>false</bool>
-             </property>
-             <layout class="QVBoxLayout" >
-              <item>
-               <widget class="QRadioButton" name="rbVlanNone" >
-                <property name="text" >
-                 <string>None</string>
-                </property>
-                <property name="checked" >
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="rbVlanSingle" >
-                <property name="text" >
-                 <string>Single Tag</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="rbVlanDouble" >
-                <property name="text" >
-                 <string>Double Tag</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="0" column="2" colspan="2" >
-            <widget class="QGroupBox" name="gbL3Proto" >
              <property name="title" >
               <string>L3</string>
              </property>
@@ -348,8 +351,95 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="1" column="1" colspan="2" >
+           <item row="0" column="3" >
+            <widget class="QGroupBox" name="gbPayloadProto" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>Payload</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbPayloadNone" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbPayloadPattern" >
+                <property name="text" >
+                 <string>Pattern</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbPayloadOther" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item rowspan="2" row="1" column="0" >
+            <widget class="QGroupBox" name="gbVlan" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>VLAN</string>
+             </property>
+             <property name="checkable" >
+              <bool>false</bool>
+             </property>
+             <property name="checked" >
+              <bool>false</bool>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbVlanNone" >
+                <property name="text" >
+                 <string>Untagged</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbVlanSingle" >
+                <property name="text" >
+                 <string>Tagged</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbVlanDouble" >
+                <property name="text" >
+                 <string>Stacked</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="2" >
             <widget class="QGroupBox" name="gbL4Proto" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
              <property name="title" >
               <string>L4</string>
              </property>
@@ -417,44 +507,15 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="1" column="3" >
-            <widget class="QGroupBox" name="gbPayloadProto" >
-             <property name="title" >
-              <string>Payload</string>
-             </property>
-             <layout class="QVBoxLayout" >
-              <item>
-               <widget class="QRadioButton" name="rbPayloadPattern" >
-                <property name="text" >
-                 <string>Pattern</string>
-                </property>
-                <property name="checked" >
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="rbPayloadOther" >
-                <property name="enabled" >
-                 <bool>false</bool>
-                </property>
-                <property name="text" >
-                 <string>Other</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="2" column="1" >
+           <item row="2" column="2" >
             <spacer>
              <property name="orientation" >
               <enum>Qt::Vertical</enum>
              </property>
              <property name="sizeHint" >
               <size>
-               <width>107</width>
-               <height>24</height>
+               <width>20</width>
+               <height>21</height>
               </size>
              </property>
             </spacer>
@@ -1084,7 +1145,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
   <tabstop>lePktLen</tabstop>
   <tabstop>lePktLenMin</tabstop>
   <tabstop>lePktLenMax</tabstop>
-  <tabstop>rbFtNone</tabstop>
   <tabstop>rbFtEthernet2</tabstop>
   <tabstop>rbFt802Dot3Raw</tabstop>
   <tabstop>rbFt802Dot3Llc</tabstop>

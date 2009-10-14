@@ -9,8 +9,8 @@ SampleConfigForm::SampleConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-SampleProtocol::SampleProtocol(StreamBase *stream);
-	: AbstractProtocol(stream)
+SampleProtocol::SampleProtocol(StreamBase *stream, AbstractProtocol *parent);
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ SampleProtocol::~SampleProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* SampleProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* SampleProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new SampleProtocol(frameProtoList, streamCore);
+	return new SampleProtocol(stream, parent);
 }
 
 quint32 SampleProtocol::protocolNumber() const

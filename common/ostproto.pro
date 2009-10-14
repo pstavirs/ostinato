@@ -22,7 +22,10 @@ PROTOS += \
 	dot3.proto \
 	llc.proto \
 	snap.proto \
+	dot2llc.proto \
+	dot2snap.proto \
 	vlan.proto \
+	vlanstack.proto \
 	ip4.proto \
 	tcp.proto \
 	udp.proto
@@ -39,7 +42,10 @@ HEADERS += \
 	dot3.h \
 	llc.h \
 	snap.h \
+	dot2llc.h \
+	dot2snap.h \
 	vlan.h \
+	vlanstack.h \
 	ip4.h \
 	tcp.h \
 	udp.h

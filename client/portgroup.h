@@ -75,6 +75,13 @@ public:
 	void stopTx(QList<uint> *portList = NULL);
 	void processStopTxAck(OstProto::Ack *ack);
 
+	void startCapture(QList<uint> *portList = NULL);
+	void processStartCaptureAck(OstProto::Ack *ack);
+	void stopCapture(QList<uint> *portList = NULL);
+	void processStopCaptureAck(OstProto::Ack *ack);
+	void viewCapture(QList<uint> *portList = NULL);
+	void processViewCaptureAck(OstProto::CaptureBufferList *bufList);
+
 	void getPortStats();
 	void processPortStatsList(OstProto::PortStatsList *portStatsList);
 	void clearPortStats(QList<uint> *portList = NULL);

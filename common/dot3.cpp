@@ -12,8 +12,8 @@ Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-Dot3Protocol::Dot3Protocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+Dot3Protocol::Dot3Protocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -23,9 +23,10 @@ Dot3Protocol::~Dot3Protocol()
 	delete configForm;
 }
 
-AbstractProtocol* Dot3Protocol::createInstance(StreamBase *stream)
+AbstractProtocol* Dot3Protocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new Dot3Protocol(stream);
+	return new Dot3Protocol(stream, parent);
 }
 
 quint32 Dot3Protocol::protocolNumber() const
@@ -75,14 +76,16 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					quint16 len;
 
-					len = mpStream->frameLen() - SZ_FCS;
+					//len = mpStream->frameLen() - SZ_FCS;
+					len = protocolFramePayloadSize();
 					return len;
 				}
 				case FieldTextValue:
 				{
 					quint16 len;
 
-					len = mpStream->frameLen() - SZ_FCS;
+					//len = mpStream->frameLen() - SZ_FCS;
+					len = protocolFramePayloadSize();
 					return QString("%1").arg(len);
 				}
 				case FieldFrameValue:
@@ -90,11 +93,14 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 					quint16 len;
 					QByteArray fv;
 
-					len = mpStream->frameLen() - SZ_FCS;
+					//len = mpStream->frameLen() - SZ_FCS;
+					len = protocolFramePayloadSize();
 					fv.resize(2);
 					qToBigEndian(len, (uchar*) fv.data());
 					return fv;
 				}
+				case FieldBitSize:
+					return 16;
 				default:
 					break;
 			}

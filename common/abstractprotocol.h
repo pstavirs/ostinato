@@ -20,16 +20,24 @@
 	QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
 
 class StreamBase;
+class ProtocolListIterator;
 
 class AbstractProtocol
 {
+	template <int protoNumber, class ProtoA, class ProtoB> 
+		friend class ComboProtocol;
+	friend class ProtocolListIterator;
+
 private:
 	mutable int		metaCount;
 	mutable int		protoSize;
 	mutable QString protoAbbr;
 
 protected:
-	StreamBase		*mpStream;
+	StreamBase			*mpStream;
+	AbstractProtocol	*parent;
+	AbstractProtocol	*prev;
+	AbstractProtocol	*next;
 
 public:
 	enum FieldFlag {
@@ -61,10 +69,11 @@ public:
 		CksumMax
 	};
 
-	AbstractProtocol(StreamBase *stream);
+	AbstractProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
 	virtual ~AbstractProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream);
+	static AbstractProtocol* createInstance(StreamBase *stream,
+		AbstractProtocol *parent = 0);
 	virtual quint32 protocolNumber() const;
 
 	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const = 0;

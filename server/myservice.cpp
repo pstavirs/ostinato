@@ -2,6 +2,7 @@
 #include <qglobal.h>
 #include <qendian.h>
 #include "qdebug.h"
+#include <QProcess>
 
 #include "myservice.h"
 #include "../common/protocollist.h"
@@ -86,7 +87,7 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 // ------------------ PortInfo --------------------
 //
 PortInfo::PortInfo(uint id, pcap_if_t *dev)
-	: monitorRx(this), monitorTx(this), transmitter(this)
+	: monitorRx(this), monitorTx(this), transmitter(this), capturer(this)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
 
@@ -331,6 +332,21 @@ void PortInfo::startTransmit()
 void PortInfo::stopTransmit()
 {
 	transmitter.stop();
+}
+
+void PortInfo::startCapture()
+{
+	capturer.start();
+}
+
+void PortInfo::stopCapture()
+{
+	capturer.stop();
+}
+
+void PortInfo::viewCapture()
+{
+	capturer.view();
 }
 
 void PortInfo::resetStats()
@@ -714,6 +730,59 @@ void PortInfo::PortTransmitter::stop()
 	m_stop = 1;
 }
 
+/*--------------- PortCapture ---------------*/
+
+PortInfo::PortCapture::PortCapture(PortInfo *port)
+{
+	this->port = port;
+	capHandle = NULL;
+	dumpHandle = NULL;
+}
+
+void PortInfo::PortCapture::run()
+{
+	if (capHandle == NULL)
+	{
+		char errbuf[PCAP_ERRBUF_SIZE];
+
+		capHandle = pcap_open_live(port->dev->name, 0, 
+			PCAP_OPENFLAG_PROMISCUOUS, 1000 /*ms*/, errbuf);
+		if (capHandle == NULL)
+		{
+			qDebug("Error opening port %s: %s\n", 
+					port->dev->name, pcap_geterr(capHandle));
+		}
+	}
+	if (!capFile.isOpen())
+	{
+		if (!capFile.open())
+			qFatal("Unable to open temp cap file");
+		qDebug("cap file = %s", capFile.fileName().toAscii().constData());
+	}
+	dumpHandle = pcap_dump_open(capHandle, 
+		capFile.fileName().toAscii().constData());
+
+	pcap_loop(capHandle, -1, pcap_dump, (uchar*) dumpHandle);
+}
+
+void PortInfo::PortCapture::stop()
+{
+	pcap_breakloop(capHandle);
+	if (dumpHandle)
+	{
+		pcap_dump_flush(dumpHandle);
+		pcap_dump_close(dumpHandle);
+		dumpHandle = NULL;
+	}
+}
+
+void PortInfo::PortCapture::view()
+{
+	// FIXME: hack - when correcting this remove the <QProcess> include also
+	QProcess::execute("C:/Program Files/Wireshark/wireshark.exe",
+		QStringList() <<  capFile.fileName());
+}
+
 
 /*--------------- MyService ---------------*/
 
@@ -1067,7 +1136,18 @@ const ::OstProto::PortIdList* request,
 ::google::protobuf::Closure* done)
 {
 	qDebug("In %s", __PRETTY_FUNCTION__);
-	controller->SetFailed("Not Implemented");
+
+	for (int i=0; i < request->port_id_size(); i++)
+	{
+		uint portIdx;
+
+		portIdx = request->port_id(i).id();
+		if (portIdx >= numPorts)
+			continue; 	// TODO(LOW): partial RPC?
+
+		portInfo[portIdx]->startCapture();
+	}
+
 	done->Run();
 }
 
@@ -1077,7 +1157,17 @@ const ::OstProto::PortIdList* request,
 ::google::protobuf::Closure* done)
 {
 	qDebug("In %s", __PRETTY_FUNCTION__);
-	controller->SetFailed("Not Implemented");
+	for (int i=0; i < request->port_id_size(); i++)
+	{
+		uint portIdx;
+
+		portIdx = request->port_id(i).id();
+		if (portIdx >= numPorts)
+			continue; 	// TODO(LOW): partial RPC?
+
+		portInfo[portIdx]->stopCapture();
+	}
+
 	done->Run();
 }
 
@@ -1087,6 +1177,19 @@ const ::OstProto::PortIdList* request,
 ::google::protobuf::Closure* done)
 {
 	qDebug("In %s", __PRETTY_FUNCTION__);
+
+	// FIXME: BAD BAD VERY BAD !!!!!!
+	for (int i=0; i < request->port_id_size(); i++)
+	{
+		uint portIdx;
+
+		portIdx = request->port_id(i).id();
+		if (portIdx >= numPorts)
+			continue; 	// TODO(LOW): partial RPC?
+
+		portInfo[portIdx]->viewCapture();
+	}
+
 	controller->SetFailed("Not Implemented");
 	done->Run();
 }

@@ -12,22 +12,23 @@ StreamBase::StreamBase() :
 	mControl(new OstProto::StreamControl)
 {
 	AbstractProtocol *proto;
+	ProtocolListIterator *iter;
 
 	mStreamId->set_id(0xFFFFFFFF);
 
 	currentFrameProtocols = new ProtocolList;
 
+	iter = createProtocolListIterator();
 	// By default newly created streams have the mac and payload protocols
 	proto = OstProtocolManager.createProtocol("mac", this);
-	currentFrameProtocols->append(proto);
+	iter->insert(proto);
 	qDebug("stream: mac = %p", proto);
 
 	proto = OstProtocolManager.createProtocol("payload", this);
-	currentFrameProtocols->append(proto);
+	iter->insert(proto);
 	qDebug("stream: payload = %p", proto);
 
 	{
-		ProtocolListIterator *iter = createProtocolListIterator();
 		iter->toFront();
 		while (iter->hasNext())
 		{
@@ -40,8 +41,9 @@ StreamBase::StreamBase() :
 			qDebug("{[%d]}", iter->next()->protocolNumber());
 		//	qDebug("{{%p}: %d}", iter->peekNext(), iter->next()->protocolNumber());
 		}
-		delete iter;
 	}
+
+	delete iter;
 }
 
 StreamBase::~StreamBase()
@@ -53,20 +55,24 @@ StreamBase::~StreamBase()
 
 void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
 {
-	AbstractProtocol	*proto;
+	AbstractProtocol		*proto;
+	ProtocolListIterator	*iter;
 
 	mStreamId->CopyFrom(stream.stream_id());
 	mCore->CopyFrom(stream.core());
 	mControl->CopyFrom(stream.control());
 
 	currentFrameProtocols->destroy();
+	iter = createProtocolListIterator();
 	for (int i=0; i < stream.protocol_size(); i++)
 	{
 		proto = OstProtocolManager.createProtocol(
 			stream.protocol(i).protocol_id().id(), this);
 		proto->protoDataCopyFrom(stream.protocol(i));
-		currentFrameProtocols->append(proto);
+		iter->insert(proto);
 	}
+
+	delete iter;
 }
 
 void StreamBase::protoDataCopyInto(OstProto::Stream &stream) const

@@ -19,8 +19,10 @@ public:
 	void registerProtocol(int protoNumber, QString protoName,
 		void *protoCreator);
 
-	AbstractProtocol* createProtocol(int protoNumber, StreamBase *stream);
-	AbstractProtocol* createProtocol(QString protoName, StreamBase *stream);
+	AbstractProtocol* createProtocol(int protoNumber, StreamBase *stream,
+		AbstractProtocol *parent = 0);
+	AbstractProtocol* createProtocol(QString protoName, StreamBase *stream,
+		AbstractProtocol *parent = 0);
 
 	QStringList protocolDatabase();
 };

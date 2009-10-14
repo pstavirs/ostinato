@@ -9,8 +9,8 @@ SnapConfigForm::SnapConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-SnapProtocol::SnapProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+SnapProtocol::SnapProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ SnapProtocol::~SnapProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* SnapProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* SnapProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new SnapProtocol(stream);
+	return new SnapProtocol(stream, parent);
 }
 
 quint32 SnapProtocol::protocolNumber() const

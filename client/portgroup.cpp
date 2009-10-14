@@ -479,6 +479,93 @@ _exit:
 	return;
 }
 
+void PortGroup::startCapture(QList<uint> *portList)
+{
+	OstProto::PortIdList	portIdList;
+	OstProto::Ack			*ack;
+
+	qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	ack = new OstProto::Ack;
+	if (portList == NULL)
+		goto _exit;
+	else
+	{
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
+	}
+
+	serviceStub->startCapture(rpcController, &portIdList, ack,
+			NewCallback(this, &PortGroup::processStartCaptureAck, ack));
+_exit:
+	return;
+}
+
+void PortGroup::stopCapture(QList<uint> *portList)
+{
+	OstProto::PortIdList	portIdList;
+	OstProto::Ack			*ack;
+
+	qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	ack = new OstProto::Ack;
+	if (portList == NULL)
+		goto _exit;
+	else
+	{
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
+	}
+
+	serviceStub->stopCapture(rpcController, &portIdList, ack,
+			NewCallback(this, &PortGroup::processStopCaptureAck, ack));
+_exit:
+	return;
+}
+
+void PortGroup::viewCapture(QList<uint> *portList)
+{
+	OstProto::PortIdList	portIdList;
+	OstProto::CaptureBufferList	*bufList;
+
+	qDebug("In %s", __FUNCTION__);
+
+	if (state() != QAbstractSocket::ConnectedState)
+		return;
+
+	bufList = new OstProto::CaptureBufferList;
+	if (portList == NULL)
+		goto _exit;
+	else
+	{
+		for (int i = 0; i < portList->size(); i++)
+		{
+			OstProto::PortId	*portId;
+			portId = portIdList.add_port_id();
+			portId->set_id(portList->at(i));
+		}
+	}
+
+	serviceStub->getCaptureBuffer(rpcController, &portIdList, bufList,
+			NewCallback(this, &PortGroup::processViewCaptureAck, bufList));
+_exit:
+	return;
+}
+
 void PortGroup::processStartTxAck(OstProto::Ack	*ack)
 {
 	qDebug("In %s", __FUNCTION__);
@@ -491,6 +578,27 @@ void PortGroup::processStopTxAck(OstProto::Ack	*ack)
 	qDebug("In %s", __FUNCTION__);
 
 	delete ack;
+}
+
+void PortGroup::processStartCaptureAck(OstProto::Ack	*ack)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	delete ack;
+}
+
+void PortGroup::processStopCaptureAck(OstProto::Ack	*ack)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	delete ack;
+}
+
+void PortGroup::processViewCaptureAck(OstProto::CaptureBufferList	*bufList)
+{
+	qDebug("In %s", __FUNCTION__);
+
+	delete bufList;
 }
 
 void PortGroup::getPortStats()

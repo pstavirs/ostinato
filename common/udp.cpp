@@ -9,8 +9,8 @@ UdpConfigForm::UdpConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-UdpProtocol::UdpProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+UdpProtocol::UdpProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ UdpProtocol::~UdpProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* UdpProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* UdpProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new UdpProtocol(stream);
+	return new UdpProtocol(stream, parent);
 }
 
 quint32 UdpProtocol::protocolNumber() const

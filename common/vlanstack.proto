@@ -1,0 +1,12 @@
+import "protocol.proto";
+
+package OstProto;
+
+// Stacked VLAN (2 tags)
+message VlanStack {
+	// Empty since this is a 'combo' protocol
+}
+
+extend Protocol {
+	optional VlanStack vlanStack = 125;
+}

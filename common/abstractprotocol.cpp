@@ -22,9 +22,12 @@
   - metaFieldCount()
   - isMetaField()
 */
-AbstractProtocol::AbstractProtocol(StreamBase *stream)
+AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
 {
+	//qDebug("%s: &prev = %p &next = %p", __FUNCTION__, &prev, &next);
 	mpStream = stream;
+	this->parent = parent;
+	prev = next = NULL;
 	metaCount = -1;
 	protoSize = -1;
 }
@@ -33,7 +36,8 @@ AbstractProtocol::~AbstractProtocol()
 {
 }
 
-AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
 	return NULL;
 }
@@ -139,6 +143,7 @@ AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
   FieldFrameValue, the subclass should handle and return a value for 
   FieldBitSize to prevent endless recrusion -
   - protocolFrameCksum()
+  - protocolFramePayloadSize()
   */
 QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
 		int streamIndex) const
@@ -184,17 +189,16 @@ quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
 
 quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
 {
-	quint32 id = 0xFFFFFFFF;
-	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
+	quint32 id;
 
-	if (iter->findNext(this))
-	{
-		if (iter->hasNext())
-			id = iter->next()->protocolId(type);
-	}
-	delete iter;
+	if (next)
+		id = next->protocolId(type);
+	else if (parent)
+		id = parent->payloadProtocolId(type);
+	else
+		id = 0xFFFFFFFF;
 
-	qDebug("%s: payloadProtocolId = %u", __FUNCTION__, id);
+	qDebug("%s: payloadProtocolId = 0x%x", __FUNCTION__, id);
 	return id;
 }
 
@@ -219,17 +223,15 @@ int AbstractProtocol::protocolFrameSize() const
 int AbstractProtocol::protocolFrameOffset() const
 {
 	int size = 0;
-	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
-
-	if (iter->findNext(this))
+	AbstractProtocol *p = prev;
+	while (p)
 	{
-		iter->previous();
-		while (iter->hasPrevious())
-			size += iter->previous()->protocolFrameSize();
+		size += p->protocolFrameSize();
+		p = p->prev;
 	}
-	else
-		return -1;
-	delete iter;
+
+	if (parent)
+		size += parent->protocolFrameOffset();
 
 	qDebug("%s: ofs = %d", __FUNCTION__, size);
 	return size;
@@ -238,17 +240,14 @@ int AbstractProtocol::protocolFrameOffset() const
 int AbstractProtocol::protocolFramePayloadSize() const
 {
 	int size = 0;
-
-	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
-
-	if (iter->findNext(this))
+	AbstractProtocol *p = next;
+	while (p)
 	{
-		while (iter->hasNext())
-			size += iter->next()->protocolFrameSize();
+		size += p->protocolFrameSize();
+		p = p->next;
 	}
-	else
-		return -1;
-	delete iter;
+	if (parent)
+		size += parent->protocolFramePayloadSize();
 
 	qDebug("%s: payloadSize = %d", __FUNCTION__, size);
 	return size;
@@ -361,7 +360,7 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
 	CksumType cksumType) const
 {
 	static int recursionCount = 0;
-	quint32 cksum = 0;
+	quint32 cksum = 0xFFFFFFFF;
 
 	recursionCount++;
 	Q_ASSERT_X(recursionCount < 10, "protocolFrameCksum", "potential infinite recursion - does a protocol checksum field not implement FieldBitSize?");
@@ -426,19 +425,24 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
 quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex, 
 	CksumType cksumType) const
 {
-	quint32 sum = 0xFFFF;
-	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
+	quint32 sum = 0;
+	quint16 cksum;
+	AbstractProtocol *p = prev;
 
 	Q_ASSERT(cksumType == CksumIpPseudo);
 
-	if (iter->findNext(this))
+	while (p)
 	{
-		iter->previous();
-		if (iter->hasPrevious())
-			sum = iter->previous()->protocolFrameCksum(streamIndex,
-				CksumIpPseudo);
+		cksum = p->protocolFrameCksum(streamIndex, cksumType);
+		sum += (quint16) ~cksum;
+		p = p->prev;
+		qDebug("%s: sum = %u, cksum = %u", __FUNCTION__, sum, cksum);
 	}
-	delete iter;
+	if (parent)
+	{
+		cksum = parent->protocolFrameHeaderCksum(streamIndex, cksumType);
+		sum += (quint16) ~cksum;
+	}
 
 	while(sum>>16)
 		sum = (sum & 0xFFFF) + (sum >> 16);
@@ -451,21 +455,22 @@ quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
 {
 	quint32 sum = 0;
 	quint16 cksum;
-	ProtocolListIterator	*iter = mpStream->createProtocolListIterator();
+	AbstractProtocol *p = next;
 
 	Q_ASSERT(cksumType == CksumIp);
 
-	if (iter->findNext(this))
+	while (p)
 	{
-		while (iter->hasNext())
-		{
-			cksum = iter->next()->protocolFrameCksum(streamIndex, CksumIp);
-			sum += (quint16) ~cksum;
-		}
+		cksum = p->protocolFrameCksum(streamIndex, cksumType);
+		sum += (quint16) ~cksum;
+		p = p->next;
 	}
-	else
-		return 0;
-	delete iter;
+
+	if (parent)
+	{
+		cksum = parent->protocolFramePayloadCksum(streamIndex, cksumType);
+		sum += (quint16) ~cksum;
+	}
 
 	while(sum>>16)
 		sum = (sum & 0xFFFF) + (sum >> 16);

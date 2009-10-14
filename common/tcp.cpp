@@ -9,8 +9,8 @@ TcpConfigForm::TcpConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-TcpProtocol::TcpProtocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+TcpProtocol::TcpProtocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ TcpProtocol::~TcpProtocol()
 	delete configForm;
 }
 
-AbstractProtocol* TcpProtocol::createInstance(StreamBase *stream)
+AbstractProtocol* TcpProtocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new TcpProtocol(stream);
+	return new TcpProtocol(stream, parent);
 }
 
 quint32 TcpProtocol::protocolNumber() const

@@ -15,13 +15,13 @@ public:
 	bool findPrevious(const AbstractProtocol* value);
 	bool hasNext() const;
 	bool hasPrevious() const;
-	void insert(const AbstractProtocol* value);
+	void insert(AbstractProtocol* value);
 	AbstractProtocol* next();
 	AbstractProtocol* peekNext() const;
 	AbstractProtocol* peekPrevious() const;
 	AbstractProtocol* previous();
 	void remove();
-	void setValue(const AbstractProtocol* value) const;
+	void setValue(AbstractProtocol* value) const;
 	void toBack();
 	void toFront();
 	const AbstractProtocol* value() const;

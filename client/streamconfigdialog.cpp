@@ -27,18 +27,13 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	setupUi(this);
 	setupUiExtra();
 
-	connect(bgL1Proto, SIGNAL(buttonClicked(int)), 
-		this, SLOT(updateL1Protocol(int)));
-	connect(bgL2Proto, SIGNAL(buttonClicked(int)), 
-		this, SLOT(updateFrameTypeProtocol(int)));
-	connect(bgVlan, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateVlanProtocol(int)));
-	connect(bgL3Proto, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateL3Protocol(int)));
-	connect(bgL4Proto, SIGNAL(buttonClicked(int)),
-		this, SLOT(updateL4Protocol(int)));
-	connect(bgPayloadProto, SIGNAL(buttonClicked(int)),
-		this, SLOT(updatePayloadProtocol(int)));
+	for (int i = ProtoMin; i < ProtoMax; i++)
+	{
+		bgProto[i]->setProperty("ProtocolLevel", i);
+		bgProto[i]->setProperty("ProtocolId", ButtonIdNone);
+		connect(bgProto[i], SIGNAL(buttonClicked(int)),
+			this, SLOT(updateProtocol(int)));
+	}
 
 	//! \todo causes a crash!
 #if 0	
@@ -48,35 +43,16 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
 	// Time to play match the signals and slots!
 
-	// Enable VLAN Choices only if FT = Eth2 or SNAP
-#if 0
-	connect(rbFtNone, SIGNAL(toggled(bool)), gbVlan, SLOT(setDisabled(bool)));
-	connect(rbFtOther, SIGNAL(toggled(bool)), gbVlan, SLOT(setDisabled(bool)));
-	connect(rbFtNone, SIGNAL(clicked(bool)), rbVlanNone, SLOT(click()));
-#endif
-
-	// Force all protocols = None if L1 = None
-	connect(rbL1None, SIGNAL(clicked(bool)), rbVlanNone, SLOT(click()));
-	connect(rbL1None, SIGNAL(clicked(bool)), rbFtNone, SLOT(click()));
-	connect(rbL1None, SIGNAL(clicked(bool)), rbPayloadNone, SLOT(click()));
-
-	connect(rbFtNone, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
-
-	// Enable/Disable L3 Protocol Choices for FT None
-	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
+	// If L1/FT = None, force subsequent protocol level(s) also to None
+	connect(rbL1None, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
 
 	// Enable/Disable L3 Protocol Choices for FT Ethernet2
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
 
 	// Force L3 = None if FT = 802.3 Raw
 	connect(rbFt802Dot3Raw, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
-
-	// Enable/Disable L3 Protocol Choices for FT 802Dot3Raw
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
 	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
 
@@ -84,12 +60,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFt802Dot3Llc, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
 
 	// Enable/Disable L3 Protocol Choices for FT 802Dot3Llc
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
 
 	// Enable/Disable L3 Protocol Choices for FT 802.3 LLC SNAP
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3None, SLOT(setEnabled(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
 	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
 
@@ -97,25 +71,16 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 	connect(rbFtOther, SIGNAL(toggled(bool)), rbL3Other, SLOT(setChecked(bool)));
 	connect(rbFtOther, SIGNAL(toggled(bool)), gbL3Proto, SLOT(setDisabled(bool)));
 
-	// Enable/Disable L4 Protocol Choices for L3 Protocol None
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setDisabled(bool)));
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
-	connect(rbL3None, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
-
-	// Force L4 Protocol = None if L3 Protocol is set to None
-	connect(rbL3None, SIGNAL(clicked(bool)), rbL4None, SLOT(click()));
+	// If L3 = None, force subsequent protocol level also to None
+	connect(rbL3None, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
 
 	// Enable/Disable L4 Protocol Choices for L3 Protocol IPv4
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setEnabled(bool)));
 	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setEnabled(bool)));
 
 	// Enable/Disable L4 Protocol Choices for L3 Protocol ARP
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4None, SLOT(setEnabled(bool)));
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setDisabled(bool)));
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
 	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
@@ -183,66 +148,62 @@ void StreamConfigDialog::setupUiExtra()
 	QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
 	// ---- Setup default stuff that cannot be done in designer ----
-#if 0
-	gbVlan->setDisabled(true);
-#endif
+	bgProto[ProtoL1] = new QButtonGroup();
+	bgProto[ProtoL1]->addButton(rbL1None, ButtonIdNone);
+	bgProto[ProtoL1]->addButton(rbL1Mac, OstProto::Protocol::kMacFieldNumber);
+	bgProto[ProtoL1]->addButton(rbL1Other, ButtonIdOther);
 
-	bgL1Proto = new QButtonGroup();
-	bgL1Proto->addButton(rbL1None, ButtonIdNone);
-	bgL1Proto->addButton(rbL1Mac, OstProto::Protocol::kMacFieldNumber);
-	bgL1Proto->addButton(rbL1Other, ButtonIdOther);
-
-	bgL2Proto = new QButtonGroup();
+	bgProto[ProtoL2] = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbFrameType->findChildren<QRadioButton*>())
 		bgL2Proto->addButton(btn);
 #else
-	bgL2Proto->addButton(rbFtNone, ButtonIdNone);
-	bgL2Proto->addButton(rbFtEthernet2, OstProto::Protocol::kEth2FieldNumber);
-	bgL2Proto->addButton(rbFt802Dot3Raw, OstProto::Protocol::kDot3FieldNumber);
-	bgL2Proto->addButton(rbFt802Dot3Llc, OstProto::Protocol::kDot2LlcFieldNumber);
-	bgL2Proto->addButton(rbFtLlcSnap, OstProto::Protocol::kDot2SnapFieldNumber);
-	bgL2Proto->addButton(rbFtOther, ButtonIdOther);
+	bgProto[ProtoL2]->addButton(rbFtNone, ButtonIdNone);
+	bgProto[ProtoL2]->addButton(rbFtEthernet2, OstProto::Protocol::kEth2FieldNumber);
+	bgProto[ProtoL2]->addButton(rbFt802Dot3Raw, OstProto::Protocol::kDot3FieldNumber);
+	bgProto[ProtoL2]->addButton(rbFt802Dot3Llc, OstProto::Protocol::kDot2LlcFieldNumber);
+	bgProto[ProtoL2]->addButton(rbFtLlcSnap, OstProto::Protocol::kDot2SnapFieldNumber);
+	bgProto[ProtoL2]->addButton(rbFtOther, ButtonIdOther);
 #endif
 
-	bgVlan = new QButtonGroup();
-	bgVlan->addButton(rbVlanNone, ButtonIdNone);
-	bgVlan->addButton(rbVlanSingle, OstProto::Protocol::kVlanFieldNumber);
-	bgVlan->addButton(rbVlanDouble, OstProto::Protocol::kVlanStackFieldNumber);
+	bgProto[ProtoVlan] = new QButtonGroup();
+	bgProto[ProtoVlan]->addButton(rbVlanNone, ButtonIdNone);
+	bgProto[ProtoVlan]->addButton(rbVlanSingle, OstProto::Protocol::kVlanFieldNumber);
+	bgProto[ProtoVlan]->addButton(rbVlanDouble, OstProto::Protocol::kVlanStackFieldNumber);
 
-	bgL3Proto = new QButtonGroup();
+	bgProto[ProtoL3] = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbL3Proto->findChildren<QRadioButton*>())
-		bgL3Proto->addButton(btn);
+		bgProto[ProtoL3]->addButton(btn);
 #else
-	bgL3Proto->addButton(rbL3None, ButtonIdNone);
-	bgL3Proto->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
-	bgL3Proto->addButton(rbL3Ipv6, 0xFFFF);
-	bgL3Proto->addButton(rbL3Arp, 0xFFFF);
-	bgL3Proto->addButton(rbL3Other, ButtonIdOther);
+	bgProto[ProtoL3]->addButton(rbL3None, ButtonIdNone);
+	bgProto[ProtoL3]->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
+	bgProto[ProtoL3]->addButton(rbL3Ipv6, 0xFFFF);
+	bgProto[ProtoL3]->addButton(rbL3Arp, 0xFFFF);
+	bgProto[ProtoL3]->addButton(rbL3Other, ButtonIdOther);
 #endif
 
-	bgL4Proto = new QButtonGroup();
+	bgProto[ProtoL4] = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbL4Proto->findChildren<QRadioButton*>())
-		bgL4Proto->addButton(btn);
+		bgProto[ProtoL4]->addButton(btn);
 #else
-	bgL4Proto->addButton(rbL4None, 0);
-	bgL4Proto->addButton(rbL4Tcp, OstProto::Protocol::kTcpFieldNumber);
-	bgL4Proto->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
-	bgL4Proto->addButton(rbL4Icmp, 0xFFFF);
-	bgL4Proto->addButton(rbL4Igmp, 0xFFFF);
-	bgL4Proto->addButton(rbL4Other, ButtonIdOther);
+	bgProto[ProtoL4]->addButton(rbL4None, 0);
+	bgProto[ProtoL4]->addButton(rbL4Tcp, OstProto::Protocol::kTcpFieldNumber);
+	bgProto[ProtoL4]->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
+	bgProto[ProtoL4]->addButton(rbL4Icmp, 0xFFFF);
+	bgProto[ProtoL4]->addButton(rbL4Igmp, 0xFFFF);
+	bgProto[ProtoL4]->addButton(rbL4Other, ButtonIdOther);
 #endif
 
-	bgPayloadProto = new QButtonGroup();
+	bgProto[ProtoPayload] = new QButtonGroup();
 #if 0
 	foreach(QRadioButton *btn, gbPayloadProto->findChildren<QRadioButton*>())
-		bgPayloadProto->addButton(btn);
+		bgProto[ProtoPayload]->addButton(btn);
 #else
-	bgPayloadProto->addButton(rbPayloadNone, ButtonIdNone);
-	bgPayloadProto->addButton(rbPayloadPattern, OstProto::Protocol::kPayloadFieldNumber);
-	bgPayloadProto->addButton(rbPayloadOther, ButtonIdOther);
+	bgProto[ProtoPayload]->addButton(rbPayloadNone, ButtonIdNone);
+	bgProto[ProtoPayload]->addButton(rbPayloadPattern, OstProto::Protocol::kPayloadFieldNumber);
+	bgProto[ProtoPayload]->addButton(rbPayloadOther, ButtonIdOther);
 #endif
 	/*
 	** Setup Validators
@@ -270,12 +231,8 @@ StreamConfigDialog::~StreamConfigDialog()
 	delete mpPacketModelTester;
 	delete mpPacketModel;
 
-	delete bgL1Proto;
-	delete bgL2Proto;
-	delete bgVlan;
-	delete bgL3Proto;
-	delete bgL4Proto;
-	delete bgPayloadProto;
+	for (int i = ProtoMin; i < ProtoMax; i++)
+		delete bgProto[i];
 
 	delete _iter;
 	delete mpStream;
@@ -594,149 +551,122 @@ void StreamConfigDialog::on_lePattern_editingFinished()
 
 /*! 
 Skip protocols upto and including the layer specified.
-	0 - L1
-	1 - VLAN
-	2 - L2
-	3 - L3
-	4 - L4
-TODO: Convert the above values to enum??
 */
 bool StreamConfigDialog::skipProtocols(int layer)
 {
-	int id;
-	QAbstractButton *btn;
-
 	_iter->toFront();
 
-	// Skip L1
-	if (_iter->hasNext())
+	for (int i = ProtoMin; i <= layer; i++)
 	{
-		id = _iter->next()->protocolNumber();
-		btn = bgL1Proto->button(id);
-		if (btn == NULL)
-			_iter->previous();
+		if(_iter->hasNext())
+		{
+			int id;
+			QAbstractButton *btn;
+
+			id = _iter->peekNext()->protocolNumber();
+			btn = bgProto[i]->button(id);
+			if (btn)
+				_iter->next();
+		}
 	}
 
-	if (layer == 0)
-		goto _done;
-
-	// Skip VLAN
-	if(_iter->hasNext())
-	{
-		id = _iter->next()->protocolNumber();
-		btn = bgVlan->button(id);
-		if (btn == NULL)
-			_iter->previous();
-	}
-
-	if (layer == 1)
-		goto _done;
-
-	// Skip L2
-	if(_iter->hasNext())
-	{
-		id = _iter->next()->protocolNumber();
-		btn = bgL2Proto->button(id);
-		if (btn == NULL)
-			_iter->previous();
-	}
-
-	if (layer == 2)
-		goto _done;
-
-	// Skip L3
-	if (_iter->hasNext())
-	{
-		id = _iter->next()->protocolNumber();
-		btn = bgL3Proto->button(id);
-		if (btn == NULL)
-			_iter->previous();
-	}
-
-	if (layer == 3)
-		goto _done;
-
-	// Skip L4
-	if(_iter->hasNext())
-	{
-		id = _iter->next()->protocolNumber();
-		btn = bgL4Proto->button(id);
-		if (btn == NULL)
-			_iter->previous();
-	}
-
-	if (layer == 4)
-		goto _done;
-
-	return false;
-
-_done:
 	return true;
 }
 
-void StreamConfigDialog::updateL1Protocol(int newId)
+/*!
+Protocol choices (except "None" and "Other") for a protocol button group are disabled if checked is true, else they are enabled
+*/
+void StreamConfigDialog::disableProtocols(QButtonGroup *protocolGroup, bool checked)
 {
-	static int oldId;
-
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
-
-	if (oldId == newId)
-		return; // Nothing to be done
-
-	if (!isUpdateInProgress)
+	qDebug("%s: btnGrp = %p, chk? = %d", __FUNCTION__, protocolGroup, checked);
+	foreach(QAbstractButton *btn, protocolGroup->buttons())
 	{
-		AbstractProtocol *p;
+		int id = protocolGroup->id(btn);
 
-		_iter->toFront();
-
-		Q_ASSERT(newId != ButtonIdOther);
-		
-		switch (oldId)
-		{
-			case ButtonIdNone:
-				_iter->insert(OstProtocolManager.createProtocol(
-						newId, mpStream));
-				break;
-
-			case ButtonIdOther:
-			default:
-				Q_ASSERT(_iter->hasNext());
-				p =_iter->next();
-
-				if (newId)
-					_iter->setValue(OstProtocolManager.createProtocol(
-							newId, mpStream));
-				else
-					_iter->remove();
-				delete p;
-				break;
-		}
+		if ((id != ButtonIdNone) && (id != ButtonIdOther))
+			btn->setDisabled(checked);
 	}
-
-	oldId = newId;
-	return;
 }
 
-void StreamConfigDialog::updateVlanProtocol(int newId)
+void StreamConfigDialog::forceProtocolNone(bool checked)
 {
-	static int oldId;
+	QObject *btn;
 
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
+	btn = sender();
+	Q_ASSERT(btn != NULL);
 
-	if (oldId == newId)
-		return; // Nothing to be done
+	qDebug("%s: chk? = %d, btn = %p, L1 = %p, L2 = %p, L3 = %p", __FUNCTION__,
+			checked, btn, rbL1None, rbFtNone, rbL3None);
+
+	if (btn == rbL1None)
+	{
+		if (checked)
+		{
+			bgProto[ProtoVlan]->button(ButtonIdNone)->click();
+			bgProto[ProtoL2]->button(ButtonIdNone)->click();
+			bgProto[ProtoPayload]->button(ButtonIdNone)->click();
+		}
+
+		disableProtocols(bgProto[ProtoVlan], checked);
+		disableProtocols(bgProto[ProtoL2], checked);
+		disableProtocols(bgProto[ProtoPayload], checked);
+	} 
+	else if (btn == rbFtNone)
+	{
+		if (checked)
+			bgProto[ProtoL3]->button(ButtonIdNone)->click();
+		disableProtocols(bgProto[ProtoL3], checked);
+	}
+   	else if (btn == rbL3None)
+	{
+		if (checked)
+			bgProto[ProtoL4]->button(ButtonIdNone)->click();
+		disableProtocols(bgProto[ProtoL4], checked);
+	}
+   	else
+	{
+		Q_ASSERT(1 == 0); // Unreachable code!
+	}
+}
+
+void StreamConfigDialog::updateProtocol(int newId)
+{
+	int level;
+	QButtonGroup	*btnGrp;
+
+	btnGrp = static_cast<QButtonGroup*>(sender());
+	Q_ASSERT(btnGrp != NULL);
+
+	level = btnGrp->property("ProtocolLevel").toInt();
+	Q_ASSERT(btnGrp == bgProto[level]);
+
+	__updateProtocol(level, newId);
+}
+
+void StreamConfigDialog::__updateProtocol(int level, int newId)
+{
+	int oldId;
+	QButtonGroup	*btnGrp;
+
+	Q_ASSERT((level >= ProtoMin) && (level <= ProtoMax));
+	btnGrp = bgProto[level];
+	oldId = btnGrp->property("ProtocolId").toInt();
+
+	qDebug("%s: level = %d old id = %d new id = %d upd? = %d", __FUNCTION__, 
+		level, oldId, newId, isUpdateInProgress);
+
+	if (newId == oldId)
+		return;
 
 	if (!isUpdateInProgress)
 	{
 		int ret;
 		AbstractProtocol *p;
 
-		ret = skipProtocols(0);
-
+		ret = skipProtocols(level-1);
 		Q_ASSERT(ret == true);
-		Q_ASSERT(oldId != ButtonIdOther);
+
+		Q_ASSERT(oldId != newId);
 		Q_ASSERT(newId != ButtonIdOther);
 		
 		switch (oldId)
@@ -757,347 +687,96 @@ void StreamConfigDialog::updateVlanProtocol(int newId)
 				else
 					_iter->remove();
 				delete p;
-				break;
-		}
-	}
-
-	oldId = newId;
-	return;
-}
-
-void StreamConfigDialog::updateFrameTypeProtocol(int newId)
-{
-	static int oldId;
-
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
-
-	if (oldId == newId)
-		return; // Nothing to be done
-
-	if (!isUpdateInProgress)
-	{
-		int ret;
-		AbstractProtocol *p;
-
-		ret = skipProtocols(1);
-
-		Q_ASSERT(ret == true);
-		Q_ASSERT(newId != ButtonIdOther);
-		
-		switch (oldId)
-		{
-			case ButtonIdNone:
-				_iter->insert(OstProtocolManager.createProtocol(
-						newId, mpStream));
-				break;
-
-			case ButtonIdOther:
-			default:
-				Q_ASSERT(_iter->hasNext());
-				p =_iter->next();
-
-				if (newId)
-					_iter->setValue(OstProtocolManager.createProtocol(
-							newId, mpStream));
-				else
-					_iter->remove();
-				delete p;
-				break;
-		}
-	}
-
-	oldId = newId;
-	return;
-}
-
-void StreamConfigDialog::updateL3Protocol(int newId)
-{
-	static int oldId;
-
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
-
-	if (oldId == newId)
-		return; // Nothing to be done
-
-	if (!isUpdateInProgress)
-	{
-		int ret;
-		AbstractProtocol *p;
-
-		ret = skipProtocols(2);
-
-		Q_ASSERT(ret == true);
-		Q_ASSERT(newId != ButtonIdOther);
-		
-		switch (oldId)
-		{
-			case ButtonIdNone:
-				_iter->insert(OstProtocolManager.createProtocol(
-						newId, mpStream));
-				break;
-
-			case ButtonIdOther:
-			default:
-				Q_ASSERT(_iter->hasNext());
-				p =_iter->next();
-
-				if (newId)
-					_iter->setValue(OstProtocolManager.createProtocol(
-							newId, mpStream));
-				else
-					_iter->remove();
-				delete p;
-				break;
-		}
-	}
-
-	oldId = newId;
-	return;
-}
-
-void StreamConfigDialog::updateL4Protocol(int newId)
-{
-	static int oldId;
-
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
-
-	if (oldId == newId)
-		return; // Nothing to be done
-
-	if (!isUpdateInProgress)
-	{
-		int ret;
-		AbstractProtocol *p;
-
-		ret = skipProtocols(3);
-
-		Q_ASSERT(ret == true);
-		Q_ASSERT(newId != ButtonIdOther);
-		
-		switch (oldId)
-		{
-			case ButtonIdNone:
-				_iter->insert(OstProtocolManager.createProtocol(
-						newId, mpStream));
-				break;
-
-			case ButtonIdOther:
-			default:
-				Q_ASSERT(_iter->hasNext());
-				p =_iter->next();
-
-				if (newId)
-					_iter->setValue(OstProtocolManager.createProtocol(
-							newId, mpStream));
-				else
-					_iter->remove();
-				delete p;
-				break;
-		}
-	}
-
-	oldId = newId;
-	return;
-}
-
-void StreamConfigDialog::updatePayloadProtocol(int newId)
-{
-	static int oldId;
-
-	qDebug("%s:old id = %d new id = %d upd? = %d", __FUNCTION__, oldId, newId,
-			isUpdateInProgress);
-
-	if (oldId == newId)
-		return; // Nothing to be done
-
-	if (!isUpdateInProgress)
-	{
-		int ret;
-		AbstractProtocol *p;
-
-		ret = skipProtocols(4);
-
-		Q_ASSERT(ret == true);
-		Q_ASSERT(newId != ButtonIdOther);
-		
-		switch (oldId)
-		{
-			case ButtonIdNone:
-				_iter->insert(OstProtocolManager.createProtocol(
-						newId, mpStream));
-				break;
-
-			case ButtonIdOther:
-			default:
-				Q_ASSERT(_iter->hasNext());
-				p =_iter->next();
-
-				if (newId)
-					_iter->setValue(OstProtocolManager.createProtocol(
-							newId, mpStream));
-				else
-					_iter->remove();
-				delete p;
-				while (_iter->hasNext())
+				if (level == ProtoPayload)
 				{
-
-					p = _iter->next();
-					_iter->remove();
-					delete p;
+					while (_iter->hasNext())
+					{
+						p = _iter->next();
+						_iter->remove();
+						delete p;
+					}
 				}
 				break;
 		}
 	}
 
-	oldId = newId;
+	btnGrp->setProperty("ProtocolId", newId);
 	return;
 }
 
 void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
 {
-	quint32			id;
+	int i;
+	quint32	id;
 	QAbstractButton *btn;
 
 	qDebug("%s", __FUNCTION__);
 
 	isUpdateInProgress = true;
 
-	// Reset to default state
-	rbL1None->setChecked(true);
-	rbVlanNone->setChecked(true);
-	rbFtNone->setChecked(true);
-	rbL3None->setChecked(true);
-	rbL4None->setChecked(true);
-	rbPayloadNone->setChecked(true);
+	// Reset to default state ...
+	for (i = ProtoMin; i < ProtoMax; i++)
+		bgProto[i]->button(ButtonIdNone)->click();
 
+	// ... now iterate and update
 	_iter->toFront();
 
-	// L1 (optional if followed by Payload)
-	if (!_iter->hasNext()) // No protocols at all?
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgL1Proto->button(id);
-
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
+	for (i = ProtoMin; i < ProtoMax; i++)
 	{
-		btn = bgPayloadProto->button(id);
+		if (!_iter->hasNext())
+			goto _done;
+
+		id = _iter->next()->protocolNumber();
+		btn = bgProto[i]->button(id);
+
 		if (btn && btn->isEnabled())
-			goto _payload;
+			btn->click();
 		else
-			goto _otherL1;
+		{
+			switch (i)
+			{
+				case ProtoVlan:
+					_iter->previous();
+					break;
+
+				case ProtoPayload:
+					goto _other;
+
+				default:
+					btn = bgProto[ProtoPayload]->button(id);
+					if (btn && btn->isEnabled())
+					{
+						btn->click();
+						break;
+					}
+					else
+						goto _other;
+			}
+		}
 	}
-
-	// VLAN (optional)
-	if (!_iter->hasNext())
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgVlan->button(id);
-
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
-		_iter->previous();
-
-	// L2 (optional if followed by Payload)
-	if (!_iter->hasNext())
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgL2Proto->button(id);
-
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
-	{
-		btn = bgPayloadProto->button(id);
-		if (btn && btn->isEnabled())
-			goto _payload;
-		else
-			goto _otherL2;
-	}
-
-	// L3 (optional if followed by Payload)
-	if (!_iter->hasNext())
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgL3Proto->button(id);
-
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
-	{
-		btn = bgPayloadProto->button(id);
-		if (btn && btn->isEnabled())
-			goto _payload;
-		else
-			goto _otherL3;
-	}
-
-	// L4 (optional if followed by Payload)
-	if (!_iter->hasNext())
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgL4Proto->button(id);
-
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
-	{
-		btn = bgPayloadProto->button(id);
-		if (btn && btn->isEnabled())
-			goto _payload;
-		else
-			goto _otherL4;
-	}
-
-	// Payload Data
-	if (!_iter->hasNext())
-		goto _done;
-
-	id = _iter->next()->protocolNumber();
-	btn = bgPayloadProto->button(id);
-
-_payload:
-	if (btn && btn->isEnabled())
-		btn->click();
-	else
-		goto _otherPayload;
 
 	// If more protocol(s) beyond payload ...
 	if (_iter->hasNext())
-		goto _otherPayload;
+	{
+		i = ProtoPayload;
+		goto _other;
+	}
 
 	goto _done;
 
-_otherL1:
-	bgL1Proto->button(ButtonIdOther)->setChecked(true);
-	updateL1Protocol(ButtonIdOther);
-_otherL2:
-	bgL2Proto->button(ButtonIdOther)->setChecked(true);
-	updateFrameTypeProtocol(ButtonIdOther);
-_otherL3:
-	bgL3Proto->button(ButtonIdOther)->setChecked(true);
-	updateL3Protocol(ButtonIdOther);
-_otherL4:
-	bgL4Proto->button(ButtonIdOther)->setChecked(true);
-	updateL4Protocol(ButtonIdOther);
-_otherPayload:
-	bgPayloadProto->button(ButtonIdOther)->setChecked(true);
-	updatePayloadProtocol(ButtonIdOther);
+_other:
+	for (int j = i; j < ProtoMax; j++)
+	{
+		// VLAN doesn't have a "Other" button
+		if (j == ProtoVlan)
+			continue;
+
+		bgProto[j]->button(ButtonIdOther)->setChecked(true);
+		__updateProtocol(j, ButtonIdOther);
+	}
 
 _done:
 	isUpdateInProgress = false;
-
-	return;
 }
 
 void StreamConfigDialog::LoadCurrentStream()

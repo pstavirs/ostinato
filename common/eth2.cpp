@@ -9,8 +9,8 @@ Eth2ConfigForm::Eth2ConfigForm(QWidget *parent)
 	setupUi(this);
 }
 
-Eth2Protocol::Eth2Protocol(StreamBase *stream)
-	: AbstractProtocol(stream)
+Eth2Protocol::Eth2Protocol(StreamBase *stream, AbstractProtocol *parent)
+	: AbstractProtocol(stream, parent)
 {
 	configForm = NULL;
 }
@@ -20,9 +20,10 @@ Eth2Protocol::~Eth2Protocol()
 	delete configForm;
 }
 
-AbstractProtocol* Eth2Protocol::createInstance(StreamBase *stream)
+AbstractProtocol* Eth2Protocol::createInstance(StreamBase *stream,
+	AbstractProtocol *parent)
 {
-	return new Eth2Protocol(stream);
+	return new Eth2Protocol(stream, parent);
 }
 
 quint32 Eth2Protocol::protocolNumber() const
