@@ -133,7 +133,6 @@ QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
 bool SnapProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

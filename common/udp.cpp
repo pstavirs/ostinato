@@ -159,7 +159,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 
 					totlen = data.is_override_totlen() ? 
 						data.totlen() : 
-						(protocolFramePayloadSize() + 8);
+						(protocolFramePayloadSize(streamIndex) + 8);
 					return totlen;
 				}
 				case FieldFrameValue:
@@ -168,7 +168,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 					int totlen;
 					totlen = data.is_override_totlen() ? 
 						data.totlen() : 
-						(protocolFramePayloadSize() + 8);
+						(protocolFramePayloadSize(streamIndex) + 8);
 					fv.resize(2);
 					qToBigEndian((quint16) totlen, (uchar*) fv.data());
 					return fv;
@@ -178,7 +178,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 					int totlen;
 					totlen = data.is_override_totlen() ? 
 						data.totlen() : 
-						(protocolFramePayloadSize() + 8);
+						(protocolFramePayloadSize(streamIndex) + 8);
 					return QString("%1").arg(totlen);
 				}
 				case FieldBitSize:
@@ -254,7 +254,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
 bool UdpProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
+	//! implement UdpProtocol::setFieldData() 
 	return false;
 }
 

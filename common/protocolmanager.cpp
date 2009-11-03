@@ -1,12 +1,9 @@
 #include "protocolmanager.h"
-
-// FIXME(HI): remove
-#include "protocol.pb.h"
 #include "abstractprotocol.h"
 
+#include "protocol.pb.h"
 #include "mac.h"
 #include "payload.h"
-
 #include "eth2.h"	
 #include "dot3.h"	
 #include "llc.h"	
@@ -23,6 +20,9 @@ ProtocolManager OstProtocolManager;
 
 ProtocolManager::ProtocolManager()
 {
+	/*! \todo (LOW) calls to registerProtocol() should be done by the protocols
+	 themselves (once this is done remove the #includes for all the protocols)
+	 */
 	registerProtocol(OstProto::Protocol::kMacFieldNumber,
 			QString("mac"),  (void*) MacProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
@@ -39,6 +39,8 @@ ProtocolManager::ProtocolManager()
 			QString("dot2Llc"), (void*) Dot2LlcProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
 			QString("dot2Snap"), (void*) Dot2SnapProtocol::createInstance);
+	registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
+		   	QString("svlan"), (void*) VlanProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kVlanFieldNumber,
 		   	QString("vlan"), (void*) VlanProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
@@ -54,7 +56,7 @@ ProtocolManager::ProtocolManager()
 void ProtocolManager::registerProtocol(int protoNumber, QString protoName,
 	void *protoInstanceCreator)
 {
-	// TODO: validate incoming params for duplicates with existing
+	//! \todo (MED) validate incoming params for duplicates with existing
 	nameToNumberMap.insert(protoName, protoNumber);
 	numberToNameMap.insert(protoNumber, protoName);
 	factory.insert(protoNumber, protoInstanceCreator);

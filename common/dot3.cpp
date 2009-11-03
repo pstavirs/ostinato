@@ -77,7 +77,7 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 					quint16 len;
 
 					//len = mpStream->frameLen() - SZ_FCS;
-					len = protocolFramePayloadSize();
+					len = protocolFramePayloadSize(streamIndex);
 					return len;
 				}
 				case FieldTextValue:
@@ -85,7 +85,7 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 					quint16 len;
 
 					//len = mpStream->frameLen() - SZ_FCS;
-					len = protocolFramePayloadSize();
+					len = protocolFramePayloadSize(streamIndex);
 					return QString("%1").arg(len);
 				}
 				case FieldFrameValue:
@@ -94,7 +94,7 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 
 					//len = mpStream->frameLen() - SZ_FCS;
-					len = protocolFramePayloadSize();
+					len = protocolFramePayloadSize(streamIndex);
 					fv.resize(2);
 					qToBigEndian(len, (uchar*) fv.data());
 					return fv;
@@ -116,7 +116,6 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
 bool Dot3Protocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

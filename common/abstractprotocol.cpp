@@ -7,7 +7,7 @@
 /*!
   \class AbstractProtocol
 
-  // FIXME - update this text
+  \todo (MED) update AbstractProtocol documentation
   Bare Minimum set of methods that a subclass needs to reimplement
   - protoDataCopyInto() [pure virtual]
   - protoDataCopyFrom() [pure virtual]
@@ -58,7 +58,7 @@ quint32 AbstractProtocol::protocolNumber() const
 
 /*
    \fn virtual void protoDataCopyFrom(const OstProto::OstProto::StreamCore &stream) = 0;
-   FIXME */
+    */
 
 /*! Returns the full name of the protocol \n
   The default implementation returns a null string */
@@ -137,7 +137,18 @@ AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
   The FieldTextValue attribute may include additional information about
   the field's value e.g. a checksum field may include "(correct)" or 
   "(incorrect)" alongwith the actual checksum value. \n
-  The default implementation returns FIXME
+
+  The default implementation returns a empty string for FieldName and 
+  FieldTextValue; empty byte array of size 0 for FieldFrameValue; 0 for
+  FieldValue; subclasses are expected to return meaning values for all
+  these attributes. The only exception is the 'FieldBitSize' attribute - 
+  the default implementation takes the (byte) size of FieldFrameValue,
+  multiplies it with 8 and returns the result - this can be used by
+  subclasses for fields which are an integral multiple of bytes; for
+  fields whose size are a non-integral multiple of bytes or smaller than
+  a byte, subclasses should return the correct value. Also for fields
+  which represent checksums, subclasses should return a value for
+  FieldBitSize - even if it is an integral multiple of bytes
 
   \note If a subclass uses any of the below functions to derive 
   FieldFrameValue, the subclass should handle and return a value for 
@@ -202,7 +213,7 @@ quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
 	return id;
 }
 
-int AbstractProtocol::protocolFrameSize() const
+int AbstractProtocol::protocolFrameSize(int streamIndex) const
 {
 	if (protoSize < 0)
 	{
@@ -211,7 +222,7 @@ int AbstractProtocol::protocolFrameSize() const
 		for (int i = 0; i < fieldCount(); i++)
 		{
 			if (!fieldFlags(i).testFlag(FieldIsMeta))
-				bitsize += fieldData(i, FieldBitSize).toUInt();
+				bitsize += fieldData(i, FieldBitSize, streamIndex).toUInt();
 		}
 		protoSize = (bitsize+7)/8;
 	}
@@ -220,34 +231,34 @@ int AbstractProtocol::protocolFrameSize() const
 	return protoSize;
 }
 
-int AbstractProtocol::protocolFrameOffset() const
+int AbstractProtocol::protocolFrameOffset(int streamIndex) const
 {
 	int size = 0;
 	AbstractProtocol *p = prev;
 	while (p)
 	{
-		size += p->protocolFrameSize();
+		size += p->protocolFrameSize(streamIndex);
 		p = p->prev;
 	}
 
 	if (parent)
-		size += parent->protocolFrameOffset();
+		size += parent->protocolFrameOffset(streamIndex);
 
 	qDebug("%s: ofs = %d", __FUNCTION__, size);
 	return size;
 }
 
-int AbstractProtocol::protocolFramePayloadSize() const
+int AbstractProtocol::protocolFramePayloadSize(int streamIndex) const
 {
 	int size = 0;
 	AbstractProtocol *p = next;
 	while (p)
 	{
-		size += p->protocolFrameSize();
+		size += p->protocolFrameSize(streamIndex);
 		p = p->next;
 	}
 	if (parent)
-		size += parent->protocolFramePayloadSize();
+		size += parent->protocolFramePayloadSize(streamIndex);
 
 	qDebug("%s: payloadSize = %d", __FUNCTION__, size);
 	return size;

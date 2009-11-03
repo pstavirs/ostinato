@@ -1,6 +1,8 @@
+#include <QTemporaryFile>
+#include <QProcess>
+
 #include "portgroup.h"
 
-#include <vector>
 
 quint32	PortGroup::mPortGroupAllocId = 0;
 
@@ -10,7 +12,15 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
 	mPortGroupId = PortGroup::mPortGroupAllocId++;
 
 	rpcChannel = new PbRpcChannel(ip, port);
-	rpcController = new PbRpcController();
+
+	/*! 
+	  \todo (HIGH) RPC Controller should be allocated and deleted for each RPC invocation
+	  as implemented currently, if a RPC is invoked before the previous completes,
+	  rpc controller is overwritten due to the Reset() call - maybe we need to pass the
+	  pointer to the controller to the callback function also?
+	*/
+	rpcController = new PbRpcController;
+	rpcControllerStats = new PbRpcController;
 	serviceStub = new OstProto::OstService::Stub(rpcChannel,
 		OstProto::OstService::STUB_OWNS_CHANNEL);
 
@@ -458,21 +468,21 @@ void PortGroup::stopTx(QList<uint> *portList)
 	qDebug("In %s", __FUNCTION__);
 
 	if (state() != QAbstractSocket::ConnectedState)
-		return;
+		goto _exit;
+
+	if ((portList == NULL) || (portList->size() == 0))
+		goto _exit;
 
 	ack = new OstProto::Ack;
-	if (portList == NULL)
-		goto _exit;
-	else
+
+	for (int i = 0; i < portList->size(); i++)
 	{
-		for (int i = 0; i < portList->size(); i++)
-		{
-			OstProto::PortId	*portId;
-			portId = portIdList.add_port_id();
-			portId->set_id(portList->at(i));
-		}
+		OstProto::PortId	*portId;
+		portId = portIdList.add_port_id();
+		portId->set_id(portList->at(i));
 	}
 
+	rpcController->Reset();
 	serviceStub->stopTx(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processStopTxAck, ack));
 _exit:
@@ -489,19 +499,19 @@ void PortGroup::startCapture(QList<uint> *portList)
 	if (state() != QAbstractSocket::ConnectedState)
 		return;
 
-	ack = new OstProto::Ack;
-	if (portList == NULL)
+	if ((portList == NULL) || (portList->size() == 0))
 		goto _exit;
-	else
+
+	ack = new OstProto::Ack;
+
+	for (int i = 0; i < portList->size(); i++)
 	{
-		for (int i = 0; i < portList->size(); i++)
-		{
-			OstProto::PortId	*portId;
-			portId = portIdList.add_port_id();
-			portId->set_id(portList->at(i));
-		}
+		OstProto::PortId	*portId;
+		portId = portIdList.add_port_id();
+		portId->set_id(portList->at(i));
 	}
 
+	rpcController->Reset();
 	serviceStub->startCapture(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processStartCaptureAck, ack));
 _exit:
@@ -518,19 +528,18 @@ void PortGroup::stopCapture(QList<uint> *portList)
 	if (state() != QAbstractSocket::ConnectedState)
 		return;
 
-	ack = new OstProto::Ack;
-	if (portList == NULL)
+	if ((portList == NULL) || (portList->size() == 0))
 		goto _exit;
-	else
+
+	ack = new OstProto::Ack;
+	for (int i = 0; i < portList->size(); i++)
 	{
-		for (int i = 0; i < portList->size(); i++)
-		{
-			OstProto::PortId	*portId;
-			portId = portIdList.add_port_id();
-			portId->set_id(portList->at(i));
-		}
+		OstProto::PortId	*portId;
+		portId = portIdList.add_port_id();
+		portId->set_id(portList->at(i));
 	}
 
+	rpcController->Reset();
 	serviceStub->stopCapture(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processStopCaptureAck, ack));
 _exit:
@@ -539,29 +548,38 @@ _exit:
 
 void PortGroup::viewCapture(QList<uint> *portList)
 {
-	OstProto::PortIdList	portIdList;
-	OstProto::CaptureBufferList	*bufList;
+	static QTemporaryFile	*capFile = NULL;
 
 	qDebug("In %s", __FUNCTION__);
 
 	if (state() != QAbstractSocket::ConnectedState)
-		return;
-
-	bufList = new OstProto::CaptureBufferList;
-	if (portList == NULL)
 		goto _exit;
-	else
-	{
-		for (int i = 0; i < portList->size(); i++)
-		{
-			OstProto::PortId	*portId;
-			portId = portIdList.add_port_id();
-			portId->set_id(portList->at(i));
-		}
-	}
 
-	serviceStub->getCaptureBuffer(rpcController, &portIdList, bufList,
-			NewCallback(this, &PortGroup::processViewCaptureAck, bufList));
+	if ((portList == NULL) || (portList->size() != 1))
+		goto _exit;
+
+	if (capFile)
+		delete capFile;
+
+	/*! \todo (MED) unable to reuse the same file 'coz capFile->resize(0) is
+		not working - it fails everytime */
+	capFile = new QTemporaryFile();
+	capFile->open();
+	qDebug("Temp CapFile = %s", capFile->fileName().toAscii().constData());
+
+	for (int i = 0; i < portList->size(); i++)
+	{
+		OstProto::PortId	portId;
+		OstProto::CaptureBuffer	*buf;
+
+		portId.set_id(portList->at(i));
+
+		buf = new OstProto::CaptureBuffer;
+		rpcController->Reset();
+		rpcController->setBinaryBlob(capFile);
+		serviceStub->getCaptureBuffer(rpcController, &portId, buf,
+			NewCallback(this, &PortGroup::processViewCaptureAck, buf, (QFile*) capFile));
+	}
 _exit:
 	return;
 }
@@ -594,11 +612,18 @@ void PortGroup::processStopCaptureAck(OstProto::Ack	*ack)
 	delete ack;
 }
 
-void PortGroup::processViewCaptureAck(OstProto::CaptureBufferList	*bufList)
+void PortGroup::processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFile)
 {
 	qDebug("In %s", __FUNCTION__);
 
-	delete bufList;
+	capFile->flush();
+	capFile->close();
+
+	if (!QProcess::startDetached("C:/Program Files/Wireshark/wireshark.exe",
+		QStringList() <<  capFile->fileName()))
+		qDebug("Failed starting Wireshark");
+
+	delete buf;
 }
 
 void PortGroup::getPortStats()
@@ -611,7 +636,8 @@ void PortGroup::getPortStats()
 		return;
 
    	portStatsList = new OstProto::PortStatsList;
-	serviceStub->getStats(rpcController, &portIdList, portStatsList,
+	rpcControllerStats->Reset();
+	serviceStub->getStats(rpcControllerStats, &portIdList, portStatsList,
 			NewCallback(this, &PortGroup::processPortStatsList, portStatsList));
 }
 
@@ -619,7 +645,7 @@ void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
 {
 	//qDebug("In %s", __FUNCTION__);
 
-	if (rpcController->Failed())
+	if (rpcControllerStats->Failed())
 	{
 		qDebug("%s: rpc failed", __FUNCTION__);
 		goto _error_exit;
@@ -664,6 +690,7 @@ void PortGroup::clearPortStats(QList<uint> *portList)
 		}
 	}
 
+	rpcController->Reset();
 	serviceStub->clearStats(rpcController, &portIdList, ack,
 			NewCallback(this, &PortGroup::processClearStatsAck, ack));
 }

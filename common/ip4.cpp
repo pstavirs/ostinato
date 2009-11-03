@@ -236,7 +236,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					int totlen;
 					totlen = data.is_override_totlen() ? data.totlen() : 
-						(protocolFramePayloadSize() + 20);
+						(protocolFramePayloadSize(streamIndex) + 20);
 					return totlen;
 				}
 				case FieldFrameValue:
@@ -244,7 +244,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					int totlen;
 					totlen = data.is_override_totlen() ? data.totlen() : 
-						(protocolFramePayloadSize() + 20);
+						(protocolFramePayloadSize(streamIndex) + 20);
 					fv.resize(2);
 					qToBigEndian((quint16) totlen, (uchar*) fv.data());
 					return fv;
@@ -253,7 +253,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 				{
 					int totlen;
 					totlen = data.is_override_totlen() ? data.totlen() : 
-						(protocolFramePayloadSize() + 20);
+						(protocolFramePayloadSize(streamIndex) + 20);
 					return QString("%1").arg(totlen);
 				}
 				case FieldBitSize:
@@ -320,7 +320,6 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
 				case FieldFrameValue:
 				{
 					QByteArray fv;
-					// FIXME need to shift for 13 bits
 					fv.resize(2);
 					qToBigEndian((quint16) (data.frag_ofs()),
 						(uchar*) fv.data());

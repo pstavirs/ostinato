@@ -25,12 +25,21 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
 	// passed by the stub to CallMethod(). They are reset to NULL when
 	// we get a response back from the server in on_mpSocket_readyRead()
 	// after calling done->Run().
-	// 
-	// TODO(?): change controller, done and response to references
-	// instead of pointers?
+
+	/*! \todo (MED) : change controller, done and response to references
+	 instead of pointers? */
 	::google::protobuf::RpcController	*controller;
 	::google::protobuf::Closure			*done;
 	::google::protobuf::Message			*response;
+
+	typedef struct _RpcCall {
+		const ::google::protobuf::MethodDescriptor	*method;
+		::google::protobuf::RpcController		*controller;
+		const ::google::protobuf::Message				*request;
+		::google::protobuf::Message				*response;
+		::google::protobuf::Closure				*done;
+	} RpcCall;
+	QList<RpcCall>		pendingCallList;
 
 	QHostAddress	mServerAddress;
 	quint16			mServerPort;

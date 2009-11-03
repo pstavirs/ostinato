@@ -377,7 +377,6 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
 bool TcpProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

@@ -1,4 +1,4 @@
-#include "pbhelper.h"
+//#include "pbhelper.h"
 #include "rpcserver.h"
 
 RpcServer::RpcServer()
@@ -37,45 +37,68 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
 
 void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcController)
 {
-	char	msg[4096];	// FIXME: hardcoding
-	char 	*p = (char *)&msg;
+	QIODevice	*blob;
+	char	msg[MSGBUF_SIZE];
 	int		len;
 
 	//qDebug("In RpcServer::done");
 
-	// TODO: check PbRpcController to see if method failed
 	if (PbRpcController->Failed())
 	{
 		qDebug("rpc failed");
 		goto _exit;
 	}
 
-	if (!resp->IsInitialized())
+	blob = PbRpcController->binaryBlob();
+	if (blob)
 	{
-		qDebug("response missing required fields!!");
-		qDebug(resp->InitializationErrorString().c_str());
+		len = blob->size();
+		qDebug("is binary blob of len %d", len);
+
+		*((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_BINBLOB); // type
+		*((quint16*)(&msg[2])) = HTONS(pendingMethodId); // method
+		(*(quint32*)(&msg[4])) = HTONL(len); // len
+
+		clientSock->write(msg, PB_HDR_SIZE);
+
+		blob->seek(0);
+		while (!blob->atEnd())
+		{	
+			int l;
+
+			len = blob->read(msg, sizeof(msg));
+			l = clientSock->write(msg, len);
+			Q_ASSERT(l == len);
+		}
+
 		goto _exit;
 	}
 
-	*((quint16*)(p+0)) = HTONS(PB_MSG_TYPE_RESPONSE); // type TODO:RESPONSE
-	*((quint16*)(p+2)) = HTONS(pendingMethodId); // method
-	*((quint16*)(p+6)) = HTONS(0); // rsvd
+	if (!resp->IsInitialized())
+	{
+		qWarning("response missing required fields!!");
+		qDebug(resp->InitializationErrorString().c_str());
+		qFatal("exiting");
+		goto _exit;
+	}
 
-	// SerialData is at offset 8
-	resp->SerializeToArray((void*) (p+8), sizeof(msg));
+	resp->SerializeToArray((void*) &msg[PB_HDR_SIZE], sizeof(msg));
 
 	len = resp->ByteSize();
-	(*(quint16*)(p+4)) = HTONS(len); // len
+
+	*((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_RESPONSE); // type
+	*((quint16*)(&msg[2])) = HTONS(pendingMethodId); // method
+	*((quint32*)(&msg[4])) = HTONL(len); // len
 
 	// Avoid printing stats since it happens once every couple of seconds
 	if (pendingMethodId != 12)
 	{
 		qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
-			__FUNCTION__, len + 8, resp->DebugString().c_str());
+			__FUNCTION__, len + PB_HDR_SIZE, resp->DebugString().c_str());
 		//BUFDUMP(msg, len + 8);
 	}
 
-	clientSock->write(msg, len + 8);
+	clientSock->write(msg, PB_HDR_SIZE + len);
 
 _exit:
 	delete PbRpcController;
@@ -91,7 +114,7 @@ void RpcServer::when_newConnection()
 		LogInt(tr("already connected, no new connections will be accepted\n"));
 
 		// Accept and close connection
-		// TODO: Send reason msg to client
+		//! \todo (MED) Send reason msg to client
 		sock = server->nextPendingConnection();
 		sock->disconnectFromHost();
 		sock->deleteLater();
@@ -127,26 +150,37 @@ void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 
 void RpcServer::when_dataAvail()
 {
-	char	msg[4096]; // FIXME: hardcoding;
+	char	msg[MSGBUF_SIZE];
 	int		msgLen;
-	char	*p = (char*) &msg;
-	quint16	type, method, len, rsvd;
+	static bool parsing = false;
+	static quint16	type, method;
+	static quint32 len;
 	const ::google::protobuf::MethodDescriptor	*methodDesc;
 	::google::protobuf::Message	*req, *resp;
 	PbRpcController	*controller;
-	
+
+	if (!parsing)
+	{
+		if (clientSock->bytesAvailable() < PB_HDR_SIZE)
+			return;
+
+		msgLen = clientSock->read(msg, PB_HDR_SIZE);
+
+		Q_ASSERT(msgLen == PB_HDR_SIZE);
+
+		type = NTOHS(GET16(&msg[0]));
+		method = NTOHS(GET16(&msg[2]));
+		len = NTOHL(GET32(&msg[4]));
+		//qDebug("type = %d, method = %d, len = %d", type, method, len);
+
+		parsing = true;
+	}
+
+	if (clientSock->bytesAvailable() < len)
+		return;
+
 	msgLen = clientSock->read(msg, sizeof(msg));
-	//LogInt(QString(QByteArray(msg, msgLen).toHex()));
-
-	//qDebug("Server %s: rcvd %d bytes", __FUNCTION__, msgLen);
-	//BUFDUMP(msg, msgLen);
-
-	type = NTOHS(GET16(p+0));
-	method = NTOHS(GET16(p+2));
-	len = NTOHS(GET16(p+4));
-	rsvd = NTOHS(GET16(p+6));
-	//qDebug("type = %d, method = %d, len = %d, rsvd = %d", 
-		//type, method, len, rsvd);
+	Q_ASSERT((unsigned) msgLen == len);
 
 	if (type != PB_MSG_TYPE_REQUEST)
 	{
@@ -154,19 +188,18 @@ void RpcServer::when_dataAvail()
 			type, PB_MSG_TYPE_REQUEST);
 		goto _error_exit;
 	}
-	
 
 	methodDesc = service->GetDescriptor()->method(method);
 	if (!methodDesc)
 	{
 		qDebug("server(%s): invalid method id %d", __FUNCTION__, method);
-		goto _error_exit; // TODO: Return Error to client
+		goto _error_exit; //! \todo Return Error to client
 	}
 
 	if (isPending)
 	{
 		qDebug("server(%s): rpc pending, try again", __FUNCTION__);
-		goto _error_exit; // TODO: Return Error to client
+		goto _error_exit; //! \todo Return Error to client
 	}
 
 	pendingMethodId = method;
@@ -175,12 +208,12 @@ void RpcServer::when_dataAvail()
 	req = service->GetRequestPrototype(methodDesc).New();
 	resp = service->GetResponsePrototype(methodDesc).New();
 
-	// Serialized data starts from offset 8
-	req->ParseFromArray((void*) (msg+8), len);
+	req->ParseFromArray((void*)msg, len);
 	if (!req->IsInitialized())
 	{
-		qDebug("Missing required fields in request");
+		qWarning("Missing required fields in request");
 		qDebug(req->InitializationErrorString().c_str());
+		qFatal("exiting");
 		delete req;
 		delete resp;
 
@@ -196,9 +229,12 @@ void RpcServer::when_dataAvail()
 	service->CallMethod(methodDesc, controller, req, resp,
 		NewCallback(this, &RpcServer::done, resp, controller));
 
+	parsing = false;
+
 	return;
 
 _error_exit:
+	parsing = false;
 	qDebug("server(%s): discarding msg from client", __FUNCTION__);
 	return;
 }

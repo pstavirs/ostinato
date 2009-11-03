@@ -6,9 +6,11 @@
 
 #include <qdebug.h>
 
+#if 0 // not reqd. any longer?
 class PbHelper
 {
 public:
+
 	// FIXME: Change msg from * to &
 	void ForceSetSingularDefault(::google::protobuf::Message *msg)
 	{
@@ -145,4 +147,5 @@ public:
 #endif
 	}
 };
+#endif
 #endif

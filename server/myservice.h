@@ -105,9 +105,10 @@ class PortInfo
 
 	public:
 		PortCapture(PortInfo *port);
+		~PortCapture();
 		void run();
 		void stop();
-		void view();
+		QFile* captureFile();
 	};
 
 	OstProto::Port			d;
@@ -173,7 +174,7 @@ public:
 	void stopTransmit();
 	void startCapture();
 	void stopCapture();
-	void viewCapture();
+	QFile* captureFile();
 	void resetStats();
 };
 
@@ -241,8 +242,8 @@ public:
 		::OstProto::Ack* response,
 		::google::protobuf::Closure* done);
 	virtual void getCaptureBuffer(::google::protobuf::RpcController* controller,
-		const ::OstProto::PortIdList* request,
-		::OstProto::CaptureBufferList* response,
+		const ::OstProto::PortId* request,
+		::OstProto::CaptureBuffer* response,
 		::google::protobuf::Closure* done);
 	virtual void getStats(::google::protobuf::RpcController* controller,
 		const ::OstProto::PortIdList* request,

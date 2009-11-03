@@ -79,14 +79,14 @@ _restart:
 		if (*p_stop)
 			return ret;
 
-		// TODO(HI): Timing between subsequent sendQueues
+		//! \todo (HIGH): Timing between subsequent sendQueues
 	}
 
 	if (returnToQIdx >= 0)
 	{
 		i = returnToQIdx;
 
-		// FIXME: 1s fixed; Change this to ipg of last stream
+		//! \todo (HIGH) 1s fixed; Change this to ipg of last stream
 		(*pf_usleep)(1000000);
 		goto _restart;
 	}

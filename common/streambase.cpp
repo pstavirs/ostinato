@@ -169,9 +169,40 @@ bool StreamBase::setLenMode(FrameLengthMode	lenMode)
 	return true;
 }
 
-quint16	StreamBase::frameLen()
+quint16	StreamBase::frameLen(int streamIndex)
 {
-	return mCore->frame_len();
+	int		pktLen;
+
+	// Decide a frame length based on length mode
+	switch(lenMode())
+	{
+		case OstProto::StreamCore::e_fl_fixed:
+			pktLen = mCore->frame_len();
+			break;
+		case OstProto::StreamCore::e_fl_inc:
+			pktLen = frameLenMin() + (streamIndex %
+				(frameLenMax() - frameLenMin() + 1));
+			break;
+		case OstProto::StreamCore::e_fl_dec:
+			pktLen = frameLenMax() - (streamIndex %
+				(frameLenMax() - frameLenMin() + 1));
+			break;
+		case OstProto::StreamCore::e_fl_random:
+			//! \todo (MED) This 'random' sequence is same across iterations
+			qsrand(((uint) this));
+			for (int i = 0; i <= streamIndex; i++)
+				pktLen = qrand();
+			pktLen = frameLenMin() + (pktLen %
+				(frameLenMax() - frameLenMin() + 1));
+			break;
+		default:
+			qWarning("Unhandled len mode %d. Using default 64", 
+					lenMode());
+			pktLen = 64;
+			break;
+	}
+
+	return pktLen;
 }
 
 bool StreamBase::setFrameLen(quint16 frameLen)

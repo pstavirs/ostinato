@@ -17,6 +17,8 @@ LOW
 
 #define DEFAULT_SERVER_PORT		7878
 
+class QFile;
+
 class PortGroup : public QObject {
 	Q_OBJECT
 
@@ -30,7 +32,8 @@ private:
 	quint16			mServerPort;
 #endif
 	PbRpcChannel						*rpcChannel;
-	::google::protobuf::RpcController	*rpcController;
+	PbRpcController						*rpcController;
+	PbRpcController						*rpcControllerStats;
 	::OstProto::OstService::Stub		*serviceStub;
 
 	::OstProto::PortIdList				portIdList;
@@ -80,7 +83,7 @@ public:
 	void stopCapture(QList<uint> *portList = NULL);
 	void processStopCaptureAck(OstProto::Ack *ack);
 	void viewCapture(QList<uint> *portList = NULL);
-	void processViewCaptureAck(OstProto::CaptureBufferList *bufList);
+	void processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFile);
 
 	void getPortStats();
 	void processPortStatsList(OstProto::PortStatsList *portStatsList);

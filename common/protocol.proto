@@ -1,7 +1,5 @@
 // stream.proto
 
-// FIXME: Re-evaluate Tag Values
-
 package OstProto;
 
 message StreamId {
@@ -56,9 +54,6 @@ message StreamControl {
 	optional NextWhat	next = 6 [default = e_nw_goto_next];
 	optional uint32		packets_per_sec = 7 [default = 1];
 	optional uint32		bursts_per_sec = 8 [default = 1];
-
-	// TODO: Gaps?
-
 }
 
 message ProtocolId {
@@ -81,11 +76,12 @@ message Protocol {
 		kLlcFieldNumber = 123;
 		kSnapFieldNumber = 124;
 
-		kVlanStackFieldNumber = 125;
+		kSvlanFieldNumber = 125;
 		kVlanFieldNumber = 126;
 
 		kDot2LlcFieldNumber = 127;
 		kDot2SnapFieldNumber = 128;
+		kVlanStackFieldNumber = 129;
 
 		kIp4FieldNumber = 130;
 		kArpFieldNumber = 131;
@@ -111,7 +107,7 @@ message Void {
 }
 
 message Ack {
-	// TODO
+	//! \todo (LOW) do we need any fields in 'Ack'
 }
 
 message PortId {
@@ -146,7 +142,7 @@ message StreamConfigList {
 }
 
 message CaptureBuffer {
-	// TODO
+	//! \todo (HIGH) define CaptureBuffer
 }
 
 message CaptureBufferList {
@@ -190,7 +186,7 @@ service OstService {
 
 	rpc startCapture(PortIdList) returns (Ack);
 	rpc stopCapture(PortIdList) returns (Ack);
-	rpc getCaptureBuffer(PortIdList) returns (CaptureBufferList);
+	rpc getCaptureBuffer(PortId) returns (CaptureBuffer);
 
 	rpc getStats(PortIdList) returns (PortStatsList);
 	rpc clearStats(PortIdList) returns (Ack);

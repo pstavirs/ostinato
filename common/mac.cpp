@@ -236,7 +236,6 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 bool MacProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

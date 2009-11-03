@@ -196,7 +196,6 @@ QVariant VlanProtocol::fieldData(int index, FieldAttrib attrib,
 bool VlanProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

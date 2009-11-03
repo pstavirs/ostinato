@@ -44,7 +44,7 @@ public:
 	virtual QString name() const;
 	virtual QString shortName() const;
 
-	virtual int protocolFrameSize() const;
+	virtual int protocolFrameSize(int streamIndex = 0) const;
 
 	virtual int	fieldCount() const;
 

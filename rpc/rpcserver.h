@@ -27,7 +27,7 @@ class RpcServer : public QObject
 	void 	LogInt (QString log) {qDebug("%s", log.toAscii().data());}
 
 public:
-	RpcServer();	// TODO: use 'parent' param
+	RpcServer();	//! \todo (LOW) use 'parent' param
 	virtual ~RpcServer();
 
 	bool registerService(::google::protobuf::Service *service,

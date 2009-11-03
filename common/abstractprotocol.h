@@ -97,9 +97,9 @@ public:
 
 	QByteArray protocolFrameValue(int streamIndex = 0,
 		bool forCksum = false) const;
-	virtual int protocolFrameSize() const;
-	int protocolFrameOffset() const;
-	int protocolFramePayloadSize() const;
+	virtual int protocolFrameSize(int streamIndex = 0) const;
+	int protocolFrameOffset(int streamIndex = 0) const;
+	int protocolFramePayloadSize(int streamIndex = 0) const;
 
 	virtual quint32 protocolFrameCksum(int streamIndex = 0,
 		CksumType cksumType = CksumIp) const;

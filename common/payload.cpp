@@ -75,9 +75,16 @@ QString PayloadProtocol::shortName() const
 	return QString("DATA");
 }
 
-int	PayloadProtocol::protocolFrameSize() const
+int	PayloadProtocol::protocolFrameSize(int streamIndex) const
 {
-	return (mpStream->frameLen() - protocolFrameOffset() - SZ_FCS);
+	int len;
+
+	len = mpStream->frameLen(streamIndex) - protocolFrameOffset(streamIndex) 
+		- SZ_FCS;
+
+	qDebug("%s: this = %p, streamIndex = %d, len = %d", __FUNCTION__, this,
+			streamIndex, len);
+	return len;
 }
 
 int	PayloadProtocol::fieldCount() const
@@ -125,8 +132,7 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 					QByteArray fv;
 					int dataLen;
 
-					dataLen = mpStream->frameLen() - protocolFrameOffset();
-					dataLen -= SZ_FCS;
+					dataLen = protocolFrameSize(streamIndex);
 
 					// FIXME: Hack! Bad! Bad! Very Bad!!!
 					if (dataLen <= 0)
@@ -149,7 +155,7 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 								fv[i] = 0xFF - (i % (0xFF + 1));
 							break;
 						case OstProto::Payload::e_dp_random:
-							//! \todo cksum will be incorrect for random pattern
+							//! \todo (HIGH) cksum is incorrect for random pattern
 							for (int i = 0; i < dataLen; i++)
 								fv[i] =  qrand() % (0xFF + 1);
 							break;
@@ -178,7 +184,6 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
 bool PayloadProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

@@ -25,6 +25,7 @@ PROTOS += \
 	dot2llc.proto \
 	dot2snap.proto \
 	vlan.proto \
+	svlan.proto \
 	vlanstack.proto \
 	ip4.proto \
 	tcp.proto \
@@ -45,6 +46,7 @@ HEADERS += \
 	dot2llc.h \
 	dot2snap.h \
 	vlan.h \
+	svlan.h \
 	vlanstack.h \
 	ip4.h \
 	tcp.h \
@@ -62,6 +64,7 @@ SOURCES += \
 	llc.cpp \
 	snap.cpp \
 	vlan.cpp \
+	svlan.cpp \
 	ip4.cpp \
 	tcp.cpp \
 	udp.cpp

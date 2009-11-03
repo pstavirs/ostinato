@@ -2,12 +2,12 @@
 #include <qglobal.h>
 #include <qendian.h>
 #include "qdebug.h"
-#include <QProcess>
 
 #include "myservice.h"
-#include "../common/protocollist.h"
+#include "../common/protocollistiterator.h"
 #include "../common/abstractprotocol.h"
 
+#include "../rpc/pbrpccontroller.h"
 
 #if 0
 #include <pcap-int.h>
@@ -19,12 +19,6 @@
 
 StreamInfo::StreamInfo()
 {
-#if 0
-	PbHelper pbh;
-	
-	pbh.ForceSetSingularDefault(mCore); 
-	pbh.ForceSetSingularDefault(mControl); 
-#endif
 }
 
 StreamInfo::~StreamInfo()
@@ -35,30 +29,7 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 {
 	int		pktLen, len = 0;
 
-	// Decide a frame length based on length mode
-	switch(lenMode())
-	{
-		case OstProto::StreamCore::e_fl_fixed:
-			pktLen = frameLen();
-			break;
-		case OstProto::StreamCore::e_fl_inc:
-			pktLen = frameLenMin() + (n %
-				(frameLenMax() - frameLenMin() + 1));
-			break;
-		case OstProto::StreamCore::e_fl_dec:
-			pktLen = frameLenMax() - (n %
-				(frameLenMax() - frameLenMin() + 1));
-			break;
-		case OstProto::StreamCore::e_fl_random:
-			pktLen = frameLenMin() + (qrand() %
-				(frameLenMax() - frameLenMin() + 1));
-			break;
-		default:
-			qWarning("Unhandled len mode %d. Using default 64", 
-					lenMode());
-			pktLen = 64;
-			break;
-	}
+	pktLen = frameLen(n);
 
 	// pktLen is adjusted for CRC/FCS which will be added by the NIC
 	pktLen -=  4;
@@ -66,18 +37,22 @@ int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
 	if ((pktLen < 0) || (pktLen > bufMaxSize))
 		return 0;
 
-	// FIXME: Calculated pktLen is an input to Payload Protocol
-	foreach(const AbstractProtocol* proto, *currentFrameProtocols)
-	{
-		QByteArray 			ba;
+	ProtocolListIterator	*iter;
 
+	iter = createProtocolListIterator();
+	while (iter->hasNext())
+	{
+		AbstractProtocol	*proto;
+		QByteArray			ba;
+
+		proto = iter->next();
 		ba = proto->protocolFrameValue(n);
+
 		if (len + ba.size() < bufMaxSize)
-		{
 			memcpy(buf+len, ba.constData(), ba.size());
-		}
 		len += ba.size();
 	}
+	delete iter;
 
 	return pktLen;
 }
@@ -155,9 +130,9 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 
 	if (dev->description)
 		d.set_description(dev->description);
-	d.set_is_enabled(true);	// FIXME(MED):check
-	d.set_is_oper_up(true); // FIXME(MED):check
-	d.set_is_exclusive_control(false); // FIXME(MED): check
+	d.set_is_enabled(true);	//! \todo (LOW) admin enable/disable of port
+	d.set_is_oper_up(true); //! \todo (HIGH) oper up/down of port
+	d.set_is_exclusive_control(false); //! \todo (HIGH) port exclusive control
 
 	memset((void*) &stats, 0, sizeof(stats));
 	resetStats();
@@ -190,7 +165,7 @@ void PortInfo::update()
 	sendQueueList.clear();
 	returnToQIdx = -1;
 
-	// TODO(LOW): calculate sendqueue size
+	//! \todo (LOW): calculate sendqueue size
 	sendQ.sendQueue = pcap_sendqueue_alloc(1*MB);
 	sendQ.sendQueueCumLen.clear();
 	
@@ -254,7 +229,7 @@ void PortInfo::update()
 						{
 							sendQueueList.append(sendQ);
 
-							// TODO(LOW): calculate sendqueue size
+							//! \todo (LOW): calculate sendqueue size
 							sendQ.sendQueue = pcap_sendqueue_alloc(1*MB);
 							sendQ.sendQueueCumLen.clear();
 
@@ -291,16 +266,17 @@ void PortInfo::update()
 					goto _stop_no_more_pkts;
 
 				case ::OstProto::StreamControl::e_nw_goto_id:
-					// TODO(MED): define and use 
-					// streamList[i].d.control().goto_stream_id();
+					/*! \todo (MED): define and use 
+					streamList[i].d.control().goto_stream_id(); */
 
-					// TODO(MED): assumes goto Id is less than current!!!! 
-					// To support goto to any id, do
-					// if goto_id > curr_id then 
-					//     i = goto_id;
-					//     goto restart;
-				    // else
-					//     returnToQIdx = 0;
+					/*! \todo (MED): assumes goto Id is less than current!!!! 
+					 To support goto to any id, do
+					 if goto_id > curr_id then 
+					     i = goto_id;
+					     goto restart;
+				     else
+					     returnToQIdx = 0;
+					 */
 
 					returnToQIdx=0;
 					goto _stop_no_more_pkts;
@@ -344,9 +320,9 @@ void PortInfo::stopCapture()
 	capturer.stop();
 }
 
-void PortInfo::viewCapture()
+QFile* PortInfo::captureFile()
 {
-	capturer.view();
+	return capturer.captureFile();
 }
 
 void PortInfo::resetStats()
@@ -550,7 +526,7 @@ void PortInfo::PortMonitorRx::callbackRx(u_char *state,
 	// Update RxStats and RxRates using PCAP data
 	usec = (header->ts.tv_sec - port->lastTsRx.tv_sec) * 1000000 + 
 		(header->ts.tv_usec - port->lastTsRx.tv_usec);
-	// TODO(rate)
+	//! \todo support Rx Pkt/Bit rate on Linux (libpcap callback)
 #if 0
 	port->stats.rxPps = (pkts * 1000000) / usec;
 	port->stats.rxBps = (bytes * 1000000) / usec;
@@ -581,7 +557,7 @@ void PortInfo::PortMonitorTx::callbackTx(u_char *state,
 	// Update TxStats and TxRates using PCAP data
 	usec = (header->ts.tv_sec - port->lastTsTx.tv_sec) * 1000000 + 
 		(header->ts.tv_usec - port->lastTsTx.tv_usec);
-	// TODO(rate)
+	//! \todo support Tx Pkt/Bit rate on Linux (libpcap callback)
 #if 0
 	port->stats.txPps = (pkts * 1000000) / usec;
 	port->stats.txBps = (bytes * 1000000) / usec;
@@ -703,7 +679,7 @@ PortInfo::PortTransmitter::PortTransmitter(PortInfo *port)
 
 void PortInfo::PortTransmitter::run()
 {
-	// TODO(HI): Stream Mode - one pass/continuous
+	//! \todo (MED) Stream Mode - continuous: define before implement
 
 	// NOTE1: We can't use pcap_sendqueue_transmit() directly even on Win32
 	// 'coz of 2 reasons - there's no way of stopping it before all packets
@@ -739,14 +715,20 @@ PortInfo::PortCapture::PortCapture(PortInfo *port)
 	dumpHandle = NULL;
 }
 
+PortInfo::PortCapture::~PortCapture()
+{
+}
+
 void PortInfo::PortCapture::run()
 {
+	int ret;
+
 	if (capHandle == NULL)
 	{
 		char errbuf[PCAP_ERRBUF_SIZE];
 
-		capHandle = pcap_open_live(port->dev->name, 0, 
-			PCAP_OPENFLAG_PROMISCUOUS, 1000 /*ms*/, errbuf);
+		capHandle = pcap_open_live(port->dev->name, 65535, 
+                        PCAP_OPENFLAG_PROMISCUOUS, -1, errbuf);
 		if (capHandle == NULL)
 		{
 			qDebug("Error opening port %s: %s\n", 
@@ -757,12 +739,27 @@ void PortInfo::PortCapture::run()
 	{
 		if (!capFile.open())
 			qFatal("Unable to open temp cap file");
-		qDebug("cap file = %s", capFile.fileName().toAscii().constData());
 	}
+
+	qDebug("cap file = %s", capFile.fileName().toAscii().constData());
 	dumpHandle = pcap_dump_open(capHandle, 
 		capFile.fileName().toAscii().constData());
 
-	pcap_loop(capHandle, -1, pcap_dump, (uchar*) dumpHandle);
+	ret = pcap_loop(capHandle, -1, pcap_dump, (uchar*) dumpHandle);
+	switch (ret)
+	{
+		case -2:
+			qDebug("%s: breakloop called %d", __PRETTY_FUNCTION__, ret);
+			break;
+
+		case -1:
+		case 0:
+			qFatal("%s: unexpected break from loop (%d): %s", 
+					__PRETTY_FUNCTION__, ret, pcap_geterr(capHandle));
+			break;
+		default:
+			qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+	}
 }
 
 void PortInfo::PortCapture::stop()
@@ -776,11 +773,9 @@ void PortInfo::PortCapture::stop()
 	}
 }
 
-void PortInfo::PortCapture::view()
+QFile* PortInfo::PortCapture::captureFile()
 {
-	// FIXME: hack - when correcting this remove the <QProcess> include also
-	QProcess::execute("C:/Program Files/Wireshark/wireshark.exe",
-		QStringList() <<  capFile.fileName());
+	return &capFile;
 }
 
 
@@ -914,7 +909,7 @@ const ::OstProto::PortId* request,
 	{
 		qDebug("%s: Invalid port id %d", __PRETTY_FUNCTION__, portIdx);
 		controller->SetFailed("Invalid Port Id");
-		goto _exit;		// TODO(LOW): Partial status of RPC
+		goto _exit;		//! \todo (LOW): Partial status of RPC
 	}
 
 	response->mutable_port_id()->set_id(portIdx);
@@ -954,7 +949,7 @@ const ::OstProto::StreamIdList* request,
 
 		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
 		if (streamIndex < 0)
-			continue;		// TODO(LOW): Partial status of RPC
+			continue;		//! \todo(LOW): Partial status of RPC
 
 		s = response->add_stream();
 
@@ -989,7 +984,7 @@ const ::OstProto::StreamIdList* request,
 		// If stream with same id as in request exists already ==> error!!
 		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
 		if (streamIndex >= 0)
-			continue;		// TODO(LOW): Partial status of RPC
+			continue;		//! \todo (LOW): Partial status of RPC
 
 		// Append a new "default" stream - actual contents of the new stream is
 		// expected in a subsequent "modifyStream" request - set the stream id
@@ -997,7 +992,7 @@ const ::OstProto::StreamIdList* request,
 		s->mStreamId.CopyFrom(request->stream_id(i));
 		portInfo[portIdx]->streamList.append(s);
 
-		// TODO(LOW): fill-in response "Ack"????
+		//! \todo (LOW): fill-in response "Ack"????
 	}
 	portInfo[portIdx]->setDirty(true);
 _exit:
@@ -1027,11 +1022,11 @@ const ::OstProto::StreamIdList* request,
 
 		streamIndex = getStreamIndex(portIdx, request->stream_id(i).id());
 		if (streamIndex < 0)
-			continue;		// TODO(LOW): Partial status of RPC
+			continue;		//! \todo (LOW): Partial status of RPC
 
 		delete portInfo[portIdx]->streamList.takeAt(streamIndex);
 
-		// TODO(LOW): fill-in response "Ack"????
+		//! \todo (LOW): fill-in response "Ack"????
 	}
 	portInfo[portIdx]->setDirty(true);
 _exit:
@@ -1061,12 +1056,12 @@ const ::OstProto::StreamConfigList* request,
 		streamIndex = getStreamIndex(portIdx, 
 			request->stream(i).stream_id().id());
 		if (streamIndex < 0)
-			continue;		// TODO(LOW): Partial status of RPC
+			continue;		//! \todo (LOW): Partial status of RPC
 
 		portInfo[portIdx]->streamList[streamIndex]->protoDataCopyFrom(
 			request->stream(i));
 
-		// TODO(LOW): fill-in response "Ack"????
+		//! \todo(LOW): fill-in response "Ack"????
 	}
 	portInfo[portIdx]->setDirty(true);
 _exit:
@@ -1087,7 +1082,7 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		if (portInfo[portIdx]->isDirty())
 			portInfo[portIdx]->update();
@@ -1099,12 +1094,12 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		portInfo[portIdx]->startTransmit();
 	}
 
-	// TODO(LOW): fill-in response "Ack"????
+	//! \todo (LOW): fill-in response "Ack"????
 
 	done->Run();
 }
@@ -1122,11 +1117,11 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		portInfo[portIdx]->stopTransmit();
 	}
-	// TODO(LOW): fill-in response "Ack"????
+	//! \todo (LOW): fill-in response "Ack"????
 	done->Run();
 }
 
@@ -1143,7 +1138,7 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		portInfo[portIdx]->startCapture();
 	}
@@ -1163,7 +1158,7 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		portInfo[portIdx]->stopCapture();
 	}
@@ -1172,25 +1167,25 @@ const ::OstProto::PortIdList* request,
 }
 
 void MyService::getCaptureBuffer(::google::protobuf::RpcController* controller,
-const ::OstProto::PortIdList* request,
-::OstProto::CaptureBufferList* response,
+const ::OstProto::PortId* request,
+::OstProto::CaptureBuffer* response,
 ::google::protobuf::Closure* done)
 {
+	uint portIdx;
 	qDebug("In %s", __PRETTY_FUNCTION__);
 
-	// FIXME: BAD BAD VERY BAD !!!!!!
-	for (int i=0; i < request->port_id_size(); i++)
+	portIdx = request->id();
+	if (portIdx >= numPorts)
 	{
-		uint portIdx;
-
-		portIdx = request->port_id(i).id();
-		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
-
-		portInfo[portIdx]->viewCapture();
+		controller->SetFailed("invalid portid");
+		goto _exit;
 	}
 
-	controller->SetFailed("Not Implemented");
+	portInfo[portIdx]->stopCapture();
+	static_cast<PbRpcController*>(controller)->setBinaryBlob(
+		portInfo[portIdx]->captureFile());
+
+_exit:
 	done->Run();
 }
 
@@ -1208,7 +1203,7 @@ const ::OstProto::PortIdList* request,
 
 		portidx = request->port_id(i).id();
 		if (portidx >= numPorts)
-			continue; 	// TODO(LOW): partial rpc?
+			continue; 	//! \todo(LOW): partial rpc?
 
 		s = response->add_port_stats();
 		s->mutable_port_id()->set_id(request->port_id(i).id());
@@ -1260,11 +1255,11 @@ const ::OstProto::PortIdList* request,
 
 		portIdx = request->port_id(i).id();
 		if (portIdx >= numPorts)
-			continue; 	// TODO(LOW): partial RPC?
+			continue; 	//! \todo (LOW): partial RPC?
 
 		portInfo[portIdx]->resetStats();
 	}
-	// TODO(LOW): fill-in response "Ack"????
+	//! \todo (LOW): fill-in response "Ack"????
 
 	done->Run();
 }

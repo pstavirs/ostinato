@@ -16,7 +16,6 @@ public:
 class VlanProtocol : public AbstractProtocol
 {
 private:
-	OstProto::Vlan	data;
 	VlanConfigForm	*configForm;
 	enum Vlanfield
 	{
@@ -30,6 +29,9 @@ private:
 
 		vlan_fieldCount
 	};
+
+protected:
+	OstProto::Vlan	data;
 
 public:
 	VlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);

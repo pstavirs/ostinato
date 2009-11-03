@@ -3,6 +3,10 @@
 
 #include "sample.h"
 
+/*! \todo (MED) Complete the "sample" protocol and make it compilable so that 
+  it can be used as an example for new protocols
+ */
+
 SampleConfigForm::SampleConfigForm(QWidget *parent)
 	: QWidget(parent)
 {
@@ -90,18 +94,18 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
 {
 	switch (index)
 	{
-		case sample_FIXME:
+		case sample_one:
 		{
 			switch(attrib)
 			{
 				case FieldName:			
-					return QString("FIXME");
+					return QString("ONE");
 				case FieldValue:
-					return data.FIXME();
+					return data.one();
 				case FieldTextValue:
-					return QString("%1").arg(data.FIXME());
+					return QString("%1").arg(data.one());
 				case FieldFrameValue:
-					return QByteArray(1, (char)(data.FIXME() & 0xF0));
+					return QByteArray(1, (char)(data.one() & 0xF0));
 				case FieldBitSize:
 					return 4;
 				default:
@@ -110,16 +114,16 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
 			break;
 
 		}
-		case sample_FIXME:
+		case sample_two:
 		{
 			switch(attrib)
 			{
 				case FieldName:			
-					return QString("FIXME");
+					return QString("TWO");
 				case FieldValue:
-					return FIXME;
+					return data.two();
 				case FieldTextValue:
-					return QString("%1").arg(FIXME);
+					return QString("%1").arg(data.two());
 				case FieldFrameValue:
 				{
 					QByteArray fv;

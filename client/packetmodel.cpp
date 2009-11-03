@@ -132,12 +132,28 @@ _exit:
 
 QVariant PacketModel::data(const QModelIndex &index, int role) const
 {
-	IndexId			id;
+	IndexId		id;
+	int			fieldIdx = 0;	
 
 	if (!index.isValid())
 		return QVariant();
 
 	id.w = index.internalId();
+
+	if (id.ws.type == ITYP_FIELD)
+	{
+		const AbstractProtocol *p = mSelectedProtocols.at(id.ws.protocol);
+		int n = index.row() + 1;
+
+		while (n)
+		{
+			if (!(p->fieldFlags(fieldIdx).testFlag(
+							AbstractProtocol::FieldIsMeta)))
+				n--;
+			fieldIdx++;
+		}
+		fieldIdx--;
+	}
 
 	// FIXME(HI): Relook at this completely
 	if (role == Qt::UserRole)
@@ -151,7 +167,7 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 
 		case  ITYP_FIELD: 
 			return	mSelectedProtocols.at(id.ws.protocol)->fieldData(
-				index.row(), AbstractProtocol::FieldFrameValue);
+				fieldIdx, AbstractProtocol::FieldFrameValue);
 
 		default:
 			qWarning("%s: Unhandled ItemType", __FUNCTION__);
@@ -170,7 +186,7 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 
 		case  ITYP_FIELD: 
 			return	mSelectedProtocols.at(id.ws.protocol)->fieldData(
-				index.row(), AbstractProtocol::FieldBitSize);
+				fieldIdx, AbstractProtocol::FieldBitSize);
 
 		default:
 			qWarning("%s: Unhandled ItemType", __FUNCTION__);
@@ -189,9 +205,9 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 			.arg(mSelectedProtocols.at(id.ws.protocol)->name());
 
 	case  ITYP_FIELD: 
-		return	mSelectedProtocols.at(id.ws.protocol)->fieldData(index.row(),
+		return	mSelectedProtocols.at(id.ws.protocol)->fieldData(fieldIdx,
 				AbstractProtocol::FieldName).toString() + QString(" : ") +
-				mSelectedProtocols.at(id.ws.protocol)->fieldData(index.row(),
+				mSelectedProtocols.at(id.ws.protocol)->fieldData(fieldIdx,
 				AbstractProtocol::FieldTextValue).toString();
 
 	default:

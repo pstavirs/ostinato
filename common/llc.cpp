@@ -128,7 +128,6 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
 bool LlcProtocol::setFieldData(int index, const QVariant &value, 
 		FieldAttrib attrib)
 {
-	// FIXME
 	return false;
 }
 

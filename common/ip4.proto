@@ -20,7 +20,6 @@ message Ip4 {
 	optional uint32	tos = 6;
 	optional uint32	totlen = 7;
 	optional uint32	id = 8 [default = 1234];
-	// TODO: rename flags to frag_flags
 	optional uint32	flags = 9;
 	optional uint32	frag_ofs = 10;
 	optional uint32	ttl = 11 [default = 127];
@@ -39,7 +38,7 @@ message Ip4 {
 	optional uint32		dst_ip_count = 20 [default = 16];
 	optional fixed32	dst_ip_mask = 21 [default = 0xFFFFFF00];
 
-	// TODO: Options
+	//! \todo (LOW) IPv4 Options
 }
 
 extend Protocol {

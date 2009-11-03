@@ -17,8 +17,6 @@ private:
 	OstProto::StreamCore 	*mCore;
 	OstProto::StreamControl	*mControl;
 
-protected:
-	//! \todo TODO: Make ProtocolList a private member of StreamBase?
 	ProtocolList			*currentFrameProtocols;
 
 public:
@@ -30,7 +28,7 @@ public:
 
 	ProtocolListIterator* createProtocolListIterator();
 
-	// TODO: make a copy constructor
+	//! \todo (LOW) should we have a copy constructor??
 
 public:
 	enum FrameLengthMode {
@@ -81,7 +79,7 @@ public:
 	FrameLengthMode	lenMode();
 	bool setLenMode(FrameLengthMode	lenMode);
 
-	quint16	frameLen();
+	quint16	frameLen(int streamIndex = 0);
 	bool setFrameLen(quint16 frameLen);
 
 	quint16	frameLenMin();
