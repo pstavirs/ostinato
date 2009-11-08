@@ -144,7 +144,17 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
 			DBG0("Exit PortModel data 5\n");
 			if (pgl->mPortGroups.at(parent.row())->numPorts() == 0)
 				return QVariant();
-			return QIcon(":/icons/bullet_green.png");
+			switch(pgl->mPortGroups.at(parent.row())->mPorts[index.row()].linkState())
+			{
+				case OstProto::LinkStateUnknown:
+					return QIcon(":/icons/bullet_white.png");
+				case OstProto::LinkStateDown:
+					return QIcon(":/icons/bullet_red.png");
+				case OstProto::LinkStateUp:
+					return QIcon(":/icons/bullet_green.png");
+				default:
+					qFatal("unexpected/unimplemented port oper state");
+			}
 		}
 		else
 		{
@@ -152,6 +162,8 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
 			return QVariant();
 		}
 	}
+
+	return QVariant();
 }
 
 QVariant PortModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -252,7 +264,7 @@ quint32 PortModel::portId(const QModelIndex& index)
 // ----------------------------------------------
 // Slots
 // ----------------------------------------------
-void PortModel::when_portGroupDataChanged(PortGroup* portGroup)
+void PortModel::when_portGroupDataChanged(PortGroup* portGroup, int portId)
 {
 	QModelIndex index;
 
@@ -266,7 +278,7 @@ void PortModel::when_portGroupDataChanged(PortGroup* portGroup)
 	qDebug("when_portGroupDataChanged idx = %d", pgl->mPortGroups.indexOf(portGroup));
 	
 	index = createIndex(pgl->mPortGroups.indexOf(portGroup), 0, 
-		(portGroup->id() << 16) | 0xFFFF);
+		(portGroup->id() << 16) | portId);
 	emit dataChanged(index, index);
 }
 

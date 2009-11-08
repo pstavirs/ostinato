@@ -23,11 +23,16 @@
 #include <packet32.h>
 #endif
 
+#ifdef Q_OS_WIN32
+#define OID_GEN_MEDIA_CONNECT_STATUS	0x00010114
+#endif
+
 #define MAX_PKT_HDR_SIZE			1536
 #define MAX_STREAM_NAME_SIZE		64
 
 //! 7 byte Preamble + 1 byte SFD + 4 byte FCS
 #define ETH_FRAME_HDR_SIZE			12
+
 
 class MyService;
 
@@ -99,6 +104,7 @@ class PortInfo
 		friend class PortInfo;
 
 		PortInfo		*port;
+		int				m_stop;
 		pcap_t			*capHandle;
 		pcap_dumper_t	*dumpHandle;
 		QTemporaryFile	capFile;
@@ -111,7 +117,13 @@ class PortInfo
 		QFile* captureFile();
 	};
 
+#ifdef Q_OS_WIN32
+	LPADAPTER			adapter;
+	PPACKET_OID_DATA	oidData;
+#endif
+
 	OstProto::Port			d;
+	OstProto::LinkState		linkState;
 
 	struct PortStats
 	{
@@ -167,6 +179,7 @@ class PortInfo
 public:
 	PortInfo(uint id, pcap_if_t *dev);
 	uint id() { return d.port_id().id(); }
+	void updateLinkState();
 	bool isDirty() { return isSendQueueDirty; }
 	void setDirty(bool dirty) { isSendQueueDirty = dirty; }
 	void update();

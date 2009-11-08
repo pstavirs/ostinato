@@ -68,6 +68,20 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 
 	this->dev = dev;
 
+#ifdef Q_OS_WIN32
+	adapter = PacketOpenAdapter(dev->name);
+	if (!adapter)
+		qFatal("Unable to open adapter %s", dev->name);
+	oidData = (PPACKET_OID_DATA) malloc(sizeof(PACKET_OID_DATA) + sizeof(uint));
+	if (oidData)
+	{
+		memset(oidData, 0, sizeof(PACKET_OID_DATA) + sizeof(uint));
+		oidData->Length=sizeof(uint);
+	}
+	else
+		qFatal("failed to alloc oidData");
+#endif
+
 	/*
 	 * Get 2 device handles - one for rx and one for tx. If we use only
 	 * one handle for both rx and tx anythin that we tx using the single
@@ -131,11 +145,12 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	if (dev->description)
 		d.set_description(dev->description);
 	d.set_is_enabled(true);	//! \todo (LOW) admin enable/disable of port
-	d.set_is_oper_up(true); //! \todo (HIGH) oper up/down of port
 	d.set_is_exclusive_control(false); //! \todo (HIGH) port exclusive control
 
 	memset((void*) &stats, 0, sizeof(stats));
 	resetStats();
+
+	linkState = OstProto::LinkStateUnknown;
 
 	// We'll create sendqueue later when required
 	sendQueueList.clear();
@@ -147,6 +162,35 @@ PortInfo::PortInfo(uint id, pcap_if_t *dev)
 	// Start the monitor thread
 	monitorRx.start();
 	monitorTx.start();
+}
+
+void PortInfo::updateLinkState()
+{
+#ifdef Q_OS_WIN32
+	OstProto::LinkState	newLinkState 
+		= OstProto::LinkStateUnknown;
+
+	memset(oidData, 0, sizeof(PACKET_OID_DATA) + sizeof(uint));
+	oidData->Oid = OID_GEN_MEDIA_CONNECT_STATUS;
+	oidData->Length = sizeof(uint);
+	if (PacketRequest(adapter, 0, oidData))
+	{
+		uint state;
+
+		if (oidData->Length == sizeof(state))
+		{
+			memcpy((void*)&state, (void*)oidData->Data, oidData->Length);
+			if (state == 0)
+				newLinkState = OstProto::LinkStateUp;
+			else if (state == 1)
+				newLinkState = OstProto::LinkStateDown;
+		}
+	}
+
+	linkState = newLinkState;
+#elif defined(Q_OS_LINUX)
+	//! \todo (HI) implement link state for linux - get from /proc maybe?
+#endif
 }
 
 void PortInfo::update()
@@ -211,6 +255,9 @@ void PortInfo::update()
 				{
 					int len;
 
+					/*! \todo (HIGH) if pkt contents do not change across
+					pkts then don't call makePacket(), rather reuse the 
+					previous */
 					len = streamList[i]->makePacket(pktBuf, sizeof(pktBuf), 
 							j * numPackets + k);
 					if (len > 0)
@@ -722,55 +769,60 @@ PortInfo::PortCapture::~PortCapture()
 void PortInfo::PortCapture::run()
 {
 	int ret;
+	char errbuf[PCAP_ERRBUF_SIZE];
 
+	capHandle = pcap_open_live(port->dev->name, 65535, 
+					PCAP_OPENFLAG_PROMISCUOUS, 1000 /* ms */, errbuf);
 	if (capHandle == NULL)
 	{
-		char errbuf[PCAP_ERRBUF_SIZE];
-
-		capHandle = pcap_open_live(port->dev->name, 65535, 
-                        PCAP_OPENFLAG_PROMISCUOUS, -1, errbuf);
-		if (capHandle == NULL)
-		{
-			qDebug("Error opening port %s: %s\n", 
-					port->dev->name, pcap_geterr(capHandle));
-		}
+		qDebug("Error opening port %s: %s\n", 
+				port->dev->name, pcap_geterr(capHandle));
+		return;
 	}
+
 	if (!capFile.isOpen())
 	{
 		if (!capFile.open())
 			qFatal("Unable to open temp cap file");
+		return;
 	}
 
 	qDebug("cap file = %s", capFile.fileName().toAscii().constData());
 	dumpHandle = pcap_dump_open(capHandle, 
 		capFile.fileName().toAscii().constData());
 
-	ret = pcap_loop(capHandle, -1, pcap_dump, (uchar*) dumpHandle);
-	switch (ret)
+	m_stop = 0;
+	while (m_stop == 0)
 	{
-		case -2:
-			qDebug("%s: breakloop called %d", __PRETTY_FUNCTION__, ret);
-			break;
+		struct pcap_pkthdr *hdr;
+		const uchar *data;
 
-		case -1:
-		case 0:
-			qFatal("%s: unexpected break from loop (%d): %s", 
-					__PRETTY_FUNCTION__, ret, pcap_geterr(capHandle));
-			break;
-		default:
-			qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+		ret = pcap_next_ex(capHandle, &hdr, &data);
+		switch (ret)
+		{
+			case 1:
+				pcap_dump((uchar*) dumpHandle, hdr, data);
+			case 0:
+				continue;
+			case -1:
+				qWarning("%s: error reading packet (%d): %s", 
+						__PRETTY_FUNCTION__, ret, pcap_geterr(capHandle));
+				break;
+			case -2:
+			default:
+				qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+		}
 	}
+	m_stop = 0;
+	pcap_dump_close(dumpHandle);
+	pcap_close(capHandle);
+	dumpHandle = NULL;
+	capHandle = NULL;
 }
 
 void PortInfo::PortCapture::stop()
 {
-	pcap_breakloop(capHandle);
-	if (dumpHandle)
-	{
-		pcap_dump_flush(dumpHandle);
-		pcap_dump_close(dumpHandle);
-		dumpHandle = NULL;
-	}
+	m_stop = 1;
 }
 
 QFile* PortInfo::PortCapture::captureFile()
@@ -1200,6 +1252,7 @@ const ::OstProto::PortIdList* request,
 	{
 		uint 	portidx;
 		::OstProto::PortStats	*s;
+		OstProto::PortState		*st;
 
 		portidx = request->port_id(i).id();
 		if (portidx >= numPorts)
@@ -1215,6 +1268,13 @@ const ::OstProto::PortIdList* request,
 			qDebug(">%llu", portInfo[portidx]->stats.rxPkts);
 		}
 #endif
+
+		portInfo[portidx]->updateLinkState(); 
+
+		st = s->mutable_state(); 
+		st->set_link_state(portInfo[portidx]->linkState); 
+		st->set_is_transmit_on(portInfo[portidx]->transmitter.isRunning()); 
+		st->set_is_capture_on(portInfo[portidx]->capturer.isRunning()); 
 
 		s->set_rx_pkts(portInfo[portidx]->stats.rxPkts -
 				portInfo[portidx]->epochStats.rxPkts);

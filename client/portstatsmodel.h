@@ -5,7 +5,19 @@
 #include <QStringList>
 
 typedef enum {
-	e_STAT_FRAMES_RCVD = 0,
+	// State
+	e_STATE_START = 0,
+
+	e_LINK_STATE = e_STATE_START,
+	e_TRANSMIT_STATE,
+	e_CAPTURE_STATE,
+
+	e_STATE_END = e_CAPTURE_STATE,
+
+	// Statistics
+	e_STATISTICS_START,
+
+	e_STAT_FRAMES_RCVD = e_STATISTICS_START,
 	e_STAT_FRAMES_SENT,
 	e_STAT_FRAME_SEND_RATE,
 	e_STAT_FRAME_RECV_RATE,
@@ -19,10 +31,17 @@ typedef enum {
 	e_STAT_BYTES_RCVD_NIC,
 	e_STAT_BYTES_SENT_NIC,
 #endif
+
+	e_STATISTICS_END = e_STAT_BYTE_RECV_RATE,
+
 	e_STAT_MAX
 } PortStat;
 
 static QStringList PortStatName = (QStringList()
+	<< "Link State"
+	<< "Transmit State"
+	<< "Capture State"
+
 	<< "Frames Received"
 	<< "Frames Sent"
 	<< "Frame Send Rate (fps)"
@@ -37,6 +56,17 @@ static QStringList PortStatName = (QStringList()
 	<< "Bytes Received (NIC)"
 	<< "Bytes Sent (NIC)"
 #endif
+);
+
+static QStringList LinkStateName = (QStringList()
+	<< "Unknown"
+	<< "Down"
+	<< "Up"
+);
+
+static QStringList BoolStateName = (QStringList()
+	<< "Off"
+	<< "On"
 );
 
 class PortGroupList;

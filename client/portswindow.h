@@ -40,6 +40,7 @@ private slots:
 	void when_streamView_selectionChanged();
 	void when_portModel_dataChanged(const QModelIndex& topLeft,
 		const QModelIndex& bottomRight);
+	void when_portModel_reset();
 
 	void on_pbApply_clicked();	
 

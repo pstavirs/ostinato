@@ -32,7 +32,7 @@ class PortModel : public QAbstractItemModel
 
 
 private slots:
-	void when_portGroupDataChanged(PortGroup *portGroup);
+	void when_portGroupDataChanged(PortGroup *portGroup, int portId);
 
 	void portGroupAboutToBeAppended();
 	void portGroupAppended();

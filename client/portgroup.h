@@ -91,7 +91,7 @@ public:
 	void processClearStatsAck(OstProto::Ack	*ack);
 
 signals:
-	void portGroupDataChanged(PortGroup* portGroup);
+	void portGroupDataChanged(PortGroup* portGroup, int portId = 0xFFFF);
 	void portListAboutToBeChanged(quint32 portGroupId);
 	void portListChanged(quint32 portGroupId);
 	void statsChanged(quint32 portGroupId);

@@ -30,7 +30,6 @@ private:
 	void reorderStreamsByOrdinals();
 public:
 	enum AdminStatus	{ AdminDisable, AdminEnable };
-	enum OperStatus		{ OperDown, OperUp };
 	enum ControlMode	{ ControlShared, ControlExclusive };
 
 	// FIXME(HIGH): default args is a hack for QList operations on Port
@@ -48,8 +47,6 @@ public:
 		{ return QString().fromStdString(d.description()); }
 	AdminStatus adminStatus() 
 		{ return (d.is_enabled()?AdminEnable:AdminDisable); }
-	OperStatus operStatus()
-		{ return (d.is_oper_up()?OperUp:OperDown); }
 	ControlMode controlMode() 
 		{ return (d.is_exclusive_control()?ControlExclusive:ControlShared); }
 
@@ -70,6 +67,9 @@ public:
 		Q_ASSERT(index < mStreams.size());
 		return mStreams[index];
 	}
+	OstProto::LinkState linkState()
+		{ return stats.state().link_state(); }
+
 	OstProto::PortStats	getStats() { return stats; }
 
 	// FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
@@ -96,6 +96,11 @@ public:
 	void when_syncComplete();
 
 	void updateStats(OstProto::PortStats *portStats);
+
+#if 0
+signals:
+	void portDataChanged(int portGroupId, int portId);
+#endif
 
 };
 

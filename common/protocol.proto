@@ -128,7 +128,6 @@ message Port {
 	optional string name = 2;
 	optional string description = 3;
 	optional bool is_enabled = 4;
-	optional bool is_oper_up = 5;
 	optional bool is_exclusive_control = 6;
 }
 
@@ -149,8 +148,23 @@ message CaptureBufferList {
 	repeated CaptureBuffer list = 1;
 }
 
+enum LinkState {
+	LinkStateUnknown = 0;
+	LinkStateDown = 1;
+	LinkStateUp = 2;
+}
+
+message PortState {
+	optional LinkState link_state = 1 [default = LinkStateUnknown];
+	optional bool is_transmit_on = 2 [default = false];
+	optional bool is_capture_on = 3 [default = false];
+}
+
 message PortStats {
+
 	required PortId	port_id = 1;
+
+	optional PortState state = 2;
 
 	optional uint64 rx_pkts = 11;
 	optional uint64 rx_bytes = 12;

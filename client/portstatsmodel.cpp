@@ -67,13 +67,15 @@ void PortStatsModel::getDomainIndexes(const QModelIndex &index,
 QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 {
 	uint pgidx, pidx;
+	int row;
 
 	// Check for a valid index
 	if (!index.isValid())
 		return QVariant();
 
 	// Check for row/column limits
-	if (index.row() >= e_STAT_MAX)
+	row = index.row();
+	if (row >= e_STAT_MAX)
 		return QVariant();
 
 	if (numPorts.isEmpty())
@@ -91,8 +93,19 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
 		stats = pgl->mPortGroups.at(pgidx)->mPorts[pidx].getStats();
 
-		switch(index.row())
+		switch(row)
 		{
+			// States
+			case e_LINK_STATE:
+				return LinkStateName.at(stats.state().link_state());
+
+			case e_TRANSMIT_STATE:
+				return BoolStateName.at(stats.state().is_transmit_on());
+
+			case e_CAPTURE_STATE:
+				return BoolStateName.at(stats.state().is_capture_on());
+
+			// Statistics
 			case e_STAT_FRAMES_RCVD:
 				return stats.rx_pkts();
 
@@ -135,6 +148,15 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 						index.row());
 				return 0;
 		}
+	}
+	else if (role == Qt::TextAlignmentRole) 
+	{
+		if (row >= e_STATE_START && row <= e_STATE_END)
+			return Qt::AlignHCenter;
+		else if (row >= e_STATISTICS_START && row <= e_STATISTICS_END)
+			return Qt::AlignRight;
+		else
+			return QVariant();
 	}
 	else
 		return QVariant();

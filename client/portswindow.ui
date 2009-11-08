@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>689</width>
-    <height>389</height>
+    <height>254</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -28,10 +28,28 @@
      </widget>
      <widget class="QStackedWidget" name="swDetail" >
       <property name="currentIndex" >
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="portDetail" >
        <layout class="QGridLayout" >
+        <property name="leftMargin" >
+         <number>0</number>
+        </property>
+        <property name="topMargin" >
+         <number>0</number>
+        </property>
+        <property name="rightMargin" >
+         <number>0</number>
+        </property>
+        <property name="bottomMargin" >
+         <number>0</number>
+        </property>
+        <property name="horizontalSpacing" >
+         <number>6</number>
+        </property>
+        <property name="verticalSpacing" >
+         <number>6</number>
+        </property>
         <item row="0" column="0" >
          <layout class="QHBoxLayout" >
           <item>
@@ -118,10 +136,31 @@
             <string>Control</string>
            </attribute>
            <layout class="QHBoxLayout" >
+            <property name="spacing" >
+             <number>0</number>
+            </property>
+            <property name="leftMargin" >
+             <number>0</number>
+            </property>
+            <property name="topMargin" >
+             <number>0</number>
+            </property>
+            <property name="rightMargin" >
+             <number>0</number>
+            </property>
+            <property name="bottomMargin" >
+             <number>0</number>
+            </property>
             <item>
              <widget class="QTableView" name="tvStreamList" >
               <property name="contextMenuPolicy" >
                <enum>Qt::ActionsContextMenu</enum>
+              </property>
+              <property name="frameShape" >
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="lineWidth" >
+               <number>0</number>
               </property>
               <property name="selectionMode" >
                <enum>QAbstractItemView::ExtendedSelection</enum>

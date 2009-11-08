@@ -60,8 +60,8 @@ void PortGroupList::addPortGroup(PortGroup &portGroup)
 {
 	mPortGroupListModel.portGroupAboutToBeAppended();
 
-	connect(&portGroup, SIGNAL(portGroupDataChanged(PortGroup*)),
-		&mPortGroupListModel, SLOT(when_portGroupDataChanged(PortGroup*)));
+	connect(&portGroup, SIGNAL(portGroupDataChanged(PortGroup*, int)),
+		&mPortGroupListModel, SLOT(when_portGroupDataChanged(PortGroup*, int)));
 #if 0
 	connect(&portGroup, SIGNAL(portListAboutToBeChanged(quint32)),
 		&mPortGroupListModel, SLOT(triggerLayoutAboutToBeChanged()));

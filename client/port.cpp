@@ -183,6 +183,13 @@ void Port::when_syncComplete()
 
 void Port::updateStats(OstProto::PortStats *portStats)
 {
+	OstProto::PortState		oldState;
+
+	oldState = stats.state(); 
 	stats.MergeFrom(*portStats);
+#if 0
+	if (oldState.link_state() != stats.state().link_state())
+		emit portDataChanged(mPortGroupId, mPortId);
+#endif
 }
 

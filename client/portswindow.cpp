@@ -36,6 +36,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 		this, SLOT(when_portModel_dataChanged(const QModelIndex&, 
 			const QModelIndex&)));
 
+	connect(plm->getPortModel(), SIGNAL(modelReset()), 
+		SLOT(when_portModel_reset()));
+
 	connect( tvPortList->selectionModel(), 
 		SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
 		this, SLOT(when_portView_currentChanged(const QModelIndex&, 
@@ -139,7 +142,11 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
 	{
 		updatePortViewActions(tvPortList->currentIndex());
 	}
-	
+}
+
+void PortsWindow::when_portModel_reset()
+{
+	when_portView_currentChanged(QModelIndex(), tvPortList->currentIndex());
 }
 
 #if 0
