@@ -84,6 +84,11 @@ public:
 		return protoA->shortName() + "/" + protoB->shortName();
 	}
 
+	virtual ProtocolIdType protocolIdType() const
+	{
+		return protoB->protocolIdType();
+	}
+
 	virtual quint32 protocolId(ProtocolIdType type) const
 	{
 		return protoA->protocolId(type);
@@ -133,7 +138,21 @@ public:
 	virtual int protocolFrameSize() const;
 	int protocolFrameOffset() const;
 	int protocolFramePayloadSize() const;
+#endif
 
+	virtual bool isProtocolFrameValueVariable() const
+	{
+		return (protoA->isProtocolFrameValueVariable()
+			|| protoB->isProtocolFrameValueVariable());
+	}
+
+	virtual bool isProtocolFrameSizeVariable() const
+	{
+		return (protoA->isProtocolFrameSizeVariable()
+			|| protoB->isProtocolFrameSizeVariable());
+	}
+
+#if 0
 	virtual quint32 protocolFrameCksum(int streamIndex = 0,
 		CksumType cksumType = CksumIp) const;
 	quint32 protocolFrameHeaderCksum(int streamIndex = 0,

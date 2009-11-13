@@ -56,6 +56,7 @@ public:
 	};
 
 	enum ProtocolIdType {
+		ProtocolIdNone,
 		ProtocolIdLlc,
 		ProtocolIdEth,
 		ProtocolIdIp,
@@ -82,6 +83,7 @@ public:
 	virtual QString name() const;
 	virtual QString shortName() const;
 
+	virtual ProtocolIdType protocolIdType() const;
 	virtual quint32 protocolId(ProtocolIdType type) const;
 	quint32 payloadProtocolId(ProtocolIdType type) const;
 
@@ -100,6 +102,11 @@ public:
 	virtual int protocolFrameSize(int streamIndex = 0) const;
 	int protocolFrameOffset(int streamIndex = 0) const;
 	int protocolFramePayloadSize(int streamIndex = 0) const;
+
+	virtual bool isProtocolFrameValueVariable() const;
+	virtual bool isProtocolFrameSizeVariable() const;
+	bool isProtocolFramePayloadValueVariable() const;
+	bool isProtocolFramePayloadSizeVariable() const;
 
 	virtual quint32 protocolFrameCksum(int streamIndex = 0,
 		CksumType cksumType = CksumIp) const;

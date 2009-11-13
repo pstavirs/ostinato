@@ -20,11 +20,13 @@ StreamBase::StreamBase() :
 
 	iter = createProtocolListIterator();
 	// By default newly created streams have the mac and payload protocols
-	proto = OstProtocolManager.createProtocol("mac", this);
+	proto = OstProtocolManager.createProtocol(
+			OstProto::Protocol::kMacFieldNumber, this);
 	iter->insert(proto);
 	qDebug("stream: mac = %p", proto);
 
-	proto = OstProtocolManager.createProtocol("payload", this);
+	proto = OstProtocolManager.createProtocol(
+			OstProto::Protocol::kPayloadFieldNumber, this);
 	iter->insert(proto);
 	qDebug("stream: payload = %p", proto);
 
@@ -104,7 +106,7 @@ void StreamBase::setFrameProtocol(ProtocolList protocolList)
 }
 #endif
 
-ProtocolListIterator*  StreamBase::createProtocolListIterator()
+ProtocolListIterator*  StreamBase::createProtocolListIterator() const
 {
 	return new ProtocolListIterator(*currentFrameProtocols);
 }
@@ -158,7 +160,7 @@ bool StreamBase::setName(QString name)
 	return true;
 }
 
-StreamBase::FrameLengthMode	StreamBase::lenMode()
+StreamBase::FrameLengthMode	StreamBase::lenMode() const
 {
 	return (StreamBase::FrameLengthMode) mCore->len_mode();
 }
@@ -169,7 +171,7 @@ bool StreamBase::setLenMode(FrameLengthMode	lenMode)
 	return true;
 }
 
-quint16	StreamBase::frameLen(int streamIndex)
+quint16	StreamBase::frameLen(int streamIndex) const
 {
 	int		pktLen;
 
@@ -211,7 +213,7 @@ bool StreamBase::setFrameLen(quint16 frameLen)
 	return true;
 }
 
-quint16	StreamBase::frameLenMin()
+quint16	StreamBase::frameLenMin() const
 {
 	return mCore->frame_len_min();
 }
@@ -222,7 +224,7 @@ bool StreamBase::setFrameLenMin(quint16 frameLenMin)
 	return true;
 }
 
-quint16	StreamBase::frameLenMax()
+quint16	StreamBase::frameLenMax() const
 {
 	return mCore->frame_len_max();
 }
@@ -233,17 +235,18 @@ bool StreamBase::setFrameLenMax(quint16 frameLenMax)
 	return true;
 }
 
-StreamBase::SendUnit StreamBase::sendUnit()
+StreamBase::SendUnit StreamBase::sendUnit() const
 {
 	return (StreamBase::SendUnit) mControl->unit();
 }
+
 bool StreamBase::setSendUnit(SendUnit sendUnit)
 {
 	mControl->set_unit((OstProto::StreamControl::SendUnit) sendUnit); 
 	return true;
 }
 
-StreamBase::SendMode StreamBase::sendMode()
+StreamBase::SendMode StreamBase::sendMode() const
 {
 	return (StreamBase::SendMode) mControl->mode();
 }
@@ -255,7 +258,7 @@ bool StreamBase::setSendMode(SendMode sendMode)
 	return true;
 }
 
-StreamBase::NextWhat StreamBase::nextWhat()
+StreamBase::NextWhat StreamBase::nextWhat() const
 {
 	return (StreamBase::NextWhat) mControl->next();
 }
@@ -266,7 +269,7 @@ bool StreamBase::setNextWhat(NextWhat nextWhat)
 	return true;
 }
 
-quint32 StreamBase::numPackets()
+quint32 StreamBase::numPackets() const
 {
 	return (quint32) mControl->num_packets();
 }
@@ -277,7 +280,7 @@ bool StreamBase::setNumPackets(quint32 numPackets)
 	return true;
 }
 
-quint32 StreamBase::numBursts()
+quint32 StreamBase::numBursts() const
 {
 	return (quint32) mControl->num_bursts();
 }
@@ -288,7 +291,7 @@ bool StreamBase::setNumBursts(quint32 numBursts)
 	return true;
 }
 
-quint32 StreamBase::burstSize()
+quint32 StreamBase::burstSize() const
 {
 	return (quint32) mControl->packets_per_burst();
 }
@@ -299,7 +302,7 @@ bool StreamBase::setBurstSize(quint32 packetsPerBurst)
 	return true;
 }
 
-quint32 StreamBase::packetRate()
+quint32 StreamBase::packetRate() const
 {
 	return (quint32) mControl->packets_per_sec();
 }
@@ -310,7 +313,7 @@ bool StreamBase::setPacketRate(quint32 packetsPerSec)
 	return true;
 }
 
-quint32 StreamBase::burstRate()
+quint32 StreamBase::burstRate() const
 {
 	return (quint32) mControl->bursts_per_sec();
 }
@@ -320,3 +323,57 @@ bool StreamBase::setBurstRate(quint32 burstsPerSec)
 	mControl->set_bursts_per_sec(burstsPerSec); 
 	return true;
 }
+
+bool StreamBase::isFrameVariable() const
+{
+	ProtocolListIterator	*iter;
+
+	iter = createProtocolListIterator();
+	while (iter->hasNext())
+	{
+		AbstractProtocol	*proto;
+
+		proto = iter->next();
+		if (proto->isProtocolFrameValueVariable())
+			goto _exit;
+	}
+	delete iter;
+	return false;
+
+_exit:
+	delete iter;
+	return true;
+}
+
+int StreamBase::frameValue(uchar *buf, int bufMaxSize, int n) const
+{
+	int		pktLen, len = 0;
+
+	pktLen = frameLen(n);
+
+	// pktLen is adjusted for CRC/FCS which will be added by the NIC
+	pktLen -=  4;
+
+	if ((pktLen < 0) || (pktLen > bufMaxSize))
+		return 0;
+
+	ProtocolListIterator	*iter;
+
+	iter = createProtocolListIterator();
+	while (iter->hasNext())
+	{
+		AbstractProtocol	*proto;
+		QByteArray			ba;
+
+		proto = iter->next();
+		ba = proto->protocolFrameValue(n);
+
+		if (len + ba.size() < bufMaxSize)
+			memcpy(buf+len, ba.constData(), ba.size());
+		len += ba.size();
+	}
+	delete iter;
+
+	return pktLen;
+}
+

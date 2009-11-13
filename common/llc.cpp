@@ -54,6 +54,11 @@ QString LlcProtocol::shortName() const
 	return QString("LLC");
 }
 
+AbstractProtocol::ProtocolIdType LlcProtocol::protocolIdType() const
+{
+	return ProtocolIdLlc;
+}
+
 int	LlcProtocol::fieldCount() const
 {
 	return llc_fieldCount;

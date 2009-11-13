@@ -44,7 +44,7 @@ AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream,
 
 quint32 AbstractProtocol::protocolNumber() const
 {
-	qDebug("Something wrong!!!");
+	qFatal("Something wrong!!!");
 	return 0xFFFFFFFF;
 }
 
@@ -191,6 +191,11 @@ bool AbstractProtocol::setFieldData(int index, const QVariant &value,
 		FieldAttrib attrib)
 {
 	return false;
+}
+
+AbstractProtocol::ProtocolIdType AbstractProtocol::protocolIdType() const
+{
+	return ProtocolIdNone;
 }
 
 quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
@@ -359,6 +364,49 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
 
 	return proto;
 }
+
+bool AbstractProtocol::isProtocolFrameValueVariable() const
+{
+	return false;
+}
+
+bool AbstractProtocol::isProtocolFrameSizeVariable() const
+{
+	return false;
+}
+
+bool AbstractProtocol::isProtocolFramePayloadValueVariable() const
+{
+	AbstractProtocol *p = next;
+
+	while (p)
+	{
+		if (p->isProtocolFrameValueVariable())
+			return true;
+		p = p->next;
+	}
+	if (parent && parent->isProtocolFramePayloadValueVariable())
+		return true;
+
+	return false;
+}
+
+bool AbstractProtocol::isProtocolFramePayloadSizeVariable() const
+{
+	AbstractProtocol *p = next;
+
+	while (p)
+	{
+		if (p->isProtocolFrameSizeVariable())
+			return true;
+		p = p->next;
+	}
+	if (parent && parent->isProtocolFramePayloadSizeVariable())
+		return true;
+
+	return false;
+}
+
 
 /*!
   \note If a subclass uses protocolFrameCksum() from within fieldData() to

@@ -380,6 +380,13 @@ bool TcpProtocol::setFieldData(int index, const QVariant &value,
 	return false;
 }
 
+bool TcpProtocol::isProtocolFrameValueVariable() const
+{
+	if (data.is_override_cksum())
+		return false;
+	else
+		return isProtocolFramePayloadValueVariable();
+}
 
 QWidget* TcpProtocol::configWidget()
 {

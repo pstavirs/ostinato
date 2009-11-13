@@ -24,42 +24,69 @@ ProtocolManager::ProtocolManager()
 	 themselves (once this is done remove the #includes for all the protocols)
 	 */
 	registerProtocol(OstProto::Protocol::kMacFieldNumber,
-			QString("mac"),  (void*) MacProtocol::createInstance);
+			(void*) MacProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
-		   	QString("payload"), (void*) PayloadProtocol::createInstance);
+		   	(void*) PayloadProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kEth2FieldNumber,
-		   	QString("eth2"), (void*) Eth2Protocol::createInstance);
+		   	(void*) Eth2Protocol::createInstance);
 	registerProtocol(OstProto::Protocol::kDot3FieldNumber,
-		   	QString("dot3"), (void*) Dot3Protocol::createInstance);
+		   	(void*) Dot3Protocol::createInstance);
 	registerProtocol(OstProto::Protocol::kLlcFieldNumber,
-		   	QString("llc"),  (void*) LlcProtocol::createInstance);
+		   	(void*) LlcProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kSnapFieldNumber,
-		   	QString("snap"), (void*) SnapProtocol::createInstance);
+		   	(void*) SnapProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kDot2LlcFieldNumber,
-			QString("dot2Llc"), (void*) Dot2LlcProtocol::createInstance);
+			(void*) Dot2LlcProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
-			QString("dot2Snap"), (void*) Dot2SnapProtocol::createInstance);
+			(void*) Dot2SnapProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
-		   	QString("svlan"), (void*) VlanProtocol::createInstance);
+		   	(void*) SVlanProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kVlanFieldNumber,
-		   	QString("vlan"), (void*) VlanProtocol::createInstance);
+		   	(void*) VlanProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
-			QString("vlanstack"), (void*) VlanStackProtocol::createInstance);
+			(void*) VlanStackProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kIp4FieldNumber,
-		   	QString("ip4"),  (void*) Ip4Protocol::createInstance);
+		   	(void*) Ip4Protocol::createInstance);
 	registerProtocol(OstProto::Protocol::kTcpFieldNumber,
-		   	QString("tcp"),  (void*) TcpProtocol::createInstance);
+		   	(void*) TcpProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kUdpFieldNumber,
-		   	QString("udp"),  (void*) UdpProtocol::createInstance);
+		   	(void*) UdpProtocol::createInstance);
+
+	populateNeighbourProtocols();
 }
 
-void ProtocolManager::registerProtocol(int protoNumber, QString protoName,
+void ProtocolManager::registerProtocol(int protoNumber,
 	void *protoInstanceCreator)
 {
+	AbstractProtocol *p;
+
 	//! \todo (MED) validate incoming params for duplicates with existing
-	nameToNumberMap.insert(protoName, protoNumber);
-	numberToNameMap.insert(protoNumber, protoName);
+
 	factory.insert(protoNumber, protoInstanceCreator);
+
+	p = createProtocol(protoNumber, NULL);
+	protocolList.append(p);
+
+	numberToNameMap.insert(protoNumber, p->shortName());
+	nameToNumberMap.insert(p->shortName(), protoNumber);
+}
+
+void ProtocolManager::populateNeighbourProtocols()
+{
+	neighbourProtocols.clear();
+
+	foreach(AbstractProtocol *p, protocolList)
+	{
+		if (p->protocolIdType() != AbstractProtocol::ProtocolIdNone)
+		{
+			foreach(AbstractProtocol *q, protocolList)
+			{
+				if (q->protocolId(p->protocolIdType()))
+					neighbourProtocols.insert(
+						p->protocolNumber(), q->protocolNumber());
+			}
+		}
+	}
 }
 
 AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
@@ -82,6 +109,14 @@ AbstractProtocol* ProtocolManager::createProtocol(QString protoName,
 	StreamBase *stream, AbstractProtocol *parent)
 {
 	return createProtocol(nameToNumberMap.value(protoName), stream, parent);
+}
+
+bool ProtocolManager::isValidNeighbour(int protoPrefix, int protoSuffix)
+{
+	if (neighbourProtocols.contains(protoPrefix, protoSuffix))
+		return true;
+	else
+		return false;
 }
 
 QStringList ProtocolManager::protocolDatabase()

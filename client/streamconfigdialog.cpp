@@ -43,59 +43,59 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
 	// Time to play match the signals and slots!
 
-	// If L1/FT = None, force subsequent protocol level(s) also to None
-	connect(rbL1None, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
-	connect(rbFtNone, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
+	// If L1/L2(FT)/L3 = None, force subsequent protocol level(s) also to None
+	connect(rbL1None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
+	connect(rbFtNone, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
+	connect(rbL3None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
 
-	// Enable/Disable L3 Protocol Choices for FT Ethernet2
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
-	connect(rbFtEthernet2, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
-
-	// Force L3 = None if FT = 802.3 Raw
-	connect(rbFt802Dot3Raw, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setDisabled(bool)));
-	connect(rbFt802Dot3Raw, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
-
-	// Force L3 = None if FT = 802.3 LLC (to ensure a valid L3 is selected)
-	connect(rbFt802Dot3Llc, SIGNAL(clicked(bool)), rbL3None, SLOT(click()));
-
-	// Enable/Disable L3 Protocol Choices for FT 802Dot3Llc
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
-	connect(rbFt802Dot3Llc, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setDisabled(bool)));
-
-	// Enable/Disable L3 Protocol Choices for FT 802.3 LLC SNAP
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Ipv4, SLOT(setEnabled(bool)));
-	connect(rbFtLlcSnap, SIGNAL(toggled(bool)), rbL3Arp, SLOT(setEnabled(bool)));
-
-	// Force L3 = Other if FT = Other
+	// If L1/L2(FT)/L3/L4 = Other, force subsequent protocol to Other and 
+	// disable the subsequent protocol group as well
+	connect(rbL1Other, SIGNAL(toggled(bool)), rbFtOther, SLOT(setChecked(bool)));
+	connect(rbL1Other, SIGNAL(toggled(bool)), gbFrameType, SLOT(setDisabled(bool)));
 	connect(rbFtOther, SIGNAL(toggled(bool)), rbL3Other, SLOT(setChecked(bool)));
 	connect(rbFtOther, SIGNAL(toggled(bool)), gbL3Proto, SLOT(setDisabled(bool)));
-
-	// If L3 = None, force subsequent protocol level also to None
-	connect(rbL3None, SIGNAL(toggled(bool)), this, SLOT(forceProtocolNone(bool)));
-
-	// Enable/Disable L4 Protocol Choices for L3 Protocol IPv4
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setEnabled(bool)));
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setEnabled(bool)));
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setEnabled(bool)));
-	connect(rbL3Ipv4, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setEnabled(bool)));
-
-	// Enable/Disable L4 Protocol Choices for L3 Protocol ARP
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Icmp, SLOT(setDisabled(bool)));
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Igmp, SLOT(setDisabled(bool)));
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Tcp, SLOT(setDisabled(bool)));
-	connect(rbL3Arp, SIGNAL(toggled(bool)), rbL4Udp, SLOT(setDisabled(bool)));
-
-	// Force L4 Protocol = None if L3 Protocol is set to ARP
-	connect(rbL3Arp, SIGNAL(clicked(bool)), rbL4None, SLOT(click()));
-
-	// Force L4 = Other if L3 = Other
 	connect(rbL3Other, SIGNAL(toggled(bool)), rbL4Other, SLOT(setChecked(bool)));
 	connect(rbL3Other, SIGNAL(toggled(bool)), gbL4Proto, SLOT(setDisabled(bool)));
-
-	// Force Payload = Other if L4 = Other
 	connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
 	connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
+
+	// Setup valid subsequent protocols for L2 and L3 protocols
+	for (int i = ProtoL2; i <= ProtoL3; i++)
+	{
+		foreach(QAbstractButton *btn1, bgProto[i]->buttons())
+		{
+			int id1 = bgProto[i]->id(btn1);
+
+			if (id1 != ButtonIdNone && id1 != ButtonIdOther)
+			{
+				int validProtocolCount = 0;
+
+				foreach(QAbstractButton *btn2, bgProto[i+1]->buttons())
+				{
+					int id2 = bgProto[i+1]->id(btn2);
+
+					if (id2 != ButtonIdNone && id2 != ButtonIdOther)
+					{
+						if (OstProtocolManager.isValidNeighbour(id1, id2))
+						{
+							connect(btn1, SIGNAL(toggled(bool)), 
+									btn2, SLOT(setEnabled(bool)));
+							validProtocolCount++;
+						}
+						else
+							connect(btn1, SIGNAL(toggled(bool)), 
+									btn2, SLOT(setDisabled(bool)));
+					}
+				}
+
+				// If btn1 has no subsequent valid protocols, 
+				// force subsequent Protocol to 'None'
+				if (validProtocolCount == 0)
+					connect(btn1, SIGNAL(clicked(bool)),
+						bgProto[i+1]->button(ButtonIdNone), SLOT(click()));
+			}
+		}
+	}
 
 	mpAvailableProtocolsModel = new QStringListModel(
 		OstProtocolManager.protocolDatabase(), this);
@@ -729,8 +729,16 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
 		id = _iter->next()->protocolNumber();
 		btn = bgProto[i]->button(id);
 
-		if (btn && btn->isEnabled())
-			btn->click();
+		if (btn)
+		{
+			if (btn->isEnabled())
+				btn->click();
+			else
+			{
+				btn->setChecked(true);
+				__updateProtocol(i, id);
+			}
+		}
 		else
 		{
 			switch (i)

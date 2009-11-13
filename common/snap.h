@@ -39,6 +39,8 @@ public:
 
 	virtual QString name() const;
 	virtual QString shortName() const;
+
+	virtual ProtocolIdType protocolIdType() const;
 	virtual quint32 protocolId(ProtocolIdType type) const;
 
 	virtual int	fieldCount() const;

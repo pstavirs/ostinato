@@ -25,39 +25,6 @@ StreamInfo::~StreamInfo()
 {
 }
 
-int StreamInfo::makePacket(uchar *buf, int bufMaxSize, int n)
-{
-	int		pktLen, len = 0;
-
-	pktLen = frameLen(n);
-
-	// pktLen is adjusted for CRC/FCS which will be added by the NIC
-	pktLen -=  4;
-
-	if ((pktLen < 0) || (pktLen > bufMaxSize))
-		return 0;
-
-	ProtocolListIterator	*iter;
-
-	iter = createProtocolListIterator();
-	while (iter->hasNext())
-	{
-		AbstractProtocol	*proto;
-		QByteArray			ba;
-
-		proto = iter->next();
-		ba = proto->protocolFrameValue(n);
-
-		if (len + ba.size() < bufMaxSize)
-			memcpy(buf+len, ba.constData(), ba.size());
-		len += ba.size();
-	}
-	delete iter;
-
-	return pktLen;
-}
-
-
 //
 // ------------------ PortInfo --------------------
 //
@@ -195,6 +162,8 @@ void PortInfo::updateLinkState()
 
 void PortInfo::update()
 {
+	int		len;
+	bool	isVariable;
 	uchar				pktBuf[2000];
 	pcap_pkthdr			pktHdr;
 	ost_pcap_send_queue	sendQ;
@@ -249,17 +218,25 @@ void PortInfo::update()
 					numBursts, numPackets);
 			qDebug("ibg = %ld, ipg = %ld\n", ibg, ipg);
 
+			if (streamList[i]->isFrameVariable())
+			{
+				isVariable = true;
+			}
+			else
+			{
+				isVariable = false;
+				len = streamList[i]->frameValue(pktBuf, sizeof(pktBuf), 0);
+			}
+
 			for (int j = 0; j < numBursts; j++)
 			{
 				for (int k = 0; k < numPackets; k++)
 				{
-					int len;
-
-					/*! \todo (HIGH) if pkt contents do not change across
-					pkts then don't call makePacket(), rather reuse the 
-					previous */
-					len = streamList[i]->makePacket(pktBuf, sizeof(pktBuf), 
+					if (isVariable)
+					{
+						len = streamList[i]->frameValue(pktBuf, sizeof(pktBuf), 
 							j * numPackets + k);
+					}
 					if (len > 0)
 					{
 						pktHdr.caplen = pktHdr.len = len;
@@ -784,7 +761,6 @@ void PortInfo::PortCapture::run()
 	{
 		if (!capFile.open())
 			qFatal("Unable to open temp cap file");
-		return;
 	}
 
 	qDebug("cap file = %s", capFile.fileName().toAscii().constData());

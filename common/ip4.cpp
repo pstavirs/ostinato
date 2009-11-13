@@ -94,6 +94,11 @@ QString Ip4Protocol::shortName() const
 	return QString("IPv4");
 }
 
+AbstractProtocol::ProtocolIdType Ip4Protocol::protocolIdType() const
+{
+	return ProtocolIdIp;
+}
+
 quint32 Ip4Protocol::protocolId(ProtocolIdType type) const
 {
 	switch(type)
@@ -570,6 +575,15 @@ bool Ip4Protocol::setFieldData(int index, const QVariant &value,
 			break;
 	}
 	return isOk;
+}
+
+bool Ip4Protocol::isProtocolFrameValueVariable() const
+{
+	if ((data.src_ip_mode() != OstProto::Ip4::e_im_fixed) 
+			|| (data.dst_ip_mode() != OstProto::Ip4::e_im_fixed))
+		return true;
+	else
+		return false;
 }
 
 quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,

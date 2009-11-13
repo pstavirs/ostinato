@@ -258,6 +258,13 @@ bool UdpProtocol::setFieldData(int index, const QVariant &value,
 	return false;
 }
 
+bool UdpProtocol::isProtocolFrameValueVariable() const
+{
+	if (data.is_override_totlen() && data.is_override_cksum())
+		return false;
+	else
+		return isProtocolFramePayloadValueVariable();
+}
 
 QWidget* UdpProtocol::configWidget()
 {

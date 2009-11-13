@@ -71,6 +71,7 @@ public:
 
 	virtual QString name() const;
 	virtual QString shortName() const;
+	virtual ProtocolIdType protocolIdType() const;
 	virtual quint32 protocolId(ProtocolIdType type) const;
 	virtual int	fieldCount() const;
 
@@ -81,6 +82,8 @@ public:
 			FieldAttrib attrib = FieldValue);
 	virtual quint32 protocolFrameCksum(int streamIndex = 0,
 		CksumType cksumType = CksumIp) const;
+
+	virtual bool isProtocolFrameValueVariable() const;
 
 	virtual QWidget* configWidget();
 	virtual void loadConfigWidget();

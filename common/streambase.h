@@ -26,7 +26,7 @@ public:
 	void protoDataCopyFrom(const OstProto::Stream &stream);
 	void protoDataCopyInto(OstProto::Stream &stream) const;
 
-	ProtocolListIterator* createProtocolListIterator();
+	ProtocolListIterator* createProtocolListIterator() const;
 
 	//! \todo (LOW) should we have a copy constructor??
 
@@ -76,41 +76,44 @@ public:
 	bool setName(QString name) ;
 
 	// Frame Length (includes FCS);
-	FrameLengthMode	lenMode();
+	FrameLengthMode	lenMode() const;
 	bool setLenMode(FrameLengthMode	lenMode);
 
-	quint16	frameLen(int streamIndex = 0);
+	quint16	frameLen(int streamIndex = 0) const;
 	bool setFrameLen(quint16 frameLen);
 
-	quint16	frameLenMin();
+	quint16	frameLenMin() const;
 	bool setFrameLenMin(quint16 frameLenMin);
 
-	quint16	frameLenMax();
+	quint16	frameLenMax() const;
 	bool setFrameLenMax(quint16 frameLenMax);
 
-	SendUnit sendUnit();
+	SendUnit sendUnit() const;
 	bool setSendUnit(SendUnit sendUnit);
 
-	SendMode sendMode();
+	SendMode sendMode() const;
 	bool setSendMode(SendMode sendMode);
 
-	NextWhat nextWhat();
+	NextWhat nextWhat() const;
 	bool setNextWhat(NextWhat nextWhat);
 
-	quint32 numPackets();
+	quint32 numPackets() const;
 	bool setNumPackets(quint32 numPackets);
 
-	quint32 numBursts();
+	quint32 numBursts() const;
 	bool setNumBursts(quint32 numBursts);
 
-	quint32 burstSize();
+	quint32 burstSize() const;
 	bool setBurstSize(quint32 packetsPerBurst);
 
-	quint32 packetRate();
+	quint32 packetRate() const;
 	bool setPacketRate(quint32 packetsPerSec);
 
-	quint32 burstRate();
+	quint32 burstRate() const;
 	bool setBurstRate(quint32 burstsPerSec);
+
+	bool isFrameVariable() const;
+	int frameValue(uchar *buf, int bufMaxSize, int n) const;
 };
 
 #endif

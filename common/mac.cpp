@@ -239,6 +239,15 @@ bool MacProtocol::setFieldData(int index, const QVariant &value,
 	return false;
 }
 
+bool MacProtocol::isProtocolFrameValueVariable() const
+{
+	if ((data.dst_mac_mode() != OstProto::Mac::e_mm_fixed) ||
+		(data.src_mac_mode() != OstProto::Mac::e_mm_fixed))
+		return true;
+	else
+		return false;
+}
+
 
 QWidget* MacProtocol::configWidget()
 {

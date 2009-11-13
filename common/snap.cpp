@@ -54,6 +54,11 @@ QString SnapProtocol::shortName() const
 	return QString("SNAP");
 }
 
+AbstractProtocol::ProtocolIdType SnapProtocol::protocolIdType() const
+{
+	return ProtocolIdEth;
+}
+
 quint32 SnapProtocol::protocolId(ProtocolIdType type) const
 {
 	switch(type)

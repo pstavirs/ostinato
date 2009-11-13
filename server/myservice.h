@@ -46,9 +46,6 @@ class StreamInfo : public StreamBase
 public:
 	StreamInfo();
 	~StreamInfo();
-
-private:
-	int makePacket(uchar *buf, int bufMaxSize, int n);
 };
 
 

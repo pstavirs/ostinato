@@ -39,6 +39,8 @@ public:
 	virtual QString name() const;
 	virtual QString shortName() const;
 
+	virtual ProtocolIdType protocolIdType() const;
+
 	virtual int	fieldCount() const;
 
 	virtual QVariant fieldData(int index, FieldAttrib attrib,

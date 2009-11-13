@@ -54,6 +54,11 @@ QString Eth2Protocol::shortName() const
 	return QString("Eth II");
 }
 
+AbstractProtocol::ProtocolIdType Eth2Protocol::protocolIdType() const
+{
+	return ProtocolIdEth;
+}
+
 int	Eth2Protocol::fieldCount() const
 {
 	return eth2_fieldCount;

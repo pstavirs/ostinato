@@ -187,6 +187,23 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 	return false;
 }
 
+bool PayloadProtocol::isProtocolFrameValueVariable() const
+{
+	if (isProtocolFrameSizeVariable() 
+			|| data.pattern_mode() == OstProto::Payload::e_dp_random)
+		return true;
+	else
+		return false;
+}
+
+bool PayloadProtocol::isProtocolFrameSizeVariable() const
+{
+	if (mpStream->lenMode() == StreamBase::e_fl_fixed)
+		return false;
+	else
+		return true;
+}
+
 
 QWidget* PayloadProtocol::configWidget()
 {

@@ -119,6 +119,10 @@ bool Dot3Protocol::setFieldData(int index, const QVariant &value,
 	return false;
 }
 
+bool Dot3Protocol::isProtocolFrameValueVariable() const
+{
+	return isProtocolFramePayloadSizeVariable();
+}
 
 QWidget* Dot3Protocol::configWidget()
 {
