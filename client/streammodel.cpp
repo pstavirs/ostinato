@@ -236,7 +236,7 @@ void StreamModel::setCurrentPortIndex(const QModelIndex &current)
 	{
 		qDebug("change to valid port");
 		quint16 pg = current.internalId() >> 16;
-		mCurrentPort = &pgl->mPortGroups[pgl->indexOfPortGroup(pg)]->mPorts[current.row()];
+		mCurrentPort = pgl->mPortGroups[pgl->indexOfPortGroup(pg)]->mPorts[current.row()];
 	}
 	reset();
 }

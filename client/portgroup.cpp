@@ -51,7 +51,7 @@ PortGroup::~PortGroup()
 void PortGroup::on_rpcChannel_stateChanged()
 {
 	qDebug("state changed");
-	emit portGroupDataChanged(this);
+	emit portGroupDataChanged(mPortGroupId);
 }
 
 void PortGroup::on_rpcChannel_connected()
@@ -60,7 +60,7 @@ void PortGroup::on_rpcChannel_connected()
 	OstProto::PortIdList	*portIdList;
 	
 	qDebug("connected\n");
-	emit portGroupDataChanged(this);
+	emit portGroupDataChanged(mPortGroupId);
 
 	qDebug("requesting portlist ...");
 	portIdList = new OstProto::PortIdList();
@@ -73,15 +73,18 @@ void PortGroup::on_rpcChannel_disconnected()
 {
 	qDebug("disconnected\n");
 	emit portListAboutToBeChanged(mPortGroupId);
-	mPorts.clear();
+
+	while (!mPorts.isEmpty())
+		delete mPorts.takeFirst(); 
+
 	emit portListChanged(mPortGroupId);
-	emit portGroupDataChanged(this);
+	emit portGroupDataChanged(mPortGroupId);
 }
 
 void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
 {
 	qDebug("error\n");
-	emit portGroupDataChanged(this);
+	emit portGroupDataChanged(mPortGroupId);
 }
 
 void PortGroup::when_configApply(int portIndex, uint *cookie)
@@ -124,8 +127,8 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 			qDebug("applying 'deleted streams' ...");
 
-			streamIdList.mutable_port_id()->set_id(mPorts[portIndex].id());
-			mPorts[portIndex].getDeletedStreamsSinceLastSync(streamIdList);
+			streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
+			mPorts[portIndex]->getDeletedStreamsSinceLastSync(streamIdList);
 
 			(*op)++;
 			rpcController->Reset();
@@ -140,8 +143,8 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 			qDebug("applying 'new streams' ...");
 
-			streamIdList.mutable_port_id()->set_id(mPorts[portIndex].id());
-			mPorts[portIndex].getNewStreamsSinceLastSync(streamIdList);
+			streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
+			mPorts[portIndex]->getNewStreamsSinceLastSync(streamIdList);
 
 			(*op)++;
 			rpcController->Reset();
@@ -156,8 +159,8 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 			qDebug("applying 'modified streams' ...");
 
-			streamConfigList.mutable_port_id()->set_id(mPorts[portIndex].id());
-			mPorts[portIndex].getModifiedStreamsSinceLastSync(streamConfigList);
+			streamConfigList.mutable_port_id()->set_id(mPorts[portIndex]->id());
+			mPorts[portIndex]->getModifiedStreamsSinceLastSync(streamConfigList);
 
 			(*op)++;
 			rpcController->Reset();
@@ -168,7 +171,7 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
 
 	case 3:
 		qDebug("apply completed");
-		mPorts[portIndex].when_syncComplete();
+		mPorts[portIndex]->when_syncComplete();
 		delete cookie;
 		break;
 
@@ -195,8 +198,10 @@ void PortGroup::processPortIdList(OstProto::PortIdList *portIdList)
 		Port *p;
 		
 		p = new Port(portIdList->port_id(i).id(), mPortGroupId);
+		connect(p, SIGNAL(portDataChanged(int, int)), 
+				this, SIGNAL(portGroupDataChanged(int, int)));
 		qDebug("before port append\n");
-		mPorts.append(*p);
+		mPorts.append(p);
 	}
 
 	emit portListChanged(mPortGroupId);
@@ -240,7 +245,7 @@ void PortGroup::processPortConfigList(OstProto::PortConfigList *portConfigList)
 
 		id = portConfigList->port(i).port_id().id();
 		// FIXME: don't mix port id & index into mPorts[]
-		mPorts[id].updatePortConfig(portConfigList->mutable_port(i));
+		mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
 	}
 
 	emit portListChanged(mPortGroupId);
@@ -284,10 +289,10 @@ void PortGroup::getStreamIdList(int portIndex,
 
 	Q_ASSERT(portIndex < numPorts());
 
-	if (streamIdList->port_id().id() != mPorts[portIndex].id())
+	if (streamIdList->port_id().id() != mPorts[portIndex]->id())
 	{
 		qDebug("%s: Invalid portId %d (expected %d) received for portIndex %d",
-			__FUNCTION__, streamIdList->port_id().id(), mPorts[portIndex].id(), 
+			__FUNCTION__, streamIdList->port_id().id(), mPorts[portIndex]->id(), 
 			portIndex);
 		goto _next_port; 	// FIXME(MED): Partial RPC
 	}
@@ -298,14 +303,14 @@ void PortGroup::getStreamIdList(int portIndex,
 		uint streamId;
 
 		streamId = streamIdList->stream_id(i).id();
-		mPorts[portIndex].insertStream(streamId);
+		mPorts[portIndex]->insertStream(streamId);
 	}
 
 _next_port:
 	// FIXME(HI): ideally we shd use signals/slots but this means
 	// we will have to use Port* instead of Port with QList<> -
 	// need to find a way for this
-	mPorts[portIndex].when_syncComplete();
+	mPorts[portIndex]->when_syncComplete();
 	portIndex++;
 	if (portIndex >= numPorts())
 	{
@@ -322,7 +327,7 @@ _next_port:
 	}
 
 _request:
-	portId.set_id(mPorts[portIndex].id());
+	portId.set_id(mPorts[portIndex]->id());
 	streamIdList->Clear();
 
 	rpcController->Reset();
@@ -368,11 +373,11 @@ void PortGroup::getStreamConfigList(int portIndex,
 
 	Q_ASSERT(portIndex < numPorts());
 
-	if (streamConfigList->port_id().id() != mPorts[portIndex].id())
+	if (streamConfigList->port_id().id() != mPorts[portIndex]->id())
 	{
 		qDebug("%s: Invalid portId %d (expected %d) received for portIndex %d",
 			__FUNCTION__, streamConfigList->port_id().id(), 
-			mPorts[portIndex].id(), portIndex);
+			mPorts[portIndex]->id(), portIndex);
 		goto _next_port; 	// FIXME(MED): Partial RPC
 	}
 
@@ -382,7 +387,7 @@ void PortGroup::getStreamConfigList(int portIndex,
 		uint streamId;
 
 		streamId = streamConfigList->stream(i).stream_id().id();
-		mPorts[portIndex].updateStream(streamId,
+		mPorts[portIndex]->updateStream(streamId,
 			streamConfigList->mutable_stream(i));
 	}
 
@@ -403,13 +408,13 @@ _request:
 	qDebug("requesting stream config list ...");
 
 	streamIdList.Clear();
-	streamIdList.mutable_port_id()->set_id(mPorts[portIndex].id());
-	for (int j = 0; j < mPorts[portIndex].numStreams(); j++)
+	streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
+	for (int j = 0; j < mPorts[portIndex]->numStreams(); j++)
 	{
 		OstProto::StreamId	*s;
 
 		s = streamIdList.add_stream_id();
-		s->set_id(mPorts[portIndex].streamByIndex(j)->id());
+		s->set_id(mPorts[portIndex]->streamByIndex(j)->id());
 	}
 	streamConfigList->Clear();
 
@@ -657,7 +662,7 @@ void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
 
 		id = portStatsList->port_stats(i).port_id().id();
 		// FIXME: don't mix port id & index into mPorts[]
-		mPorts[id].updateStats(portStatsList->mutable_port_stats(i));
+		mPorts[id]->updateStats(portStatsList->mutable_port_stats(i));
 	}
 
 	emit statsChanged(mPortGroupId);

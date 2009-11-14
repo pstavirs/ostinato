@@ -57,12 +57,18 @@
          <property name="text" >
           <string>></string>
          </property>
+         <property name="icon" >
+          <iconset resource="ostinato.qrc" >:/icons/arrow_right.png</iconset>
+         </property>
         </widget>
        </item>
        <item>
         <widget class="QToolButton" name="tbSelectOut" >
          <property name="text" >
           <string>&lt;</string>
+         </property>
+         <property name="icon" >
+          <iconset resource="ostinato.qrc" >:/icons/arrow_left.png</iconset>
          </property>
         </widget>
        </item>

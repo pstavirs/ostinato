@@ -91,7 +91,7 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 	{
 		OstProto::PortStats	stats;
 
-		stats = pgl->mPortGroups.at(pgidx)->mPorts[pidx].getStats();
+		stats = pgl->mPortGroups.at(pgidx)->mPorts[pidx]->getStats();
 
 		switch(row)
 		{

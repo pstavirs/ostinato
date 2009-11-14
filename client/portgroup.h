@@ -38,7 +38,7 @@ private:
 
 	::OstProto::PortIdList				portIdList;
 public: // FIXME(HIGH): member access
-	QList<Port>		mPorts;
+	QList<Port*>		mPorts;
 
 public:
 	PortGroup(QHostAddress ip = QHostAddress::LocalHost, 
@@ -91,7 +91,7 @@ public:
 	void processClearStatsAck(OstProto::Ack	*ack);
 
 signals:
-	void portGroupDataChanged(PortGroup* portGroup, int portId = 0xFFFF);
+	void portGroupDataChanged(int portGroupId, int portId = 0xFFFF);
 	void portListAboutToBeChanged(quint32 portGroupId);
 	void portListChanged(quint32 portGroupId);
 	void statsChanged(quint32 portGroupId);

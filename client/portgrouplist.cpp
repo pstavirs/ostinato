@@ -32,36 +32,23 @@ bool PortGroupList::isPort(const QModelIndex& index)
 
 PortGroup& PortGroupList::portGroup(const QModelIndex& index)
 {
-	if (mPortGroupListModel.isPortGroup(index))
-	{
-		//return *(mPortGroups[mPortGroupListModel.portGroupId(index)]);
-		return *(mPortGroups[index.row()]);
-	}
-#if 0 // FIXME(MED)
-	else
-		return NULL;
-#endif
+	Q_ASSERT(mPortGroupListModel.isPortGroup(index));
+
+	return *(mPortGroups[index.row()]);
 }
 
 Port& PortGroupList::port(const QModelIndex& index)
 {
-	if (mPortGroupListModel.isPort(index))
-	{
-		return (mPortGroups.at(index.parent().row())->
-			mPorts[index.row()]);
-	}
-#if 0 // FIXME(MED)
-	else
-		return NULL;
-#endif
+	Q_ASSERT(mPortGroupListModel.isPort(index));
+	return (*mPortGroups.at(index.parent().row())->mPorts[index.row()]);
 }
 
 void PortGroupList::addPortGroup(PortGroup &portGroup)
 {
 	mPortGroupListModel.portGroupAboutToBeAppended();
 
-	connect(&portGroup, SIGNAL(portGroupDataChanged(PortGroup*, int)),
-		&mPortGroupListModel, SLOT(when_portGroupDataChanged(PortGroup*, int)));
+	connect(&portGroup, SIGNAL(portGroupDataChanged(int, int)),
+		&mPortGroupListModel, SLOT(when_portGroupDataChanged(int, int)));
 #if 0
 	connect(&portGroup, SIGNAL(portListAboutToBeChanged(quint32)),
 		&mPortGroupListModel, SLOT(triggerLayoutAboutToBeChanged()));

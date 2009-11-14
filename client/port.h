@@ -1,18 +1,17 @@
 #ifndef _PORT_H
 #define _PORT_H
 
-#include <Qt>
+#include <QObject>
 #include <QString>
 #include <QList>
 #include "stream.h"
 
 //class StreamModel;
 
-class Port {
+class Port : public QObject {
 
-	//friend class StreamModel;
+	Q_OBJECT
 
-private:
 	static uint			mAllocStreamId;
 	OstProto::Port		d;
 	OstProto::PortStats	stats;
@@ -28,6 +27,7 @@ private:
 	uint newStreamId();
 	void updateStreamOrdinalsFromIndex();
 	void reorderStreamsByOrdinals();
+
 public:
 	enum AdminStatus	{ AdminDisable, AdminEnable };
 	enum ControlMode	{ ControlShared, ControlExclusive };
@@ -50,13 +50,6 @@ public:
 	ControlMode controlMode() 
 		{ return (d.is_exclusive_control()?ControlExclusive:ControlShared); }
 
-#if 0
-	void setName(QString &name) { d.name; }
-	void setName(const char* name) { mName = QString(name); }
-	void setDescription(QString &description) { mDescription = description; }
-	void setDescription(const char *description) 
-		{ mDescription = QString(description); }
-#endif
 	//void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
 	void setAlias(QString &alias) { mUserAlias = alias; }
 	//void setExclusive(bool flag);
@@ -97,10 +90,8 @@ public:
 
 	void updateStats(OstProto::PortStats *portStats);
 
-#if 0
 signals:
 	void portDataChanged(int portGroupId, int portId);
-#endif
 
 };
 

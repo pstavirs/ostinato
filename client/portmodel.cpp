@@ -132,19 +132,19 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
 
 			return QString("Port %1: %2 [%3] (%4)").
 				arg(pgl->mPortGroups.at(
-					parent.row())->mPorts[index.row()].id()).
+					parent.row())->mPorts[index.row()]->id()).
 				arg(pgl->mPortGroups.at(
-					parent.row())->mPorts[index.row()].name()).
+					parent.row())->mPorts[index.row()]->name()).
 				arg(QHostAddress("0.0.0.0").toString()).	// FIXME(LOW)
 				arg(pgl->mPortGroups.at(
-					parent.row())->mPorts[index.row()].description());
+					parent.row())->mPorts[index.row()]->description());
 		}
 		else if ((role == Qt::DecorationRole))
 		{
 			DBG0("Exit PortModel data 5\n");
 			if (pgl->mPortGroups.at(parent.row())->numPorts() == 0)
 				return QVariant();
-			switch(pgl->mPortGroups.at(parent.row())->mPorts[index.row()].linkState())
+			switch(pgl->mPortGroups.at(parent.row())->mPorts[index.row()]->linkState())
 			{
 				case OstProto::LinkStateUnknown:
 					return QIcon(":/icons/bullet_white.png");
@@ -198,7 +198,7 @@ QModelIndex PortModel::index (int row, int col,
 	else
 	{
 		quint16 pg = parent.internalId() >> 16;
-		quint16 p = pgl->mPortGroups.value(parent.row())->mPorts.value(row).id();
+		quint16 p = pgl->mPortGroups.value(parent.row())->mPorts.value(row)->id();
 		quint32 id = (pg << 16) | p;
 		//qDebug("index (nontop) dbg: PG=%d, P=%d, ID=%x\n", pg, p, id);
 
@@ -264,21 +264,18 @@ quint32 PortModel::portId(const QModelIndex& index)
 // ----------------------------------------------
 // Slots
 // ----------------------------------------------
-void PortModel::when_portGroupDataChanged(PortGroup* portGroup, int portId)
+void PortModel::when_portGroupDataChanged(int portGroupId, int portId)
 {
 	QModelIndex index;
+	int row;
 
-	if (!pgl->mPortGroups.contains(portGroup))
-	{
-		qDebug("when_portGroupDataChanged(): pg not in list - do nothing");
-		return;
-	}
+	if (portId == 0xFFFF)
+		row = pgl->indexOfPortGroup(portGroupId);
+	else
+		row = portId;
 
-	qDebug("when_portGroupDataChanged pgid = %d", portGroup->id());
-	qDebug("when_portGroupDataChanged idx = %d", pgl->mPortGroups.indexOf(portGroup));
-	
-	index = createIndex(pgl->mPortGroups.indexOf(portGroup), 0, 
-		(portGroup->id() << 16) | portId);
+	index = createIndex(row, 0, (portGroupId << 16) | portId);
+
 	emit dataChanged(index, index);
 }
 
@@ -307,18 +304,6 @@ void PortModel::portGroupRemoved()
 {
 	endRemoveRows();
 }
-
-#if 0
-void PortModel::triggerLayoutAboutToBeChanged()
-{
-	emit layoutAboutToBeChanged();
-}
-
-void PortModel::triggerLayoutChanged()
-{
-	emit layoutChanged();
-}
-#endif
 
 void PortModel::when_portListChanged()
 {
