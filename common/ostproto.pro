@@ -13,7 +13,8 @@ FORMS += \
 	vlan.ui \
 	ip4.ui \
 	tcp.ui \
-	udp.ui
+	udp.ui \
+	sample.ui 
 PROTOS += \
 	protocol.proto \
 	mac.proto \
@@ -29,7 +30,8 @@ PROTOS += \
 	vlanstack.proto \
 	ip4.proto \
 	tcp.proto \
-	udp.proto
+	udp.proto \
+	sample.proto
 HEADERS += \
 	abstractprotocol.h	\
 	comboprotocol.h	\
@@ -50,7 +52,8 @@ HEADERS += \
 	vlanstack.h \
 	ip4.h \
 	tcp.h \
-	udp.h
+	udp.h \
+	sample.h
 SOURCES += \
 	abstractprotocol.cpp \
 	protocolmanager.cpp \
@@ -67,7 +70,8 @@ SOURCES += \
 	svlan.cpp \
 	ip4.cpp \
 	tcp.cpp \
-	udp.cpp
+	udp.cpp \
+	sample.cpp
 
 protobuf_decl.name  = protobuf header
 protobuf_decl.input = PROTOS

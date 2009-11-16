@@ -70,6 +70,7 @@ message Protocol {
 	enum k {
 		kMacFieldNumber = 51;
 		kPayloadFieldNumber = 52;
+		kSampleFieldNumber = 53;
 
 		kEth2FieldNumber = 121;
 		kDot3FieldNumber = 122;

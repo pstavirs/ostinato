@@ -6,6 +6,15 @@
 #include "sample.pb.h"
 #include "ui_sample.h"
 
+/* 
+Sample Protocol Frame Format -
+    +-----+------+------+------+------+------+
+	|  A  |   B  |  LEN | CSUM |   X  |   Y  |
+	| (3) | (13) | (16) | (16) | (32) | (32) |
+    +-----+------+------+------+------+------+
+Figures in brackets represent field width in bits
+*/
+
 class SampleConfigForm : public QWidget, public Ui::Sample
 {
 	Q_OBJECT
@@ -21,6 +30,16 @@ private:
 	SampleConfigForm	*configForm;
 	enum samplefield
 	{
+		// Frame Fields
+		sample_a = 0,
+		sample_b,
+		sample_payloadLength,
+		sample_checksum,
+		sample_x,
+		sample_y,
+
+		// Meta Fields
+		sample_is_override_checksum,
 
 		sample_fieldCount
 	};
@@ -36,6 +55,9 @@ public:
 	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
 	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
+	virtual ProtocolIdType protocolIdType() const;
+	virtual quint32 protocolId(ProtocolIdType type) const;
+
 	virtual QString name() const;
 	virtual QString shortName() const;
 
@@ -46,6 +68,11 @@ public:
 		   	int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 
 			FieldAttrib attrib = FieldValue);
+
+	virtual int protocolFrameSize(int streamIndex = 0) const;
+
+	virtual bool isProtocolFrameValueVariable() const;
+	virtual bool isProtocolFrameSizeVariable() const;
 
 	virtual QWidget* configWidget();
 	virtual void loadConfigWidget();

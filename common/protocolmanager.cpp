@@ -2,6 +2,7 @@
 #include "abstractprotocol.h"
 
 #include "protocol.pb.h"
+#include "sample.h"
 #include "mac.h"
 #include "payload.h"
 #include "eth2.h"	
@@ -51,6 +52,9 @@ ProtocolManager::ProtocolManager()
 		   	(void*) TcpProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kUdpFieldNumber,
 		   	(void*) UdpProtocol::createInstance);
+
+	registerProtocol(OstProto::Protocol::kSampleFieldNumber,
+		   	(void*) SampleProtocol::createInstance);
 
 	populateNeighbourProtocols();
 }

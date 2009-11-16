@@ -88,7 +88,7 @@ public:
 	quint32 payloadProtocolId(ProtocolIdType type) const;
 
 	virtual int	fieldCount() const;
-	virtual int	metaFieldCount() const;
+	int metaFieldCount() const;
 	int	frameFieldCount() const;
 
 	virtual FieldFlags fieldFlags(int index) const;
