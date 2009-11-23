@@ -71,6 +71,7 @@ message Protocol {
 		kMacFieldNumber = 51;
 		kPayloadFieldNumber = 52;
 		kSampleFieldNumber = 53;
+		kUserScriptFieldNumber = 54;
 
 		kEth2FieldNumber = 121;
 		kDot3FieldNumber = 122;

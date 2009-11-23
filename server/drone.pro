@@ -1,6 +1,6 @@
 TEMPLATE = app
 CONFIG += qt debug
-QT += network
+QT += network script
 DEFINES += HAVE_REMOTE WPCAP
 INCLUDEPATH += "../rpc"
 LIBS += -lprotobuf

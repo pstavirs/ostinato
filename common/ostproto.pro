@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += network
+QT += network script
 LIBS += \
 	-lprotobuf
 FORMS += \
@@ -14,6 +14,7 @@ FORMS += \
 	ip4.ui \
 	tcp.ui \
 	udp.ui \
+	userscript.ui \
 	sample.ui 
 PROTOS += \
 	protocol.proto \
@@ -31,6 +32,7 @@ PROTOS += \
 	ip4.proto \
 	tcp.proto \
 	udp.proto \
+	userscript.proto \
 	sample.proto
 HEADERS += \
 	abstractprotocol.h	\
@@ -53,6 +55,7 @@ HEADERS += \
 	ip4.h \
 	tcp.h \
 	udp.h \
+	userscript.h \
 	sample.h
 SOURCES += \
 	abstractprotocol.cpp \
@@ -71,6 +74,7 @@ SOURCES += \
 	ip4.cpp \
 	tcp.cpp \
 	udp.cpp \
+	userscript.cpp \
 	sample.cpp
 
 protobuf_decl.name  = protobuf header

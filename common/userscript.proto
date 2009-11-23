@@ -1,0 +1,14 @@
+import "protocol.proto";
+
+package OstProto;
+
+// Sample Protocol
+message UserScript {
+
+	optional string program	= 1;
+
+}
+
+extend Protocol {
+	optional UserScript userScript = 54;
+}

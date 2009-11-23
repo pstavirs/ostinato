@@ -2,7 +2,6 @@
 #include "abstractprotocol.h"
 
 #include "protocol.pb.h"
-#include "sample.h"
 #include "mac.h"
 #include "payload.h"
 #include "eth2.h"	
@@ -16,6 +15,8 @@
 #include "ip4.h"	
 #include "tcp.h"	
 #include "udp.h"	
+#include "userscript.h"
+#include "sample.h"
 
 ProtocolManager OstProtocolManager;
 
@@ -53,6 +54,8 @@ ProtocolManager::ProtocolManager()
 	registerProtocol(OstProto::Protocol::kUdpFieldNumber,
 		   	(void*) UdpProtocol::createInstance);
 
+	registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
+		   	(void*) UserScriptProtocol::createInstance);
 	registerProtocol(OstProto::Protocol::kSampleFieldNumber,
 		   	(void*) SampleProtocol::createInstance);
 
@@ -64,7 +67,7 @@ void ProtocolManager::registerProtocol(int protoNumber,
 {
 	AbstractProtocol *p;
 
-	//! \todo (MED) validate incoming params for duplicates with existing
+	Q_ASSERT(!factory.contains(protoNumber));
 
 	factory.insert(protoNumber, protoInstanceCreator);
 

@@ -1,6 +1,6 @@
 TEMPLATE = app
 CONFIG += qt debug
-QT += network
+QT += network script
 INCLUDEPATH += "../rpc/" "../common/"
 LIBS += -lprotobuf
 win32:LIBS += -L"../common/debug" -lostproto
