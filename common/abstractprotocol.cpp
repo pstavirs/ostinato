@@ -287,6 +287,8 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
 		if (!flags.testFlag(FieldIsMeta))
 		{
 			bits = fieldData(i, FieldBitSize, streamIndex).toUInt();
+			if (bits == 0)
+				continue;
 			Q_ASSERT(bits > 0);
 
 			if (forCksum && flags.testFlag(FieldIsCksum))

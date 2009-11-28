@@ -12,13 +12,11 @@ class UserScriptProtocol;
 
 class UserProtocol : public QObject
 {
-    friend class UserScriptProtocol;
-
     Q_OBJECT;
     Q_ENUMS(ProtocolIdType);
+    Q_ENUMS(CksumType);
 
     Q_PROPERTY(QString name READ name WRITE setName);
-    Q_PROPERTY(QString shortName READ shortName WRITE setShortName);
     Q_PROPERTY(bool protocolFrameValueVariable
             READ isProtocolFrameValueVariable
             WRITE setProtocolFrameValueVariable);
@@ -34,20 +32,20 @@ public:
         ProtocolIdIp = AbstractProtocol::ProtocolIdIp
     };
 
-    UserProtocol(AbstractProtocol *parent);
+    enum CksumType
+    {
+        CksumIp = AbstractProtocol::CksumIp,
+        CksumIpPseudo = AbstractProtocol::CksumIpPseudo,
+        CksumTcpUdp = AbstractProtocol::CksumTcpUdp
+    };
 
-    bool isProtocolFrameFixed() const;
-    const QByteArray& protocolFrameFixedValue() const;
-    void setProtocolFrameFixedValue(const QByteArray& value);
-    void setProtocolFrameFixedValue(const QList<int>& value);
+    UserProtocol(AbstractProtocol *parent);
 
 public slots:
     void reset();
 
     QString name() const;
     void setName(QString &name);
-    QString shortName() const;
-    void setShortName(QString &shortName);
 
     bool isProtocolFrameValueVariable() const;
     void setProtocolFrameValueVariable(bool variable);
@@ -67,16 +65,14 @@ public slots:
         AbstractProtocol::CksumType cksumType = AbstractProtocol::CksumIp) const;
 
 private:
-    AbstractProtocol *_parent;
+    AbstractProtocol *parent_;
 
-    QString _name;
-    QString _shortName;
-    QMap<int, quint32> _protocolId;
-    bool _protocolFrameValueVariable;
-    bool _protocolFrameSizeVariable;
-    QByteArray _protocolFrameFixedValue;
-
+    QString name_;
+    bool    protocolFrameValueVariable_;
+    bool    protocolFrameSizeVariable_;
 };
+
+
 
 class UserScriptConfigForm : public QWidget, public Ui::UserScript
 {
@@ -86,7 +82,8 @@ public:
     UserScriptConfigForm(UserScriptProtocol *protocol, QWidget *parent = 0);
 
 private:
-    UserScriptProtocol        *_protocol;
+    void updateStatus();
+    UserScriptProtocol        *protocol_;
 
 private slots:
     void on_programEdit_textChanged();
@@ -94,9 +91,9 @@ private slots:
 };
 
 
+
 class UserScriptProtocol : public AbstractProtocol
 {
-    friend class UserScriptConfigForm;
 
 public:
     UserScriptProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
@@ -121,23 +118,26 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
+    virtual int protocolFrameSize(int streamIndex = 0) const;
+
     virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
+
+    virtual quint32 protocolFrameCksum(int streamIndex = 0,
+            CksumType cksumType = CksumIp) const;
 
     virtual QWidget* configWidget();
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
 
-private:
-    bool evaluateUserScript() const;
+    void evaluateUserScript() const;
+    bool isScriptValid() const;
     int userScriptErrorLineNumber() const;
     QString userScriptErrorText() const;
 
+private:
     int userScriptLineCount() const;
 
-
-    OstProto::UserScript    data;
-    UserScriptConfigForm    *configForm;
     enum userScriptfield
     {
         // Frame Fields
@@ -145,14 +145,16 @@ private:
 
         userScript_fieldCount
     };
+    OstProto::UserScript    data;
+    UserScriptConfigForm    *configForm;
 
-    mutable QScriptEngine   _scriptEngine;
-    mutable UserProtocol    _userProtocol;
-    mutable QScriptValue    _userProtocolScriptValue;
+    mutable QScriptEngine   engine_;
+    mutable UserProtocol    userProtocol_;
+    mutable QScriptValue    userProtocolScriptValue_;
 
-    mutable bool            _isUpdated;
-    mutable int             _errorLineNumber;
-    mutable QString         _errorText;
+    mutable bool            isScriptValid_;
+    mutable int             errorLineNumber_;
+    mutable QString         errorText_;
 };
 
 #endif

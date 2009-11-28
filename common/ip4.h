@@ -80,10 +80,11 @@ public:
 		   	int streamIndex = 0) const;
 	virtual bool setFieldData(int index, const QVariant &value, 
 			FieldAttrib attrib = FieldValue);
-	virtual quint32 protocolFrameCksum(int streamIndex = 0,
-		CksumType cksumType = CksumIp) const;
 
 	virtual bool isProtocolFrameValueVariable() const;
+
+	virtual quint32 protocolFrameCksum(int streamIndex = 0,
+		CksumType cksumType = CksumIp) const;
 
 	virtual QWidget* configWidget();
 	virtual void loadConfigWidget();

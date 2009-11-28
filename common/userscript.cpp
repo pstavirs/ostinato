@@ -1,53 +1,70 @@
 #include "userscript.h"
 
-#include <qendian.h>
 #include <QMessageBox>
-#include <QMetaEnum>
-#include <QMetaObject>
+
+//
+// -------------------- UserScriptConfigForm --------------------
+//
 
 UserScriptConfigForm::UserScriptConfigForm(UserScriptProtocol *protocol,
-    QWidget *parent) : QWidget(parent), _protocol(protocol)
+    QWidget *parent) : QWidget(parent), protocol_(protocol)
 {
     setupUi(this);
+    updateStatus();
+}
+
+void UserScriptConfigForm::updateStatus()
+{
+    if (protocol_->isScriptValid())
+    {
+        statusLabel->setText(QString("<font color=\"green\">Success</font>"));
+        compileButton->setDisabled(true);
+    }
+    else
+    {
+        statusLabel->setText(
+                QString("<font color=\"red\">Error: %1: %2</font>").arg(
+                protocol_->userScriptErrorLineNumber()).arg(
+                protocol_->userScriptErrorText()));
+        compileButton->setEnabled(true);
+    }
 }
 
 void UserScriptConfigForm::on_programEdit_textChanged()
 {
+    compileButton->setEnabled(true);
 }
 
 void UserScriptConfigForm::on_compileButton_clicked(bool checked)
 {
-    _protocol->storeConfigWidget();
-    if (_protocol->userScriptErrorLineNumber() >= 0)
+    protocol_->storeConfigWidget();
+    if (!protocol_->isScriptValid())
     {
-        statusLabel->setText("<font color=\"red\">Fail</font>");
         QMessageBox::critical(this, "Error", 
-            QString("Line %1: %2").arg(
-                _protocol->userScriptErrorLineNumber()).arg(
-                _protocol->userScriptErrorText()));
+            QString("%1: %2").arg(
+                protocol_->userScriptErrorLineNumber()).arg(
+                protocol_->userScriptErrorText()));
     }
-    else
-    {
-        statusLabel->setText("<font color=\"green\">Success</font>");
-    }
+    updateStatus();
 }
+
+//
+// -------------------- UserScriptProtocol --------------------
+//
 
 UserScriptProtocol::UserScriptProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent),
-        _userProtocol(this)
+        userProtocol_(this)
 {
     configForm = NULL;
-    _isUpdated = false;
-    _errorLineNumber = -1;
+    isScriptValid_ = false;
+    errorLineNumber_ = 0;
 
-    _userProtocolScriptValue = _scriptEngine.newQObject(&_userProtocol);
-    _userProtocolScriptValue.setProperty("protocolId", _scriptEngine.newObject());
-    _scriptEngine.globalObject().setProperty("protocol", _userProtocolScriptValue);
+    userProtocolScriptValue_ = engine_.newQObject(&userProtocol_);
+    engine_.globalObject().setProperty("protocol", userProtocolScriptValue_);
 
-
-    QScriptValue meta = _scriptEngine.newQMetaObject(_userProtocol.metaObject());
-    _scriptEngine.globalObject().setProperty("Protocol", meta);
-
+    QScriptValue meta = engine_.newQMetaObject(userProtocol_.metaObject());
+    engine_.globalObject().setProperty("Protocol", meta);
 }
 
 UserScriptProtocol::~UserScriptProtocol()
@@ -83,23 +100,42 @@ void UserScriptProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
 
 QString UserScriptProtocol::name() const
 {
-    return QString("%1:{UserScript}").arg(_userProtocol.name());
+    return QString("%1:{UserScript} [EXPERIMENTAL]").arg(userProtocol_.name());
 }
 
 QString UserScriptProtocol::shortName() const
 {
-    return QString("%1:{Script}").arg(_userProtocol.shortName());
+    return QString("%1:{Script} [EXPERIMENTAL]").arg(userProtocol_.name());
 }
 
 quint32 UserScriptProtocol::protocolId(ProtocolIdType type) const
 {
-    if (_userProtocol._protocolId.contains(static_cast<int>(type)))
-        return _userProtocol._protocolId.value(static_cast<int>(type));
-    else
-        return AbstractProtocol::protocolId(type);
+    QScriptValue userFunction;
+    QScriptValue userValue;
+
+    if (!isScriptValid_)
+        goto _do_default;
+
+    userFunction = userProtocolScriptValue_.property("protocolId");
+
+    if (!userFunction.isValid())
+        goto _do_default;
+
+    Q_ASSERT(userFunction.isFunction());
+
+    userValue = userFunction.call(QScriptValue(),
+        QScriptValueList() << QScriptValue(&engine_, type));
+
+    Q_ASSERT(userValue.isValid());
+    Q_ASSERT(userValue.isNumber());
+
+    return userValue.toUInt32();
+
+_do_default:
+    return AbstractProtocol::protocolId(type);
 }
 
-int    UserScriptProtocol::fieldCount() const
+int UserScriptProtocol::fieldCount() const
 {
     return userScript_fieldCount;
 }
@@ -109,79 +145,54 @@ QVariant UserScriptProtocol::fieldData(int index, FieldAttrib attrib,
 {
     switch (index)
     {
-        case userScript_program:
+    case userScript_program:
+
+        switch(attrib)
         {
-            switch(attrib)
-            {
-                case FieldName:            
-                    return QString("UserProtocol");
+        case FieldName:            
+            return QString("UserProtocol");
 
-                case FieldValue:
-                case FieldTextValue:
-                    return QString().fromStdString(data.program());
+        case FieldValue:
+        case FieldTextValue:
+            return QString().fromStdString(data.program());
 
-                case FieldFrameValue:
-                {
-                    QScriptValue    userFunction;
-                    QByteArray        fv;
+        case FieldFrameValue:
+        {
+            if (!isScriptValid_)
+                return QByteArray();
 
-                    evaluateUserScript();    // FIXME: don't call everytime!
+            QScriptValue userFunction = userProtocolScriptValue_.property(
+                    "protocolFrameValue");
 
-                    if (_userProtocol.isProtocolFrameFixed())
-                    {
-                        fv = _userProtocol.protocolFrameFixedValue();
-                        if (fv.size())
-                            return fv;
-                        else
-                            return QByteArray(4, 0);    // FIXME
-                    }
+            Q_ASSERT(userFunction.isValid());
+            Q_ASSERT(userFunction.isFunction());
 
-                    userFunction = _userProtocolScriptValue.property(
-                            "protocolFrameValue");
+            QScriptValue userValue = userFunction.call(QScriptValue(),
+                QScriptValueList() << QScriptValue(&engine_, streamIndex));
 
-                    qDebug("userscript protoFrameVal(): isValid:%d/isFunc:%d",
-                        userFunction.isValid(), userFunction.isFunction());
+            Q_ASSERT(userValue.isValid());
+            Q_ASSERT(userValue.isArray());
 
-                    if (userFunction.isValid() && userFunction.isFunction())
-                    {
-                        QScriptValue    userValue;
+            QByteArray fv;
+            QList<int> pktBuf;
+               
+            qScriptValueToSequence(userValue, pktBuf); 
 
-                        userValue = userFunction.call(QScriptValue(),
-                            QScriptValueList() 
-                                << QScriptValue(&_scriptEngine, streamIndex));
+            fv.resize(pktBuf.size());
+            for (int i = 0; i < pktBuf.size(); i++)
+                fv[i] = pktBuf.at(i) & 0xFF;
 
-                        qDebug("userscript value: isValid:%d/isArray:%d",
-                            userValue.isValid(), userValue.isArray());
-
-                        if (userValue.isArray())
-                        {
-                            QList<int> pktBuf;
-                           
-                            qScriptValueToSequence(userValue, pktBuf); 
-
-                            fv.resize(pktBuf.size());
-                            for (int i = 0; i < pktBuf.size(); i++)
-                                fv[i] = pktBuf.at(i) & 0xFF;
-                        }
-                    }
-
-                    if (fv.size())
-                        return fv;
-                    else
-                        return QByteArray(4, 0);    // FIXME
-                }
-                //case FieldBitSize:
-                    //return 3;
-                default:
-                    break;
-            }
-            break;
-
+            return fv;
         }
         default:
-            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
-                index);
             break;
+        }
+        break;
+
+    default:
+        qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+            index);
+        break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
@@ -212,14 +223,65 @@ _exit:
     return isOk;
 }
 
+int UserScriptProtocol::protocolFrameSize(int streamIndex) const
+{
+    if (!isScriptValid_)
+        return 0;
+
+    QScriptValue userFunction = userProtocolScriptValue_.property(
+            "protocolFrameSize");
+
+    Q_ASSERT(userFunction.isValid());
+    Q_ASSERT(userFunction.isFunction());
+
+    QScriptValue userValue = userFunction.call(QScriptValue(), 
+            QScriptValueList() << QScriptValue(&engine_, streamIndex));
+
+    Q_ASSERT(userValue.isNumber());
+
+    return userValue.toInt32();
+}
+
 bool UserScriptProtocol::isProtocolFrameValueVariable() const
 {
-    return _userProtocol.isProtocolFrameValueVariable();
+    return userProtocol_.isProtocolFrameValueVariable();
 }
 
 bool UserScriptProtocol::isProtocolFrameSizeVariable() const
 {
-    return _userProtocol.isProtocolFrameSizeVariable();
+    return userProtocol_.isProtocolFrameSizeVariable();
+}
+
+quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
+        CksumType cksumType) const
+{
+    QScriptValue userFunction;
+    QScriptValue userValue;
+
+    if (!isScriptValid_)
+        goto _do_default;
+
+    userFunction = userProtocolScriptValue_.property("protocolFrameCksum");
+
+    qDebug("userscript protoFrameCksum(): isValid:%d/isFunc:%d",
+        userFunction.isValid(), userFunction.isFunction());
+
+    if (!userFunction.isValid())
+        goto _do_default;
+
+    Q_ASSERT(userFunction.isFunction());
+
+    userValue = userFunction.call(QScriptValue(),
+            QScriptValueList() << QScriptValue(&engine_, streamIndex)
+            << QScriptValue(&engine_, cksumType));
+
+    Q_ASSERT(userValue.isValid());
+    Q_ASSERT(userValue.isNumber());
+
+    return userValue.toUInt32();
+
+_do_default:
+    return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }
 
 QWidget* UserScriptProtocol::configWidget()
@@ -248,118 +310,186 @@ void UserScriptProtocol::storeConfigWidget()
     evaluateUserScript();
 }
 
-bool UserScriptProtocol::evaluateUserScript() const
+void UserScriptProtocol::evaluateUserScript() const
 {
     QScriptValue    userFunction;
     QScriptValue    userValue;
+    QString         property;
 
-    _errorLineNumber = -1;
-    _userProtocol.reset();
-    _userProtocolScriptValue.setProperty("protocolFrameValue", QScriptValue());
+    isScriptValid_ = false;
+    errorLineNumber_ = userScriptLineCount();
 
-    _scriptEngine.evaluate(
-            fieldData(userScript_program, FieldValue).toString());
-    if (_scriptEngine.hasUncaughtException())
+    // Reset all properties including the dynamic ones
+    userProtocol_.reset();
+    userProtocolScriptValue_.setProperty("protocolFrameValue", QScriptValue());
+    userProtocolScriptValue_.setProperty("protocolFrameSize", QScriptValue());
+    userProtocolScriptValue_.setProperty("protocolFrameCksum", QScriptValue());
+    userProtocolScriptValue_.setProperty("protocolId", QScriptValue());
+
+    engine_.evaluate(fieldData(userScript_program, FieldValue).toString());
+    if (engine_.hasUncaughtException())
         goto _error_exception;
 
-    userFunction = _userProtocolScriptValue.property(
-            "protocolFrameValue");
-    qDebug("userscript eval protoFrameVal(): isValid:%d/isFunc:%d",
-        userFunction.isValid(), userFunction.isFunction());
+    // Validate protocolFrameValue()
+    property = QString("protocolFrameValue");
+    userFunction = userProtocolScriptValue_.property(property);
+
+    qDebug("userscript property %s: isValid:%d/isFunc:%d", 
+            property.toAscii().constData(),
+            userFunction.isValid(), userFunction.isFunction());
+
     if (!userFunction.isValid())
-        goto _error_frame_value_not_set;
-
-    if (userFunction.isArray())
     {
-        QList<int> pktBuf;
-
-        userValue = userFunction;
-        _userProtocol.setProtocolFrameValueVariable(false);
-       
-        qScriptValueToSequence(userValue, pktBuf); 
-        _userProtocol.setProtocolFrameFixedValue(pktBuf);
+        errorText_ = property + QString(" not set");
+        goto _error_exit;
     }
-    else if (userFunction.isFunction())
+
+    if (!userFunction.isFunction())
     {
-        userValue = userFunction.call();
-        if (_scriptEngine.hasUncaughtException())
-            goto _error_exception;
-        qDebug("userscript eval value: isValid:%d/isArray:%d",
+        errorText_ = property + QString(" is not a function");
+        goto _error_exit;
+    }
+
+    userValue = userFunction.call();
+    if (engine_.hasUncaughtException())
+        goto _error_exception;
+
+    qDebug("userscript property %s return value: isValid:%d/isArray:%d",
+            property.toAscii().constData(),
             userValue.isValid(), userValue.isArray());
-        if (!userValue.isArray())
-            goto _error_not_an_array;
 
-        if (_userProtocol.isProtocolFrameFixed())
-        {
-            QList<int> pktBuf;
-           
-            qScriptValueToSequence(userValue, pktBuf); 
-            _userProtocol.setProtocolFrameFixedValue(pktBuf);
-        }
-    }
-    else
-        goto _error_frame_value_type;
-
-
-    userValue = _userProtocolScriptValue.property("protocolId");
-
-    if (userValue.isValid() && userValue.isObject())
+    if (!userValue.isArray())
     {
-        QMetaEnum        meta;
-        QScriptValue    userProtocolId;
-
-        meta = _userProtocol.metaObject()->enumerator(
-            _userProtocol.metaObject()->indexOfEnumerator("ProtocolIdType"));
-        for (int i = 0; i < meta.keyCount(); i++)
-        {
-            userProtocolId = userValue.property(meta.key(i));
-
-            qDebug("userscript protoId: isValid:%d/isNumber:%d",
-                userProtocolId.isValid(),
-                userProtocolId.isNumber());
-
-            if (userProtocolId.isValid() && userProtocolId.isNumber())
-                _userProtocol._protocolId.insert(
-                        meta.value(i), userProtocolId.toUInt32());
-        }
+        errorText_ = property + QString(" does not return an array");
+        goto _error_exit;
     }
 
-    _isUpdated = true;
-    return true;
+    // Validate protocolFrameSize()
+    property = QString("protocolFrameSize");
+    userFunction = userProtocolScriptValue_.property(property);
 
-_error_not_an_array:
-    _errorLineNumber = userScriptLineCount();
-    _errorText = QString("property 'protocolFrameValue' returns invalid array");
-    goto _error;
+    qDebug("userscript property %s: isValid:%d/isFunc:%d", 
+            property.toAscii().constData(),
+            userFunction.isValid(), userFunction.isFunction());
 
-_error_frame_value_type:
-    _errorLineNumber = userScriptLineCount();
-    _errorText = QString("property 'protocolFrameValue' is neither an array nor a function");
-    goto _error;
+    if (!userFunction.isValid())
+    {
+        errorText_ = property + QString(" not set");
+        goto _error_exit;
+    }
 
-_error_frame_value_not_set:
-    _errorLineNumber = userScriptLineCount();
-    _errorText = QString("mandatory property 'protocolFrameValue' is not set");
-    goto _error;
+    if (!userFunction.isFunction())
+    {
+        errorText_ = property + QString(" is not a function");
+        goto _error_exit;
+    }
+
+    userValue = userFunction.call();
+    if (engine_.hasUncaughtException())
+        goto _error_exception;
+
+    qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
+            property.toAscii().constData(),
+            userValue.isValid(), userValue.isNumber());
+
+    if (!userValue.isNumber())
+    {
+        errorText_ = property + QString(" does not return a number");
+        goto _error_exit;
+    }
+
+    // Validate protocolFrameCksum() [optional]
+    property = QString("protocolFrameCksum");
+    userFunction = userProtocolScriptValue_.property(property);
+
+    qDebug("userscript property %s: isValid:%d/isFunc:%d", 
+            property.toAscii().constData(),
+            userFunction.isValid(), userFunction.isFunction());
+
+    if (!userFunction.isValid())
+        goto _skip_cksum;
+
+    if (!userFunction.isFunction())
+    {
+        errorText_ = property + QString(" is not a function");
+        goto _error_exit;
+    }
+
+    userValue = userFunction.call();
+    if (engine_.hasUncaughtException())
+        goto _error_exception;
+
+    qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
+            property.toAscii().constData(),
+            userValue.isValid(), userValue.isNumber());
+
+    if (!userValue.isNumber())
+    {
+        errorText_ = property + QString(" does not return a number");
+        goto _error_exit;
+    }
+
+
+_skip_cksum:
+    // Validate protocolId() [optional]
+    property = QString("protocolId");
+    userFunction = userProtocolScriptValue_.property(property);
+
+    qDebug("userscript property %s: isValid:%d/isFunc:%d", 
+            property.toAscii().constData(),
+            userFunction.isValid(), userFunction.isFunction());
+
+    if (!userFunction.isValid())
+        goto _skip_protocol_id;
+
+    if (!userFunction.isFunction())
+    {
+        errorText_ = property + QString(" is not a function");
+        goto _error_exit;
+    }
+
+    userValue = userFunction.call();
+    if (engine_.hasUncaughtException())
+        goto _error_exception;
+
+    qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
+            property.toAscii().constData(),
+            userValue.isValid(), userValue.isNumber());
+
+    if (!userValue.isNumber())
+    {
+        errorText_ = property + QString(" does not return a number");
+        goto _error_exit;
+    }
+
+
+_skip_protocol_id:
+    errorText_ = QString("");
+    isScriptValid_ = true;
+    return;
 
 _error_exception:
-    _errorLineNumber = _scriptEngine.uncaughtExceptionLineNumber();
-    _errorText = _scriptEngine.uncaughtException().toString();
-    goto _error;
+    errorLineNumber_ = engine_.uncaughtExceptionLineNumber();
+    errorText_ = engine_.uncaughtException().toString();
 
-_error:
-    _userProtocol.reset();
-    return false;
+_error_exit:
+    userProtocol_.reset();
+    return;
+}
+
+bool UserScriptProtocol::isScriptValid() const
+{
+    return isScriptValid_;
 }
 
 int UserScriptProtocol::userScriptErrorLineNumber() const
 {
-    return _errorLineNumber;
+    return errorLineNumber_;
 }
 
 QString UserScriptProtocol::userScriptErrorText() const
 {
-    return _errorText;
+    return errorText_;
 }
 
 int UserScriptProtocol::userScriptLineCount() const
@@ -369,124 +499,92 @@ int UserScriptProtocol::userScriptLineCount() const
 }
 
 //
-// ---------------------------------------------------------------
+// -------------------- UserProtocol --------------------
 //
 
 UserProtocol::UserProtocol(AbstractProtocol *parent)
-    : _parent (parent)
+    : parent_ (parent)
 {
     reset();
 }
 
-bool UserProtocol::isProtocolFrameFixed() const
-{
-    return !isProtocolFrameValueVariable() && !isProtocolFrameSizeVariable();
-}
-
-const QByteArray& UserProtocol::protocolFrameFixedValue() const
-{
-    return _protocolFrameFixedValue;
-}
-
-void UserProtocol::setProtocolFrameFixedValue(const QByteArray& value)
-{
-    _protocolFrameFixedValue = value;
-}
-
-void UserProtocol::setProtocolFrameFixedValue(const QList<int>& value)
-{
-    _protocolFrameFixedValue.resize(value.size());
-    for (int i = 0; i < value.size(); i++)
-        _protocolFrameFixedValue[i] = value.at(i) & 0xFF;
-}
-
 void UserProtocol::reset()
 {
-    _name = QString();
-    _shortName = QString();
-    _protocolId.clear();
-    _protocolFrameValueVariable = false;
-    _protocolFrameSizeVariable = false;
-    _protocolFrameFixedValue.resize(0);
+    name_ = QString();
+    protocolFrameValueVariable_ = false;
+    protocolFrameSizeVariable_ = false;
 }
 
 QString UserProtocol::name() const
 {
-    return _name;
+    return name_;
 }
 
 void UserProtocol::setName(QString &name)
 {
-    _name = name;
-}
-
-QString UserProtocol::shortName() const
-{
-    return _shortName;
-}
-
-void UserProtocol::setShortName(QString &shortName)
-{
-    _shortName = shortName;
+    name_ = name;
 }
 
 bool UserProtocol::isProtocolFrameValueVariable() const
 {
-    return _protocolFrameValueVariable;
+    return protocolFrameValueVariable_;
 }
 
 void UserProtocol::setProtocolFrameValueVariable(bool variable)
 {
-    qDebug("%s: %d", __FUNCTION__, variable);
-    _protocolFrameValueVariable = variable;
+    protocolFrameValueVariable_ = variable;
 }
 
 bool UserProtocol::isProtocolFrameSizeVariable() const
 {
-    return _protocolFrameSizeVariable;
+    return protocolFrameSizeVariable_;
 }
 
 void UserProtocol::setProtocolFrameSizeVariable(bool variable)
 {
-    _protocolFrameSizeVariable = variable;
+    protocolFrameSizeVariable_ = variable;
 }
 
 quint32 UserProtocol::payloadProtocolId(UserProtocol::ProtocolIdType type) const
 {
-    return _parent->payloadProtocolId(
+    return parent_->payloadProtocolId(
             static_cast<AbstractProtocol::ProtocolIdType>(type));
 }
 
 int UserProtocol::protocolFrameOffset(int streamIndex) const
 {
-    return _parent->protocolFrameOffset(streamIndex);
+    return parent_->protocolFrameOffset(streamIndex);
 }
 
 int UserProtocol::protocolFramePayloadSize(int streamIndex) const
 {
-    return _parent->protocolFramePayloadSize(streamIndex);
+    return parent_->protocolFramePayloadSize(streamIndex);
 }
 
 bool UserProtocol::isProtocolFramePayloadValueVariable() const
 {
-    return _parent->isProtocolFramePayloadValueVariable();
+    return parent_->isProtocolFramePayloadValueVariable();
 }
 
 bool UserProtocol::isProtocolFramePayloadSizeVariable() const
 {
-    return _parent->isProtocolFramePayloadSizeVariable();
+    return parent_->isProtocolFramePayloadSizeVariable();
 }
 
 quint32 UserProtocol::protocolFrameHeaderCksum(int streamIndex,
     AbstractProtocol::CksumType cksumType) const
 {
-    return _parent->protocolFrameHeaderCksum(streamIndex, cksumType);
+    return parent_->protocolFrameHeaderCksum(streamIndex, cksumType);
 }
 
 quint32 UserProtocol::protocolFramePayloadCksum(int streamIndex,
     AbstractProtocol::CksumType cksumType) const
 {
-    return _parent->protocolFramePayloadCksum(streamIndex, cksumType);
+    quint32 cksum;
+
+    cksum = parent_->protocolFramePayloadCksum(streamIndex, cksumType);
+    qDebug("UserProto:%s = %d", __FUNCTION__, cksum);
+    return cksum;
 }
 
 /* vim: set shiftwidth=4 tabstop=8 softtabstop=4 expandtab: */
