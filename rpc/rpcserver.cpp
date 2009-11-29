@@ -27,12 +27,23 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
 	connect(server, SIGNAL(newConnection()), this, SLOT(when_newConnection()));
 	if (!server->listen(QHostAddress::Any, tcpPortNum)) 
 	{
-		LogInt(tr("Unable to start the server: %1").arg(server->errorString()));
+		qDebug("Unable to start the server: %s", 
+				server->errorString().toAscii().constData());
+		errorString_ = QString("Error starting Ostinato server: %1").arg(
+				server->errorString());
 		return false;
 	}
 
-	LogInt(tr("The server is running on %1:%2").arg(server->serverAddress().toString()).arg(server->serverPort()));
+	qDebug("The server is running on %s: %d", 
+			server->serverAddress().toString().toAscii().constData(),
+			server->serverPort());
+	errorString_ = QString();
 	return true;
+}
+
+QString RpcServer::errorString()
+{
+	return errorString_;
 }
 
 void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcController)
@@ -111,7 +122,7 @@ void RpcServer::when_newConnection()
 	{
 		QTcpSocket	*sock;
 
-		LogInt(tr("already connected, no new connections will be accepted\n"));
+		qDebug("already connected, no new connections will be accepted");
 
 		// Accept and close connection
 		//! \todo (MED) Send reason msg to client
@@ -122,7 +133,9 @@ void RpcServer::when_newConnection()
 	}
 
 	clientSock = server->nextPendingConnection();
-	LogInt(tr("accepting new connection from %1:%2").arg(clientSock->peerAddress().toString()).arg(clientSock->peerPort()));
+	qDebug("accepting new connection from %s: %d", 
+			clientSock->peerAddress().toString().toAscii().constData(),
+			clientSock->peerPort());
 
 	connect(clientSock, SIGNAL(readyRead()), 
 		this, SLOT(when_dataAvail()));
@@ -137,7 +150,9 @@ _exit:
 
 void RpcServer::when_disconnected()
 {
-	LogInt(tr("connection closed from %1:%2").arg(clientSock->peerAddress().toString()).arg(clientSock->peerPort()));
+	qDebug("connection closed from %s: %d",
+			clientSock->peerAddress().toString().toAscii().constData(),
+			clientSock->peerPort());
 
 	clientSock->deleteLater();
 	clientSock = NULL;
@@ -145,7 +160,7 @@ void RpcServer::when_disconnected()
 
 void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 {
-	LogInt(clientSock->errorString());
+	qDebug("%s", clientSock->errorString().toAscii().constData());
 }
 
 void RpcServer::when_dataAvail()

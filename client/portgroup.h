@@ -34,6 +34,7 @@ private:
 	PbRpcChannel						*rpcChannel;
 	PbRpcController						*rpcController;
 	PbRpcController						*rpcControllerStats;
+	bool								isGetStatsPending_;
 	::OstProto::OstService::Stub		*serviceStub;
 
 	::OstProto::PortIdList				portIdList;

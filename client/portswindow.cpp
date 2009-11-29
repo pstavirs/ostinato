@@ -71,7 +71,6 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
 PortsWindow::~PortsWindow()
 {
-	delete plm;
 }
 
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)

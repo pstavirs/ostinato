@@ -18,6 +18,9 @@
      <property name="orientation" >
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="childrenCollapsible" >
+      <bool>false</bool>
+     </property>
      <widget class="QTreeView" name="tvPortList" >
       <property name="contextMenuPolicy" >
        <enum>Qt::ActionsContextMenu</enum>

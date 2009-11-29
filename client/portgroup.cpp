@@ -21,6 +21,7 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
 	*/
 	rpcController = new PbRpcController;
 	rpcControllerStats = new PbRpcController;
+	isGetStatsPending_ = false;
 	serviceStub = new OstProto::OstService::Stub(rpcChannel,
 		OstProto::OstService::STUB_OWNS_CHANNEL);
 
@@ -640,8 +641,12 @@ void PortGroup::getPortStats()
 	if (state() != QAbstractSocket::ConnectedState)
 		return;
 
+	if (isGetStatsPending_)
+		return;
+
    	portStatsList = new OstProto::PortStatsList;
 	rpcControllerStats->Reset();
+	isGetStatsPending_ = true;
 	serviceStub->getStats(rpcControllerStats, &portIdList, portStatsList,
 			NewCallback(this, &PortGroup::processPortStatsList, portStatsList));
 }
@@ -669,6 +674,7 @@ void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
 
 _error_exit:
 	delete portStatsList;
+	isGetStatsPending_ = false;
 }
 
 void PortGroup::clearPortStats(QList<uint> *portList)

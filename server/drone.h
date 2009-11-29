@@ -1,26 +1,37 @@
 #ifndef _DRONE_H
 #define _DRONE_H
 
-#include <QTcpServer>
-#include <QTcpSocket>
-
 #include "ui_drone.h"
-#include "abstracthost.h"
-#include "rpcserver.h"
-#include "myservice.h"
 
-class Drone : public QDialog, AbstractHost
+#include <QMenu>
+#include <QSystemTrayIcon>
+
+class RpcServer;
+namespace OstProto { class OstService; }
+
+class Drone : public QWidget, Ui::Drone 
 {
      Q_OBJECT
 
- public:
-    Ui::Drone ui;
-    Drone(QDialog *parent = 0);
-	void Log(const char *msg);
+public:
+    Drone(QWidget *parent = 0);
+	~Drone();
+    bool init();
 
- private:
-	RpcServer				*rpcServer;
-	OstProto::OstService	*service;
- 	void LogInt(const QString &msg);
+signals:
+	void hideMe(bool hidden);
+
+protected:
+	void changeEvent(QEvent *event);
+
+private:
+	QSystemTrayIcon			*trayIcon_;
+	QMenu					*trayIconMenu_;
+    RpcServer               *rpcServer;
+    OstProto::OstService    *service;
+
+private slots:
+	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
+
 }; 
 #endif

@@ -14,7 +14,7 @@
 #include <Ntddndis.h>
 #endif
 
-#define LOG(...)	{sprintf(logStr, __VA_ARGS__); host->Log(logStr);}
+#define LOG(...)    {}
 #define MB			(1024*1024)
 
 StreamInfo::StreamInfo()
@@ -831,14 +831,13 @@ _found:
 	return i;
 }
 
-MyService::MyService(AbstractHost *host)
+MyService::MyService()
 {
     pcap_if_t *dev;
     int i=0;
     char errbuf[PCAP_ERRBUF_SIZE];
 
 	// Init Data
-	this->host = host;
 	numPorts = 0;
 	alldevs = NULL;
 

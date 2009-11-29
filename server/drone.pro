@@ -11,6 +11,7 @@ unix:LIBS += -L"../common" -lostproto
 win32:LIBS += -L"../rpc/debug" -lpbrpc
 unix:LIBS += -L"../rpc" -lpbrpc
 POST_TARGETDEPS += "../common/debug/libostproto.a" "../rpc/debug/libpbrpc.a"
+RESOURCES += drone.qrc 
 HEADERS += drone.h 
 FORMS += drone.ui
 SOURCES += drone_main.cpp drone.cpp 

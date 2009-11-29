@@ -23,8 +23,7 @@ class RpcServer : public QObject
 
 	bool	isPending;
 	int		pendingMethodId;
-
-	void 	LogInt (QString log) {qDebug("%s", log.toAscii().data());}
+	QString errorString_;
 
 public:
 	RpcServer();	//! \todo (LOW) use 'parent' param
@@ -32,6 +31,7 @@ public:
 
 	bool registerService(::google::protobuf::Service *service,
 		quint16 tcpPortNum);
+	QString errorString();
 	void done(::google::protobuf::Message *resp, PbRpcController *controller);
 
 private slots:

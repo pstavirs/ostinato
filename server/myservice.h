@@ -9,7 +9,6 @@
 
 #include "../common/protocol.pb.h"
 #include "../common/streambase.h"
-#include "abstracthost.h"
 #include <pcap.h>
 #include <QtGlobal>
 #include <QList>
@@ -191,9 +190,6 @@ public:
 
 class MyService: public OstProto::OstService
 {
-	AbstractHost	*host;
-	char			logStr[1024];
-
 	uint		 		numPorts;
 
 	/*! PortInfo::d::port_id and index into portInfo[] are same! */
@@ -203,7 +199,7 @@ class MyService: public OstProto::OstService
 	int getStreamIndex(unsigned int portIdx,unsigned int streamId);
 
 public:
-	MyService(AbstractHost* host);
+	MyService();
 	virtual ~MyService();
 
 	/* Methods provided by the service */

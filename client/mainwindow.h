@@ -1,19 +1,21 @@
 #ifndef _MAIN_WINDOW_H
 #define _MAIN_WINDOW_H
 
-#include <QMainWindow>
-#include <QDockWidget>
-
 #include "ui_mainwindow.h"
+#include <QMainWindow>
 
-#include "portswindow.h"
-#include "portstatswindow.h"
+class PortsWindow;
+class PortStatsWindow;
+
+class QDockWidget;
+class QProcess;
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
 	Q_OBJECT
 
 private:
+	QProcess		*localServer_;
 	PortsWindow		*portsWindow;
 	PortStatsWindow *statsWindow;
 	QDockWidget		*portsDock;

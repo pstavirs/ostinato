@@ -1,17 +1,25 @@
 #include "mainwindow.h"
-#include "portgrouplist.h"
 
 #if 0
 #include "dbgthread.h"
 #endif
 
+#include "portgrouplist.h"
+#include "portstatswindow.h"
+#include "portswindow.h"
 #include "ui_about.h"
+
+#include <QDockWidget>
+#include <QProcess>
 
 PortGroupList	*pgl;
 
 MainWindow::MainWindow(QWidget *parent) 
 	: QMainWindow (parent)
 {
+	localServer_ = new QProcess(this);
+	localServer_->start("drone.exe");
+
 	pgl = new PortGroupList;
 
 	portsWindow = new PortsWindow(pgl, this);
@@ -37,6 +45,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+	delete pgl;
+	localServer_->terminate();
+	localServer_->waitForFinished();
+	delete localServer_;
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
