@@ -290,6 +290,15 @@ void PbRpcChannel::on_mpSocket_connected()
 void PbRpcChannel::on_mpSocket_disconnected()
 {
 	qDebug("In %s", __FUNCTION__);
+
+	pendingMethodId = -1;
+	controller = NULL;
+	response = NULL;
+	isPending = false;
+	// \todo convert parsing from static to data member
+	//parsing = false 
+	pendingCallList.clear();
+
 	emit disconnected();
 }
 

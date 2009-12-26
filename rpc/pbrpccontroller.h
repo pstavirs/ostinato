@@ -3,6 +3,8 @@
 
 #include <google/protobuf/service.h>
 
+class QIODevice;
+
 class PbRpcController : public ::google::protobuf::RpcController
 {
 	bool		failed;
