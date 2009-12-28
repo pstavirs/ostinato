@@ -5,25 +5,25 @@ package OstProto;
 // Ethernet
 message Mac {
 
-	enum MacAddrMode {
-		e_mm_fixed = 0;
-		e_mm_inc = 1;
-		e_mm_dec = 2;
-	}
+    enum MacAddrMode {
+        e_mm_fixed = 0;
+        e_mm_inc = 1;
+        e_mm_dec = 2;
+    }
 
-	// Dst Mac
-	optional uint64			dst_mac = 1;
-	optional MacAddrMode	dst_mac_mode = 2 [default = e_mm_fixed];
-	optional uint32			dst_mac_count = 3 [default = 16];
-	optional uint32			dst_mac_step = 4 [default = 1];
+    // Dst Mac
+    optional uint64            dst_mac = 1;
+    optional MacAddrMode    dst_mac_mode = 2 [default = e_mm_fixed];
+    optional uint32            dst_mac_count = 3 [default = 16];
+    optional uint32            dst_mac_step = 4 [default = 1];
 
-	// Src Mac
-	optional uint64			src_mac = 5;
-	optional MacAddrMode	src_mac_mode = 6 [default = e_mm_fixed];
-	optional uint32			src_mac_count = 7 [default = 16];
-	optional uint32			src_mac_step = 8 [default = 1];
+    // Src Mac
+    optional uint64            src_mac = 5;
+    optional MacAddrMode    src_mac_mode = 6 [default = e_mm_fixed];
+    optional uint32            src_mac_count = 7 [default = 16];
+    optional uint32            src_mac_step = 8 [default = 1];
 }
 
 extend Protocol {
-	optional Mac mac = 51;
+    optional Mac mac = 51;
 }

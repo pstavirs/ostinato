@@ -13,39 +13,39 @@ class StreamModel;
 
 class PortGroupList : public QObject {
 
-	Q_OBJECT
+    Q_OBJECT
 
-	friend class PortModel;
-	friend class StreamModel;
-	friend class PortStatsModel;
+    friend class PortModel;
+    friend class StreamModel;
+    friend class PortStatsModel;
 
-	QList<PortGroup*>	mPortGroups;	
-	PortModel			mPortGroupListModel;
-	StreamModel			mStreamListModel;
-	PortStatsModel		mPortStatsModel;
+    QList<PortGroup*>    mPortGroups;    
+    PortModel            mPortGroupListModel;
+    StreamModel            mStreamListModel;
+    PortStatsModel        mPortStatsModel;
 
 // Methods
 public:
-	PortGroupList();
+    PortGroupList();
 
 
-	PortModel* getPortModel() { return &mPortGroupListModel; }
-	PortStatsModel* getPortStatsModel() { return &mPortStatsModel; }
-	StreamModel* getStreamModel() { return &mStreamListModel; }
+    PortModel* getPortModel() { return &mPortGroupListModel; }
+    PortStatsModel* getPortStatsModel() { return &mPortStatsModel; }
+    StreamModel* getStreamModel() { return &mStreamListModel; }
 
-	bool isPortGroup(const QModelIndex& index);
-	bool isPort(const QModelIndex& index);
-	PortGroup& portGroup(const QModelIndex& index);
-	Port& port(const QModelIndex& index);
+    bool isPortGroup(const QModelIndex& index);
+    bool isPort(const QModelIndex& index);
+    PortGroup& portGroup(const QModelIndex& index);
+    Port& port(const QModelIndex& index);
 
-	int numPortGroups() { return mPortGroups.size(); }
-	PortGroup& portGroupByIndex(int index) { return *(mPortGroups[index]); }
+    int numPortGroups() { return mPortGroups.size(); }
+    PortGroup& portGroupByIndex(int index) { return *(mPortGroups[index]); }
 
-	void addPortGroup(PortGroup &portGroup);
-	void removePortGroup(PortGroup &portGroup);
+    void addPortGroup(PortGroup &portGroup);
+    void removePortGroup(PortGroup &portGroup);
 
 private:
-	int indexOfPortGroup(quint32 portGroupId);
+    int indexOfPortGroup(quint32 portGroupId);
 
 };
 

@@ -4,5 +4,5 @@ import "vlan.proto";
 package OstProto;
 
 extend Protocol {
-	optional Vlan svlan = 125;
+    optional Vlan svlan = 125;
 }

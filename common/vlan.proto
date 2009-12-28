@@ -2,14 +2,14 @@ import "protocol.proto";
 
 package OstProto;
 message Vlan {
-	// VLAN presence/absence
-	optional bool is_override_tpid = 1;
+    // VLAN presence/absence
+    optional bool is_override_tpid = 1;
 
-	// VLAN values
-	optional uint32	tpid = 2;
-	optional uint32	vlan_tag = 3; // includes prio, cfi and vlanid
+    // VLAN values
+    optional uint32    tpid = 2;
+    optional uint32    vlan_tag = 3; // includes prio, cfi and vlanid
 }
 
 extend Protocol {
-	optional Vlan vlan = 126;
+    optional Vlan vlan = 126;
 }

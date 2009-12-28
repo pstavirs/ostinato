@@ -8,58 +8,58 @@
 
 class PayloadConfigForm : public QWidget, public Ui::payload
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	PayloadConfigForm(QWidget *parent = 0);
+    PayloadConfigForm(QWidget *parent = 0);
 private slots:
-	void on_cmbPatternMode_currentIndexChanged(int index);
+    void on_cmbPatternMode_currentIndexChanged(int index);
 };
 
 class PayloadProtocol : public AbstractProtocol
 {
 private:
-	OstProto::Payload			data;
-	PayloadConfigForm	*configForm;
-	enum payloadfield
-	{
-		payload_dataPattern,
+    OstProto::Payload            data;
+    PayloadConfigForm    *configForm;
+    enum payloadfield
+    {
+        payload_dataPattern,
 
-		// Meta fields
-		payload_dataPatternMode,
+        // Meta fields
+        payload_dataPatternMode,
 
-		payload_fieldCount
-	};
+        payload_fieldCount
+    };
 
 public:
-	PayloadProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-	virtual ~PayloadProtocol();
+    PayloadProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
+    virtual ~PayloadProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream,
-		AbstractProtocol *parent = 0);
-	virtual quint32 protocolNumber() const;
+    static AbstractProtocol* createInstance(StreamBase *stream,
+        AbstractProtocol *parent = 0);
+    virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
-	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
+    virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+    virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
-	virtual QString name() const;
-	virtual QString shortName() const;
+    virtual QString name() const;
+    virtual QString shortName() const;
 
-	virtual int protocolFrameSize(int streamIndex = 0) const;
+    virtual int protocolFrameSize(int streamIndex = 0) const;
 
-	virtual int	fieldCount() const;
+    virtual int    fieldCount() const;
 
-	virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
-	virtual QVariant fieldData(int index, FieldAttrib attrib,
-		   	int streamIndex = 0) const;
-	virtual bool setFieldData(int index, const QVariant &value, 
-			FieldAttrib attrib = FieldValue);
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
+    virtual QVariant fieldData(int index, FieldAttrib attrib,
+               int streamIndex = 0) const;
+    virtual bool setFieldData(int index, const QVariant &value, 
+            FieldAttrib attrib = FieldValue);
 
-	virtual bool isProtocolFrameValueVariable() const;
-	virtual bool isProtocolFrameSizeVariable() const;
+    virtual bool isProtocolFrameValueVariable() const;
+    virtual bool isProtocolFrameSizeVariable() const;
 
-	virtual QWidget* configWidget();
-	virtual void loadConfigWidget();
-	virtual void storeConfigWidget();
+    virtual QWidget* configWidget();
+    virtual void loadConfigWidget();
+    virtual void storeConfigWidget();
 };
 
 #endif

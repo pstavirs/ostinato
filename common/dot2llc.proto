@@ -6,9 +6,9 @@ package OstProto;
 
 // 802.2 LLC
 message Dot2Llc {
-	// Empty since this is a 'combo' protocol
+    // Empty since this is a 'combo' protocol
 }
 
 extend Protocol {
-	optional Dot2Llc dot2Llc = 127;
+    optional Dot2Llc dot2Llc = 127;
 }

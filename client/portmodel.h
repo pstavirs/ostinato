@@ -8,42 +8,42 @@ class PortGroup;
 
 class PortModel : public QAbstractItemModel
 {
-	Q_OBJECT
+    Q_OBJECT
 
-	friend class PortGroupList;
+    friend class PortGroupList;
 
-	PortGroupList	*pgl;
+    PortGroupList    *pgl;
 
-	public:
-		PortModel(PortGroupList *p, QObject *parent = 0);
+    public:
+        PortModel(PortGroupList *p, QObject *parent = 0);
 
-		int rowCount(const QModelIndex &parent = QModelIndex()) const;
-		int columnCount(const QModelIndex &parent = QModelIndex()) const;
-		Qt::ItemFlags flags(const QModelIndex &index) const;
-		QVariant data(const QModelIndex &index, int role) const;
-		QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
-		QModelIndex index (int row, int col, const QModelIndex & parent = QModelIndex() ) const;
-		QModelIndex parent(const QModelIndex &index) const;	
+        int rowCount(const QModelIndex &parent = QModelIndex()) const;
+        int columnCount(const QModelIndex &parent = QModelIndex()) const;
+        Qt::ItemFlags flags(const QModelIndex &index) const;
+        QVariant data(const QModelIndex &index, int role) const;
+        QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+        QModelIndex index (int row, int col, const QModelIndex & parent = QModelIndex() ) const;
+        QModelIndex parent(const QModelIndex &index) const;    
 
-		bool isPortGroup(const QModelIndex& index);
-		bool isPort(const QModelIndex& index);
-		quint32 portGroupId(const QModelIndex& index);
-		quint32 portId(const QModelIndex& index);
+        bool isPortGroup(const QModelIndex& index);
+        bool isPort(const QModelIndex& index);
+        quint32 portGroupId(const QModelIndex& index);
+        quint32 portId(const QModelIndex& index);
 
 
 private slots:
-	void when_portGroupDataChanged(int portGroupId, int portId);
+    void when_portGroupDataChanged(int portGroupId, int portId);
 
-	void portGroupAboutToBeAppended();
-	void portGroupAppended();
-	void portGroupAboutToBeRemoved(PortGroup *portGroup);
-	void portGroupRemoved();
+    void portGroupAboutToBeAppended();
+    void portGroupAppended();
+    void portGroupAboutToBeRemoved(PortGroup *portGroup);
+    void portGroupRemoved();
 
-	void when_portListChanged();
+    void when_portListChanged();
 
 #if 0
-	void triggerLayoutAboutToBeChanged();
-	void triggerLayoutChanged();
+    void triggerLayoutAboutToBeChanged();
+    void triggerLayoutChanged();
 #endif
 
 };

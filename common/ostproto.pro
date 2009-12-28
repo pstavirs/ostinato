@@ -2,80 +2,80 @@ TEMPLATE = lib
 CONFIG += qt staticlib
 QT += network script
 LIBS += \
-	-lprotobuf
+    -lprotobuf
 FORMS += \
-	mac.ui \
-	payload.ui \
-	eth2.ui \
-	dot3.ui \
-	llc.ui \
-	snap.ui \
-	vlan.ui \
-	ip4.ui \
-	tcp.ui \
-	udp.ui \
-	userscript.ui \
-	sample.ui 
+    mac.ui \
+    payload.ui \
+    eth2.ui \
+    dot3.ui \
+    llc.ui \
+    snap.ui \
+    vlan.ui \
+    ip4.ui \
+    tcp.ui \
+    udp.ui \
+    userscript.ui \
+    sample.ui 
 PROTOS += \
-	protocol.proto \
-	mac.proto \
-	payload.proto \
-	eth2.proto \
-	dot3.proto \
-	llc.proto \
-	snap.proto \
-	dot2llc.proto \
-	dot2snap.proto \
-	vlan.proto \
-	svlan.proto \
-	vlanstack.proto \
-	ip4.proto \
-	tcp.proto \
-	udp.proto \
-	userscript.proto \
-	sample.proto
+    protocol.proto \
+    mac.proto \
+    payload.proto \
+    eth2.proto \
+    dot3.proto \
+    llc.proto \
+    snap.proto \
+    dot2llc.proto \
+    dot2snap.proto \
+    vlan.proto \
+    svlan.proto \
+    vlanstack.proto \
+    ip4.proto \
+    tcp.proto \
+    udp.proto \
+    userscript.proto \
+    sample.proto
 HEADERS += \
-	abstractprotocol.h	\
-	comboprotocol.h	\
-	protocolmanager.h \
-	protocollist.h \
-	protocollistiterator.h \
-	streambase.h \
-	mac.h \
-	payload.h \
-	eth2.h \
-	dot3.h \
-	llc.h \
-	snap.h \
-	dot2llc.h \
-	dot2snap.h \
-	vlan.h \
-	svlan.h \
-	vlanstack.h \
-	ip4.h \
-	tcp.h \
-	udp.h \
-	userscript.h \
-	sample.h
+    abstractprotocol.h    \
+    comboprotocol.h    \
+    protocolmanager.h \
+    protocollist.h \
+    protocollistiterator.h \
+    streambase.h \
+    mac.h \
+    payload.h \
+    eth2.h \
+    dot3.h \
+    llc.h \
+    snap.h \
+    dot2llc.h \
+    dot2snap.h \
+    vlan.h \
+    svlan.h \
+    vlanstack.h \
+    ip4.h \
+    tcp.h \
+    udp.h \
+    userscript.h \
+    sample.h
 SOURCES += \
-	abstractprotocol.cpp \
-	protocolmanager.cpp \
-	protocollist.cpp \
-	protocollistiterator.cpp \
-	streambase.cpp \
-	mac.cpp \
-	payload.cpp \
-	eth2.cpp \
-	dot3.cpp \
-	llc.cpp \
-	snap.cpp \
-	vlan.cpp \
-	svlan.cpp \
-	ip4.cpp \
-	tcp.cpp \
-	udp.cpp \
-	userscript.cpp \
-	sample.cpp
+    abstractprotocol.cpp \
+    protocolmanager.cpp \
+    protocollist.cpp \
+    protocollistiterator.cpp \
+    streambase.cpp \
+    mac.cpp \
+    payload.cpp \
+    eth2.cpp \
+    dot3.cpp \
+    llc.cpp \
+    snap.cpp \
+    vlan.cpp \
+    svlan.cpp \
+    ip4.cpp \
+    tcp.cpp \
+    udp.cpp \
+    userscript.cpp \
+    sample.cpp
 
 protobuf_decl.name  = protobuf header
 protobuf_decl.input = PROTOS

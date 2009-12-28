@@ -6,6 +6,6 @@
 #include "vlan.h"
 
 typedef ComboProtocol<OstProto::Protocol::kVlanStackFieldNumber, 
-	SVlanProtocol, VlanProtocol> VlanStackProtocol;
+    SVlanProtocol, VlanProtocol> VlanStackProtocol;
 
 #endif

@@ -5,5 +5,5 @@ class AbstractProtocol;
 class ProtocolList : public QLinkedList<AbstractProtocol*>
 {
 public:
-	void destroy();
+    void destroy();
 };

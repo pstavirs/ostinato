@@ -10,14 +10,14 @@
 
 class Stream : public StreamBase {
 
-	//quint32					mId;
+    //quint32                    mId;
 
 public:
-	Stream();
-	~Stream();
+    Stream();
+    ~Stream();
 
-	void loadProtocolWidgets();
-	void storeProtocolWidgets();
+    void loadProtocolWidgets();
+    void storeProtocolWidgets();
 };
 
 #endif

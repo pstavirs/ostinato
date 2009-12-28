@@ -3,20 +3,20 @@ import "protocol.proto";
 package OstProto;
 
 message Payload {
-	enum DataPatternMode {
-		e_dp_fixed_word = 0;
-		e_dp_inc_byte = 1;
-		e_dp_dec_byte = 2;
-		e_dp_random = 3;
-	}
+    enum DataPatternMode {
+        e_dp_fixed_word = 0;
+        e_dp_inc_byte = 1;
+        e_dp_dec_byte = 2;
+        e_dp_random = 3;
+    }
 
-	// Data Pattern
-	optional DataPatternMode	pattern_mode = 1;
-	optional uint32				pattern = 2;
+    // Data Pattern
+    optional DataPatternMode    pattern_mode = 1;
+    optional uint32                pattern = 2;
 
-	//optional uint32				data_start_ofs = 13;
+    //optional uint32                data_start_ofs = 13;
 }
 
 extend Protocol {
-	optional Payload payload = 52;
+    optional Payload payload = 52;
 }

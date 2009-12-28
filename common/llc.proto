@@ -3,11 +3,11 @@ import "protocol.proto";
 package OstProto;
 
 message Llc {
-	optional uint32			dsap = 1;
-	optional uint32			ssap = 2;
-	optional uint32			ctl = 3;
+    optional uint32            dsap = 1;
+    optional uint32            ssap = 2;
+    optional uint32            ctl = 3;
 }
 
 extend Protocol {
-	optional Llc llc = 123;
+    optional Llc llc = 123;
 }

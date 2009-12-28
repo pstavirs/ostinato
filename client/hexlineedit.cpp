@@ -4,9 +4,9 @@
 QString & uintToHexStr(quint64 num, QString &hexStr, quint8 octets);
 
 HexLineEdit::HexLineEdit( QWidget * parent) 
-	: QLineEdit(parent)
+    : QLineEdit(parent)
 {
-	//QLineEdit::QLineEdit(parent);
+    //QLineEdit::QLineEdit(parent);
 }
 
 void HexLineEdit::focusOutEvent( QFocusEvent *e )
@@ -40,15 +40,15 @@ void HexLineEdit::focusOutEvent( QFocusEvent *e )
     emit focusOut();
 #else
 #define uintToHexStr(num, bytesize) \
-   	QString("%1").arg((num), (bytesize)*2 , 16, QChar('0'))
+       QString("%1").arg((num), (bytesize)*2 , 16, QChar('0'))
 
-	bool isOk;
-	ulong	num;
+    bool isOk;
+    ulong    num;
 
-	qDebug("before = %s\n", text().toAscii().data());
-	num = text().remove(QChar(' ')).toULong(&isOk, 16);
-	setText(uintToHexStr(num, 4));
-	qDebug("after = %s\n", text().toAscii().data());
+    qDebug("before = %s\n", text().toAscii().data());
+    num = text().remove(QChar(' ')).toULong(&isOk, 16);
+    setText(uintToHexStr(num, 4));
+    qDebug("after = %s\n", text().toAscii().data());
 #undef uintToHexStr
 #endif
 }

@@ -3,6 +3,6 @@
 
 void ProtocolList::destroy() 
 {
-	while (!isEmpty())
-		delete takeFirst(); 
+    while (!isEmpty())
+        delete takeFirst(); 
 }

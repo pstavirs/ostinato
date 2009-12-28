@@ -4,9 +4,9 @@ package OstProto;
 
 // 802.2 SNAP
 message Dot2Snap {
-	// Empty since this is a 'combo' protocol
+    // Empty since this is a 'combo' protocol
 }
 
 extend Protocol {
-	optional Dot2Snap dot2Snap = 128;
+    optional Dot2Snap dot2Snap = 128;
 }

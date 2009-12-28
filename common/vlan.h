@@ -8,56 +8,56 @@
 
 class VlanConfigForm : public QWidget, public Ui::Vlan
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	VlanConfigForm(QWidget *parent = 0);
+    VlanConfigForm(QWidget *parent = 0);
 };
 
 class VlanProtocol : public AbstractProtocol
 {
 private:
-	VlanConfigForm	*configForm;
-	enum Vlanfield
-	{
-		vlan_tpid,
-		vlan_prio,
-		vlan_cfiDei,
-		vlan_vlanId,
+    VlanConfigForm    *configForm;
+    enum Vlanfield
+    {
+        vlan_tpid,
+        vlan_prio,
+        vlan_cfiDei,
+        vlan_vlanId,
 
-		// meta-fields
-		vlan_isOverrideTpid,
+        // meta-fields
+        vlan_isOverrideTpid,
 
-		vlan_fieldCount
-	};
+        vlan_fieldCount
+    };
 
 protected:
-	OstProto::Vlan	data;
+    OstProto::Vlan    data;
 
 public:
-	VlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-	virtual ~VlanProtocol();
+    VlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
+    virtual ~VlanProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream,
-		AbstractProtocol *parent = 0);
-	virtual quint32 protocolNumber() const;
+    static AbstractProtocol* createInstance(StreamBase *stream,
+        AbstractProtocol *parent = 0);
+    virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
-	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
+    virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+    virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
-	virtual QString name() const;
-	virtual QString shortName() const;
+    virtual QString name() const;
+    virtual QString shortName() const;
 
-	virtual int	fieldCount() const;
+    virtual int    fieldCount() const;
 
-	virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
-	virtual QVariant fieldData(int index, FieldAttrib attrib,
-		   	int streamIndex = 0) const;
-	virtual bool setFieldData(int index, const QVariant &value, 
-			FieldAttrib attrib = FieldValue);
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
+    virtual QVariant fieldData(int index, FieldAttrib attrib,
+               int streamIndex = 0) const;
+    virtual bool setFieldData(int index, const QVariant &value, 
+            FieldAttrib attrib = FieldValue);
 
-	virtual QWidget* configWidget();
-	virtual void loadConfigWidget();
-	virtual void storeConfigWidget();
+    virtual QWidget* configWidget();
+    virtual void loadConfigWidget();
+    virtual void storeConfigWidget();
 };
 
 #endif

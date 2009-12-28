@@ -9,28 +9,28 @@
 
 class PortStatsWindow : public QWidget, public Ui::PortStatsWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	PortStatsWindow(PortGroupList *pgl, QWidget *parent = 0);
-	~PortStatsWindow();
+    PortStatsWindow(PortGroupList *pgl, QWidget *parent = 0);
+    ~PortStatsWindow();
 
 private:
-	PortGroupList		*pgl;
-	PortStatsModel		*model;
+    PortGroupList        *pgl;
+    PortStatsModel        *model;
 
 private slots:
-	void on_tbStartTransmit_clicked();
-	void on_tbStopTransmit_clicked();
+    void on_tbStartTransmit_clicked();
+    void on_tbStopTransmit_clicked();
 
-	void on_tbStartCapture_clicked();
-	void on_tbStopCapture_clicked();
-	void on_tbViewCapture_clicked();
+    void on_tbStartCapture_clicked();
+    void on_tbStopCapture_clicked();
+    void on_tbViewCapture_clicked();
 
-	void on_tbClear_clicked();
-	void on_tbClearAll_clicked();
+    void on_tbClear_clicked();
+    void on_tbClearAll_clicked();
 
-	void on_tbFilter_clicked();
+    void on_tbFilter_clicked();
 };
 
 #endif

@@ -13,163 +13,163 @@ StreamListDelegate::StreamListDelegate(QObject *parent)
 
 
 QWidget *StreamListDelegate::createEditor(QWidget *parent,
-	const QStyleOptionViewItem &option,
-	const QModelIndex &index) const
+    const QStyleOptionViewItem &option,
+    const QModelIndex &index) const
 {
-	QWidget	*editor = NULL;
+    QWidget    *editor = NULL;
 
-	switch ((StreamModel::StreamFields) index.column())
-	{
-		case StreamModel::StreamStatus:
-		{
-			editor = new QCheckBox(parent);
-			goto _handled;
-		}
-		case StreamModel::StreamNextWhat:
-		{
-			editor = new QComboBox(parent);
-			static_cast<QComboBox*>(editor)->insertItems(0, 
-				StreamModel::nextWhatOptionList());
-			goto _handled;
-		}
+    switch ((StreamModel::StreamFields) index.column())
+    {
+        case StreamModel::StreamStatus:
+        {
+            editor = new QCheckBox(parent);
+            goto _handled;
+        }
+        case StreamModel::StreamNextWhat:
+        {
+            editor = new QComboBox(parent);
+            static_cast<QComboBox*>(editor)->insertItems(0, 
+                StreamModel::nextWhatOptionList());
+            goto _handled;
+        }
 
-		case StreamModel::StreamIcon:
-		case StreamModel::StreamName:
-		default:
-			break;
-	}
+        case StreamModel::StreamIcon:
+        case StreamModel::StreamName:
+        default:
+            break;
+    }
 
-	editor =  QItemDelegate::createEditor(parent, option, index);
+    editor =  QItemDelegate::createEditor(parent, option, index);
 
 _handled:
-	return editor;
+    return editor;
 
 }
 
 
 void StreamListDelegate::setEditorData(QWidget *editor,
-	const QModelIndex &index) const
+    const QModelIndex &index) const
 {
-	switch ((StreamModel::StreamFields) index.column())
-	{
-		case StreamModel::StreamStatus:
-		{
-			QCheckBox *cb = static_cast<QCheckBox*>(editor);
-			cb->setChecked(
-				index.model()->data(index, Qt::EditRole).toBool());
-			goto _handled;
-		}
-		case StreamModel::StreamNextWhat:
-		{
-			QComboBox *cb = static_cast<QComboBox*>(editor);
-			cb->setCurrentIndex(
-				index.model()->data(index, Qt::EditRole).toInt());
-			goto _handled;
-		}
+    switch ((StreamModel::StreamFields) index.column())
+    {
+        case StreamModel::StreamStatus:
+        {
+            QCheckBox *cb = static_cast<QCheckBox*>(editor);
+            cb->setChecked(
+                index.model()->data(index, Qt::EditRole).toBool());
+            goto _handled;
+        }
+        case StreamModel::StreamNextWhat:
+        {
+            QComboBox *cb = static_cast<QComboBox*>(editor);
+            cb->setCurrentIndex(
+                index.model()->data(index, Qt::EditRole).toInt());
+            goto _handled;
+        }
 
-		case StreamModel::StreamIcon:
-		case StreamModel::StreamName:
-		default:
-			break;
-	}
+        case StreamModel::StreamIcon:
+        case StreamModel::StreamName:
+        default:
+            break;
+    }
 
-	QItemDelegate::setEditorData(editor, index);
+    QItemDelegate::setEditorData(editor, index);
 
 _handled:
-	return;
+    return;
 }
 
 
 void StreamListDelegate::setModelData(QWidget *editor,
-		QAbstractItemModel *model, const QModelIndex &index) const
+        QAbstractItemModel *model, const QModelIndex &index) const
 {
-	switch ((StreamModel::StreamFields) index.column())
-	{
-		case StreamModel::StreamStatus:
-		{
-			QCheckBox *cb = static_cast<QCheckBox*>(editor);
-			model->setData(index, cb->isChecked(), Qt::EditRole);
-			goto _handled;
-		}
+    switch ((StreamModel::StreamFields) index.column())
+    {
+        case StreamModel::StreamStatus:
+        {
+            QCheckBox *cb = static_cast<QCheckBox*>(editor);
+            model->setData(index, cb->isChecked(), Qt::EditRole);
+            goto _handled;
+        }
 
-		case StreamModel::StreamNextWhat:
-		{
-			QComboBox *cb = static_cast<QComboBox*>(editor);
-			model->setData(index, cb->currentIndex(), Qt::EditRole);
-			goto _handled;
-		}
+        case StreamModel::StreamNextWhat:
+        {
+            QComboBox *cb = static_cast<QComboBox*>(editor);
+            model->setData(index, cb->currentIndex(), Qt::EditRole);
+            goto _handled;
+        }
 
-		case StreamModel::StreamIcon:
-		case StreamModel::StreamName:
-		default:
-			break;
-	}
+        case StreamModel::StreamIcon:
+        case StreamModel::StreamName:
+        default:
+            break;
+    }
 
-	QItemDelegate::setModelData(editor, model, index);
+    QItemDelegate::setModelData(editor, model, index);
 
 _handled:
-	return;
+    return;
 }
 
 
 void StreamListDelegate::updateEditorGeometry(QWidget *editor,
-	const QStyleOptionViewItem &option, const QModelIndex &index) const
+    const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-	switch ((StreamModel::StreamFields) index.column())
-	{
-		case StreamModel::StreamStatus:
-		{
-			/*
-			 * extra 'coz QItemDelegate does it - otherwise the editor
-			 * placement is incorrect
-			 */
-    		int extra = 2 * (qApp->style()->pixelMetric(
-				QStyle::PM_FocusFrameHMargin, 0) + 1);
+    switch ((StreamModel::StreamFields) index.column())
+    {
+        case StreamModel::StreamStatus:
+        {
+            /*
+             * extra 'coz QItemDelegate does it - otherwise the editor
+             * placement is incorrect
+             */
+            int extra = 2 * (qApp->style()->pixelMetric(
+                QStyle::PM_FocusFrameHMargin, 0) + 1);
 
-			editor->setGeometry(option.rect.translated(extra, 0));
-			goto _handled;
-		}
-		case StreamModel::StreamIcon:
-		case StreamModel::StreamName:
-		case StreamModel::StreamNextWhat:
-		default:
-			break;
-	}
+            editor->setGeometry(option.rect.translated(extra, 0));
+            goto _handled;
+        }
+        case StreamModel::StreamIcon:
+        case StreamModel::StreamName:
+        case StreamModel::StreamNextWhat:
+        default:
+            break;
+    }
 
-	QItemDelegate::updateEditorGeometry(editor, option, index);
+    QItemDelegate::updateEditorGeometry(editor, option, index);
 
 _handled:
-	return;
+    return;
 } 
 
 
 bool StreamListDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
-		const QStyleOptionViewItem &option, const QModelIndex &index) 
+        const QStyleOptionViewItem &option, const QModelIndex &index) 
 {
-	/* 
+    /* 
      * Special Handling so that user can use the "Stream status" checkbox 
-	 * without double clicking first. Copied from QItemDelegate::editorEvent()
-	 * and modified suitably
-	 */
-	if ((StreamModel::StreamFields)index.column() ==
-			StreamModel::StreamStatus)
-	{
-		// make sure that we have the right event type
-		if ((event->type() == QEvent::MouseButtonRelease)
-			|| (event->type() == QEvent::MouseButtonDblClick))
-		{
-			QRect checkRect = check(option, option.rect, Qt::Checked);
-			QRect emptyRect;
-			doLayout(option, &checkRect, &emptyRect, &emptyRect, false);
-			if (!checkRect.contains(static_cast<QMouseEvent*>(event)->pos()))
-				return false;
+     * without double clicking first. Copied from QItemDelegate::editorEvent()
+     * and modified suitably
+     */
+    if ((StreamModel::StreamFields)index.column() ==
+            StreamModel::StreamStatus)
+    {
+        // make sure that we have the right event type
+        if ((event->type() == QEvent::MouseButtonRelease)
+            || (event->type() == QEvent::MouseButtonDblClick))
+        {
+            QRect checkRect = check(option, option.rect, Qt::Checked);
+            QRect emptyRect;
+            doLayout(option, &checkRect, &emptyRect, &emptyRect, false);
+            if (!checkRect.contains(static_cast<QMouseEvent*>(event)->pos()))
+                return false;
 
-			Qt::CheckState state = (static_cast<Qt::CheckState>(index.data(
-				Qt::CheckStateRole).toInt()) == Qt::Checked ? Qt::Unchecked : Qt::Checked);
-			return model->setData(index, state, Qt::CheckStateRole);
-		}
-	}
+            Qt::CheckState state = (static_cast<Qt::CheckState>(index.data(
+                Qt::CheckStateRole).toInt()) == Qt::Checked ? Qt::Unchecked : Qt::Checked);
+            return model->setData(index, state, Qt::CheckStateRole);
+        }
+    }
 
-	return QItemDelegate::editorEvent(event, model, option, index);
+    return QItemDelegate::editorEvent(event, model, option, index);
 }
 

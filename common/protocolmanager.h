@@ -9,27 +9,27 @@ class StreamBase;
 
 class ProtocolManager
 {
-	QMap<int, QString>	numberToNameMap;
-	QMap<QString, int>	nameToNumberMap;
-	QMultiMap<int, int> neighbourProtocols;
-	QMap<int, void*>	factory;
-	QList<AbstractProtocol*>	protocolList;
+    QMap<int, QString>    numberToNameMap;
+    QMap<QString, int>    nameToNumberMap;
+    QMultiMap<int, int> neighbourProtocols;
+    QMap<int, void*>    factory;
+    QList<AbstractProtocol*>    protocolList;
 
-	void populateNeighbourProtocols();
+    void populateNeighbourProtocols();
 
 public:
-	ProtocolManager();
+    ProtocolManager();
 
-	void registerProtocol(int protoNumber, void *protoInstanceCreator);
+    void registerProtocol(int protoNumber, void *protoInstanceCreator);
 
-	AbstractProtocol* createProtocol(int protoNumber, StreamBase *stream,
-		AbstractProtocol *parent = 0);
-	AbstractProtocol* createProtocol(QString protoName, StreamBase *stream,
-		AbstractProtocol *parent = 0);
+    AbstractProtocol* createProtocol(int protoNumber, StreamBase *stream,
+        AbstractProtocol *parent = 0);
+    AbstractProtocol* createProtocol(QString protoName, StreamBase *stream,
+        AbstractProtocol *parent = 0);
 
-	bool isValidNeighbour(int protoPrefix, int protoSuffix);
+    bool isValidNeighbour(int protoPrefix, int protoSuffix);
 
-	QStringList protocolDatabase();
+    QStringList protocolDatabase();
 };
 
 #endif

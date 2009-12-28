@@ -24,12 +24,12 @@
 */
 AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
 {
-	//qDebug("%s: &prev = %p &next = %p", __FUNCTION__, &prev, &next);
-	mpStream = stream;
-	this->parent = parent;
-	prev = next = NULL;
-	metaCount = -1;
-	protoSize = -1;
+    //qDebug("%s: &prev = %p &next = %p", __FUNCTION__, &prev, &next);
+    mpStream = stream;
+    this->parent = parent;
+    prev = next = NULL;
+    metaCount = -1;
+    protoSize = -1;
 }
 
 AbstractProtocol::~AbstractProtocol()
@@ -37,15 +37,15 @@ AbstractProtocol::~AbstractProtocol()
 }
 
 AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream,
-	AbstractProtocol *parent)
+    AbstractProtocol *parent)
 {
-	return NULL;
+    return NULL;
 }
 
 quint32 AbstractProtocol::protocolNumber() const
 {
-	qFatal("Something wrong!!!");
-	return 0xFFFFFFFF;
+    qFatal("Something wrong!!!");
+    return 0xFFFFFFFF;
 }
 
 /*!
@@ -64,7 +64,7 @@ quint32 AbstractProtocol::protocolNumber() const
   The default implementation returns a null string */
 QString AbstractProtocol::name() const
 {
-	return QString(); 
+    return QString(); 
 }
 
 /*! Returns the short name or abbreviation of the protocol \n
@@ -74,27 +74,27 @@ QString AbstractProtocol::name() const
   and subsequently returns the cached abbreviation */
 QString AbstractProtocol::shortName() const
 {
-	if (protoAbbr.isNull())
-	{
-		QString abbr;
+    if (protoAbbr.isNull())
+    {
+        QString abbr;
 
-		for (int i = 0; i < name().size(); i++)
-			if (name().at(i).isUpper()) abbr.append(name().at(i));
+        for (int i = 0; i < name().size(); i++)
+            if (name().at(i).isUpper()) abbr.append(name().at(i));
 
-		if (abbr.size())
-			protoAbbr = abbr;
-		else
-			protoAbbr = QString("");
-	}
+        if (abbr.size())
+            protoAbbr = abbr;
+        else
+            protoAbbr = QString("");
+    }
 
-	return protoAbbr;
+    return protoAbbr;
 }
 
 /*! Returns the number of fields (both Frame and Meta fields) \n
   The default implementation returns zero */
-int	AbstractProtocol::fieldCount() const
+int    AbstractProtocol::fieldCount() const
 {
-	return 0;
+    return 0;
 }
 
 /*! Returns the number of meta fields \n
@@ -102,31 +102,31 @@ int	AbstractProtocol::fieldCount() const
   the FieldIsMeta flag is set\n
   The default implementation caches the count on its first invocation
   and subsequently returns the cached count */
-int	AbstractProtocol::metaFieldCount() const
+int    AbstractProtocol::metaFieldCount() const
 {
-	if (metaCount < 0)
-	{
-		int c = 0;
-		for (int i = 0; i < fieldCount() ; i++) 
-			if (fieldFlags(i).testFlag(FieldIsMeta))
-				c++;
-		metaCount = c;
-	}
+    if (metaCount < 0)
+    {
+        int c = 0;
+        for (int i = 0; i < fieldCount() ; i++) 
+            if (fieldFlags(i).testFlag(FieldIsMeta))
+                c++;
+        metaCount = c;
+    }
 
-	return metaCount;
+    return metaCount;
 }
 
 /*! Returns the number of frame fields \n
   Convenience method - same as fieldCount() minus metaFieldCount() */
-int	AbstractProtocol::frameFieldCount() const
+int    AbstractProtocol::frameFieldCount() const
 {
-	//qDebug("%s:%d, %d", __FUNCTION__, fieldCount(), metaFieldCount());
-	return (fieldCount() - metaFieldCount());
+    //qDebug("%s:%d, %d", __FUNCTION__, fieldCount(), metaFieldCount());
+    return (fieldCount() - metaFieldCount());
 }
 
 AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
 {
-	return FieldIsNormal;
+    return FieldIsNormal;
 }
 
 /*! Returns the requested field attribute data \n
@@ -157,116 +157,116 @@ AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
   - protocolFramePayloadSize()
   */
 QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
-		int streamIndex) const
+        int streamIndex) const
 {
-	switch (attrib)
-	{
-		case FieldName:
-			return QString();
-		case FieldBitSize:
-			Q_ASSERT_X(!fieldFlags(index).testFlag(FieldIsCksum),
-				"AbstractProtocol::fieldData()",
-				"FieldBitSize for checksum fields need to be handled by the subclass");
-			return fieldData(index, FieldFrameValue, streamIndex).
-				toByteArray().size() * 8;
-		case FieldValue:
-			return 0;
-		case FieldFrameValue:
-			return QByteArray();
-		case FieldTextValue:
-			return QString();
+    switch (attrib)
+    {
+        case FieldName:
+            return QString();
+        case FieldBitSize:
+            Q_ASSERT_X(!fieldFlags(index).testFlag(FieldIsCksum),
+                "AbstractProtocol::fieldData()",
+                "FieldBitSize for checksum fields need to be handled by the subclass");
+            return fieldData(index, FieldFrameValue, streamIndex).
+                toByteArray().size() * 8;
+        case FieldValue:
+            return 0;
+        case FieldFrameValue:
+            return QByteArray();
+        case FieldTextValue:
+            return QString();
 
-		default:
-			qFatal("%s:%d: unhandled case %d\n", __FUNCTION__, __LINE__,
-					attrib);
-	}
+        default:
+            qFatal("%s:%d: unhandled case %d\n", __FUNCTION__, __LINE__,
+                    attrib);
+    }
 
-	return QVariant();
+    return QVariant();
 }
 
 /*! Sets the value of a field corresponding to index \n
  Returns true if field is successfully set, false otherwise \n
  The default implementation always returns false */
 bool AbstractProtocol::setFieldData(int index, const QVariant &value,
-		FieldAttrib attrib)
+        FieldAttrib attrib)
 {
-	return false;
+    return false;
 }
 
 AbstractProtocol::ProtocolIdType AbstractProtocol::protocolIdType() const
 {
-	return ProtocolIdNone;
+    return ProtocolIdNone;
 }
 
 quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
 {
-	return 0;
+    return 0;
 }
 
 quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
 {
-	quint32 id;
+    quint32 id;
 
-	if (next)
-		id = next->protocolId(type);
-	else if (parent)
-		id = parent->payloadProtocolId(type);
-	else
-		id = 0xFFFFFFFF;
+    if (next)
+        id = next->protocolId(type);
+    else if (parent)
+        id = parent->payloadProtocolId(type);
+    else
+        id = 0xFFFFFFFF;
 
-	qDebug("%s: payloadProtocolId = 0x%x", __FUNCTION__, id);
-	return id;
+    qDebug("%s: payloadProtocolId = 0x%x", __FUNCTION__, id);
+    return id;
 }
 
 int AbstractProtocol::protocolFrameSize(int streamIndex) const
 {
-	if (protoSize < 0)
-	{
-		int bitsize = 0;
+    if (protoSize < 0)
+    {
+        int bitsize = 0;
 
-		for (int i = 0; i < fieldCount(); i++)
-		{
-			if (!fieldFlags(i).testFlag(FieldIsMeta))
-				bitsize += fieldData(i, FieldBitSize, streamIndex).toUInt();
-		}
-		protoSize = (bitsize+7)/8;
-	}
+        for (int i = 0; i < fieldCount(); i++)
+        {
+            if (!fieldFlags(i).testFlag(FieldIsMeta))
+                bitsize += fieldData(i, FieldBitSize, streamIndex).toUInt();
+        }
+        protoSize = (bitsize+7)/8;
+    }
 
-	qDebug("%s: protoSize = %d", __FUNCTION__, protoSize);
-	return protoSize;
+    qDebug("%s: protoSize = %d", __FUNCTION__, protoSize);
+    return protoSize;
 }
 
 int AbstractProtocol::protocolFrameOffset(int streamIndex) const
 {
-	int size = 0;
-	AbstractProtocol *p = prev;
-	while (p)
-	{
-		size += p->protocolFrameSize(streamIndex);
-		p = p->prev;
-	}
+    int size = 0;
+    AbstractProtocol *p = prev;
+    while (p)
+    {
+        size += p->protocolFrameSize(streamIndex);
+        p = p->prev;
+    }
 
-	if (parent)
-		size += parent->protocolFrameOffset(streamIndex);
+    if (parent)
+        size += parent->protocolFrameOffset(streamIndex);
 
-	qDebug("%s: ofs = %d", __FUNCTION__, size);
-	return size;
+    qDebug("%s: ofs = %d", __FUNCTION__, size);
+    return size;
 }
 
 int AbstractProtocol::protocolFramePayloadSize(int streamIndex) const
 {
-	int size = 0;
-	AbstractProtocol *p = next;
-	while (p)
-	{
-		size += p->protocolFrameSize(streamIndex);
-		p = p->next;
-	}
-	if (parent)
-		size += parent->protocolFramePayloadSize(streamIndex);
+    int size = 0;
+    AbstractProtocol *p = next;
+    while (p)
+    {
+        size += p->protocolFrameSize(streamIndex);
+        p = p->next;
+    }
+    if (parent)
+        size += parent->protocolFramePayloadSize(streamIndex);
 
-	qDebug("%s: payloadSize = %d", __FUNCTION__, size);
-	return size;
+    qDebug("%s: payloadSize = %d", __FUNCTION__, size);
+    return size;
 }
 
 
@@ -277,136 +277,136 @@ int AbstractProtocol::protocolFramePayloadSize(int streamIndex) const
   which are not an integral number of bytes\n */
 QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) const
 {
-	QByteArray proto, field;
-	uint bits, lastbitpos = 0;
-	FieldFlags flags;
+    QByteArray proto, field;
+    uint bits, lastbitpos = 0;
+    FieldFlags flags;
 
-	for (int i=0; i < fieldCount() ; i++) 
-	{
-		flags = fieldFlags(i);
-		if (!flags.testFlag(FieldIsMeta))
-		{
-			bits = fieldData(i, FieldBitSize, streamIndex).toUInt();
-			if (bits == 0)
-				continue;
-			Q_ASSERT(bits > 0);
+    for (int i=0; i < fieldCount() ; i++) 
+    {
+        flags = fieldFlags(i);
+        if (!flags.testFlag(FieldIsMeta))
+        {
+            bits = fieldData(i, FieldBitSize, streamIndex).toUInt();
+            if (bits == 0)
+                continue;
+            Q_ASSERT(bits > 0);
 
-			if (forCksum && flags.testFlag(FieldIsCksum))
-			{
-				field.resize((bits+7)/8);
-				field.fill('\0');
-			}
-			else
-				field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
-			qDebug("<<< %d, %d/%d >>>>", proto.size(), bits, field.size());
+            if (forCksum && flags.testFlag(FieldIsCksum))
+            {
+                field.resize((bits+7)/8);
+                field.fill('\0');
+            }
+            else
+                field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
+            qDebug("<<< %d, %d/%d >>>>", proto.size(), bits, field.size());
 
-			if (bits == (uint) field.size() * 8)
-			{
-				if (lastbitpos == 0)
-					proto.append(field);
-				else
-				{
-					Q_ASSERT(field.size() > 0);
+            if (bits == (uint) field.size() * 8)
+            {
+                if (lastbitpos == 0)
+                    proto.append(field);
+                else
+                {
+                    Q_ASSERT(field.size() > 0);
 
-					char c = proto[proto.size() - 1];
-					proto[proto.size() - 1] =  c | (field.at(0) >> lastbitpos);
-					for (int j = 0; j < field.size() - 1; j++)
-						proto.append(field.at(j) << lastbitpos |
-								field.at(j+1) >> lastbitpos);
-				}
-			}
-			else if (bits < (uint) field.size() * 8)
-			{
-				uchar c;
-				uint v;
+                    char c = proto[proto.size() - 1];
+                    proto[proto.size() - 1] =  c | (field.at(0) >> lastbitpos);
+                    for (int j = 0; j < field.size() - 1; j++)
+                        proto.append(field.at(j) << lastbitpos |
+                                field.at(j+1) >> lastbitpos);
+                }
+            }
+            else if (bits < (uint) field.size() * 8)
+            {
+                uchar c;
+                uint v;
 
-				v = (field.size()*8) - bits;
+                v = (field.size()*8) - bits;
 
-				Q_ASSERT(v < 8);
+                Q_ASSERT(v < 8);
 
-				if (lastbitpos == 0)
-				{
-					for (int j = 0; j < field.size(); j++)
-					{
-						c = field.at(j) << v;
-						if ((j+1) < field.size())
-							c |= ((uchar)field.at(j+1) >> (8-v));
-						proto.append(c);
-					}
+                if (lastbitpos == 0)
+                {
+                    for (int j = 0; j < field.size(); j++)
+                    {
+                        c = field.at(j) << v;
+                        if ((j+1) < field.size())
+                            c |= ((uchar)field.at(j+1) >> (8-v));
+                        proto.append(c);
+                    }
 
-					lastbitpos = (lastbitpos + bits) % 8;
-				}
-				else
-				{
-					Q_ASSERT(proto.size() > 0);
+                    lastbitpos = (lastbitpos + bits) % 8;
+                }
+                else
+                {
+                    Q_ASSERT(proto.size() > 0);
 
-					for (int j = 0; j < field.size(); j++)
-					{
-						uchar d;
+                    for (int j = 0; j < field.size(); j++)
+                    {
+                        uchar d;
 
-						c = field.at(j) << v;
-						if ((j+1) < field.size())
-							c |= ((uchar) field.at(j+1) >> (8-v));
-						d = proto[proto.size() - 1];
-						proto[proto.size() - 1] = d | ((uchar) c >> lastbitpos);
-						if (bits > (8*j + (8 - v)))
-							proto.append(c << (8-lastbitpos));
-					}
+                        c = field.at(j) << v;
+                        if ((j+1) < field.size())
+                            c |= ((uchar) field.at(j+1) >> (8-v));
+                        d = proto[proto.size() - 1];
+                        proto[proto.size() - 1] = d | ((uchar) c >> lastbitpos);
+                        if (bits > (8*j + (8 - v)))
+                            proto.append(c << (8-lastbitpos));
+                    }
 
-					lastbitpos = (lastbitpos + bits) % 8;
-				}
-			}
-			else // if (bits > field.size() * 8)
-			{
-				qFatal("bitsize more than FrameValue size. skipping...");
-				continue;
-			}
-		}
-	}
+                    lastbitpos = (lastbitpos + bits) % 8;
+                }
+            }
+            else // if (bits > field.size() * 8)
+            {
+                qFatal("bitsize more than FrameValue size. skipping...");
+                continue;
+            }
+        }
+    }
 
-	return proto;
+    return proto;
 }
 
 bool AbstractProtocol::isProtocolFrameValueVariable() const
 {
-	return false;
+    return false;
 }
 
 bool AbstractProtocol::isProtocolFrameSizeVariable() const
 {
-	return false;
+    return false;
 }
 
 bool AbstractProtocol::isProtocolFramePayloadValueVariable() const
 {
-	AbstractProtocol *p = next;
+    AbstractProtocol *p = next;
 
-	while (p)
-	{
-		if (p->isProtocolFrameValueVariable())
-			return true;
-		p = p->next;
-	}
-	if (parent && parent->isProtocolFramePayloadValueVariable())
-		return true;
+    while (p)
+    {
+        if (p->isProtocolFrameValueVariable())
+            return true;
+        p = p->next;
+    }
+    if (parent && parent->isProtocolFramePayloadValueVariable())
+        return true;
 
-	return false;
+    return false;
 }
 
 bool AbstractProtocol::isProtocolFramePayloadSizeVariable() const
 {
-	AbstractProtocol *p = next;
+    AbstractProtocol *p = next;
 
-	while (p)
-	{
-		if (p->isProtocolFrameSizeVariable())
-			return true;
-		p = p->next;
-	}
-	if (parent && parent->isProtocolFramePayloadSizeVariable())
-		return true;
+    while (p)
+    {
+        if (p->isProtocolFrameSizeVariable())
+            return true;
+        p = p->next;
+    }
+    if (parent && parent->isProtocolFramePayloadSizeVariable())
+        return true;
 
-	return false;
+    return false;
 }
 
 
@@ -418,124 +418,124 @@ bool AbstractProtocol::isProtocolFramePayloadSizeVariable() const
   to prevent infinite recursion
   */
 quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
-	CksumType cksumType) const
+    CksumType cksumType) const
 {
-	static int recursionCount = 0;
-	quint32 cksum = 0xFFFFFFFF;
+    static int recursionCount = 0;
+    quint32 cksum = 0xFFFFFFFF;
 
-	recursionCount++;
-	Q_ASSERT_X(recursionCount < 10, "protocolFrameCksum", "potential infinite recursion - does a protocol checksum field not implement FieldBitSize?");
+    recursionCount++;
+    Q_ASSERT_X(recursionCount < 10, "protocolFrameCksum", "potential infinite recursion - does a protocol checksum field not implement FieldBitSize?");
 
-	switch(cksumType)
-	{
-		case CksumIp:
-		{
-			QByteArray fv;
-			quint16 *ip;
-			quint32 len, sum = 0;
+    switch(cksumType)
+    {
+        case CksumIp:
+        {
+            QByteArray fv;
+            quint16 *ip;
+            quint32 len, sum = 0;
 
-			fv = protocolFrameValue(streamIndex, true);
-			ip = (quint16*) fv.constData();
-			len = fv.size();
+            fv = protocolFrameValue(streamIndex, true);
+            ip = (quint16*) fv.constData();
+            len = fv.size();
 
-			while(len > 1)
-			{
-				sum += *ip;
-				if(sum & 0x80000000)
-					sum = (sum & 0xFFFF) + (sum >> 16);
-				ip++;
-				len -= 2;
-			}
+            while(len > 1)
+            {
+                sum += *ip;
+                if(sum & 0x80000000)
+                    sum = (sum & 0xFFFF) + (sum >> 16);
+                ip++;
+                len -= 2;
+            }
 
-			if (len)
-				sum += (unsigned short) *(unsigned char *)ip;
+            if (len)
+                sum += (unsigned short) *(unsigned char *)ip;
 
-			while(sum>>16)
-				sum = (sum & 0xFFFF) + (sum >> 16);
+            while(sum>>16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
 
-			cksum = qFromBigEndian((quint16) ~sum);
-			break;
-		}
+            cksum = qFromBigEndian((quint16) ~sum);
+            break;
+        }
 
-		case CksumTcpUdp:
-		{
-			quint16 cks;
-			quint32 sum = 0;
+        case CksumTcpUdp:
+        {
+            quint16 cks;
+            quint32 sum = 0;
 
-			cks = protocolFrameCksum(streamIndex, CksumIp);
-			sum += (quint16) ~cks;
-			cks = protocolFramePayloadCksum(streamIndex, CksumIp);
-			sum += (quint16) ~cks;
-			cks = protocolFrameHeaderCksum(streamIndex, CksumIpPseudo);
-			sum += (quint16) ~cks;
+            cks = protocolFrameCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+            cks = protocolFramePayloadCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+            cks = protocolFrameHeaderCksum(streamIndex, CksumIpPseudo);
+            sum += (quint16) ~cks;
 
-			while(sum>>16)
-				sum = (sum & 0xFFFF) + (sum >> 16);
+            while(sum>>16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
 
-			cksum = (~sum) & 0xFFFF;
-			break;
-		}	
-		default:
-			break;
-	}
+            cksum = (~sum) & 0xFFFF;
+            break;
+        }    
+        default:
+            break;
+    }
 
-	recursionCount--;
-	return cksum;
+    recursionCount--;
+    return cksum;
 }
 
 quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex, 
-	CksumType cksumType) const
+    CksumType cksumType) const
 {
-	quint32 sum = 0;
-	quint16 cksum;
-	AbstractProtocol *p = prev;
+    quint32 sum = 0;
+    quint16 cksum;
+    AbstractProtocol *p = prev;
 
-	Q_ASSERT(cksumType == CksumIpPseudo);
+    Q_ASSERT(cksumType == CksumIpPseudo);
 
-	while (p)
-	{
-		cksum = p->protocolFrameCksum(streamIndex, cksumType);
-		sum += (quint16) ~cksum;
-		p = p->prev;
-		qDebug("%s: sum = %u, cksum = %u", __FUNCTION__, sum, cksum);
-	}
-	if (parent)
-	{
-		cksum = parent->protocolFrameHeaderCksum(streamIndex, cksumType);
-		sum += (quint16) ~cksum;
-	}
+    while (p)
+    {
+        cksum = p->protocolFrameCksum(streamIndex, cksumType);
+        sum += (quint16) ~cksum;
+        p = p->prev;
+        qDebug("%s: sum = %u, cksum = %u", __FUNCTION__, sum, cksum);
+    }
+    if (parent)
+    {
+        cksum = parent->protocolFrameHeaderCksum(streamIndex, cksumType);
+        sum += (quint16) ~cksum;
+    }
 
-	while(sum>>16)
-		sum = (sum & 0xFFFF) + (sum >> 16);
+    while(sum>>16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
 
-	return (quint16) ~sum;
+    return (quint16) ~sum;
 }
 
 quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
-	CksumType cksumType) const
+    CksumType cksumType) const
 {
-	quint32 sum = 0;
-	quint16 cksum;
-	AbstractProtocol *p = next;
+    quint32 sum = 0;
+    quint16 cksum;
+    AbstractProtocol *p = next;
 
-	Q_ASSERT(cksumType == CksumIp);
+    Q_ASSERT(cksumType == CksumIp);
 
-	while (p)
-	{
-		cksum = p->protocolFrameCksum(streamIndex, cksumType);
-		sum += (quint16) ~cksum;
-		p = p->next;
-	}
+    while (p)
+    {
+        cksum = p->protocolFrameCksum(streamIndex, cksumType);
+        sum += (quint16) ~cksum;
+        p = p->next;
+    }
 
-	if (parent)
-	{
-		cksum = parent->protocolFramePayloadCksum(streamIndex, cksumType);
-		sum += (quint16) ~cksum;
-	}
+    if (parent)
+    {
+        cksum = parent->protocolFramePayloadCksum(streamIndex, cksumType);
+        sum += (quint16) ~cksum;
+    }
 
-	while(sum>>16)
-		sum = (sum & 0xFFFF) + (sum >> 16);
+    while(sum>>16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
 
-	return (quint16) ~sum;
+    return (quint16) ~sum;
 }
 

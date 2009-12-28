@@ -4,9 +4,9 @@ package OstProto;
 
 // Ethernet II
 message Eth2 {
-	optional uint32			type = 1;
+    optional uint32            type = 1;
 }
 
 extend Protocol {
-	optional Eth2 eth2 = 121;
+    optional Eth2 eth2 = 121;
 }

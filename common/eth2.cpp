@@ -4,150 +4,150 @@
 #include "eth2.h"
 
 Eth2ConfigForm::Eth2ConfigForm(QWidget *parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
-	setupUi(this);
+    setupUi(this);
 }
 
 Eth2Protocol::Eth2Protocol(StreamBase *stream, AbstractProtocol *parent)
-	: AbstractProtocol(stream, parent)
+    : AbstractProtocol(stream, parent)
 {
-	configForm = NULL;
+    configForm = NULL;
 }
 
 Eth2Protocol::~Eth2Protocol()
 {
-	delete configForm;
+    delete configForm;
 }
 
 AbstractProtocol* Eth2Protocol::createInstance(StreamBase *stream,
-	AbstractProtocol *parent)
+    AbstractProtocol *parent)
 {
-	return new Eth2Protocol(stream, parent);
+    return new Eth2Protocol(stream, parent);
 }
 
 quint32 Eth2Protocol::protocolNumber() const
 {
-	return OstProto::Protocol::kEth2FieldNumber;
+    return OstProto::Protocol::kEth2FieldNumber;
 }
 
 void Eth2Protocol::protoDataCopyInto(OstProto::Protocol &protocol) const
 {
-	protocol.MutableExtension(OstProto::eth2)->CopyFrom(data);
-	protocol.mutable_protocol_id()->set_id(protocolNumber());
+    protocol.MutableExtension(OstProto::eth2)->CopyFrom(data);
+    protocol.mutable_protocol_id()->set_id(protocolNumber());
 }
 
 void Eth2Protocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
 {
-	if (protocol.protocol_id().id() == protocolNumber() &&
-			protocol.HasExtension(OstProto::eth2))
-		data.MergeFrom(protocol.GetExtension(OstProto::eth2));
+    if (protocol.protocol_id().id() == protocolNumber() &&
+            protocol.HasExtension(OstProto::eth2))
+        data.MergeFrom(protocol.GetExtension(OstProto::eth2));
 }
 
 QString Eth2Protocol::name() const
 {
-	return QString("Ethernet II");
+    return QString("Ethernet II");
 }
 
 QString Eth2Protocol::shortName() const
 {
-	return QString("Eth II");
+    return QString("Eth II");
 }
 
 AbstractProtocol::ProtocolIdType Eth2Protocol::protocolIdType() const
 {
-	return ProtocolIdEth;
+    return ProtocolIdEth;
 }
 
-int	Eth2Protocol::fieldCount() const
+int    Eth2Protocol::fieldCount() const
 {
-	return eth2_fieldCount;
+    return eth2_fieldCount;
 }
 
 QVariant Eth2Protocol::fieldData(int index, FieldAttrib attrib,
-		int streamIndex) const
+        int streamIndex) const
 {
-	switch (index)
-	{
-		case eth2_type:
-		{
-			quint16 type;
-			switch(attrib)
-			{
-				case FieldName:			
-					return QString("Type");
-				case FieldValue:
-					type = payloadProtocolId(ProtocolIdEth);
-					return type;
-				case FieldTextValue:
-					type = payloadProtocolId(ProtocolIdEth);
-					return QString("0x%1").arg(type, 4, BASE_HEX, QChar('0'));
-				case FieldFrameValue:
-				{
-					QByteArray fv;
-					type = payloadProtocolId(ProtocolIdEth);
-					fv.resize(2);
-					qToBigEndian((quint16) type, (uchar*) fv.data());
-					return fv;
-				}
-				default:
-					break;
-			}
-			break;
-		}
-		default:
-			break;
-	}
+    switch (index)
+    {
+        case eth2_type:
+        {
+            quint16 type;
+            switch(attrib)
+            {
+                case FieldName:            
+                    return QString("Type");
+                case FieldValue:
+                    type = payloadProtocolId(ProtocolIdEth);
+                    return type;
+                case FieldTextValue:
+                    type = payloadProtocolId(ProtocolIdEth);
+                    return QString("0x%1").arg(type, 4, BASE_HEX, QChar('0'));
+                case FieldFrameValue:
+                {
+                    QByteArray fv;
+                    type = payloadProtocolId(ProtocolIdEth);
+                    fv.resize(2);
+                    qToBigEndian((quint16) type, (uchar*) fv.data());
+                    return fv;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        default:
+            break;
+    }
 
-	return AbstractProtocol::fieldData(index, attrib, streamIndex);
+    return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
 bool Eth2Protocol::setFieldData(int index, const QVariant &value, 
-		FieldAttrib attrib)
+        FieldAttrib attrib)
 {
-	bool isOk = false;
+    bool isOk = false;
 
-	if (attrib != FieldValue)
-		return false;
+    if (attrib != FieldValue)
+        return false;
 
-	switch (index)
-	{
-		case eth2_type:
-		{
-			uint type = value.toUInt(&isOk);
-			if (isOk)
-				data.set_type(type);
-		}
-		default:
-			break;
-	}
-	return isOk;
+    switch (index)
+    {
+        case eth2_type:
+        {
+            uint type = value.toUInt(&isOk);
+            if (isOk)
+                data.set_type(type);
+        }
+        default:
+            break;
+    }
+    return isOk;
 }
 
 QWidget* Eth2Protocol::configWidget()
 {
-	if (configForm == NULL)
-	{
-		configForm = new Eth2ConfigForm;
-		loadConfigWidget();
-	}
-	return configForm;
+    if (configForm == NULL)
+    {
+        configForm = new Eth2ConfigForm;
+        loadConfigWidget();
+    }
+    return configForm;
 }
 
 void Eth2Protocol::loadConfigWidget()
 {
-	configWidget();
+    configWidget();
 
-	configForm->leType->setText(uintToHexStr(
-		fieldData(eth2_type, FieldValue).toUInt(), 2));
+    configForm->leType->setText(uintToHexStr(
+        fieldData(eth2_type, FieldValue).toUInt(), 2));
 }
 
 void Eth2Protocol::storeConfigWidget()
 {
-	bool isOk;
+    bool isOk;
 
-	configWidget();
+    configWidget();
 
-	data.set_type(configForm->leType->text().remove(QChar(' ')).toULong(&isOk, 16));
+    data.set_type(configForm->leType->text().remove(QChar(' ')).toULong(&isOk, 16));
 }
 

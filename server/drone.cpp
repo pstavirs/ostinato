@@ -19,58 +19,58 @@ Drone::Drone(QWidget *parent)
 
 Drone::~Drone()
 {
-	trayIcon_->hide();
-	delete rpcServer;
-	delete service;
+    trayIcon_->hide();
+    delete rpcServer;
+    delete service;
 }
 
 bool Drone::init()
 {
-	Q_ASSERT(rpcServer);
+    Q_ASSERT(rpcServer);
 
     if (!rpcServer->registerService(service, myport ? myport : 7878))
-	{
-		QMessageBox::critical(0, qApp->applicationName(),
-				rpcServer->errorString());
-		return false;
-	}
+    {
+        QMessageBox::critical(0, qApp->applicationName(),
+                rpcServer->errorString());
+        return false;
+    }
 
-	trayIconMenu_ = new QMenu(this);
+    trayIconMenu_ = new QMenu(this);
 
-	trayIconMenu_->addAction(actionShow);
-	trayIconMenu_->addAction(actionExit);
-	trayIconMenu_->setDefaultAction(actionShow);
-	trayIcon_ = new QSystemTrayIcon();
-	trayIcon_->setIcon(QIcon(":/icons/portgroup.png"));
-	trayIcon_->setToolTip(qApp->applicationName());
-	trayIcon_->setContextMenu(trayIconMenu_);
-	trayIcon_->show();
+    trayIconMenu_->addAction(actionShow);
+    trayIconMenu_->addAction(actionExit);
+    trayIconMenu_->setDefaultAction(actionShow);
+    trayIcon_ = new QSystemTrayIcon();
+    trayIcon_->setIcon(QIcon(":/icons/portgroup.png"));
+    trayIcon_->setToolTip(qApp->applicationName());
+    trayIcon_->setContextMenu(trayIconMenu_);
+    trayIcon_->show();
 
-	connect(trayIcon_, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-			this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-	connect(this, SIGNAL(hideMe(bool)), this, SLOT(setHidden(bool)), 
-			Qt::QueuedConnection);
+    connect(trayIcon_, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+    connect(this, SIGNAL(hideMe(bool)), this, SLOT(setHidden(bool)), 
+            Qt::QueuedConnection);
 
-	return true;
+    return true;
 }
 
 void Drone::changeEvent(QEvent *event)
 {
-	if (event->type() == QEvent::WindowStateChange && isMinimized())
-	{
-		emit hideMe(true);
-		event->ignore();
-		return;
-	}
+    if (event->type() == QEvent::WindowStateChange && isMinimized())
+    {
+        emit hideMe(true);
+        event->ignore();
+        return;
+    }
 
-	QWidget::changeEvent(event);
+    QWidget::changeEvent(event);
 }
 
 void Drone::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
-	if (reason == QSystemTrayIcon::DoubleClick)
-	{
-		showNormal();
-		activateWindow();
-	}
+    if (reason == QSystemTrayIcon::DoubleClick)
+    {
+        showNormal();
+        activateWindow();
+    }
 }

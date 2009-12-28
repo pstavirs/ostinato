@@ -6,18 +6,18 @@
 class SVlanProtocol : public VlanProtocol
 {
 public:
-	SVlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-	virtual ~SVlanProtocol();
+    SVlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
+    virtual ~SVlanProtocol();
 
-	static AbstractProtocol* createInstance(StreamBase *stream,
-		AbstractProtocol *parent = 0);
-	virtual quint32 protocolNumber() const;
+    static AbstractProtocol* createInstance(StreamBase *stream,
+        AbstractProtocol *parent = 0);
+    virtual quint32 protocolNumber() const;
 
-	virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
-	virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
+    virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
+    virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
 
-	virtual QString name() const;
-	virtual QString shortName() const;
+    virtual QString name() const;
+    virtual QString shortName() const;
 };
 
 #endif

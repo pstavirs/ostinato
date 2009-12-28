@@ -12,21 +12,21 @@ class QProcess;
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
 private:
-	QProcess		*localServer_;
-	PortsWindow		*portsWindow;
-	PortStatsWindow *statsWindow;
-	QDockWidget		*portsDock;
-	QDockWidget		*statsDock;
+    QProcess        *localServer_;
+    PortsWindow        *portsWindow;
+    PortStatsWindow *statsWindow;
+    QDockWidget        *portsDock;
+    QDockWidget        *statsDock;
 
 public:
-	MainWindow(QWidget *parent = 0);
-	~MainWindow();
+    MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
 public slots:
-	void on_actionHelpAbout_triggered();
+    void on_actionHelpAbout_triggered();
 };
 
 #endif

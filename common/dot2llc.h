@@ -6,6 +6,6 @@
 #include "llc.h"
 
 typedef ComboProtocol<OstProto::Protocol::kDot2LlcFieldNumber, 
-	Dot3Protocol, LlcProtocol> Dot2LlcProtocol;
+    Dot3Protocol, LlcProtocol> Dot2LlcProtocol;
 
 #endif

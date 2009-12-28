@@ -8,7 +8,7 @@ class HexLineEdit : public QLineEdit
     Q_OBJECT
 public:
     // Constructors
-	HexLineEdit ( QWidget * parent);
+    HexLineEdit ( QWidget * parent);
 
 protected:
     void focusOutEvent( QFocusEvent *e );

@@ -250,9 +250,9 @@ void ModelTest::parent()
     // that is the first level index.
     if (model->rowCount(topIndex) > 0) {
         QModelIndex childIndex = model->index(0, 0, topIndex);
-		qDebug("topIndex RCI %x %x %llx", topIndex.row(), topIndex.column(), topIndex.internalId());
-		qDebug("topIndex I %llx", topIndex.internalId());
-		qDebug("childIndex RCI %x %x %llx", childIndex.row(), childIndex.column(), childIndex.internalId());
+        qDebug("topIndex RCI %x %x %llx", topIndex.row(), topIndex.column(), topIndex.internalId());
+        qDebug("topIndex I %llx", topIndex.internalId());
+        qDebug("childIndex RCI %x %x %llx", childIndex.row(), childIndex.column(), childIndex.internalId());
         Q_ASSERT(model->parent(childIndex) == topIndex);
     }
 

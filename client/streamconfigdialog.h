@@ -8,9 +8,9 @@
 #include "packetmodel.h"
 #include "modeltest.h"
 
-#define MAX_MAC_ITER_COUNT	256
-#define MIN_PKT_LEN			64
-#define MAX_PKT_LEN			1522
+#define MAX_MAC_ITER_COUNT    256
+#define MIN_PKT_LEN            64
+#define MAX_PKT_LEN            1522
 
 /*
 ** TODO
@@ -21,92 +21,92 @@
 
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
-	~StreamConfigDialog();
+    StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
+    ~StreamConfigDialog();
 
 private: 
 
-	enum ButtonId
-	{
-		ButtonIdNone = 0,
-		ButtonIdOther = -2
-	};
+    enum ButtonId
+    {
+        ButtonIdNone = 0,
+        ButtonIdOther = -2
+    };
 
-	enum ProtoButtonGroup
-	{
-		ProtoMin,
-		ProtoL1 = 0,
-		ProtoVlan = 1,
-		ProtoL2 = 2,
-		ProtoL3 = 3,
-		ProtoL4 = 4,
-		ProtoPayload = 5,
-		ProtoMax
-	};
+    enum ProtoButtonGroup
+    {
+        ProtoMin,
+        ProtoL1 = 0,
+        ProtoVlan = 1,
+        ProtoL2 = 2,
+        ProtoL3 = 3,
+        ProtoL4 = 4,
+        ProtoPayload = 5,
+        ProtoMax
+    };
 
-	QButtonGroup	*bgProto[ProtoMax];
+    QButtonGroup    *bgProto[ProtoMax];
 
-	QStringListModel *mpAvailableProtocolsModel;
-	QStringListModel *mpSelectedProtocolsModel;
+    QStringListModel *mpAvailableProtocolsModel;
+    QStringListModel *mpSelectedProtocolsModel;
 
-	Port&			mPort;
-	uint			mCurrentStreamIndex;
+    Port&            mPort;
+    uint            mCurrentStreamIndex;
 
-	Stream					*mpStream;
-	ProtocolListIterator	*_iter;
+    Stream                    *mpStream;
+    ProtocolListIterator    *_iter;
 
-	bool			isUpdateInProgress;
+    bool            isUpdateInProgress;
 
-	PacketModel		*mpPacketModel;
-	ModelTest		*mpPacketModelTester;
+    PacketModel        *mpPacketModel;
+    ModelTest        *mpPacketModelTester;
 
-	// The following static variables are used to track the "selected" tab
+    // The following static variables are used to track the "selected" tab
     // for the various tab widgets so that it can be restored when the dialog
-	// is opened the next time
-	static int		lastTopLevelTabIndex;
+    // is opened the next time
+    static int        lastTopLevelTabIndex;
 
-	void setupUiExtra();
-	void updateSelectedProtocols();
-	void LoadCurrentStream();
-	void StoreCurrentStream();
+    void setupUiExtra();
+    void updateSelectedProtocols();
+    void LoadCurrentStream();
+    void StoreCurrentStream();
 
 private slots:
-	void on_cmbPktLenMode_currentIndexChanged(QString mode);
-	void update_NumPacketsAndNumBursts();
+    void on_cmbPktLenMode_currentIndexChanged(QString mode);
+    void update_NumPacketsAndNumBursts();
 
-	void on_twTopLevel_currentChanged(int index);
-	void on_tbSelectProtocols_currentChanged(int index);
+    void on_twTopLevel_currentChanged(int index);
+    void on_tbSelectProtocols_currentChanged(int index);
 
-	// "Simple" Protocol Selection related
-	bool skipProtocols(int layer);
+    // "Simple" Protocol Selection related
+    bool skipProtocols(int layer);
 
-	void disableProtocols(QButtonGroup *protocolGroup, bool checked);
-	void forceProtocolNone(bool checked);
+    void disableProtocols(QButtonGroup *protocolGroup, bool checked);
+    void forceProtocolNone(bool checked);
 
-	void updateProtocol(int newId);
-	void __updateProtocol(int level, int newId);
+    void updateProtocol(int newId);
+    void __updateProtocol(int level, int newId);
 
-	void updateSelectProtocolsSimpleWidget();
+    void updateSelectProtocolsSimpleWidget();
 
-	// "Advanced" Protocol Selection related
-	void when_lvAllProtocols_selectionChanged(
-		const QItemSelection &selected, const QItemSelection &deselected);
-	void when_lvSelectedProtocols_currentChanged(
-		const QModelIndex &current, const QModelIndex &previous);
+    // "Advanced" Protocol Selection related
+    void when_lvAllProtocols_selectionChanged(
+        const QItemSelection &selected, const QItemSelection &deselected);
+    void when_lvSelectedProtocols_currentChanged(
+        const QModelIndex &current, const QModelIndex &previous);
 
-	void on_tbAdd_clicked();
-	void on_tbDelete_clicked();
-	void on_tbUp_clicked();
-	void on_tbDown_clicked();
+    void on_tbAdd_clicked();
+    void on_tbDelete_clicked();
+    void on_tbUp_clicked();
+    void on_tbDown_clicked();
 
-	void updateSelectProtocolsAdvancedWidget();
+    void updateSelectProtocolsAdvancedWidget();
 
-	void on_pbPrev_clicked();
-	void on_pbNext_clicked();
+    void on_pbPrev_clicked();
+    void on_pbNext_clicked();
 
-	void on_pbOk_clicked();
+    void on_pbOk_clicked();
 };
 
 #endif

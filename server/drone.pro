@@ -15,12 +15,12 @@ RESOURCES += drone.qrc
 HEADERS += drone.h 
 FORMS += drone.ui
 SOURCES += \
-	drone_main.cpp \
-	drone.cpp \
-	portmanager.cpp \
-	abstractport.cpp \
-	pcapport.cpp \
-	winpcapport.cpp 
+    drone_main.cpp \
+    drone.cpp \
+    portmanager.cpp \
+    abstractport.cpp \
+    pcapport.cpp \
+    winpcapport.cpp 
 SOURCES += myservice.cpp 
 SOURCES += pcapextra.cpp 
 
