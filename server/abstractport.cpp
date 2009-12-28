@@ -210,5 +210,3 @@ void AbstractPort::stats(PortStats *stats)
     stats->txPps = stats_.txPps; 
     stats->txBps = stats_.txBps; 
 }
-
-/* vim: set shiftwidth=4 tabstop=8 softtabstop=4 expandtab: */

@@ -140,5 +140,3 @@ void WinPcapPort::PortMonitor::run()
         QThread::msleep(1000);
     }
 }
-
-/* vim: set shiftwidth=4 tabstop=8 softtabstop=4 expandtab: */

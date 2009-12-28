@@ -419,5 +419,3 @@ void MyService::clearStats(::google::protobuf::RpcController* controller,
 
     done->Run();
 }
-
-/* vim: set shiftwidth=4 tabstop=8 softtabstop=4 expandtab: */
