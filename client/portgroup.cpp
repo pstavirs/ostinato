@@ -1,5 +1,6 @@
-#include <QTemporaryFile>
+#include <QtGlobal>
 #include <QProcess>
+#include <QTemporaryFile>
 
 #include "portgroup.h"
 

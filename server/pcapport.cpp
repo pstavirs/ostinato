@@ -1,5 +1,7 @@
 #include "pcapport.h"
 
+#include <QtGlobal>
+
 pcap_if_t *PcapPort::deviceList_ = NULL;
 
 PcapPort::PcapPort(int id, const char *device)

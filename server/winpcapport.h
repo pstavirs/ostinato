@@ -1,6 +1,8 @@
 #ifndef _SERVER_WIN_PCAP_PORT_H
 #define _SERVER_WIN_PCAP_PORT_H
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN32
 
 #include "pcapport.h"

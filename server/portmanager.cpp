@@ -1,5 +1,6 @@
 #include "portmanager.h"
 
+#include <QtGlobal>
 #include <pcap.h>
 
 #include "pcapport.h"
