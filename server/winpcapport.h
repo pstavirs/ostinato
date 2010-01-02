@@ -1,6 +1,8 @@
 #ifndef _SERVER_WIN_PCAP_PORT_H
 #define _SERVER_WIN_PCAP_PORT_H
 
+#ifdef Q_OS_WIN32
+
 #include "pcapport.h"
 
 #include <packet32.h>
@@ -25,5 +27,7 @@ private:
     LPADAPTER adapter_;
     PPACKET_OID_DATA linkStateOid_ ;
 };
+
+#endif
 
 #endif

@@ -6,6 +6,7 @@
 #include <pcap.h>
 
 #include "abstractport.h"
+#include "pcapextra.h"
 
 class PcapPort : public AbstractPort
 {

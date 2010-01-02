@@ -22,6 +22,10 @@ PcapPort::PcapPort(int id, const char *device)
     {
         if (strcmp(device, dev->name) == 0)
         {
+#ifndef Q_OS_WIN32
+            if (dev->name)
+                data_.set_name(dev->name);
+#endif
             if (dev->description)
                 data_.set_description(dev->description);
 
@@ -214,7 +218,7 @@ void PcapPort::PortTransmitter::setHandle(pcap_t *handle)
 
 void PcapPort::PortTransmitter::useExternalStats(AbstractPort::PortStats *stats)
 {
-    if (usingInternalStats_);
+    if (usingInternalStats_)
         delete stats_;
     stats_ = stats;
     usingInternalStats_ = false;
@@ -384,6 +388,7 @@ void PcapPort::PortCapturer::run()
 
         if (stop_) 
         {
+            qDebug("user requested capture stop\n");
             stop_ = false;
             break;
         }

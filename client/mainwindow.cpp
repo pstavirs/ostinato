@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow (parent)
 {
     localServer_ = new QProcess(this);
-    localServer_->start("drone.exe");
+    localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
+    localServer_->start("./drone.exe");
 
     pgl = new PortGroupList;
 

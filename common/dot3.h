@@ -4,7 +4,7 @@
 #include "abstractprotocol.h"
 
 #include "dot3.pb.h"
-#include "ui_Dot3.h"
+#include "ui_dot3.h"
 
 class Dot3ConfigForm : public QWidget, public Ui::dot3
 {

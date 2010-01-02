@@ -2,6 +2,7 @@
 
 #include <pcap.h>
 
+#include "pcapport.h"
 #include "winpcapport.h"
 
 PortManager *PortManager::instance_ = NULL;

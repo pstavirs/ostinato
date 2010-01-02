@@ -1,5 +1,7 @@
 #include "winpcapport.h"
 
+#ifdef Q_OS_WIN32
+
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
 WinPcapPort::WinPcapPort(int id, const char *device)
@@ -140,3 +142,5 @@ void WinPcapPort::PortMonitor::run()
         QThread::msleep(1000);
     }
 }
+
+#endif

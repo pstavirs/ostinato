@@ -7,7 +7,8 @@ win32:LIBS += -L"../common/debug" -lostproto
 unix: LIBS += -L"../common" -lostproto
 win32:LIBS += -L"../rpc/debug" -lpbrpc
 unix:LIBS += -L"../rpc" -lpbrpc
-POST_TARGETDEPS += "../common/debug/libostproto.a" "../rpc/debug/libpbrpc.a"
+win32:POST_TARGETDEPS += "../common/debug/libostproto.a" "../rpc/debug/libpbrpc.a"
+unix:POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 RESOURCES += ostinato.qrc 
 HEADERS += \
     dumpview.h \

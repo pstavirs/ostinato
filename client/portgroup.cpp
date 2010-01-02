@@ -620,13 +620,18 @@ void PortGroup::processStopCaptureAck(OstProto::Ack    *ack)
 
 void PortGroup::processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFile)
 {
+#ifdef Q_OS_WIN32
+    QString viewer("C:/Program Files/Wireshark/wireshark.exe");
+#else
+    QString viewer("/usr/bin/wireshark");
+#endif
+
     qDebug("In %s", __FUNCTION__);
 
     capFile->flush();
     capFile->close();
 
-    if (!QProcess::startDetached("C:/Program Files/Wireshark/wireshark.exe",
-        QStringList() <<  capFile->fileName()))
+    if (!QProcess::startDetached(viewer, QStringList() << capFile->fileName()))
         qDebug("Failed starting Wireshark");
 
     delete buf;

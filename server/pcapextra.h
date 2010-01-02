@@ -6,7 +6,7 @@
 
 #ifndef Q_OS_WIN32
 
-//#define PCAP_OPENFLAG_PROMISCUOUS    1
+#define PCAP_OPENFLAG_PROMISCUOUS    1
 
 struct pcap_send_queue
 {
