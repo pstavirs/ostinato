@@ -2,6 +2,10 @@
 
 #include <QtGlobal>
 
+#ifdef Q_OS_WIN32
+#include <windows.h>
+#endif
+
 pcap_if_t *PcapPort::deviceList_ = NULL;
 
 PcapPort::PcapPort(int id, const char *device)
@@ -40,10 +44,24 @@ PcapPort::PcapPort(int id, const char *device)
 
 void PcapPort::init()
 {
+    QString notes;
+
+    if (!monitorRx_->isDirectional() && !data_.is_exclusive_control())
+        notes.append("<i>Rx Frames/Bytes</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>");
+
     if (!monitorTx_->isDirectional())
+    {
         transmitter_->useExternalStats(&stats_);
+        notes.append("<i>Tx Frames/Bytes</i>: Only Ostinato Tx pkts (Tx by others NOT included)<br>");
+    }
 
     transmitter_->setHandle(monitorRx_->handle());
+
+    if (!notes.isEmpty())
+        data_.set_notes(QString("<b>Limitation(s)</b>"
+            "<p>%1<br>"
+            "Rx/Tx Rates are also subject to above limitation(s)</p>").
+            arg(notes).toStdString());
 
     monitorRx_->start();
     monitorTx_->start();
@@ -150,6 +168,14 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
 
+#ifdef Q_OS_WIN32
+    LARGE_INTEGER   freq;
+    if (QueryPerformanceFrequency(&freq))
+        ticksFreq_ = freq.QuadPart;
+    else
+        Q_ASSERT_X(false, "PortTransmitter::PortTransmitter",
+                "This Win32 platform does not support performance counter");
+#endif
     returnToQIdx_ = -1;
     stop_ = false;
     stats_ = new AbstractPort::PortStats;
@@ -316,11 +342,27 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
 
             if (usec)
             {
-                QThread::usleep(usec);
+                udelay(usec);
                 ts = hdr->ts;
             }
         }
     }
+}
+
+void PcapPort::PortTransmitter::udelay(long usec)
+{
+#ifdef Q_OS_WIN32
+    LARGE_INTEGER tgtTicks;
+    LARGE_INTEGER curTicks;
+
+    QueryPerformanceCounter(&curTicks);
+    tgtTicks.QuadPart = curTicks.QuadPart + (usec*ticksFreq_)/1000000;
+
+    while (curTicks.QuadPart < tgtTicks.QuadPart)
+        QueryPerformanceCounter(&curTicks);
+#else
+    QThread::usleep(usec);
+#endif 
 }
 
 PcapPort::PortCapturer::PortCapturer(const char *device)

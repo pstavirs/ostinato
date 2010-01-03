@@ -45,6 +45,8 @@ public:
         { return QString().fromStdString(d.name()); }
     const QString description() const 
         { return QString().fromStdString(d.description()); }
+    const QString notes() const 
+        { return QString().fromStdString(d.notes()); }
     AdminStatus adminStatus() 
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
     ControlMode controlMode() 

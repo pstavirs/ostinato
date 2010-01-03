@@ -80,8 +80,10 @@ protected:
         void run();
         void stop();
     private:
+        void udelay(long usec);
         int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, int sync);
 
+        quint64 ticksFreq_;
         QList<pcap_send_queue*> sendQueueList_;
         int returnToQIdx_;
         bool usingInternalStats_;

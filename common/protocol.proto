@@ -15,18 +15,15 @@ message StreamCore {
     }
     
     // Basics
-    optional string    name = 1;
-    optional bool    is_enabled = 2;
-    optional uint32    ordinal = 3;
+    optional string name = 1;
+    optional bool is_enabled = 2;
+    optional uint32 ordinal = 3;
 
     // Frame Length (includes CRC)
-    optional FrameLengthMode    len_mode = 14 [default = e_fl_fixed];
-    optional uint32                frame_len = 15 [default = 64];
-    optional uint32                frame_len_min = 16 [default = 64];
-    optional uint32                frame_len_max = 17 [default = 1518];
-
-    // Currently Selected Protocols
-    //repeated uint32                frame_proto = 20;
+    optional FrameLengthMode len_mode = 14 [default = e_fl_fixed];
+    optional uint32 frame_len = 15 [default = 64];
+    optional uint32 frame_len_min = 16 [default = 64];
+    optional uint32 frame_len_max = 17 [default = 1518];
 }
 
 message StreamControl {
@@ -46,14 +43,14 @@ message StreamControl {
         e_nw_goto_id = 2;
     }
 
-    optional SendUnit    unit = 1 [default = e_su_packets];
-    optional SendMode    mode = 2 [default = e_sm_fixed];
-    optional uint32        num_packets = 3 [default = 1];
-    optional uint32        num_bursts = 4 [default = 1];
-    optional uint32        packets_per_burst = 5 [default = 10];
-    optional NextWhat    next = 6 [default = e_nw_goto_next];
-    optional uint32        packets_per_sec = 7 [default = 1];
-    optional uint32        bursts_per_sec = 8 [default = 1];
+    optional SendUnit unit = 1 [default = e_su_packets];
+    optional SendMode mode = 2 [default = e_sm_fixed];
+    optional uint32 num_packets = 3 [default = 1];
+    optional uint32 num_bursts = 4 [default = 1];
+    optional uint32 packets_per_burst = 5 [default = 10];
+    optional NextWhat next = 6 [default = e_nw_goto_next];
+    optional uint32 packets_per_sec = 7 [default = 1];
+    optional uint32 bursts_per_sec = 8 [default = 1];
 }
 
 message ProtocolId {
@@ -129,7 +126,8 @@ message Port {
     required PortId port_id = 1;
     optional string name = 2;
     optional string description = 3;
-    optional bool is_enabled = 4;
+    optional string notes = 4;
+    optional bool is_enabled = 5;
     optional bool is_exclusive_control = 6;
 }
 

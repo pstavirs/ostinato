@@ -165,24 +165,23 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
 QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-#ifdef Q_OS_WIN32
-    // TODO(MED): The limitations should be the server's not the client's!
-    // Ideally we shd enhance the protocol to convey limitation(s), if any,
-    // from server to client
     if (role == Qt::ToolTipRole)
     {
         if (orientation == Qt::Horizontal)
         {
-            return QString("<b>Limitation(s)</b>"  
-                    "<p><i>Frames/Bytes Receieved</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>" 
-                    "<i>Frames/Bytes Sent</i>: Only Ostinato Tx pkts (Tx by others NOT included)</p>" 
-                    "<p>Rx/Tx Rates are derived from the above and hence subject to same limitations</p>"
-                    );
+            QString notes;
+            uint portGroupIdx, portIdx;
+
+            getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
+            notes = pgl->mPortGroups.at(portGroupIdx)->mPorts[portIdx]->notes();
+            if (!notes.isEmpty())
+                return notes;
+            else
+                return QVariant();
         }
         else
             return QVariant();
     }
-#endif
 
     if (role != Qt::DisplayRole)
         return QVariant();
@@ -192,11 +191,7 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
         uint portGroupIdx, portIdx;
 
         getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
-#ifdef Q_OS_WIN32
-        return QString("Port %1-%2 (*)").arg(portGroupIdx).arg(portIdx);
-#else
         return QString("Port %1-%2").arg(portGroupIdx).arg(portIdx);
-#endif
     }
     else
         return PortStatName.at(section);
