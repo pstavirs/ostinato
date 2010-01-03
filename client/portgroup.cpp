@@ -85,7 +85,7 @@ void PortGroup::on_rpcChannel_disconnected()
 
 void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
 {
-    qDebug("error\n");
+    qDebug("%s: error %d", __FUNCTION__, socketError);
     emit portGroupDataChanged(mPortGroupId);
 }
 
@@ -429,7 +429,7 @@ _exit:
     return;
 }
 
-void PortGroup::processModifyStreamAck(OstProto::Ack *ack)
+void PortGroup::processModifyStreamAck(OstProto::Ack */*ack*/)
 {
     qDebug("In %s", __FUNCTION__);
 

@@ -191,6 +191,7 @@ quint16    StreamBase::frameLen(int streamIndex) const
             break;
         case OstProto::StreamCore::e_fl_random:
             //! \todo (MED) This 'random' sequence is same across iterations
+            pktLen = 64; // to avoid the 'maybe used uninitialized' warning
             qsrand(((uint) this));
             for (int i = 0; i <= streamIndex; i++)
                 pktLen = qrand();

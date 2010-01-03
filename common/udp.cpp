@@ -205,6 +205,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
                     qDebug("UDP cksum = %hu", cksum);
                 }
                 default:
+                    cksum = 0;
                     break;
             }
 
@@ -251,8 +252,8 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool UdpProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool UdpProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     //! implement UdpProtocol::setFieldData() 
     return false;

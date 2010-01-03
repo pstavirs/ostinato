@@ -21,7 +21,7 @@ int StreamModel::rowCount(const QModelIndex &parent) const
         return 0;
 }
 
-int StreamModel::columnCount(const QModelIndex &parent ) const
+int StreamModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return (int) StreamMaxFields;
 }
@@ -197,7 +197,7 @@ QVariant StreamModel::headerData(int section, Qt::Orientation orientation, int r
     return QVariant();
 }
 
-bool StreamModel::insertRows(int row, int count, const QModelIndex &parent) 
+bool StreamModel::insertRows(int row, int count, const QModelIndex &/*parent*/) 
 {
     qDebug("insertRows() row = %d", row);
     qDebug("insertRows() count = %d", count);
@@ -209,7 +209,7 @@ bool StreamModel::insertRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-bool StreamModel::removeRows(int row, int count, const QModelIndex &parent) 
+bool StreamModel::removeRows(int row, int count, const QModelIndex &/*parent*/) 
 {
     qDebug("removeRows() row = %d", row);
     qDebug("removeRows() count = %d", count);

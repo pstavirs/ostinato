@@ -374,8 +374,8 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool TcpProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool TcpProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

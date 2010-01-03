@@ -233,8 +233,8 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool MacProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool MacProtocol::setFieldData(int /*index*/, const QVariant& /*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

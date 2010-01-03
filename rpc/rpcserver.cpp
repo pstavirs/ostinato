@@ -160,7 +160,8 @@ void RpcServer::when_disconnected()
 
 void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 {
-    qDebug("%s", clientSock->errorString().toAscii().constData());
+    qDebug("%s (%d)", clientSock->errorString().toAscii().constData(), 
+            socketError);
 }
 
 void RpcServer::when_dataAvail()

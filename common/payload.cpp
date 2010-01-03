@@ -181,8 +181,8 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool PayloadProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool PayloadProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

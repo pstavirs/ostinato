@@ -193,8 +193,8 @@ QVariant VlanProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool VlanProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool VlanProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

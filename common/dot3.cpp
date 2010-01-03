@@ -113,8 +113,8 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool Dot3Protocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool Dot3Protocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

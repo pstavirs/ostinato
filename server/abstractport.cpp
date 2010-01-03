@@ -8,7 +8,7 @@
 AbstractPort::AbstractPort(int id, const char *device)
 {
     data_.mutable_port_id()->set_id(id);
-    data_.set_name(QString("if%1 ").arg(id).toStdString());
+    data_.set_name(device);
 
     //! \todo (LOW) admin enable/disable of port
     data_.set_is_enabled(true);

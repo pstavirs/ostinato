@@ -261,7 +261,7 @@ void PortStatsModel::when_portListChanged()
     reset();
 }
 
-void PortStatsModel::on_portStatsUpdate(int port, void*stats)
+void PortStatsModel::on_portStatsUpdate(int port, void* /*stats*/)
 {
     QModelIndex topLeft = index(port, 0, QModelIndex());
     QModelIndex bottomRight = index(port, e_STAT_MAX, QModelIndex());
@@ -277,7 +277,7 @@ void PortStatsModel::updateStats()
         pgl->mPortGroups[i]->getPortStats();
 }
 
-void PortStatsModel::when_portGroup_stats_update(quint32 portGroupId)
+void PortStatsModel::when_portGroup_stats_update(quint32 /*portGroupId*/)
 {
     // FIXME(MED): update only the changed ports, not all
 

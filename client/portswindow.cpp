@@ -5,6 +5,7 @@
 #include <QItemSelectionModel>
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
+    : QWidget(parent)
 {
     StreamListDelegate *delegate = new StreamListDelegate;
     //slm = new StreamListModel();
@@ -90,7 +91,7 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 }
 
 void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
-    const QModelIndex& previous)
+    const QModelIndex& /*previous*/)
 {
     plm->getStreamModel()->setCurrentPortIndex(current);
     updatePortViewActions(current);
@@ -114,8 +115,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
     }
 }
 
-void PortsWindow::when_streamView_currentChanged(const QModelIndex& current,
-    const QModelIndex& previous)
+void PortsWindow::when_streamView_currentChanged(const QModelIndex& /*current*/,
+    const QModelIndex& /*previous*/)
 {
     qDebug("stream view current changed");
     updateStreamViewActions();

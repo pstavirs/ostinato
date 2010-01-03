@@ -24,7 +24,9 @@ PcapPort::PcapPort(int id, const char *device)
     {
         if (strcmp(device, dev->name) == 0)
         {
-#ifndef Q_OS_WIN32
+#ifdef Q_OS_WIN32
+            data_.set_name(QString("if%1 ").arg(id).toStdString());
+#else
             if (dev->name)
                 data_.set_name(dev->name);
 #endif

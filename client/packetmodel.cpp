@@ -5,6 +5,7 @@
 #include "../common/abstractprotocol.h"
 
 PacketModel::PacketModel(QObject *parent)
+    : QAbstractItemModel(parent)
 {
 }
 
@@ -51,7 +52,7 @@ int PacketModel::rowCount(const QModelIndex &parent) const
     return 0; // catch all
 }
 
-int PacketModel::columnCount(const QModelIndex &parent) const
+int PacketModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return 1;
 }

@@ -27,8 +27,8 @@ MyService::~MyService()
 {
 }
 
-void MyService::getPortIdList(::google::protobuf::RpcController* controller,
-    const ::OstProto::Void* request,
+void MyService::getPortIdList(::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::Void* /*request*/,
     ::OstProto::PortIdList* response,
     ::google::protobuf::Closure* done)
 {
@@ -45,7 +45,7 @@ void MyService::getPortIdList(::google::protobuf::RpcController* controller,
     done->Run();
 }
 
-void MyService::getPortConfig(::google::protobuf::RpcController* controller,
+void MyService::getPortConfig(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
     ::OstProto::PortConfigList* response,
     ::google::protobuf::Closure* done)
@@ -134,7 +134,7 @@ _invalid_port:
 
 void MyService::addStream(::google::protobuf::RpcController* controller,
     const ::OstProto::StreamIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     int portId;
@@ -175,7 +175,7 @@ _invalid_port:
 
 void MyService::deleteStream(::google::protobuf::RpcController* controller,
     const ::OstProto::StreamIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     int portId;
@@ -201,7 +201,7 @@ _invalid_port:
 
 void MyService::modifyStream(::google::protobuf::RpcController* controller,
     const ::OstProto::StreamConfigList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     int    portId;
@@ -234,9 +234,9 @@ _invalid_port:
     done->Run();
 }
 
-void MyService::startTx(::google::protobuf::RpcController* controller,
+void MyService::startTx(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -257,9 +257,9 @@ void MyService::startTx(::google::protobuf::RpcController* controller,
     done->Run();
 }
 
-void MyService::stopTx(::google::protobuf::RpcController* controller,
+void MyService::stopTx(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -280,9 +280,9 @@ void MyService::stopTx(::google::protobuf::RpcController* controller,
     done->Run();
 }
 
-void MyService::startCapture(::google::protobuf::RpcController* controller,
+void MyService::startCapture(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -303,9 +303,9 @@ void MyService::startCapture(::google::protobuf::RpcController* controller,
     done->Run();
 }
 
-void MyService::stopCapture(::google::protobuf::RpcController* controller,
+void MyService::stopCapture(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -327,7 +327,7 @@ void MyService::stopCapture(::google::protobuf::RpcController* controller,
 
 void MyService::getCaptureBuffer(::google::protobuf::RpcController* controller,
     const ::OstProto::PortId* request,
-    ::OstProto::CaptureBuffer* response,
+    ::OstProto::CaptureBuffer* /*response*/,
     ::google::protobuf::Closure* done)
 {
     int portId;
@@ -350,7 +350,7 @@ _invalid_port:
     done->Run();
 }
 
-void MyService::getStats(::google::protobuf::RpcController* controller,
+void MyService::getStats(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
     ::OstProto::PortStatsList* response,
     ::google::protobuf::Closure* done)
@@ -397,9 +397,9 @@ void MyService::getStats(::google::protobuf::RpcController* controller,
     done->Run();
 }
 
-void MyService::clearStats(::google::protobuf::RpcController* controller,
+void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);

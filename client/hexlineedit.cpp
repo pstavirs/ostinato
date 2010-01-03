@@ -9,7 +9,7 @@ HexLineEdit::HexLineEdit( QWidget * parent)
     //QLineEdit::QLineEdit(parent);
 }
 
-void HexLineEdit::focusOutEvent( QFocusEvent *e )
+void HexLineEdit::focusOutEvent(QFocusEvent* /*e*/)
 {
 #if 0
     const QValidator *v = validator();

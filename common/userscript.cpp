@@ -35,7 +35,7 @@ void UserScriptConfigForm::on_programEdit_textChanged()
     compileButton->setEnabled(true);
 }
 
-void UserScriptConfigForm::on_compileButton_clicked(bool checked)
+void UserScriptConfigForm::on_compileButton_clicked(bool /*checked*/)
 {
     protocol_->storeConfigWidget();
     if (!protocol_->isScriptValid())

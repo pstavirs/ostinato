@@ -311,7 +311,7 @@ void StreamConfigDialog::on_tbSelectProtocols_currentChanged(int index)
 }
 
 void StreamConfigDialog::when_lvAllProtocols_selectionChanged(
-    const QItemSelection &selected, const QItemSelection &deselected)
+    const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/)
 {
     int size = lvAllProtocols->selectionModel()->selectedIndexes().size();
 
@@ -321,7 +321,7 @@ void StreamConfigDialog::when_lvAllProtocols_selectionChanged(
 }
 
 void StreamConfigDialog::when_lvSelectedProtocols_currentChanged(
-    const QModelIndex &current, const QModelIndex &previous)
+    const QModelIndex &current, const QModelIndex &/*previous*/)
 {
     qDebug("%s: currentRow = %d\n", __FUNCTION__, current.row());
 

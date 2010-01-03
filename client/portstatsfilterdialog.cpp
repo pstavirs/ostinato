@@ -1,6 +1,7 @@
 #include "portstatsfilterdialog.h"
 
 PortStatsFilterDialog::PortStatsFilterDialog(QWidget *parent)
+    : QDialog(parent)
 {
     setupUi(this);
 
@@ -92,8 +93,8 @@ void PortStatsFilterDialog::on_lvUnselected_doubleClicked(const QModelIndex &ind
 {
     QStandardItem    *item;
 
-    item = mUnselected.takeItem(lvUnselected->currentIndex().row());
-    if (mUnselected.removeRow(lvUnselected->currentIndex().row()))
+    item = mUnselected.takeItem(index.row());
+    if (mUnselected.removeRow(index.row()))
         mSelected.appendRow(item);
 }
 
@@ -101,8 +102,8 @@ void PortStatsFilterDialog::on_lvSelected_doubleClicked(const QModelIndex &index
 {
     QStandardItem    *item;
 
-    item = mSelected.takeItem(lvSelected->currentIndex().row());
-    if (mSelected.removeRow(lvSelected->currentIndex().row()))
+    item = mSelected.takeItem(index.row());
+    if (mSelected.removeRow(index.row()))
     {
         mUnselected.appendRow(item);
         mUnselected.sort(0);

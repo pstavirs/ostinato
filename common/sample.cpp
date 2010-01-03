@@ -220,6 +220,7 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
                         cksum = protocolFrameCksum(streamIndex, CksumIp);
                 }
                 default:
+                    cksum = 0; // avoid the 'maybe used unitialized' warning
                     break;
             }
 

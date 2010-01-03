@@ -36,8 +36,8 @@ AbstractProtocol::~AbstractProtocol()
 {
 }
 
-AbstractProtocol* AbstractProtocol::createInstance(StreamBase *stream,
-    AbstractProtocol *parent)
+AbstractProtocol* AbstractProtocol::createInstance(StreamBase* /* stream */,
+    AbstractProtocol* /* parent */)
 {
     return NULL;
 }
@@ -124,7 +124,7 @@ int    AbstractProtocol::frameFieldCount() const
     return (fieldCount() - metaFieldCount());
 }
 
-AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int index) const
+AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int /*index*/) const
 {
     return FieldIsNormal;
 }
@@ -187,8 +187,8 @@ QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
 /*! Sets the value of a field corresponding to index \n
  Returns true if field is successfully set, false otherwise \n
  The default implementation always returns false */
-bool AbstractProtocol::setFieldData(int index, const QVariant &value,
-        FieldAttrib attrib)
+bool AbstractProtocol::setFieldData(int /*index*/, const QVariant& /*value*/,
+        FieldAttrib /*attrib*/)
 {
     return false;
 }
@@ -198,7 +198,7 @@ AbstractProtocol::ProtocolIdType AbstractProtocol::protocolIdType() const
     return ProtocolIdNone;
 }
 
-quint32 AbstractProtocol::protocolId(ProtocolIdType type) const
+quint32 AbstractProtocol::protocolId(ProtocolIdType /*type*/) const
 {
     return 0;
 }

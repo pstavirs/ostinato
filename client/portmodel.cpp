@@ -53,7 +53,7 @@ int PortModel::rowCount(const QModelIndex &parent) const
     }
 }
 
-int PortModel::columnCount(const QModelIndex &parent ) const
+int PortModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return 1;    // FIXME: hardcoding
 }
@@ -166,7 +166,7 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-QVariant PortModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant PortModel::headerData(int /*section*/, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole)
         return QVariant();

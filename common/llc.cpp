@@ -130,8 +130,8 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool LlcProtocol::setFieldData(int index, const QVariant &value, 
-        FieldAttrib attrib)
+bool LlcProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
+        FieldAttrib /*attrib*/)
 {
     return false;
 }

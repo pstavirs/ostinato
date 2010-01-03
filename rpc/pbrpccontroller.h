@@ -24,7 +24,9 @@ public:
     void SetFailed(const std::string &reason) 
         { failed = true; errStr = reason; }
     bool IsCanceled() const { return false; };
-    void NotifyOnCancel(::google::protobuf::Closure *callback) { /*! \todo (MED) */ }
+    void NotifyOnCancel(::google::protobuf::Closure* /* callback */) {
+        /*! \todo (MED) */ 
+    }
 
     // srivatsp added
     QIODevice* binaryBlob() { return blob; };

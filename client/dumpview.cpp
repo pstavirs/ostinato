@@ -3,6 +3,7 @@
 //! \todo Enable Scrollbars
 
 DumpView::DumpView(QWidget *parent)
+    : QAbstractItemView(parent)
 {
     int w, h;
 
@@ -26,7 +27,7 @@ DumpView::DumpView(QWidget *parent)
     qDebug("DumpView::DumpView");
 }
 
-QModelIndex DumpView::indexAt( const QPoint &point ) const
+QModelIndex DumpView::indexAt(const QPoint &/*point*/) const
 {
 #if 0
     int x = point.x();
@@ -84,12 +85,12 @@ _exit:
     return QModelIndex();
 }
 
-void DumpView::scrollTo( const QModelIndex &index, ScrollHint hint )
+void DumpView::scrollTo(const QModelIndex &/*index*/, ScrollHint /*hint*/)
 {
     // FIXME: implement scrolling
 }
 
-QRect DumpView::visualRect( const QModelIndex &index ) const
+QRect DumpView::visualRect(const QModelIndex &/*index*/) const
 {
     // FIXME: calculate actual rect
     return rect();
@@ -101,20 +102,20 @@ int DumpView::horizontalOffset() const
     return horizontalScrollBar()->value();
 }
 
-bool DumpView::isIndexHidden( const QModelIndex &index ) const
+bool DumpView::isIndexHidden(const QModelIndex &/*index*/) const
 {
     return false;
 }
 
-QModelIndex DumpView::moveCursor( CursorAction cursorAction, 
-        Qt::KeyboardModifiers modifiers )
+QModelIndex DumpView::moveCursor(CursorAction /*cursorAction*/, 
+        Qt::KeyboardModifiers /*modifiers*/)
 {
     // FIXME(MED): need to implement movement using cursor
     return currentIndex();
 }
 
-void DumpView::setSelection( const QRect &rect,
-        QItemSelectionModel::SelectionFlags flags )
+void DumpView::setSelection(const QRect &/*rect*/,
+        QItemSelectionModel::SelectionFlags flags)
 {
     // FIXME(HI): calculate indexes using rect
     selectionModel()->select(QModelIndex(), flags);
@@ -125,22 +126,23 @@ int DumpView::verticalOffset() const
     return verticalScrollBar()->value();
 }
 
-QRegion DumpView::visualRegionForSelection( const QItemSelection &selection ) const
+QRegion DumpView::visualRegionForSelection(
+        const QItemSelection &/*selection*/) const
 {
     // FIXME(HI)
     return QRegion(rect());
 }
 
 //protected slots:
-void DumpView::dataChanged( const QModelIndex &topLeft, 
-        const QModelIndex &bottomRight )
+void DumpView::dataChanged(const QModelIndex &/*topLeft*/, 
+        const QModelIndex &/*bottomRight*/)
 {
     // FIXME(HI)
     update();
 }
 
-void DumpView::selectionChanged( const QItemSelection &selected, 
-        const QItemSelection &deselected )
+void DumpView::selectionChanged(const QItemSelection &/*selected*/, 
+        const QItemSelection &/*deselected*/)
 {
     // FIXME(HI)
     update();
@@ -220,7 +222,7 @@ void DumpView::populateDump(QByteArray &dump, int &selOfs, int &selSize,
 }
 
 // TODO(LOW): rewrite this function - it's a mess!
-void DumpView::paintEvent(QPaintEvent* event)
+void DumpView::paintEvent(QPaintEvent* /*event*/)
 {
     QStylePainter    painter(viewport());
     QRect            offsetRect = mOffsetPaneTopRect;
