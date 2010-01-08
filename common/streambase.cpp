@@ -50,9 +50,11 @@ StreamBase::StreamBase() :
 
 StreamBase::~StreamBase()
 {
-    delete mStreamId;
-    delete mCore;
+    currentFrameProtocols->destroy();
+    delete currentFrameProtocols;
     delete mControl;
+    delete mCore;
+    delete mStreamId;
 }
 
 void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)

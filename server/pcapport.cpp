@@ -195,6 +195,12 @@ _open_error:
     usingInternalHandle_ = false;
 }
 
+PcapPort::PortTransmitter::~PortTransmitter()
+{
+    if (usingInternalStats_)
+        delete stats_;
+}
+
 void PcapPort::PortTransmitter::clearPacketList()
 {
     Q_ASSERT(!isRunning());

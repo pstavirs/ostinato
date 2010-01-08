@@ -11,13 +11,23 @@ PortGroupList::PortGroupList()
     PortGroup    *pg;
 
     // TODO(LOW): Remove
-    new ModelTest(getStreamModel());
-    new ModelTest(getPortModel());
-    new ModelTest(getPortStatsModel());
+    streamModelTester_ = new ModelTest(getStreamModel());
+    portModelTester_ = new ModelTest(getPortModel());
+    portStatsModelTester_ = new ModelTest(getPortStatsModel());
     
     // Add the "Local" Port Group
     pg = new PortGroup;
     addPortGroup(*pg);
+}
+
+PortGroupList::~PortGroupList()
+{
+    while (!mPortGroups.isEmpty())
+        delete mPortGroups.takeFirst();
+
+    delete portStatsModelTester_;
+    delete portModelTester_;
+    delete streamModelTester_;
 }
 
 bool PortGroupList::isPortGroup(const QModelIndex& index)

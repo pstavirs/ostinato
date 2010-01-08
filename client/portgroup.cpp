@@ -23,8 +23,7 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
     rpcController = new PbRpcController;
     rpcControllerStats = new PbRpcController;
     isGetStatsPending_ = false;
-    serviceStub = new OstProto::OstService::Stub(rpcChannel,
-        OstProto::OstService::STUB_OWNS_CHANNEL);
+    serviceStub = new OstProto::OstService::Stub(rpcChannel);
 
     // FIXME(LOW):Can't for my life figure out why this ain't working!
     //QMetaObject::connectSlotsByName(this);
@@ -44,6 +43,9 @@ PortGroup::~PortGroup()
     // Disconnect and free rpc channel etc.
     PortGroup::disconnectFromHost();
     delete serviceStub;
+    delete rpcControllerStats;
+    delete rpcController;
+    delete rpcChannel;
 }
 
 

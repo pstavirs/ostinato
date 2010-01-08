@@ -10,6 +10,7 @@ RpcServer::RpcServer()
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
+    controller_.Reset();
 }
 
 RpcServer::~RpcServer()
@@ -46,21 +47,22 @@ QString RpcServer::errorString()
     return errorString_;
 }
 
-void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcController)
+void RpcServer::done(::google::protobuf::Message *request, 
+        ::google::protobuf::Message *response)
 {
-    QIODevice    *blob;
-    char    msg[MSGBUF_SIZE];
-    int        len;
+    QIODevice *blob;
+    char msg[MSGBUF_SIZE];
+    int len;
 
     //qDebug("In RpcServer::done");
 
-    if (PbRpcController->Failed())
+    if (controller_.Failed())
     {
         qDebug("rpc failed");
         goto _exit;
     }
 
-    blob = PbRpcController->binaryBlob();
+    blob = controller_.binaryBlob();
     if (blob)
     {
         len = blob->size();
@@ -85,17 +87,17 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
         goto _exit;
     }
 
-    if (!resp->IsInitialized())
+    if (!response->IsInitialized())
     {
         qWarning("response missing required fields!!");
-        qDebug(resp->InitializationErrorString().c_str());
+        qDebug(response->InitializationErrorString().c_str());
         qFatal("exiting");
         goto _exit;
     }
 
-    resp->SerializeToArray((void*) &msg[PB_HDR_SIZE], sizeof(msg));
+    response->SerializeToArray((void*) &msg[PB_HDR_SIZE], sizeof(msg));
 
-    len = resp->ByteSize();
+    len = response->ByteSize();
 
     *((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_RESPONSE); // type
     *((quint16*)(&msg[2])) = HTONS(pendingMethodId); // method
@@ -105,14 +107,15 @@ void RpcServer::done(::google::protobuf::Message *resp, PbRpcController *PbRpcCo
     if (pendingMethodId != 12)
     {
         qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
-            __FUNCTION__, len + PB_HDR_SIZE, resp->DebugString().c_str());
+            __FUNCTION__, len + PB_HDR_SIZE, response->DebugString().c_str());
         //BUFDUMP(msg, len + 8);
     }
 
     clientSock->write(msg, PB_HDR_SIZE + len);
 
 _exit:
-    delete PbRpcController;
+    delete request;
+    delete response;
     isPending = false;
 }
 
@@ -173,7 +176,6 @@ void RpcServer::when_dataAvail()
     static quint32 len;
     const ::google::protobuf::MethodDescriptor    *methodDesc;
     ::google::protobuf::Message    *req, *resp;
-    PbRpcController    *controller;
 
     if (!parsing)
     {
@@ -238,12 +240,12 @@ void RpcServer::when_dataAvail()
     //qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
         //resp->DebugString().c_str());
 
-    controller = new PbRpcController;
+    controller_.Reset();
 
     //qDebug("before service->callmethod()");
 
-    service->CallMethod(methodDesc, controller, req, resp,
-        NewCallback(this, &RpcServer::done, resp, controller));
+    service->CallMethod(methodDesc, &controller_, req, resp,
+        NewCallback(this, &RpcServer::done, req, resp));
 
     parsing = false;
 

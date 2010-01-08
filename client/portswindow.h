@@ -12,6 +12,7 @@ MED
 LOW
 */
 
+class QAbstractItemDelegate;
 
 class PortsWindow : public QWidget, private Ui::PortsWindow
 {
@@ -26,6 +27,7 @@ public:
 
 private:
     QString        lastNewPortGroup;
+    QAbstractItemDelegate *delegate;
 
     void updatePortViewActions(const QModelIndex& current);
     //void updateStreamViewActions(const QModelIndex& current);

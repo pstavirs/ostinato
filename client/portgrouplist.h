@@ -21,13 +21,17 @@ class PortGroupList : public QObject {
 
     QList<PortGroup*>    mPortGroups;    
     PortModel            mPortGroupListModel;
-    StreamModel            mStreamListModel;
-    PortStatsModel        mPortStatsModel;
+    StreamModel          mStreamListModel;
+    PortStatsModel       mPortStatsModel;
+
+    QObject *streamModelTester_;
+    QObject *portModelTester_;
+    QObject *portStatsModelTester_;
 
 // Methods
 public:
     PortGroupList();
-
+    ~PortGroupList();
 
     PortModel* getPortModel() { return &mPortGroupListModel; }
     PortStatsModel* getPortStatsModel() { return &mPortStatsModel; }

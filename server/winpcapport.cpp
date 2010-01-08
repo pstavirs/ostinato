@@ -24,6 +24,8 @@ WinPcapPort::WinPcapPort(int id, const char *device)
 
 WinPcapPort::~WinPcapPort()
 {
+    delete monitorRx_;
+    delete monitorTx_;
 }
 
 OstProto::LinkState WinPcapPort::linkState()

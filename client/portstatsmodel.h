@@ -4,6 +4,8 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+class QTimer;
+
 typedef enum {
     // State
     e_STATE_START = 0,
@@ -78,6 +80,7 @@ class PortStatsModel : public QAbstractTableModel
     public:
 
         PortStatsModel(PortGroupList *p, QObject *parent = 0);
+        ~PortStatsModel();
 
         int rowCount(const QModelIndex &parent = QModelIndex()) const;
         int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -108,6 +111,8 @@ class PortStatsModel : public QAbstractTableModel
         // in the same order as the portgroups are index in the pgl
         // Also it stores them as cumulative totals
         QList<quint16>    numPorts;
+
+        QTimer *timer;
 
         void getDomainIndexes(const QModelIndex &index,
               uint &portGroupIdx, uint &portIdx) const;

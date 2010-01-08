@@ -19,6 +19,7 @@ class ProtocolManager
 
 public:
     ProtocolManager();
+    ~ProtocolManager();
 
     void registerProtocol(int protoNumber, void *protoInstanceCreator);
 

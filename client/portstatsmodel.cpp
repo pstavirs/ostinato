@@ -6,13 +6,17 @@
 PortStatsModel::PortStatsModel(PortGroupList *p, QObject *parent)
     : QAbstractTableModel(parent) 
 {
-    QTimer    *timer;
-
     pgl = p;
 
     timer = new QTimer();
     connect(timer, SIGNAL(timeout()), this, SLOT(updateStats()));
     timer->start(1000);
+}
+
+PortStatsModel::~PortStatsModel()
+{
+    timer->stop();
+    delete timer;
 }
 
 int PortStatsModel::rowCount(const QModelIndex &parent) const

@@ -1,13 +1,15 @@
 #include "portswindow.h"
-#include "streamlistdelegate.h"
-#include "streamconfigdialog.h"
+
 #include <QInputDialog>
 #include <QItemSelectionModel>
+
+#include "streamconfigdialog.h"
+#include "streamlistdelegate.h"
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent)
 {
-    StreamListDelegate *delegate = new StreamListDelegate;
+    delegate = new StreamListDelegate;
     //slm = new StreamListModel();
     //plm = new PortGroupList();
     plm = pgl;
@@ -72,6 +74,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
 PortsWindow::~PortsWindow()
 {
+    delete delegate;
 }
 
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)

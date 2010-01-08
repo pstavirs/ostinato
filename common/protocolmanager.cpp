@@ -62,6 +62,16 @@ ProtocolManager::ProtocolManager()
     populateNeighbourProtocols();
 }
 
+ProtocolManager::~ProtocolManager()
+{
+    numberToNameMap.clear();
+    nameToNumberMap.clear();
+    neighbourProtocols.clear();
+    factory.clear();
+    while (!protocolList.isEmpty())
+        delete protocolList.takeFirst();
+}
+
 void ProtocolManager::registerProtocol(int protoNumber,
     void *protoInstanceCreator)
 {

@@ -13,8 +13,9 @@ class Port : public QObject {
     Q_OBJECT
 
     static uint            mAllocStreamId;
+
     OstProto::Port        d;
-    OstProto::PortStats    stats;
+    OstProto::PortStats   stats;
 
     // FIXME(HI): consider removing mPortId as it is duplicated inside 'd'
     quint32        mPortId;

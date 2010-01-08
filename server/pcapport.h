@@ -69,6 +69,7 @@ protected:
     {
     public:
         PortTransmitter(const char *device);
+        ~PortTransmitter();
         void clearPacketList();
         bool appendToPacketList(long sec, long usec, const uchar *packet, 
             int length);

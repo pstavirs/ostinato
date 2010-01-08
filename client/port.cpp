@@ -22,6 +22,8 @@ Port::Port(quint32 id, quint32 portGroupId)
 
 Port::~Port()
 {
+    while (!mStreams.isEmpty())
+        delete mStreams.takeFirst();
 }
 
 void Port::updatePortConfig(OstProto::Port *port)

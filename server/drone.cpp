@@ -20,6 +20,9 @@ Drone::Drone(QWidget *parent)
 Drone::~Drone()
 {
     trayIcon_->hide();
+
+    delete trayIcon_;
+    delete trayIconMenu_;
     delete rpcServer;
     delete service;
 }

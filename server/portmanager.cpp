@@ -45,6 +45,8 @@ PortManager::PortManager()
 
 PortManager::~PortManager()
 {
+    while (!portList_.isEmpty())
+        delete portList_.takeFirst();
 }
 
 PortManager* PortManager::instance()
