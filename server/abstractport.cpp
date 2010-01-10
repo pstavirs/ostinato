@@ -31,6 +31,12 @@ AbstractPort::~AbstractPort()
 {
 }    
 
+StreamBase* AbstractPort::streamAtIndex(int index)
+{
+    Q_ASSERT(index < streamList_.size());
+    return streamList_.at(index);
+}
+
 StreamBase* AbstractPort::stream(int streamId)
 {
     for (int i = 0; i < streamList_.size(); i++)
@@ -79,7 +85,7 @@ void AbstractPort::updatePacketList()
     qDebug("In %s", __FUNCTION__);
 
     // First sort the streams by ordinalValue
-    qSort(streamList_);
+    qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
     clearPacketList();
 

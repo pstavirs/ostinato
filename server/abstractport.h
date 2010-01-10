@@ -34,6 +34,7 @@ public:
     void protoDataCopyInto(OstProto::Port *port) { port->CopyFrom(data_); }
 
     int streamCount() { return streamList_.size(); }
+    StreamBase* streamAtIndex(int index);
     StreamBase* stream(int streamId);
     bool addStream(StreamBase *stream);
     bool deleteStream(int streamId);

@@ -2,11 +2,16 @@
 
 #include <QApplication>
 
+QMainWindow *mainWindow;
+
 int main(int argc, char* argv[])
 {
-    QApplication    app(argc, argv);
-    MainWindow mainWin;
+    QApplication app(argc, argv);
+    int exitCode;
 
-    mainWin.show();
-    return app.exec();
+    mainWindow = new MainWindow;
+    mainWindow->show();
+    exitCode =  app.exec();
+    delete mainWindow;
+    return exitCode;
 }

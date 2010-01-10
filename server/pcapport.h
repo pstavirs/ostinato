@@ -29,8 +29,7 @@ public:
     }
 
     virtual void startTransmit() { 
-        if (isDirty())
-            updatePacketList();
+        Q_ASSERT(!isDirty());
         transmitter_->start(); 
     }
     virtual void stopTransmit()  { transmitter_->stop();  }

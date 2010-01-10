@@ -1,9 +1,13 @@
-#include <QtGlobal>
-#include <QProcess>
-#include <QTemporaryFile>
-
 #include "portgroup.h"
 
+#include <QApplication>
+#include <QCursor>
+#include <QMainWindow>
+#include <QProcess>
+#include <QTemporaryFile>
+#include <QtGlobal>
+
+extern QMainWindow *mainWindow;
 
 quint32    PortGroup::mPortGroupAllocId = 0;
 
@@ -129,6 +133,9 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
         {
             OstProto::StreamIdList        streamIdList;
 
+            QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+            mainWindow->setDisabled(true);
+
             qDebug("applying 'deleted streams' ...");
 
             streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
@@ -177,6 +184,10 @@ void PortGroup::when_configApply(int portIndex, uint *cookie)
         qDebug("apply completed");
         mPorts[portIndex]->when_syncComplete();
         delete cookie;
+
+        mainWindow->setEnabled(true);
+        QApplication::restoreOverrideCursor();
+
         break;
 
     default:
@@ -431,7 +442,7 @@ _exit:
     return;
 }
 
-void PortGroup::processModifyStreamAck(OstProto::Ack */*ack*/)
+void PortGroup::processModifyStreamAck(OstProto::Ack * /*ack*/)
 {
     qDebug("In %s", __FUNCTION__);
 

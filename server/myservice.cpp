@@ -88,7 +88,7 @@ void MyService::getStreamIdList(::google::protobuf::RpcController* controller,
         OstProto::StreamId    *s;
 
         s = response->add_stream_id();
-        s->set_id(portInfo[portId]->stream(i)->id());
+        s->set_id(portInfo[portId]->streamAtIndex(i)->id());
     }
     done->Run();
     return;
@@ -223,6 +223,9 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
             portInfo[portId]->setDirty();
         }
     }
+
+    if (portInfo[portId]->isDirty())
+        portInfo[portId]->updatePacketList();
 
     //! \todo(LOW): fill-in response "Ack"????
 

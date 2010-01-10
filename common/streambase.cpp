@@ -113,11 +113,6 @@ ProtocolListIterator*  StreamBase::createProtocolListIterator() const
     return new ProtocolListIterator(*currentFrameProtocols);
 }
 
-bool StreamBase::operator < (const StreamBase &s) const
-{
-    return(mCore->ordinal() < s.mCore->ordinal());
-}
-
 quint32    StreamBase::id()
 {
     return mStreamId->id();
@@ -380,3 +375,7 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int n) const
     return pktLen;
 }
 
+bool StreamBase::StreamLessThan(StreamBase* stream1, StreamBase* stream2)
+{
+    return stream1->ordinal() < stream2->ordinal() ? true : false;
+}

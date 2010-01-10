@@ -39,7 +39,7 @@ void Port::updateStreamOrdinalsFromIndex()
 
 void Port::reorderStreamsByOrdinals()
 {
-    qSort(mStreams);
+    qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
 }
 
 bool Port::newStreamAt(int index)
@@ -176,7 +176,7 @@ void Port::getModifiedStreamsSinceLastSync(
 
 void Port::when_syncComplete()
 {
-    qSort(mStreams);
+    //reorderStreamsByOrdinals();
 
     mLastSyncStreamList.clear();
     for (int i=0; i<mStreams.size(); i++)

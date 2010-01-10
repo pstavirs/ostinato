@@ -54,8 +54,6 @@ public:
         e_nw_goto_id
     };
 
-    bool operator < (const StreamBase &s) const;
-
     quint32    id();
     bool setId(quint32 id);
 
@@ -114,6 +112,8 @@ public:
 
     bool isFrameVariable() const;
     int frameValue(uchar *buf, int bufMaxSize, int n) const;
+
+    static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
 };
 
 #endif
