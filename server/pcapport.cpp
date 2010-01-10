@@ -177,6 +177,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
                 "This Win32 platform does not support performance counter");
 #endif
     returnToQIdx_ = -1;
+    loopDelay_ = 0;
     stop_ = false;
     stats_ = new AbstractPort::PortStats;
     usingInternalStats_ = true;
@@ -210,6 +211,7 @@ void PcapPort::PortTransmitter::clearPacketList()
         pcap_send_queue *sq = sendQueueList_.takeFirst();
         pcap_sendqueue_destroy(sq);
     }
+    setPacketListLoopMode(false, 0); 
 }
 
 bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec, 
@@ -223,24 +225,22 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec,
     pktHdr.ts.tv_sec = sec;
     pktHdr.ts.tv_usec = usec;
 
-    if (sendQueueList_.size())
-        sendQ = sendQueueList_.last();
-    else
-        sendQ = pcap_sendqueue_alloc(1*1024*1024);
-
-    // Not enough space? Alloc another one!
-    if ((sendQ->len + length + sizeof(pcap_pkthdr)) > sendQ->maxlen)
+    sendQ = sendQueueList_.isEmpty() ? NULL : sendQueueList_.last();
+ 
+    if ((sendQ == NULL) || 
+            (sendQ->len + sizeof(pcap_pkthdr) + length) > sendQ->maxlen)
     {
-        sendQueueList_.append(sendQ);
-
         //! \todo (LOW): calculate sendqueue size
         sendQ = pcap_sendqueue_alloc(1*1024*1024);
+        sendQueueList_.append(sendQ);
+
+        // Validate that the pkt will fit inside the new sendQ
+        Q_ASSERT((length + sizeof(pcap_pkthdr)) < sendQ->maxlen);
     }
 
     if (pcap_sendqueue_queue(sendQ, &pktHdr, (u_char*) packet) < 0)
         op = false;
 
-    sendQueueList_.append(sendQ);
     return op;
 }
 
@@ -279,6 +279,8 @@ void PcapPort::PortTransmitter::run()
     const int kSyncTransmit = 1;
     int i;
 
+    qDebug("sendQueueList_.size = %d", sendQueueList_.size());
+
     for(i = 0; i < sendQueueList_.size(); i++)
     {
         int ret;
@@ -286,17 +288,17 @@ _restart:
         ret = sendQueueTransmit(handle_, sendQueueList_.at(i), kSyncTransmit);
 
         if (ret < 0)
+        {
+            qDebug("error in sendQueueTransmit()");
             return;
-
-        //! \todo (HIGH): Timing between subsequent sendQueues
+        }
     }
 
     if (returnToQIdx_ >= 0)
     {
         i = returnToQIdx_;
 
-        //! \todo (HIGH) 1s fixed; Change this to ipg of last stream
-        QThread::usleep(1000000);
+        udelay(loopDelay_);
         goto _restart;
     }
 }
@@ -327,11 +329,14 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
             return -2;
         }
 
+        // A pktLen of size 0 is used at the end of a sendQueue and before
+        // the next sendQueue - i.e. for inter sendQueue timing
         if(pktLen > 0)
+        {
             pcap_sendpacket(p, pkt, pktLen);
-
-        stats_->txPkts++;
-        stats_->txBytes += pktLen;
+            stats_->txPkts++;
+            stats_->txBytes += pktLen;
+        }
 
         // Step to the next packet in the buffer
         hdr = (struct pcap_pkthdr*) ((uchar*)hdr + sizeof(*hdr) + pktLen);

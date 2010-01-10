@@ -73,22 +73,18 @@ void AbstractPort::updatePacketList()
     int     len;
     bool    isVariable;
     uchar   pktBuf[2000];
-    long    sec;
-    long    usec;
+    long    sec = 0; 
+    long    usec = 0;
 
     qDebug("In %s", __FUNCTION__);
-
-    clearPacketList();
-    //returnToQIdx = -1;
 
     // First sort the streams by ordinalValue
     qSort(streamList_);
 
-    sec = 0;
-    usec = 0;
+    clearPacketList();
+
     for (int i = 0; i < streamList_.size(); i++)
     {
-//_restart:
         if (streamList_[i]->isEnabled())
         {
             long numPackets, numBursts;
@@ -139,18 +135,17 @@ void AbstractPort::updatePacketList()
                     if (len <= 0)
                         continue;
 
+                    qDebug("q(%d, %d, %d) sec = %lu usec = %lu",
+                            i, j, k, sec, usec);
+
+                    appendToPacketList(sec, usec, pktBuf, len); 
+
                     usec += ipg;
                     if (usec > 1000000)
                     {
                         sec++;
                         usec -= 1000000;
                     }
-
-                    qDebug("q(%d, %d, %d) sec = %lu usec = %lu",
-                            i, j, k, sec, usec);
-
-                    appendToPacketList(sec, usec, pktBuf, len); 
-
                 } // for (numPackets)
 
                 usec += ibg;
@@ -179,7 +174,8 @@ void AbstractPort::updatePacketList()
                          returnToQIdx = 0;
                      */
 
-                    setPacketListLoopMode(true);
+                    setPacketListLoopMode(true, streamList_[i]->sendUnit() == 
+                          OstProto::StreamControl::e_su_bursts ? ibg : ipg);
                     goto _stop_no_more_pkts;
 
                 case ::OstProto::StreamControl::e_nw_goto_next:
