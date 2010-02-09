@@ -1,6 +1,8 @@
 #include "portmodel.h"
 #include "portgrouplist.h"
+
 #include <QIcon>
+#include <QPainter>
 
 #if 0
 #define DBG0(x)    qDebug(x)
@@ -14,6 +16,23 @@ PortModel::PortModel(PortGroupList *p, QObject *parent)
     : QAbstractItemModel(parent) 
 {
     pgl = p;
+
+    portIconFactory[OstProto::LinkStateUnknown][false] = 
+        QIcon(":/icons/bullet_white.png");
+    portIconFactory[OstProto::LinkStateDown][false] = 
+        QIcon(":/icons/bullet_red.png");
+    portIconFactory[OstProto::LinkStateUp][false] = 
+        QIcon(":/icons/bullet_green.png");
+
+    for (int linkState = 0; linkState < kLinkStatesCount; linkState++)
+    {
+        QPixmap pixmap(":/icons/deco_exclusive.png");
+        QPainter painter(&pixmap);
+        QIcon icon = portIconFactory[linkState][false]; 
+
+        painter.drawPixmap(0, 0, icon.pixmap(QSize(32,32))); 
+        portIconFactory[linkState][true] = QIcon(pixmap);
+    }
 }
 
 int PortModel::rowCount(const QModelIndex &parent) const
@@ -123,38 +142,27 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
     }
     else
     {
+        if (pgl->mPortGroups.at(parent.row())->numPorts() == 0)
+        {
+            DBG0("Exit PortModel data 4\n");
+            return QVariant();
+        }
+
+        Port *port = pgl->mPortGroups.at(parent.row())->mPorts[index.row()];
+
         // Non Top Level - Port
         if ((role == Qt::DisplayRole))
         {
-            DBG0("Exit PortModel data 4\n");
-            if (pgl->mPortGroups.at(parent.row())->numPorts() == 0)
-                return QVariant();
-
-            return QString("Port %1: %2 [%3] (%4)").
-                arg(pgl->mPortGroups.at(
-                    parent.row())->mPorts[index.row()]->id()).
-                arg(pgl->mPortGroups.at(
-                    parent.row())->mPorts[index.row()]->name()).
-                arg(QHostAddress("0.0.0.0").toString()).    // FIXME(LOW)
-                arg(pgl->mPortGroups.at(
-                    parent.row())->mPorts[index.row()]->description());
+            // FIXME(LOW) - IP Address below
+            return QString("Port %1: %2 [%3] (%4)")
+                .arg(port->id())
+                .arg(port->name())
+                .arg(QHostAddress("0.0.0.0").toString())
+                .arg(port->description());
         }
         else if ((role == Qt::DecorationRole))
         {
-            DBG0("Exit PortModel data 5\n");
-            if (pgl->mPortGroups.at(parent.row())->numPorts() == 0)
-                return QVariant();
-            switch(pgl->mPortGroups.at(parent.row())->mPorts[index.row()]->linkState())
-            {
-                case OstProto::LinkStateUnknown:
-                    return QIcon(":/icons/bullet_white.png");
-                case OstProto::LinkStateDown:
-                    return QIcon(":/icons/bullet_red.png");
-                case OstProto::LinkStateUp:
-                    return QIcon(":/icons/bullet_green.png");
-                default:
-                    qFatal("unexpected/unimplemented port oper state");
-            }
+            return portIconFactory[port->linkState()][port->hasExclusiveControl()];
         }
         else
         {
@@ -235,7 +243,7 @@ QModelIndex PortModel::parent(const QModelIndex &index) const
 
 bool PortModel::isPortGroup(const QModelIndex& index)
 {
-    if ((index.internalId() & 0xFFFF) == 0xFFFF)
+    if (index.isValid() && ((index.internalId() & 0xFFFF) == 0xFFFF))
         return true;
     else
         return false;
@@ -243,7 +251,7 @@ bool PortModel::isPortGroup(const QModelIndex& index)
 
 bool PortModel::isPort(const QModelIndex& index)
 {
-    if ((index.internalId() & 0xFFFF) != 0xFFFF)
+    if (index.isValid() && ((index.internalId() & 0xFFFF) != 0xFFFF))
         return true;
     else
         return false;

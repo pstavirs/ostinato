@@ -31,7 +31,6 @@ class Port : public QObject {
 
 public:
     enum AdminStatus    { AdminDisable, AdminEnable };
-    enum ControlMode    { ControlShared, ControlExclusive };
 
     // FIXME(HIGH): default args is a hack for QList operations on Port
     Port(quint32 id = 0xFFFFFFFF, quint32 pgId = 0xFFFFFFFF);
@@ -50,8 +49,8 @@ public:
         { return QString().fromStdString(d.notes()); }
     AdminStatus adminStatus() 
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
-    ControlMode controlMode() 
-        { return (d.is_exclusive_control()?ControlExclusive:ControlShared); }
+    bool hasExclusiveControl() 
+        { return d.is_exclusive_control(); }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
     void setAlias(QString &alias) { mUserAlias = alias; }

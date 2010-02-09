@@ -16,6 +16,9 @@ public:
 
     void init();
 
+    virtual bool hasExclusiveControl() { return false; }
+    virtual bool setExclusiveControl(bool exclusive) { return false; }
+
     virtual void clearPacketList() { 
         transmitter_->clearPacketList();
         setPacketListLoopMode(false, 0);
@@ -114,11 +117,14 @@ protected:
 
     PortMonitor     *monitorRx_;
     PortMonitor     *monitorTx_;
+
+    void updateNotes();
+
 private:
     PortTransmitter *transmitter_;
     PortCapturer    *capturer_;
 
-    static pcap_if_t        *deviceList_;
+    static pcap_if_t *deviceList_;
 };
 
 #endif

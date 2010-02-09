@@ -16,6 +16,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     setupUi(this);
 
+    tvPortList->header()->hide();
+
     tvStreamList->setItemDelegate(delegate);
 
     tvStreamList->verticalHeader()->setDefaultSectionSize(
@@ -26,6 +28,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvPortList->addAction(actionDelete_Port_Group);
     tvPortList->addAction(actionConnect_Port_Group);
     tvPortList->addAction(actionDisconnect_Port_Group);
+
+    tvPortList->addAction(actionExclusive_Control);
 
     tvStreamList->addAction(actionNew_Stream);
     tvStreamList->addAction(actionEdit_Stream);
@@ -210,6 +214,8 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
         actionDelete_Port_Group->setDisabled(true);
         actionConnect_Port_Group->setDisabled(true);
         actionDisconnect_Port_Group->setDisabled(true);
+
+        actionExclusive_Control->setDisabled(true);
     
         goto _EXIT;
     }
@@ -219,6 +225,9 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
     if (plm->isPortGroup(current))
     {
         actionDelete_Port_Group->setEnabled(true);
+
+        actionExclusive_Control->setDisabled(true);
+
         switch(plm->portGroup(current).state())
         {
             case QAbstractSocket::UnconnectedState:
@@ -247,9 +256,15 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
     }
     else if (plm->isPort(current))
     {
-        actionDelete_Port_Group->setEnabled(false);
-        actionConnect_Port_Group->setEnabled(false);
-        actionDisconnect_Port_Group->setEnabled(false);
+        actionDelete_Port_Group->setDisabled(true);
+        actionConnect_Port_Group->setDisabled(true);
+        actionDisconnect_Port_Group->setDisabled(true);
+
+        actionExclusive_Control->setEnabled(true);
+        if (plm->port(current).hasExclusiveControl())
+            actionExclusive_Control->setChecked(true);
+        else
+            actionExclusive_Control->setChecked(false);
     }
 
 _EXIT:
@@ -346,6 +361,15 @@ void PortsWindow::on_actionDisconnect_Port_Group_triggered()
     if (current.isValid())
         plm->portGroup(current).disconnectFromHost();
 }
+
+void PortsWindow::on_actionExclusive_Control_triggered(bool checked)
+{
+    QModelIndex    current = tvPortList->selectionModel()->currentIndex();
+
+    if (plm->isPort(current))
+        plm->portGroup(current.parent()).modifyPort(current.row(), checked);
+}
+
 #if 0
 void PortsWindow::on_actionNew_Stream_triggered()
 {

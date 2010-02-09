@@ -25,6 +25,10 @@ public:
         const ::OstProto::PortIdList* request,
         ::OstProto::PortConfigList* response,
         ::google::protobuf::Closure* done);
+    void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
+        const ::OstProto::PortConfigList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
     virtual void getStreamIdList(::google::protobuf::RpcController* controller,
         const ::OstProto::PortId* request,
         ::OstProto::StreamIdList* response,

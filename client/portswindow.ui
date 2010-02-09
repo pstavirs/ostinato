@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>689</width>
-    <height>254</height>
+    <height>352</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -34,7 +34,10 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="portDetail" >
-       <layout class="QGridLayout" >
+       <layout class="QVBoxLayout" >
+        <property name="spacing" >
+         <number>6</number>
+        </property>
         <property name="leftMargin" >
          <number>0</number>
         </property>
@@ -47,13 +50,7 @@
         <property name="bottomMargin" >
          <number>0</number>
         </property>
-        <property name="horizontalSpacing" >
-         <number>6</number>
-        </property>
-        <property name="verticalSpacing" >
-         <number>6</number>
-        </property>
-        <item row="0" column="0" >
+        <item>
          <layout class="QHBoxLayout" >
           <item>
            <spacer>
@@ -77,7 +74,7 @@
           </item>
          </layout>
         </item>
-        <item row="1" column="0" >
+        <item>
          <widget class="QFrame" name="frAggregate" >
           <property name="frameShape" >
            <enum>QFrame::StyledPanel</enum>
@@ -129,52 +126,23 @@
           </layout>
          </widget>
         </item>
-        <item row="2" column="0" >
-         <widget class="QTabWidget" name="tabWidget" >
-          <property name="currentIndex" >
-           <number>0</number>
+        <item>
+         <widget class="QTableView" name="tvStreamList" >
+          <property name="contextMenuPolicy" >
+           <enum>Qt::ActionsContextMenu</enum>
           </property>
-          <widget class="QWidget" name="tab_3" >
-           <attribute name="title" >
-            <string>Control</string>
-           </attribute>
-           <layout class="QHBoxLayout" >
-            <property name="spacing" >
-             <number>0</number>
-            </property>
-            <property name="leftMargin" >
-             <number>0</number>
-            </property>
-            <property name="topMargin" >
-             <number>0</number>
-            </property>
-            <property name="rightMargin" >
-             <number>0</number>
-            </property>
-            <property name="bottomMargin" >
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QTableView" name="tvStreamList" >
-              <property name="contextMenuPolicy" >
-               <enum>Qt::ActionsContextMenu</enum>
-              </property>
-              <property name="frameShape" >
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="lineWidth" >
-               <number>0</number>
-              </property>
-              <property name="selectionMode" >
-               <enum>QAbstractItemView::ExtendedSelection</enum>
-              </property>
-              <property name="selectionBehavior" >
-               <enum>QAbstractItemView::SelectRows</enum>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+          <property name="frameShape" >
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="lineWidth" >
+           <number>1</number>
+          </property>
+          <property name="selectionMode" >
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+          <property name="selectionBehavior" >
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
          </widget>
         </item>
        </layout>
@@ -252,6 +220,14 @@
    </property>
    <property name="text" >
     <string>Edit Stream</string>
+   </property>
+  </action>
+  <action name="actionExclusive_Control" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Exclusive Control (EXPERIMENTAL)</string>
    </property>
   </action>
  </widget>

@@ -104,7 +104,7 @@ void RpcServer::done(::google::protobuf::Message *request,
     *((quint32*)(&msg[4])) = HTONL(len); // len
 
     // Avoid printing stats since it happens once every couple of seconds
-    if (pendingMethodId != 12)
+    if (pendingMethodId != 13)
     {
         qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
             __FUNCTION__, len + PB_HDR_SIZE, response->DebugString().c_str());

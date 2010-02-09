@@ -23,21 +23,19 @@ class PortGroup : public QObject {
     Q_OBJECT
 
 private:
-    quint32            mPortGroupId;
-    static quint32    mPortGroupAllocId;
-    QString            mUserAlias;            // user defined
-#if 0 // PB
-    QTcpSocket        *mpSocket;
-    QHostAddress    mServerAddress;
-    quint16            mServerPort;
-#endif
-    PbRpcChannel                        *rpcChannel;
-    PbRpcController                        *rpcController;
-    PbRpcController                        *rpcControllerStats;
-    bool                                isGetStatsPending_;
-    ::OstProto::OstService::Stub        *serviceStub;
+    static quint32 mPortGroupAllocId;
+    quint32        mPortGroupId;
+    QString        mUserAlias;            // user defined
 
-    ::OstProto::PortIdList                portIdList;
+    PbRpcChannel    *rpcChannel;
+    PbRpcController *rpcController;
+    PbRpcController *rpcControllerStats;
+    bool            isGetStatsPending_;
+
+    ::OstProto::OstService::Stub *serviceStub;
+
+    ::OstProto::PortIdList       portIdList;
+
 public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;
 
@@ -66,6 +64,10 @@ public:
 
     void processPortIdList(OstProto::PortIdList *portIdList);
     void processPortConfigList(OstProto::PortConfigList *portConfigList);
+
+    void modifyPort(int portId, bool isExclusive);
+    void processModifyPortAck(int portIndex, OstProto::Ack *ack);
+    void processUpdatedPortConfig(OstProto::PortConfigList *portConfigList);
 
     void getStreamIdList(int portIndex = 0, 
         OstProto::StreamIdList *streamIdList = NULL);
@@ -98,7 +100,7 @@ signals:
     void statsChanged(quint32 portGroupId);
 
 private slots:
-    void on_rpcChannel_stateChanged();
+    void on_rpcChannel_stateChanged(QAbstractSocket::SocketState state);
     void on_rpcChannel_connected();
     void on_rpcChannel_disconnected();
     void on_rpcChannel_error(QAbstractSocket::SocketError socketError);

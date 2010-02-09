@@ -1,9 +1,7 @@
-// stream.proto
-
 package OstProto;
 
 message StreamId {
-    required uint32    id = 1;
+    required uint32 id = 1;
 }
 
 message StreamCore {
@@ -136,7 +134,7 @@ message PortConfigList {
 }
 
 message StreamConfigList {
-    required PortId    port_id = 1;
+    required PortId port_id = 1;
     repeated Stream stream = 2;
 }
 
@@ -188,6 +186,7 @@ message PortStatsList {
 service OstService {
     rpc getPortIdList(Void) returns (PortIdList);
     rpc getPortConfig(PortIdList) returns (PortConfigList);
+    rpc modifyPort(PortConfigList) returns (Ack);
 
     rpc getStreamIdList(PortId) returns (StreamIdList);
     rpc getStreamConfig(StreamIdList) returns (StreamConfigList);

@@ -51,6 +51,8 @@ private slots:
     void on_actionConnect_Port_Group_triggered();
     void on_actionDisconnect_Port_Group_triggered();
 
+    void on_actionExclusive_Control_triggered(bool checked);
+
     void on_actionNew_Stream_triggered();
     void on_actionEdit_Stream_triggered();
     void on_actionDelete_Stream_triggered();

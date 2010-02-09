@@ -16,6 +16,8 @@ public:
     ~WinPcapPort();
 
     virtual OstProto::LinkState linkState();
+    virtual bool hasExclusiveControl();
+    virtual bool setExclusiveControl(bool exclusive);
 
 protected:
     class PortMonitor: public PcapPort::PortMonitor 

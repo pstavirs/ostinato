@@ -193,9 +193,18 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
     if (orientation == Qt::Horizontal)
     {
         uint portGroupIdx, portIdx;
+        QString portName;
 
         getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
-        return QString("Port %1-%2").arg(portGroupIdx).arg(portIdx);
+        portName = QString("Port %1-%2").arg(portGroupIdx).arg(portIdx);
+        if (portGroupIdx < (uint) pgl->mPortGroups.size() 
+            && portIdx < (uint) pgl->mPortGroups.at(portGroupIdx)->mPorts.size())
+        {
+            if (!pgl->mPortGroups.at(portGroupIdx)->mPorts[portIdx]->notes()
+                    .isEmpty())
+                portName += " *";
+        }
+        return portName;
     }
     else
         return PortStatName.at(section);

@@ -22,6 +22,7 @@ Port::Port(quint32 id, quint32 portGroupId)
 
 Port::~Port()
 {
+    qDebug("%s", __FUNCTION__);
     while (!mStreams.isEmpty())
         delete mStreams.takeFirst();
 }

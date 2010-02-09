@@ -1,5 +1,7 @@
 #include "winpcapport.h"
 
+#include <QProcess> 
+
 #ifdef Q_OS_WIN32
 
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
@@ -20,6 +22,8 @@ WinPcapPort::WinPcapPort(int id, const char *device)
             sizeof(uint));
     if (!linkStateOid_)
         qFatal("failed to alloc oidData");
+
+    data_.set_is_exclusive_control(hasExclusiveControl());
 }
 
 WinPcapPort::~WinPcapPort()
@@ -51,6 +55,41 @@ OstProto::LinkState WinPcapPort::linkState()
     }
 
     return linkState_; 
+}
+
+bool WinPcapPort::hasExclusiveControl() 
+{
+    QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    int exitCode;
+
+    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+
+    exitCode = QProcess::execute("bindconfig.exe", 
+            QStringList() << "comp" << portName);
+
+    qDebug("%s: exit code %d", __FUNCTION__, exitCode);
+
+    if (exitCode == 0)
+        return true;
+    else
+        return false;
+}
+
+bool WinPcapPort::setExclusiveControl(bool exclusive) 
+{
+    QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    QString status;
+
+    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+
+    status = exclusive ? "disable" : "enable";
+
+    QProcess::execute("bindconfig.exe", 
+            QStringList() << "comp" << portName << status);
+
+    updateNotes(); 
+
+    return (exclusive == hasExclusiveControl());
 }
 
 WinPcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,

@@ -32,7 +32,7 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
     // FIXME(LOW):Can't for my life figure out why this ain't working!
     //QMetaObject::connectSlotsByName(this);
     connect(rpcChannel, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-        this, SLOT(on_rpcChannel_stateChanged()));
+        this, SLOT(on_rpcChannel_stateChanged(QAbstractSocket::SocketState)));
     connect(rpcChannel, SIGNAL(connected()), 
         this, SLOT(on_rpcChannel_connected()));
     connect(rpcChannel, SIGNAL(disconnected()),
@@ -56,9 +56,9 @@ PortGroup::~PortGroup()
 // ------------------------------------------------
 //                      Slots
 // ------------------------------------------------
-void PortGroup::on_rpcChannel_stateChanged()
+void PortGroup::on_rpcChannel_stateChanged(QAbstractSocket::SocketState state)
 {
-    qDebug("state changed");
+    qDebug("state changed %d", state);
     emit portGroupDataChanged(mPortGroupId);
 }
 
@@ -272,6 +272,80 @@ void PortGroup::processPortConfigList(OstProto::PortConfigList *portConfigList)
         getStreamIdList();
 
 _error_exit:
+    delete portConfigList;
+}
+
+void PortGroup::modifyPort(int portIndex, bool isExclusive)
+{
+    OstProto::PortConfigList portConfigList;
+    OstProto::Port *port;
+    OstProto::Ack *ack;
+
+    qDebug("%s: portIndex = %d", __FUNCTION__, portIndex);
+
+    Q_ASSERT(portIndex < mPorts.size());
+
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    mainWindow->setDisabled(true);
+
+    port = portConfigList.add_port();
+    port->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    port->set_is_exclusive_control(isExclusive);
+
+    ack = new OstProto::Ack;
+    rpcController->Reset();
+    serviceStub->modifyPort(rpcController, &portConfigList, ack, 
+        NewCallback(this, &PortGroup::processModifyPortAck, portIndex, ack));
+}
+
+void PortGroup::processModifyPortAck(int portIndex, OstProto::Ack *ack)
+{
+    OstProto::PortIdList portIdList;
+    OstProto::PortId *portId;
+    OstProto::PortConfigList *portConfigList;
+
+    qDebug("In %s", __FUNCTION__);
+
+    portId = portIdList.add_port_id();
+    portId->set_id(mPorts[portIndex]->id());
+
+    portConfigList = new OstProto::PortConfigList;
+
+    rpcController->Reset();
+    serviceStub->getPortConfig(rpcController, &portIdList, portConfigList, 
+        NewCallback(this, &PortGroup::processUpdatedPortConfig, 
+            portConfigList));
+
+    delete ack;
+}
+
+void PortGroup::processUpdatedPortConfig(OstProto::PortConfigList *portConfigList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (rpcController->Failed())
+    {
+        qDebug("%s: rpc failed", __FUNCTION__);
+        goto _exit;
+    }
+
+    if (portConfigList->port_size() != 1)
+        qDebug("port size = %d (expected = 1)", portConfigList->port_size());
+
+    for(int i = 0; i < portConfigList->port_size(); i++)
+    {
+        uint    id;
+
+        id = portConfigList->port(i).port_id().id();
+        // FIXME: don't mix port id & index into mPorts[]
+        mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
+    }
+
+    emit portGroupDataChanged(mPortGroupId);
+
+_exit:
+    mainWindow->setEnabled(true);
+    QApplication::restoreOverrideCursor();
     delete portConfigList;
 }
 

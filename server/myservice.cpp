@@ -69,6 +69,30 @@ void MyService::getPortConfig(::google::protobuf::RpcController* /*controller*/,
     done->Run();
 }
 
+void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::PortConfigList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_size(); i++)
+    {
+        OstProto::Port port;
+        int id;
+
+        port = request->port(i);
+        id = port.port_id().id();
+        if (id < portInfo.size())
+        {
+            portInfo[id]->modify(port);
+        }
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+    done->Run();
+}
+
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,
     const ::OstProto::PortId* request,
     ::OstProto::StreamIdList* response,

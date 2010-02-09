@@ -13,7 +13,6 @@ AbstractPort::AbstractPort(int id, const char *device)
     //! \todo (LOW) admin enable/disable of port
     data_.set_is_enabled(true);
 
-    //! \todo (HIGH) port exclusive control
     data_.set_is_exclusive_control(false);
 
     isSendQueueDirty_ = true;
@@ -23,12 +22,29 @@ AbstractPort::AbstractPort(int id, const char *device)
     resetStats();
 }
 
+AbstractPort::~AbstractPort()
+{
+}    
+
 void AbstractPort::init()
 {
 }    
 
-AbstractPort::~AbstractPort()
+bool AbstractPort::modify(const OstProto::Port &port)
 {
+    bool ret = false;
+
+    //! \todo Use reflection to find out which fields are set
+    if (port.has_is_exclusive_control())
+    {
+        bool val = port.is_exclusive_control();
+
+        ret = setExclusiveControl(val);
+        if (ret)
+            data_.set_is_exclusive_control(val);
+    }
+
+    return ret;
 }    
 
 StreamBase* AbstractPort::streamAtIndex(int index)

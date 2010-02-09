@@ -64,7 +64,7 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Closure* done)
 {
     char    msg[MSGBUF_SIZE];
-    int        len;
+    int     len;
     bool    ret;
   
     if (isPending)
@@ -80,6 +80,7 @@ void PbRpcChannel::CallMethod(
         call.done = done;
 
         pendingCallList.append(call);
+	qDebug("pendingCallList size = %d", pendingCallList.size());
 
         Q_ASSERT(pendingCallList.size() < 100);
 
@@ -113,7 +114,7 @@ void PbRpcChannel::CallMethod(
     *((quint32*)(&msg[4])) = HTONL(len); // len
 
     // Avoid printing stats since it happens every couple of seconds
-    if (pendingMethodId != 12)
+    if (pendingMethodId != 13)
     {
         qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, 
                 PB_HDR_SIZE + len, req->DebugString().c_str());
@@ -230,7 +231,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
             response->ParseFromArray((void*) msg, len);
 
             // Avoid printing stats
-            if (method != 12)
+            if (method != 13)
             {
                 qDebug("client(%s): Parsed as %s", __FUNCTION__,
                     response->DebugString().c_str());
@@ -262,6 +263,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
     if (pendingCallList.size())
     {
         RpcCall call = pendingCallList.takeFirst();
+        qDebug("RpcChannel: executing queued method %d", call.method->index());
         CallMethod(call.method, call.controller, call.request, call.response,
                 call.done);
     }

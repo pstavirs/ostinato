@@ -44,24 +44,12 @@ PcapPort::PcapPort(int id, const char *device)
 
 void PcapPort::init()
 {
-    QString notes;
-
-    if (!monitorRx_->isDirectional() && !data_.is_exclusive_control())
-        notes.append("<i>Rx Frames/Bytes</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>");
-
     if (!monitorTx_->isDirectional())
-    {
         transmitter_->useExternalStats(&stats_);
-        notes.append("<i>Tx Frames/Bytes</i>: Only Ostinato Tx pkts (Tx by others NOT included)<br>");
-    }
 
     transmitter_->setHandle(monitorRx_->handle());
 
-    if (!notes.isEmpty())
-        data_.set_notes(QString("<b>Limitation(s)</b>"
-            "<p>%1<br>"
-            "Rx/Tx Rates are also subject to above limitation(s)</p>").
-            arg(notes).toStdString());
+    updateNotes();
 
     monitorRx_->start();
     monitorTx_->start();
@@ -73,6 +61,25 @@ PcapPort::~PcapPort()
     delete transmitter_;
     delete monitorTx_;
     delete monitorRx_;
+}
+
+void PcapPort::updateNotes()
+{
+    QString notes;
+
+    if (!monitorRx_->isDirectional() && !hasExclusiveControl())
+        notes.append("<i>Rx Frames/Bytes</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>");
+
+    if (!monitorTx_->isDirectional() && !hasExclusiveControl())
+        notes.append("<i>Tx Frames/Bytes</i>: Only Ostinato Tx pkts (Tx by others NOT included)<br>");
+
+    if (notes.isEmpty())
+        data_.set_notes("");
+    else
+        data_.set_notes(QString("<b>Limitation(s)</b>"
+            "<p>%1<br>"
+            "Rx/Tx Rates are also subject to above limitation(s)</p>").
+            arg(notes).toStdString());
 }
 
 PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,

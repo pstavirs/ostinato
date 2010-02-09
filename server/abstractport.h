@@ -33,6 +33,12 @@ public:
     int id() { return data_.port_id().id(); }
     void protoDataCopyInto(OstProto::Port *port) { port->CopyFrom(data_); }
 
+    bool modify(const OstProto::Port &port);
+
+    virtual OstProto::LinkState linkState() { return linkState_; }
+    virtual bool hasExclusiveControl() = 0;
+    virtual bool setExclusiveControl(bool exclusive) = 0;
+
     int streamCount() { return streamList_.size(); }
     StreamBase* streamAtIndex(int index);
     StreamBase* stream(int streamId);
@@ -41,8 +47,6 @@ public:
 
     bool isDirty() { return isSendQueueDirty_; }
     void setDirty() { isSendQueueDirty_ = true; }
-
-    virtual OstProto::LinkState linkState() { return linkState_; }
 
     virtual void clearPacketList() = 0;
     virtual bool appendToPacketList(long sec, long usec, const uchar *packet, 
