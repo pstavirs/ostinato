@@ -2,6 +2,7 @@
 
 #include <QInputDialog>
 #include <QItemSelectionModel>
+#include <QMessageBox>
 
 #include "streamconfigdialog.h"
 #include "streamlistdelegate.h"
@@ -286,6 +287,13 @@ void PortsWindow::on_pbApply_clicked()
     if (!plm->isPort(curPort))
     {
         qDebug("%s: curPort is not a port", __FUNCTION__);
+        goto _exit;
+    }
+
+    if (plm->port(curPort).getStats().state().is_transmit_on())
+    {
+        QMessageBox::information(0, "Configuration Change",
+                "Please stop transmit on the port before applying any changes");
         goto _exit;
     }
 

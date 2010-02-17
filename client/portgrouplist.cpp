@@ -22,12 +22,13 @@ PortGroupList::PortGroupList()
 
 PortGroupList::~PortGroupList()
 {
-    while (!mPortGroups.isEmpty())
-        delete mPortGroups.takeFirst();
-
     delete portStatsModelTester_;
     delete portModelTester_;
     delete streamModelTester_;
+
+    while (!mPortGroups.isEmpty())
+        delete mPortGroups.takeFirst();
+
 }
 
 bool PortGroupList::isPortGroup(const QModelIndex& index)

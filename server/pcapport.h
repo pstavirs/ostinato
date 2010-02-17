@@ -95,7 +95,7 @@ protected:
         AbstractPort::PortStats *stats_;
         bool usingInternalHandle_;
         pcap_t *handle_;
-        bool stop_;
+        volatile bool stop_;
     };
 
     class PortCapturer: public QThread
@@ -109,7 +109,7 @@ protected:
 
     private:
         QString         device_;
-        bool            stop_;
+        volatile bool   stop_;
         QTemporaryFile  capFile_;
         pcap_t          *handle_;
         pcap_dumper_t   *dumpHandle_;

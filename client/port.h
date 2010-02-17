@@ -1,9 +1,10 @@
 #ifndef _PORT_H
 #define _PORT_H
 
-#include <QObject>
-#include <QString>
 #include <QList>
+#include <QString>
+#include <QTemporaryFile>
+
 #include "stream.h"
 
 //class StreamModel;
@@ -16,6 +17,7 @@ class Port : public QObject {
 
     OstProto::Port        d;
     OstProto::PortStats   stats;
+    QTemporaryFile *capFile_;
 
     // FIXME(HI): consider removing mPortId as it is duplicated inside 'd'
     quint32        mPortId;
@@ -66,6 +68,12 @@ public:
         { return stats.state().link_state(); }
 
     OstProto::PortStats    getStats() { return stats; }
+    QTemporaryFile* getCaptureFile() 
+    {
+        delete capFile_;
+        capFile_ = new QTemporaryFile();
+        return capFile_; 
+    }
 
     // FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
     void updatePortConfig(OstProto::Port *port);

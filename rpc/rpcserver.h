@@ -23,7 +23,6 @@ class RpcServer : public QObject
 
     bool isPending;
     int pendingMethodId;
-    PbRpcController controller_;
     QString errorString_;
 
 public:
@@ -33,8 +32,7 @@ public:
     bool registerService(::google::protobuf::Service *service,
         quint16 tcpPortNum);
     QString errorString();
-    void done(::google::protobuf::Message *req, 
-            ::google::protobuf::Message *resp);
+    void done(PbRpcController *controller);
 
 private slots:
      void when_newConnection();

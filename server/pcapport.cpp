@@ -57,6 +57,7 @@ void PcapPort::init()
 
 PcapPort::~PcapPort()
 {
+    qDebug("In %s", __FUNCTION__);
     delete capturer_;
     delete transmitter_;
     delete monitorTx_;
@@ -296,7 +297,8 @@ _restart:
 
         if (ret < 0)
         {
-            qDebug("error in sendQueueTransmit()");
+            qDebug("error %d in sendQueueTransmit()", ret);
+            stop_ = false;
             return;
         }
     }
@@ -312,7 +314,8 @@ _restart:
 
 void PcapPort::PortTransmitter::stop()
 {
-    stop_ = true;
+    if (isRunning())
+        stop_ = true;
 }
 
 int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
@@ -332,7 +335,6 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
 
         if (stop_)
         {
-            stop_ = false;
             return -2;
         }
 
@@ -453,7 +455,6 @@ void PcapPort::PortCapturer::run()
         if (stop_) 
         {
             qDebug("user requested capture stop\n");
-            stop_ = false;
             break;
         }
     }
@@ -461,11 +462,13 @@ void PcapPort::PortCapturer::run()
     pcap_close(handle_);
     dumpHandle_ = NULL;
     handle_ = NULL;
+    stop_ = false;
 }
 
 void PcapPort::PortCapturer::stop()
 {
-    stop_ = true;
+    if (isRunning())
+        stop_ = true;
 }
 
 QFile* PcapPort::PortCapturer::captureFile()

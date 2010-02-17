@@ -25,6 +25,9 @@ MyService::MyService()
 
 MyService::~MyService()
 {
+    //! \todo Use a singleton destroyer instead 
+    // http://www.research.ibm.com/designpatterns/pubs/ph-jun96.txt
+    delete PortManager::instance();
 }
 
 void MyService::getPortIdList(::google::protobuf::RpcController* /*controller*/,

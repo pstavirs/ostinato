@@ -7,26 +7,24 @@
 #include <QTemporaryFile>
 #include <QtGlobal>
 
+using ::google::protobuf::NewCallback;
+
 extern QMainWindow *mainWindow;
 
-quint32    PortGroup::mPortGroupAllocId = 0;
+quint32 PortGroup::mPortGroupAllocId = 0;
 
 PortGroup::PortGroup(QHostAddress ip, quint16 port)
 {
     // Allocate an id for self
     mPortGroupId = PortGroup::mPortGroupAllocId++;
 
-    rpcChannel = new PbRpcChannel(ip, port);
+    portIdList_ = new OstProto::PortIdList;
+    portStatsList_ = new OstProto::PortStatsList;
 
-    /*! 
-      \todo (HIGH) RPC Controller should be allocated and deleted for each RPC invocation
-      as implemented currently, if a RPC is invoked before the previous completes,
-      rpc controller is overwritten due to the Reset() call - maybe we need to pass the
-      pointer to the controller to the callback function also?
-    */
-    rpcController = new PbRpcController;
-    rpcControllerStats = new PbRpcController;
+    statsController = new PbRpcController(portIdList_, portStatsList_);
     isGetStatsPending_ = false;
+
+    rpcChannel = new PbRpcChannel(ip, port);
     serviceStub = new OstProto::OstService::Stub(rpcChannel);
 
     // FIXME(LOW):Can't for my life figure out why this ain't working!
@@ -47,9 +45,8 @@ PortGroup::~PortGroup()
     // Disconnect and free rpc channel etc.
     PortGroup::disconnectFromHost();
     delete serviceStub;
-    delete rpcControllerStats;
-    delete rpcController;
     delete rpcChannel;
+    delete statsController;
 }
 
 
@@ -64,17 +61,17 @@ void PortGroup::on_rpcChannel_stateChanged(QAbstractSocket::SocketState state)
 
 void PortGroup::on_rpcChannel_connected()
 {
-    OstProto::Void            void_;
-    OstProto::PortIdList    *portIdList;
+    OstProto::Void *void_ = new OstProto::Void;
+    OstProto::PortIdList *portIdList = new OstProto::PortIdList;
     
     qDebug("connected\n");
     emit portGroupDataChanged(mPortGroupId);
 
     qDebug("requesting portlist ...");
-    portIdList = new OstProto::PortIdList();
-    rpcController->Reset();
-    serviceStub->getPortIdList(rpcController, &void_, portIdList, 
-        NewCallback(this, &PortGroup::processPortIdList, portIdList));
+    
+    PbRpcController *controller = new PbRpcController(void_, portIdList);
+    serviceStub->getPortIdList(controller, void_, portIdList, 
+            NewCallback(this, &PortGroup::processPortIdList, controller));
 }
 
 void PortGroup::on_rpcChannel_disconnected()
@@ -95,112 +92,16 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
     emit portGroupDataChanged(mPortGroupId);
 }
 
-void PortGroup::when_configApply(int portIndex, uint *cookie)
+void PortGroup::processPortIdList(PbRpcController *controller)
 {
-    uint            *op;
-    OstProto::Ack    *ack;
+    OstProto::PortIdList *portIdList 
+        = static_cast<OstProto::PortIdList*>(controller->response());
 
-    Q_ASSERT(portIndex < mPorts.size());
+    Q_ASSERT(portIdList != NULL);
 
-    if (state() != QAbstractSocket::ConnectedState)
-    {
-        if (cookie != NULL)
-            delete cookie;
-        return;
-    }
-
-    if (cookie == NULL)
-    {
-        // cookie[0]: op [0 - delete, 1 - add, 2 - modify, 3 - Done!]
-        // cookie[1]: *ack
-        cookie = new uint[2];
-        ack = new OstProto::Ack;
-
-        cookie[0] = (uint) 0;
-        cookie[1] = (uint) ack;
-    }
-    else
-    {
-        ack = (OstProto::Ack*) cookie[1];
-    }
-
-    Q_ASSERT(cookie != NULL);
-    op = &cookie[0];
-
-    switch (*op)
-    {
-    case 0:
-        {
-            OstProto::StreamIdList        streamIdList;
-
-            QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-            mainWindow->setDisabled(true);
-
-            qDebug("applying 'deleted streams' ...");
-
-            streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
-            mPorts[portIndex]->getDeletedStreamsSinceLastSync(streamIdList);
-
-            (*op)++;
-            rpcController->Reset();
-            serviceStub->deleteStream(rpcController, &streamIdList, ack, 
-                ::google::protobuf::NewCallback(this, &PortGroup::when_configApply, portIndex, cookie));
-            break;
-        }
-
-    case 1:
-        {
-            OstProto::StreamIdList        streamIdList;
-
-            qDebug("applying 'new streams' ...");
-
-            streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
-            mPorts[portIndex]->getNewStreamsSinceLastSync(streamIdList);
-
-            (*op)++;
-            rpcController->Reset();
-            serviceStub->addStream(rpcController, &streamIdList, ack, 
-                ::google::protobuf::NewCallback(this, &PortGroup::when_configApply, portIndex, cookie));
-            break;
-        }
-
-    case 2:
-        {
-            OstProto::StreamConfigList    streamConfigList;
-
-            qDebug("applying 'modified streams' ...");
-
-            streamConfigList.mutable_port_id()->set_id(mPorts[portIndex]->id());
-            mPorts[portIndex]->getModifiedStreamsSinceLastSync(streamConfigList);
-
-            (*op)++;
-            rpcController->Reset();
-            serviceStub->modifyStream(rpcController, &streamConfigList, ack, 
-                ::google::protobuf::NewCallback(this, &PortGroup::when_configApply, portIndex, cookie));
-            break;
-        }
-
-    case 3:
-        qDebug("apply completed");
-        mPorts[portIndex]->when_syncComplete();
-        delete cookie;
-
-        mainWindow->setEnabled(true);
-        QApplication::restoreOverrideCursor();
-
-        break;
-
-    default:
-        qDebug("%s: Unknown Op!!!", __FUNCTION__);
-        break;
-    }
-}
-
-void PortGroup::processPortIdList(OstProto::PortIdList *portIdList)
-{
     qDebug("got a portlist ...");
 
-    if (rpcController->Failed())
+    if (controller->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
         goto _error_exit;
@@ -221,32 +122,37 @@ void PortGroup::processPortIdList(OstProto::PortIdList *portIdList)
 
     emit portListChanged(mPortGroupId);
 
-    this->portIdList.CopyFrom(*portIdList);
+    portIdList_->CopyFrom(*portIdList);
 
     // Request PortConfigList
     {
-        OstProto::PortConfigList    *portConfigList;
-        
         qDebug("requesting port config list ...");
-        portConfigList = new OstProto::PortConfigList();
-        rpcController->Reset();
-        serviceStub->getPortConfig(rpcController,
-            portIdList, portConfigList, NewCallback(this, 
-                &PortGroup::processPortConfigList, portConfigList));
-    }
+        OstProto::PortIdList *portIdList2 = new OstProto::PortIdList();
+        OstProto::PortConfigList *portConfigList = new OstProto::PortConfigList();
+        PbRpcController *controller2 = new PbRpcController(portIdList2, 
+                portConfigList);
 
-    goto _exit;
+        portIdList2->CopyFrom(*portIdList);
+
+        serviceStub->getPortConfig(controller, portIdList2, portConfigList, 
+                NewCallback(this, &PortGroup::processPortConfigList, controller2));
+
+        goto _exit;
+    }
 
 _error_exit:
 _exit:
-    delete portIdList;
+    delete controller;
 }
 
-void PortGroup::processPortConfigList(OstProto::PortConfigList *portConfigList)
+void PortGroup::processPortConfigList(PbRpcController *controller)
 {
+    OstProto::PortConfigList *portConfigList 
+        = static_cast<OstProto::PortConfigList*>(controller->response());
+
     qDebug("In %s", __FUNCTION__);
 
-    if (rpcController->Failed())
+    if (controller->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
         goto _error_exit;
@@ -272,14 +178,89 @@ void PortGroup::processPortConfigList(OstProto::PortConfigList *portConfigList)
         getStreamIdList();
 
 _error_exit:
-    delete portConfigList;
+    delete controller;
+}
+
+void PortGroup::when_configApply(int portIndex)
+{
+    OstProto::StreamIdList *streamIdList;
+    OstProto::StreamConfigList *streamConfigList;
+    OstProto::Ack *ack;
+    PbRpcController *controller;
+
+    Q_ASSERT(portIndex < mPorts.size());
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return;
+
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    mainWindow->setDisabled(true);
+
+    qDebug("applying 'deleted streams' ...");
+    streamIdList = new OstProto::StreamIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamIdList, ack);
+
+    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getDeletedStreamsSinceLastSync(*streamIdList);
+
+    serviceStub->deleteStream(controller, streamIdList, ack, 
+        NewCallback(this, &PortGroup::processDeleteStreamAck, controller));
+
+    qDebug("applying 'new streams' ...");
+    streamIdList = new OstProto::StreamIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamIdList, ack);
+
+    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getNewStreamsSinceLastSync(*streamIdList);
+
+    serviceStub->addStream(controller, streamIdList, ack, 
+        NewCallback(this, &PortGroup::processAddStreamAck, controller));
+
+    qDebug("applying 'modified streams' ...");
+    streamConfigList = new OstProto::StreamConfigList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamConfigList, ack);
+
+    streamConfigList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getModifiedStreamsSinceLastSync(*streamConfigList);
+
+    serviceStub->modifyStream(controller, streamConfigList, ack, 
+            NewCallback(this, &PortGroup::processModifyStreamAck, 
+                portIndex, controller));
+}
+
+void PortGroup::processAddStreamAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processDeleteStreamAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processModifyStreamAck(int portIndex, 
+        PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    qDebug("apply completed");
+    mPorts[portIndex]->when_syncComplete();
+
+    mainWindow->setEnabled(true);
+    QApplication::restoreOverrideCursor();
+
+    delete controller;
 }
 
 void PortGroup::modifyPort(int portIndex, bool isExclusive)
 {
-    OstProto::PortConfigList portConfigList;
-    OstProto::Port *port;
-    OstProto::Ack *ack;
+    OstProto::PortConfigList *portConfigList = new OstProto::PortConfigList;
+    OstProto::Ack *ack = new OstProto::Ack;
 
     qDebug("%s: portIndex = %d", __FUNCTION__, portIndex);
 
@@ -288,42 +269,51 @@ void PortGroup::modifyPort(int portIndex, bool isExclusive)
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     mainWindow->setDisabled(true);
 
-    port = portConfigList.add_port();
+    OstProto::Port *port = portConfigList->add_port();
     port->mutable_port_id()->set_id(mPorts[portIndex]->id());
     port->set_is_exclusive_control(isExclusive);
 
-    ack = new OstProto::Ack;
-    rpcController->Reset();
-    serviceStub->modifyPort(rpcController, &portConfigList, ack, 
-        NewCallback(this, &PortGroup::processModifyPortAck, portIndex, ack));
+    PbRpcController *controller = new PbRpcController(portConfigList, ack);
+    serviceStub->modifyPort(controller, portConfigList, ack, 
+        NewCallback(this, &PortGroup::processModifyPortAck, controller));
 }
 
-void PortGroup::processModifyPortAck(int portIndex, OstProto::Ack *ack)
-{
-    OstProto::PortIdList portIdList;
-    OstProto::PortId *portId;
-    OstProto::PortConfigList *portConfigList;
-
-    qDebug("In %s", __FUNCTION__);
-
-    portId = portIdList.add_port_id();
-    portId->set_id(mPorts[portIndex]->id());
-
-    portConfigList = new OstProto::PortConfigList;
-
-    rpcController->Reset();
-    serviceStub->getPortConfig(rpcController, &portIdList, portConfigList, 
-        NewCallback(this, &PortGroup::processUpdatedPortConfig, 
-            portConfigList));
-
-    delete ack;
-}
-
-void PortGroup::processUpdatedPortConfig(OstProto::PortConfigList *portConfigList)
+void PortGroup::processModifyPortAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
-    if (rpcController->Failed())
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed", __FUNCTION__);
+        goto _exit;
+    }
+
+    {
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::PortConfigList *portConfigList = new OstProto::PortConfigList;
+        PbRpcController *controller2 = new PbRpcController(portIdList, 
+                portConfigList);
+
+        OstProto::PortId *portId = portIdList->add_port_id();
+        portId->CopyFrom(static_cast<OstProto::PortConfigList*>
+                (controller->request())->mutable_port(0)->port_id());
+
+        serviceStub->getPortConfig(controller, portIdList, portConfigList, 
+            NewCallback(this, &PortGroup::processUpdatedPortConfig, 
+                controller2));
+    }
+_exit:
+    delete controller;
+}
+
+void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
+{
+    OstProto::PortConfigList *portConfigList
+        = static_cast<OstProto::PortConfigList*>(controller->response());
+
+    qDebug("In %s", __FUNCTION__);
+
+    if (controller->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
         goto _exit;
@@ -346,47 +336,47 @@ void PortGroup::processUpdatedPortConfig(OstProto::PortConfigList *portConfigLis
 _exit:
     mainWindow->setEnabled(true);
     QApplication::restoreOverrideCursor();
-    delete portConfigList;
+    delete controller;
 }
 
-void PortGroup::getStreamIdList(int portIndex, 
-    OstProto::StreamIdList *streamIdList)
+void PortGroup::getStreamIdList()
 {
-    ::OstProto::PortId            portId;
-
-    qDebug("In %s", __FUNCTION__);
-
-    if (streamIdList == NULL)
+    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
     {
-        // First invocation (uses default params) - 
-        //     request StreamIdList for first port
+        OstProto::PortId *portId = new OstProto::PortId;
+        OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
+        PbRpcController *controller = new PbRpcController(portId, streamIdList);
 
-        Q_ASSERT(portIndex == 0);
-        Q_ASSERT(numPorts() > 0);
-        streamIdList = new ::OstProto::StreamIdList();
+        portId->set_id(mPorts[portIndex]->id());
 
-        goto _request;
+        serviceStub->getStreamIdList(controller, portId, streamIdList,
+                NewCallback(this, &PortGroup::processStreamIdList, 
+                    portIndex, controller));
     }
+}
 
-    qDebug("got a streamIdlist ...");
+void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
+{
+    OstProto::StreamIdList *streamIdList
+        = static_cast<OstProto::StreamIdList*>(controller->response());
 
-    if (rpcController->Failed())
+    qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
+
+    if (controller->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
-        goto _next_port;     // FIXME(MED): Partial RPC
+        goto _exit;
     }
 
     Q_ASSERT(portIndex < numPorts());
 
     if (streamIdList->port_id().id() != mPorts[portIndex]->id())
     {
-        qDebug("%s: Invalid portId %d (expected %d) received for portIndex %d",
-            __FUNCTION__, streamIdList->port_id().id(), mPorts[portIndex]->id(), 
-            portIndex);
-        goto _next_port;     // FIXME(MED): Partial RPC
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            streamIdList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
     }
 
-    // FIXME(MED): need to mPorts.clear()???
     for(int i = 0; i < streamIdList->stream_id_size(); i++)
     {
         uint streamId;
@@ -395,82 +385,69 @@ void PortGroup::getStreamIdList(int portIndex,
         mPorts[portIndex]->insertStream(streamId);
     }
 
-_next_port:
-    // FIXME(HI): ideally we shd use signals/slots but this means
-    // we will have to use Port* instead of Port with QList<> -
-    // need to find a way for this
     mPorts[portIndex]->when_syncComplete();
-    portIndex++;
-    if (portIndex >= numPorts())
+
+    // Are we done for all ports?
+    if (numPorts() && portIndex >= (numPorts()-1))
     {
-        // We're done for all ports !!!
-
         // FIXME(HI): some way to reset streammodel 
-
-        delete streamIdList;
-
-        if (numPorts() > 0)
-            getStreamConfigList();
-
-        goto _exit;
+        getStreamConfigList();
     }
 
-_request:
-    portId.set_id(mPorts[portIndex]->id());
-    streamIdList->Clear();
-
-    rpcController->Reset();
-    serviceStub->getStreamIdList(rpcController, &portId, streamIdList,
-        NewCallback(this, &PortGroup::getStreamIdList,
-            portIndex, streamIdList));
-
-    goto _exit;
-
-
-
 _exit:
-    return;
+    delete controller;
 }
 
-void PortGroup::getStreamConfigList(int portIndex,
-    OstProto::StreamConfigList *streamConfigList)
+void PortGroup::getStreamConfigList()
 {
-    OstProto::StreamIdList    streamIdList;
+    qDebug("requesting stream config list ...");
+
+    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
+    {
+        OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
+        OstProto::StreamConfigList *streamConfigList 
+                = new OstProto::StreamConfigList;
+        PbRpcController *controller = new PbRpcController(
+                streamIdList, streamConfigList);
+
+        streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+        for (int j = 0; j < mPorts[portIndex]->numStreams(); j++)
+        {
+            OstProto::StreamId *s = streamIdList->add_stream_id();
+            s->set_id(mPorts[portIndex]->streamByIndex(j)->id());
+        }
+
+        serviceStub->getStreamConfig(controller, streamIdList, streamConfigList,
+                NewCallback(this, &PortGroup::processStreamConfigList, 
+                    portIndex, controller));
+    }
+}
+
+void PortGroup::processStreamConfigList(int portIndex, 
+        PbRpcController *controller)
+{
+    OstProto::StreamConfigList *streamConfigList
+        = static_cast<OstProto::StreamConfigList*>(controller->response());
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
-    if (streamConfigList == NULL)
-    {
-        // First invocation using default params 
-        //        - request for first port
+    Q_ASSERT(portIndex < numPorts());
 
-        Q_ASSERT(portIndex == 0);
-        Q_ASSERT(numPorts() > 0);
-
-        streamConfigList = new OstProto::StreamConfigList;
-
-        goto _request;
-    }
-
-    qDebug("got a streamconfiglist");
-
-    if (rpcController->Failed())
+    if (controller->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
-        goto _next_port;
+        goto _exit;
     }
 
     Q_ASSERT(portIndex < numPorts());
 
     if (streamConfigList->port_id().id() != mPorts[portIndex]->id())
     {
-        qDebug("%s: Invalid portId %d (expected %d) received for portIndex %d",
-            __FUNCTION__, streamConfigList->port_id().id(), 
-            mPorts[portIndex]->id(), portIndex);
-        goto _next_port;     // FIXME(MED): Partial RPC
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            streamConfigList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
     }
 
-    // FIXME(MED): need to mStreams.clear()???
     for(int i = 0; i <  streamConfigList->stream_size(); i++)
     {
         uint streamId;
@@ -480,84 +457,53 @@ void PortGroup::getStreamConfigList(int portIndex,
             streamConfigList->mutable_stream(i));
     }
 
-_next_port:
-    portIndex++;
-
+    // Are we done for all ports?
     if (portIndex >= numPorts())
     {
-        // We're done for all ports !!!
-
         // FIXME(HI): some way to reset streammodel 
-
-        delete streamConfigList;
-        goto _exit;
     }
-
-_request:
-    qDebug("requesting stream config list ...");
-
-    streamIdList.Clear();
-    streamIdList.mutable_port_id()->set_id(mPorts[portIndex]->id());
-    for (int j = 0; j < mPorts[portIndex]->numStreams(); j++)
-    {
-        OstProto::StreamId    *s;
-
-        s = streamIdList.add_stream_id();
-        s->set_id(mPorts[portIndex]->streamByIndex(j)->id());
-    }
-    streamConfigList->Clear();
-
-    rpcController->Reset();
-    serviceStub->getStreamConfig(rpcController,
-        &streamIdList, streamConfigList, NewCallback(this, 
-            &PortGroup::getStreamConfigList, portIndex, streamConfigList));
 
 _exit:
-    return;
-}
-
-void PortGroup::processModifyStreamAck(OstProto::Ack * /*ack*/)
-{
-    qDebug("In %s", __FUNCTION__);
-
-    qDebug("Modify Successful!!");
-
-    // TODO(HI): Apply Button should now be disabled???!!!!???
+    delete controller;
 }
 
 void PortGroup::startTx(QList<uint> *portList)
 {
-    OstProto::PortIdList    portIdList;
-    OstProto::Ack            *ack;
-
     qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
-        return;
+        goto _exit;
 
-    ack = new OstProto::Ack;
     if (portList == NULL)
         goto _exit;
-    else
+
     {
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
+
         for (int i = 0; i < portList->size(); i++)
         {
-            OstProto::PortId    *portId;
-            portId = portIdList.add_port_id();
+            OstProto::PortId *portId = portIdList->add_port_id();
             portId->set_id(portList->at(i));
         }
-    }
 
-    serviceStub->startTx(rpcController, &portIdList, ack,
-            NewCallback(this, &PortGroup::processStartTxAck, ack));
+        serviceStub->startTx(controller, portIdList, ack,
+                NewCallback(this, &PortGroup::processStartTxAck, controller));
+    }
 _exit:
     return;
+}
+
+void PortGroup::processStartTxAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
 }
 
 void PortGroup::stopTx(QList<uint> *portList)
 {
-    OstProto::PortIdList    portIdList;
-    OstProto::Ack            *ack;
 
     qDebug("In %s", __FUNCTION__);
 
@@ -566,28 +512,33 @@ void PortGroup::stopTx(QList<uint> *portList)
 
     if ((portList == NULL) || (portList->size() == 0))
         goto _exit;
-
-    ack = new OstProto::Ack;
-
-    for (int i = 0; i < portList->size(); i++)
     {
-        OstProto::PortId    *portId;
-        portId = portIdList.add_port_id();
-        portId->set_id(portList->at(i));
-    }
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
 
-    rpcController->Reset();
-    serviceStub->stopTx(rpcController, &portIdList, ack,
-            NewCallback(this, &PortGroup::processStopTxAck, ack));
+        for (int i = 0; i < portList->size(); i++)
+        {
+            OstProto::PortId *portId = portIdList->add_port_id();
+            portId->set_id(portList->at(i));
+        }
+
+        serviceStub->stopTx(controller, portIdList, ack,
+                NewCallback(this, &PortGroup::processStopTxAck, controller));
+    }
 _exit:
     return;
+}
+
+void PortGroup::processStopTxAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
 }
 
 void PortGroup::startCapture(QList<uint> *portList)
 {
-    OstProto::PortIdList    portIdList;
-    OstProto::Ack            *ack;
-
     qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
@@ -596,27 +547,33 @@ void PortGroup::startCapture(QList<uint> *portList)
     if ((portList == NULL) || (portList->size() == 0))
         goto _exit;
 
-    ack = new OstProto::Ack;
-
-    for (int i = 0; i < portList->size(); i++)
     {
-        OstProto::PortId    *portId;
-        portId = portIdList.add_port_id();
-        portId->set_id(portList->at(i));
-    }
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
 
-    rpcController->Reset();
-    serviceStub->startCapture(rpcController, &portIdList, ack,
-            NewCallback(this, &PortGroup::processStartCaptureAck, ack));
+        for (int i = 0; i < portList->size(); i++)
+        {
+            OstProto::PortId *portId = portIdList->add_port_id();
+            portId->set_id(portList->at(i));
+        }
+
+        serviceStub->startCapture(controller, portIdList, ack,
+            NewCallback(this, &PortGroup::processStartCaptureAck, controller));
+    }
 _exit:
     return;
+}
+
+void PortGroup::processStartCaptureAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
 }
 
 void PortGroup::stopCapture(QList<uint> *portList)
 {
-    OstProto::PortIdList    portIdList;
-    OstProto::Ack            *ack;
-
     qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
@@ -625,25 +582,33 @@ void PortGroup::stopCapture(QList<uint> *portList)
     if ((portList == NULL) || (portList->size() == 0))
         goto _exit;
 
-    ack = new OstProto::Ack;
-    for (int i = 0; i < portList->size(); i++)
     {
-        OstProto::PortId    *portId;
-        portId = portIdList.add_port_id();
-        portId->set_id(portList->at(i));
-    }
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
 
-    rpcController->Reset();
-    serviceStub->stopCapture(rpcController, &portIdList, ack,
-            NewCallback(this, &PortGroup::processStopCaptureAck, ack));
+        for (int i = 0; i < portList->size(); i++)
+        {
+            OstProto::PortId *portId = portIdList->add_port_id();
+            portId->set_id(portList->at(i));
+        }
+
+        serviceStub->stopCapture(controller, portIdList, ack,
+            NewCallback(this, &PortGroup::processStopCaptureAck, controller));
+    }
 _exit:
     return;
 }
 
+void PortGroup::processStopCaptureAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
+}
+
 void PortGroup::viewCapture(QList<uint> *portList)
 {
-    static QTemporaryFile    *capFile = NULL;
-
     qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
@@ -652,62 +617,31 @@ void PortGroup::viewCapture(QList<uint> *portList)
     if ((portList == NULL) || (portList->size() != 1))
         goto _exit;
 
-    if (capFile)
-        delete capFile;
-
-    /*! \todo (MED) unable to reuse the same file 'coz capFile->resize(0) is
-        not working - it fails everytime */
-    capFile = new QTemporaryFile();
-    capFile->open();
-    qDebug("Temp CapFile = %s", capFile->fileName().toAscii().constData());
 
     for (int i = 0; i < portList->size(); i++)
     {
-        OstProto::PortId    portId;
-        OstProto::CaptureBuffer    *buf;
+        OstProto::PortId *portId = new OstProto::PortId;
+        OstProto::CaptureBuffer *buf = new OstProto::CaptureBuffer;
+        PbRpcController *controller = new PbRpcController(portId, buf);
+        QFile *capFile = mPorts[portList->at(i)]->getCaptureFile();
 
-        portId.set_id(portList->at(i));
+        portId->set_id(portList->at(i));
 
-        buf = new OstProto::CaptureBuffer;
-        rpcController->Reset();
-        rpcController->setBinaryBlob(capFile);
-        serviceStub->getCaptureBuffer(rpcController, &portId, buf,
-            NewCallback(this, &PortGroup::processViewCaptureAck, buf, (QFile*) capFile));
+        capFile->open(QIODevice::ReadWrite|QIODevice::Truncate);
+        qDebug("Temp CapFile = %s", capFile->fileName().toAscii().constData());
+        controller->setBinaryBlob(capFile);
+
+        serviceStub->getCaptureBuffer(controller, portId, buf,
+            NewCallback(this, &PortGroup::processViewCaptureAck, controller));
     }
 _exit:
     return;
 }
 
-void PortGroup::processStartTxAck(OstProto::Ack    *ack)
+void PortGroup::processViewCaptureAck(PbRpcController *controller)
 {
-    qDebug("In %s", __FUNCTION__);
+    QFile *capFile = static_cast<QFile*>(controller->binaryBlob());
 
-    delete ack;
-}
-
-void PortGroup::processStopTxAck(OstProto::Ack    *ack)
-{
-    qDebug("In %s", __FUNCTION__);
-
-    delete ack;
-}
-
-void PortGroup::processStartCaptureAck(OstProto::Ack    *ack)
-{
-    qDebug("In %s", __FUNCTION__);
-
-    delete ack;
-}
-
-void PortGroup::processStopCaptureAck(OstProto::Ack    *ack)
-{
-    qDebug("In %s", __FUNCTION__);
-
-    delete ack;
-}
-
-void PortGroup::processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFile)
-{
 #ifdef Q_OS_WIN32
     QString viewer("C:/Program Files/Wireshark/wireshark.exe");
 #else
@@ -722,90 +656,90 @@ void PortGroup::processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFi
     if (!QProcess::startDetached(viewer, QStringList() << capFile->fileName()))
         qDebug("Failed starting Wireshark");
 
-    delete buf;
+    delete controller;
 }
 
 void PortGroup::getPortStats()
 {
-    OstProto::PortStatsList    *portStatsList;
-
     //qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
-        return;
+        goto _exit;
 
     if (isGetStatsPending_)
-        return;
+        goto _exit;
 
-       portStatsList = new OstProto::PortStatsList;
-    rpcControllerStats->Reset();
+    statsController->Reset();
     isGetStatsPending_ = true;
-    serviceStub->getStats(rpcControllerStats, &portIdList, portStatsList,
-            NewCallback(this, &PortGroup::processPortStatsList, portStatsList));
+    serviceStub->getStats(statsController, 
+        static_cast<OstProto::PortIdList*>(statsController->request()), 
+        static_cast<OstProto::PortStatsList*>(statsController->response()), 
+        NewCallback(this, &PortGroup::processPortStatsList));
+
+_exit:
+    return;
 }
 
-void PortGroup::processPortStatsList(OstProto::PortStatsList *portStatsList)
+void PortGroup::processPortStatsList()
 {
     //qDebug("In %s", __FUNCTION__);
 
-    if (rpcControllerStats->Failed())
+    if (statsController->Failed())
     {
         qDebug("%s: rpc failed", __FUNCTION__);
         goto _error_exit;
     }
 
-    for(int i = 0; i < portStatsList->port_stats_size(); i++)
+    for(int i = 0; i < portStatsList_->port_stats_size(); i++)
     {
-        uint    id;
-
-        id = portStatsList->port_stats(i).port_id().id();
+        uint id = portStatsList_->port_stats(i).port_id().id();
         // FIXME: don't mix port id & index into mPorts[]
-        mPorts[id]->updateStats(portStatsList->mutable_port_stats(i));
+        mPorts[id]->updateStats(portStatsList_->mutable_port_stats(i));
     }
 
     emit statsChanged(mPortGroupId);
 
 _error_exit:
-    delete portStatsList;
     isGetStatsPending_ = false;
 }
 
 void PortGroup::clearPortStats(QList<uint> *portList)
 {
-    OstProto::PortIdList    portIdList;
-    OstProto::Ack            *ack;
-
     qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
-        return;
+        goto _exit;
 
-    ack = new OstProto::Ack;
-    if (portList == NULL)
-        portIdList.CopyFrom(this->portIdList);
-    else
     {
-        for (int i = 0; i < portList->size(); i++)
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
+
+        if (portList == NULL)
+            portIdList->CopyFrom(*portIdList_);
+        else
         {
-            OstProto::PortId    *portId;
-
-            portId = portIdList.add_port_id();
-            portId->set_id(portList->at(i));
+            for (int i = 0; i < portList->size(); i++)
+            {
+                OstProto::PortId *portId = portIdList->add_port_id();
+                portId->set_id(portList->at(i));
+            }
         }
-    }
 
-    rpcController->Reset();
-    serviceStub->clearStats(rpcController, &portIdList, ack,
-            NewCallback(this, &PortGroup::processClearStatsAck, ack));
+        serviceStub->clearStats(controller, portIdList, ack,
+            NewCallback(this, &PortGroup::processClearStatsAck, controller));
+    }
+_exit:
+    return;
 }
 
-void PortGroup::processClearStatsAck(OstProto::Ack    *ack)
+void PortGroup::processClearStatsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
     // Refresh stats immediately after a stats clear/reset
     getPortStats();
 
-    delete ack;
+    delete controller;
 }
 

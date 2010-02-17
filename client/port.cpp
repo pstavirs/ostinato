@@ -18,6 +18,7 @@ Port::Port(quint32 id, quint32 portGroupId)
     d.mutable_port_id()->set_id(id);
     stats.mutable_port_id()->set_id(id);
     mPortGroupId = portGroupId;
+    capFile_ = NULL;
 }
 
 Port::~Port()

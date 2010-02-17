@@ -28,13 +28,13 @@ private:
     QString        mUserAlias;            // user defined
 
     PbRpcChannel    *rpcChannel;
-    PbRpcController *rpcController;
-    PbRpcController *rpcControllerStats;
+    PbRpcController *statsController;
     bool            isGetStatsPending_;
 
-    ::OstProto::OstService::Stub *serviceStub;
+    OstProto::OstService::Stub *serviceStub;
 
-    ::OstProto::PortIdList       portIdList;
+    OstProto::PortIdList       *portIdList_;
+    OstProto::PortStatsList    *portStatsList_;
 
 public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;
@@ -62,36 +62,40 @@ public:
     QAbstractSocket::SocketState state() const
         { return rpcChannel->state(); }    
 
-    void processPortIdList(OstProto::PortIdList *portIdList);
-    void processPortConfigList(OstProto::PortConfigList *portConfigList);
+    void processPortIdList(PbRpcController *controller);
+    void processPortConfigList(PbRpcController *controller);
+
+    void processAddStreamAck(PbRpcController *controller);
+    void processDeleteStreamAck(PbRpcController *controller);
+    void processModifyStreamAck(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, bool isExclusive);
-    void processModifyPortAck(int portIndex, OstProto::Ack *ack);
-    void processUpdatedPortConfig(OstProto::PortConfigList *portConfigList);
+    void processModifyPortAck(PbRpcController *controller);
+    void processUpdatedPortConfig(PbRpcController *controller);
 
-    void getStreamIdList(int portIndex = 0, 
-        OstProto::StreamIdList *streamIdList = NULL);
-    void getStreamConfigList(int portIndex = 0,
-        OstProto::StreamConfigList *streamConfigList = NULL);
+    void getStreamIdList();
+    void processStreamIdList(int portIndex, PbRpcController *controller);
+    void getStreamConfigList();
+    void processStreamConfigList(int portIndex, PbRpcController *controller);
 
     void processModifyStreamAck(OstProto::Ack *ack);
 
     void startTx(QList<uint> *portList = NULL);
-    void processStartTxAck(OstProto::Ack *ack);
+    void processStartTxAck(PbRpcController *controller);
     void stopTx(QList<uint> *portList = NULL);
-    void processStopTxAck(OstProto::Ack *ack);
+    void processStopTxAck(PbRpcController *controller);
 
     void startCapture(QList<uint> *portList = NULL);
-    void processStartCaptureAck(OstProto::Ack *ack);
+    void processStartCaptureAck(PbRpcController *controller);
     void stopCapture(QList<uint> *portList = NULL);
-    void processStopCaptureAck(OstProto::Ack *ack);
+    void processStopCaptureAck(PbRpcController *controller);
     void viewCapture(QList<uint> *portList = NULL);
-    void processViewCaptureAck(OstProto::CaptureBuffer *buf, QFile *capFile);
+    void processViewCaptureAck(PbRpcController *controller);
 
     void getPortStats();
-    void processPortStatsList(OstProto::PortStatsList *portStatsList);
+    void processPortStatsList();
     void clearPortStats(QList<uint> *portList = NULL);
-    void processClearStatsAck(OstProto::Ack    *ack);
+    void processClearStatsAck(PbRpcController *controller);
 
 signals:
     void portGroupDataChanged(int portGroupId, int portId = 0xFFFF);
@@ -106,16 +110,8 @@ private slots:
     void on_rpcChannel_error(QAbstractSocket::SocketError socketError);
 
 public slots:
-    void when_configApply(int portIndex, uint *cookie = NULL);
-#if 0 // PB
-    void on_rpcChannel_when_dataAvail();
-#endif
+    void when_configApply(int portIndex);
 
-private:
-#if 0 // PB
-    void ProcessCapabilityInfo(const char *msg, qint32 size);
-    void ProcessMsg(const char *msg, quint32 size);
-#endif
 };
 
 #endif

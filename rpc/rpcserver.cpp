@@ -10,7 +10,6 @@ RpcServer::RpcServer()
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
-    controller_.Reset();
 }
 
 RpcServer::~RpcServer()
@@ -47,22 +46,22 @@ QString RpcServer::errorString()
     return errorString_;
 }
 
-void RpcServer::done(::google::protobuf::Message *request, 
-        ::google::protobuf::Message *response)
+void RpcServer::done(PbRpcController *controller)
 {
+    google::protobuf::Message *response = controller->response();
     QIODevice *blob;
     char msg[MSGBUF_SIZE];
     int len;
 
     //qDebug("In RpcServer::done");
 
-    if (controller_.Failed())
+    if (controller->Failed())
     {
         qDebug("rpc failed");
         goto _exit;
     }
 
-    blob = controller_.binaryBlob();
+    blob = controller->binaryBlob();
     if (blob)
     {
         len = blob->size();
@@ -114,8 +113,7 @@ void RpcServer::done(::google::protobuf::Message *request,
     clientSock->write(msg, PB_HDR_SIZE + len);
 
 _exit:
-    delete request;
-    delete response;
+    delete controller;
     isPending = false;
 }
 
@@ -176,6 +174,7 @@ void RpcServer::when_dataAvail()
     static quint32 len;
     const ::google::protobuf::MethodDescriptor    *methodDesc;
     ::google::protobuf::Message    *req, *resp;
+    PbRpcController *controller;
 
     if (!parsing)
     {
@@ -240,12 +239,12 @@ void RpcServer::when_dataAvail()
     //qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
         //resp->DebugString().c_str());
 
-    controller_.Reset();
+    controller = new PbRpcController(req, resp);
 
     //qDebug("before service->callmethod()");
 
-    service->CallMethod(methodDesc, &controller_, req, resp,
-        NewCallback(this, &RpcServer::done, req, resp));
+    service->CallMethod(methodDesc, controller, req, resp,
+        google::protobuf::NewCallback(this, &RpcServer::done, controller));
 
     parsing = false;
 

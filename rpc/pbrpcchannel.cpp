@@ -70,8 +70,9 @@ void PbRpcChannel::CallMethod(
     if (isPending)
     {
         RpcCall call;
-        qDebug("RpcChannel: queueing method %d since %d is pending", 
-            method->index(), pendingMethodId);
+        qDebug("RpcChannel: queueing method %d since %d is pending; "
+                "queued message = <%s>", 
+                method->index(), pendingMethodId, req->DebugString().c_str());
 
         call.method = method;
         call.controller = controller;
@@ -252,18 +253,19 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 
     }
 
+    done->Run();
+
     pendingMethodId = -1;
     controller = NULL;
     response = NULL;
     isPending = false;
     parsing = false;
 
-    done->Run();
-
     if (pendingCallList.size())
     {
         RpcCall call = pendingCallList.takeFirst();
-        qDebug("RpcChannel: executing queued method %d", call.method->index());
+        qDebug("RpcChannel: executing queued method %d <%s>", 
+                call.method->index(), call.request->DebugString().c_str());
         CallMethod(call.method, call.controller, call.request, call.response,
                 call.done);
     }
