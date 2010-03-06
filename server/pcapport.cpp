@@ -97,7 +97,13 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
 
     if (handle_ == NULL)
         goto _open_error;
-
+#ifdef Q_OS_WIN32
+    // pcap_setdirection() API is not supported in Windows.
+    // NOTE: WinPcap 4.1.1 and above exports a dummy API that returns -1
+    // but since we would like to work with previous versions of WinPcap
+    // also, we assume the API does not exist
+    ret = -1;
+#else
     switch (direction_)
     {
     case kDirectionRx:
@@ -109,6 +115,7 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     default:
         Q_ASSERT(false);
     }
+#endif
 
     if (ret < 0)
         goto _set_direction_error;

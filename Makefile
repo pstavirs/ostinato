@@ -1,4 +1,6 @@
-all:
+release: QMAKE_CONFIG=-config release
+
+all release: qmake
 	$(MAKE) -C rpc
 	$(MAKE) -C common
 	$(MAKE) -C server
@@ -17,7 +19,8 @@ distclean:
 	$(MAKE) -C client $@
 
 qmake:
-	cd rpc && qmake && cd ..
-	cd common && qmake && cd ..
-	cd server && qmake && cd ..
-	cd client && qmake && cd ..
+	cd rpc && qmake $(QMAKE_CONFIG) && cd ..
+	cd common && qmake $(QMAKE_CONFIG) && cd ..
+	cd server && qmake $(QMAKE_CONFIG) && cd ..
+	cd client && qmake $(QMAKE_CONFIG) && cd ..
+
