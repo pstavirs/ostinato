@@ -12,6 +12,7 @@
 #include "dot2snap.h"
 #include "vlan.h"    
 #include "vlanstack.h"    
+#include "arp.h"    
 #include "ip4.h"    
 #include "tcp.h"    
 #include "udp.h"    
@@ -28,36 +29,38 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kMacFieldNumber,
             (void*) MacProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
-               (void*) PayloadProtocol::createInstance);
+            (void*) PayloadProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
-               (void*) Eth2Protocol::createInstance);
+            (void*) Eth2Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot3FieldNumber,
-               (void*) Dot3Protocol::createInstance);
+            (void*) Dot3Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kLlcFieldNumber,
-               (void*) LlcProtocol::createInstance);
+            (void*) LlcProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSnapFieldNumber,
-               (void*) SnapProtocol::createInstance);
+            (void*) SnapProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot2LlcFieldNumber,
             (void*) Dot2LlcProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
             (void*) Dot2SnapProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
-               (void*) SVlanProtocol::createInstance);
+            (void*) SVlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanFieldNumber,
-               (void*) VlanProtocol::createInstance);
+            (void*) VlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
             (void*) VlanStackProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kArpFieldNumber,
+            (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
-               (void*) Ip4Protocol::createInstance);
+            (void*) Ip4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
-               (void*) TcpProtocol::createInstance);
+            (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
-               (void*) UdpProtocol::createInstance);
+            (void*) UdpProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
-               (void*) UserScriptProtocol::createInstance);
+            (void*) UserScriptProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSampleFieldNumber,
-               (void*) SampleProtocol::createInstance);
+            (void*) SampleProtocol::createInstance);
 
     populateNeighbourProtocols();
 }

@@ -123,8 +123,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // TODO(MED):
 
-    //! \todo Implement then enable these protocols - ARP, IPv6, ICMP, IGMP
-    rbL3Arp->setHidden(true);
+    //! \todo Implement then enable these protocols - IPv6, ICMP, IGMP
     rbL3Ipv6->setHidden(true);
     rbL4Icmp->setHidden(true);
     rbL4Igmp->setHidden(true);
@@ -179,7 +178,7 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoL3]->addButton(rbL3None, ButtonIdNone);
     bgProto[ProtoL3]->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ipv6, 0xFFFF);
-    bgProto[ProtoL3]->addButton(rbL3Arp, 0xFFFF);
+    bgProto[ProtoL3]->addButton(rbL3Arp, OstProto::Protocol::kArpFieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Other, ButtonIdOther);
 #endif
 
@@ -191,8 +190,8 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoL4]->addButton(rbL4None, 0);
     bgProto[ProtoL4]->addButton(rbL4Tcp, OstProto::Protocol::kTcpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
-    bgProto[ProtoL4]->addButton(rbL4Icmp, 0xFFFF);
-    bgProto[ProtoL4]->addButton(rbL4Igmp, 0xFFFF);
+    bgProto[ProtoL4]->addButton(rbL4Icmp, OstProto::Protocol::kIcmpFieldNumber);
+    bgProto[ProtoL4]->addButton(rbL4Igmp, OstProto::Protocol::kIgmpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Other, ButtonIdOther);
 #endif
 

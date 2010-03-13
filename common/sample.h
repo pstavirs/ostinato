@@ -1,10 +1,10 @@
 #ifndef _SAMPLE_H
 #define _SAMPLE_H
 
-#include "abstractprotocol.h"
-
 #include "sample.pb.h"
 #include "ui_sample.h"
+
+#include "abstractprotocol.h"
 
 /* 
 Sample Protocol Frame Format -
@@ -61,7 +61,7 @@ public:
     virtual QString name() const;
     virtual QString shortName() const;
 
-    virtual int    fieldCount() const;
+    virtual int fieldCount() const;
 
     virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,

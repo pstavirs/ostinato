@@ -11,6 +11,7 @@ FORMS += \
     llc.ui \
     snap.ui \
     vlan.ui \
+    arp.ui \
     ip4.ui \
     tcp.ui \
     udp.ui \
@@ -29,6 +30,7 @@ PROTOS += \
     vlan.proto \
     svlan.proto \
     vlanstack.proto \
+    arp.proto \
     ip4.proto \
     tcp.proto \
     udp.proto \
@@ -52,6 +54,7 @@ HEADERS += \
     vlan.h \
     svlan.h \
     vlanstack.h \
+    arp.h \
     ip4.h \
     tcp.h \
     udp.h \
@@ -71,6 +74,7 @@ SOURCES += \
     snap.cpp \
     vlan.cpp \
     svlan.cpp \
+    arp.cpp \
     ip4.cpp \
     tcp.cpp \
     udp.cpp \

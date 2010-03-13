@@ -84,7 +84,7 @@ quint32 SampleProtocol::protocolId(ProtocolIdType type) const
     return AbstractProtocol::protocolId(type);
 }
 
-int    SampleProtocol::fieldCount() const
+int SampleProtocol::fieldCount() const
 {
     return sample_fieldCount;
 }

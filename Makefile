@@ -1,10 +1,13 @@
 release: QMAKE_CONFIG=-config release
 
-all release: qmake
+all:
 	$(MAKE) -C rpc
 	$(MAKE) -C common
 	$(MAKE) -C server
 	$(MAKE) -C client
+
+release: qmake all
+
 
 clean:
 	$(MAKE) -C rpc $@
