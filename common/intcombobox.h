@@ -1,3 +1,6 @@
+#ifndef __INT_COMBO_BOX
+#define __INT_COMBO_BOX
+
 #include <QComboBox>
 
 class IntComboBox : public QComboBox
@@ -29,3 +32,5 @@ public:
             setEditText(QString().setNum(value));
     }
 };
+
+#endif

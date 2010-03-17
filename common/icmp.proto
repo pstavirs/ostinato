@@ -1,0 +1,19 @@
+import "protocol.proto";
+
+package OstProto;
+
+// Icmp Protocol
+message Icmp {
+
+    optional bool is_override_checksum    = 1;
+
+    optional uint32    type = 2 [default = 0x8];  // echo request
+    optional uint32    code = 3; 
+    optional uint32    checksum = 4;
+    optional uint32    identifier = 5 [default = 1234];
+    optional uint32    sequence = 6;
+}
+
+extend Protocol {
+    optional Icmp icmp = 142;
+}

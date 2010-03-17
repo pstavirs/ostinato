@@ -14,6 +14,7 @@
 #include "vlanstack.h"    
 #include "arp.h"    
 #include "ip4.h"    
+#include "icmp.h"    
 #include "tcp.h"    
 #include "udp.h"    
 #include "userscript.h"
@@ -52,6 +53,8 @@ ProtocolManager::ProtocolManager()
             (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
             (void*) Ip4Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
+            (void*) IcmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
             (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,

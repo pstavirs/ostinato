@@ -123,9 +123,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // TODO(MED):
 
-    //! \todo Implement then enable these protocols - IPv6, ICMP, IGMP
+    //! \todo Implement then enable these protocols - IPv6, IGMP
     rbL3Ipv6->setHidden(true);
-    rbL4Icmp->setHidden(true);
     rbL4Igmp->setHidden(true);
     //! \todo Enable navigation of streams
     pbPrev->setDisabled(true);

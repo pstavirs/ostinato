@@ -13,6 +13,7 @@ FORMS += \
     vlan.ui \
     arp.ui \
     ip4.ui \
+    icmp.ui \
     tcp.ui \
     udp.ui \
     userscript.ui \
@@ -32,6 +33,7 @@ PROTOS += \
     vlanstack.proto \
     arp.proto \
     ip4.proto \
+    icmp.proto \
     tcp.proto \
     udp.proto \
     userscript.proto \
@@ -56,6 +58,7 @@ HEADERS += \
     vlanstack.h \
     arp.h \
     ip4.h \
+    icmp.h \
     tcp.h \
     udp.h \
     userscript.h \
@@ -76,6 +79,7 @@ SOURCES += \
     svlan.cpp \
     arp.cpp \
     ip4.cpp \
+    icmp.cpp \
     tcp.cpp \
     udp.cpp \
     userscript.cpp \

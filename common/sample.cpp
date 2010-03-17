@@ -54,7 +54,7 @@ QString SampleProtocol::shortName() const
 }
 
 /*!
-  Return the ProtocolIdType for your protocol \n
+  TODO Return the ProtocolIdType for your protocol \n
 
   If your protocol doesn't have a protocolId field, you don't need to 
   reimplement this method - the base class implementation will do the 
@@ -66,7 +66,7 @@ AbstractProtocol::ProtocolIdType SampleProtocol::protocolIdType() const
 }
 
 /*!
-  Return the protocolId for your protoocol based on the 'type' requested \n
+  TODO Return the protocolId for your protoocol based on the 'type' requested \n
 
   If not all types are valid for your protocol, handle the valid type(s) 
   and for the remaining fallback to the base class implementation; if your 
@@ -89,6 +89,11 @@ int SampleProtocol::fieldCount() const
     return sample_fieldCount;
 }
 
+/*!
+  TODO Edit this function to return the appropriate flags for each field \n
+
+  See AbstractProtocol::FieldFlags for more info
+*/
 AbstractProtocol::FieldFlags SampleProtocol::fieldFlags(int index) const
 {
     AbstractProtocol::FieldFlags flags;
@@ -123,6 +128,11 @@ AbstractProtocol::FieldFlags SampleProtocol::fieldFlags(int index) const
     return flags;
 }
 
+/*!
+TODO: Edit this function to return the data for each field
+
+See AbstractProtocol::fieldData() for more info
+*/
 QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
         int streamIndex) const
 {
@@ -213,12 +223,11 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldFrameValue:
                 case FieldTextValue:
-                {
                     if (data.is_override_checksum())
                         cksum = data.checksum();
                     else
                         cksum = protocolFrameCksum(streamIndex, CksumIp);
-                }
+                    break;
                 default:
                     cksum = 0; // avoid the 'maybe used unitialized' warning
                     break;
@@ -257,7 +266,9 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                     return data.x();
                 case FieldTextValue:
+                    // Use the following line for display in decimal
                     return QString("%1").arg(data.x());
+                    // Use the following line for display in hexa-decimal
                     //return QString("%1").arg(data.x(), 8, BASE_HEX, QChar('0'));
                 case FieldFrameValue:
                 {
@@ -280,13 +291,15 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                     return data.y();
                 case FieldTextValue:
+                    // Use the following line for display in decimal
                     //return QString("%1").arg(data.y());
-                    return QString("%1").arg(data.y(), 8, BASE_HEX, QChar('0'));
+                    // Use the following line for display in hexa-decimal
+                    return QString("%1").arg(data.y(), 4, BASE_HEX, QChar('0'));
                 case FieldFrameValue:
                 {
                     QByteArray fv;
-                    fv.resize(4);
-                    qToBigEndian((quint32) data.y(), (uchar*) fv.data());
+                    fv.resize(2);
+                    qToBigEndian((quint16) data.y(), (uchar*) fv.data());
                     return fv;
                 }
                 default:
@@ -317,6 +330,11 @@ QVariant SampleProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
+/*!
+TODO: Edit this function to set the data for each field
+
+See AbstractProtocol::setFieldData() for more info
+*/
 bool SampleProtocol::setFieldData(int index, const QVariant &value, 
         FieldAttrib attrib)
 {
@@ -387,7 +405,7 @@ _exit:
 }
 
 /*!
-  Return the protocol frame size in bytes\n
+  TODO: Return the protocol frame size in bytes\n
 
   If your protocol has a fixed size - you don't need to reimplement this; the
   base class implementation is good enough
@@ -398,7 +416,7 @@ int SampleProtocol::protocolFrameSize(int streamIndex) const
 }
 
 /*!
-  If your protocol has any variable fields, return true \n
+  TODO: If your protocol has any variable fields, return true \n
 
   Otherwise you don't need to reimplement this method - the base class always
   returns false
@@ -409,7 +427,7 @@ bool SampleProtocol::isProtocolFrameValueVariable() const
 }
 
 /*!
-  If your protocol frame size can vary across pkts of the same stream,
+  TODO: If your protocol frame size can vary across pkts of the same stream,
   return true \n
 
   Otherwise you don't need to reimplement this method - the base class always
@@ -431,6 +449,11 @@ QWidget* SampleProtocol::configWidget()
     return configForm;
 }
 
+/*!
+TODO: Edit this function to load each field's data into the config Widget
+
+See AbstractProtocol::loadConfigWidget() for more info
+*/
 void SampleProtocol::loadConfigWidget()
 {
     configWidget();
@@ -451,6 +474,11 @@ void SampleProtocol::loadConfigWidget()
 
 }
 
+/*!
+TODO: Edit this function to store each field's data from the config Widget
+
+See AbstractProtocol::storeConfigWidget() for more info
+*/
 void SampleProtocol::storeConfigWidget()
 {
     bool isOk;

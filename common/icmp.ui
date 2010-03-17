@@ -1,0 +1,144 @@
+<ui version="4.0" >
+ <class>Icmp</class>
+ <widget class="QWidget" name="Icmp" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>258</width>
+    <height>168</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>Type</string>
+     </property>
+     <property name="buddy" >
+      <cstring>typeCombo</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="IntComboBox" name="typeCombo" />
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLabel" name="label_2" >
+     <property name="text" >
+      <string>Code</string>
+     </property>
+     <property name="buddy" >
+      <cstring>codeEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QLineEdit" name="codeEdit" />
+   </item>
+   <item row="2" column="0" >
+    <widget class="QCheckBox" name="overrideCksum" >
+     <property name="text" >
+      <string>Checksum</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QLineEdit" name="cksumEdit" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="0" >
+    <widget class="QLabel" name="label_4" >
+     <property name="text" >
+      <string>Identifier</string>
+     </property>
+     <property name="buddy" >
+      <cstring>idEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" >
+    <widget class="QLineEdit" name="idEdit" />
+   </item>
+   <item row="4" column="0" >
+    <widget class="QLabel" name="label_5" >
+     <property name="text" >
+      <string>Sequence</string>
+     </property>
+     <property name="buddy" >
+      <cstring>seqEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" >
+    <widget class="QLineEdit" name="seqEdit" />
+   </item>
+   <item row="5" column="1" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IntComboBox</class>
+   <extends>QComboBox</extends>
+   <header>intcombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>typeCombo</tabstop>
+  <tabstop>codeEdit</tabstop>
+  <tabstop>overrideCksum</tabstop>
+  <tabstop>cksumEdit</tabstop>
+  <tabstop>idEdit</tabstop>
+  <tabstop>seqEdit</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>overrideCksum</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cksumEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>33</x>
+     <y>70</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>96</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
