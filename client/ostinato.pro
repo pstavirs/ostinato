@@ -1,5 +1,6 @@
 TEMPLATE = app
 CONFIG += qt
+RC_FILE = ostinato.rc
 QT += network script
 INCLUDEPATH += "../rpc/" "../common/"
 LIBS += -lprotobuf
@@ -66,6 +67,11 @@ SOURCES += \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp 
+
+
+QMAKE_DISTCLEAN += object_script.*
+
+include(../version.pri)
 
 # TODO(LOW): Test only
 include(modeltest.pri)

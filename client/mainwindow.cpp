@@ -12,6 +12,9 @@
 #include <QDockWidget>
 #include <QProcess>
 
+extern const char* version;
+extern const char* revision;
+
 PortGroupList    *pgl;
 
 MainWindow::MainWindow(QWidget *parent) 
@@ -58,6 +61,8 @@ void MainWindow::on_actionHelpAbout_triggered()
 
     Ui::About about;
     about.setupUi(aboutDialog);
+    about.versionLabel->setText(
+            QString("Version: %1 Revision: %2").arg(version).arg(revision));
 
     aboutDialog->exec();
 

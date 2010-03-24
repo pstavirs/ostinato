@@ -7,11 +7,15 @@
 #include <QMessageBox>
 
 extern int myport;
+extern const char* version;
+extern const char* revision;
 
 Drone::Drone(QWidget *parent)
      : QWidget(parent)
 {
     setupUi(this);
+    versionLabel->setText(
+            QString("Version: %1 Revision: %2").arg(version).arg(revision));
 
     rpcServer = new RpcServer();
     service = new MyService();

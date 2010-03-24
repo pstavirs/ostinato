@@ -38,3 +38,6 @@ SOURCES += \
 SOURCES += myservice.cpp 
 SOURCES += pcapextra.cpp 
 
+QMAKE_DISTCLEAN += object_script.*
+
+include (../version.pri)

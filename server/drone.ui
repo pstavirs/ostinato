@@ -43,6 +43,16 @@ p, li { white-space: pre-wrap; }&#xd;
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="versionLabel" >
+     <property name="text" >
+      <string>Version/Revision Placeholder</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="label_3" >
      <property name="text" >
       <string>(Server)</string>
