@@ -1,5 +1,6 @@
 #include "winpcapport.h"
 
+#include <QCoreApplication> 
 #include <QProcess> 
 
 #ifdef Q_OS_WIN32
@@ -58,11 +59,16 @@ OstProto::LinkState WinPcapPort::linkState()
 bool WinPcapPort::hasExclusiveControl() 
 {
     QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    QString bindConfigFilePath(QCoreApplication::applicationDirPath()
+                + "/bindconfig.exe");
     int exitCode;
 
     qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
 
-    exitCode = QProcess::execute("bindconfig.exe", 
+    if (!QFile::exists(bindConfigFilePath))
+        return false;
+
+    exitCode = QProcess::execute(bindConfigFilePath, 
             QStringList() << "comp" << portName);
 
     qDebug("%s: exit code %d", __FUNCTION__, exitCode);
@@ -76,13 +82,18 @@ bool WinPcapPort::hasExclusiveControl()
 bool WinPcapPort::setExclusiveControl(bool exclusive) 
 {
     QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    QString bindConfigFilePath(QCoreApplication::applicationDirPath()
+                + "/bindconfig.exe");
     QString status;
 
     qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
 
+    if (!QFile::exists(bindConfigFilePath))
+        return false;
+
     status = exclusive ? "disable" : "enable";
 
-    QProcess::execute("bindconfig.exe", 
+    QProcess::execute(bindConfigFilePath, 
             QStringList() << "comp" << portName << status);
 
     updateNotes(); 
