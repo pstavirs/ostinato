@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QFile>
+#include <QSettings>
+
+QSettings *appSettings;
 
 QMainWindow *mainWindow;
 
@@ -28,9 +32,21 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
     int exitCode;
 
+    /* (Portable Mode) If we have a .ini file in the same directory as the 
+       executable, we use that instead of the platform specific location
+       and format for the settings */
+    QString portableIni = QCoreApplication::applicationDirPath() 
+            + "/ostinato.ini";
+    if (QFile::exists(portableIni))
+        appSettings = new QSettings(portableIni, QSettings::IniFormat);
+    else
+        appSettings = new QSettings("Ostinato", "Ostinato");
+
     mainWindow = new MainWindow;
     mainWindow->show();
     exitCode =  app.exec();
     delete mainWindow;
+    delete appSettings;
+
     return exitCode;
 }

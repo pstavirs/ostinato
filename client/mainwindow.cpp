@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 #include "portstatswindow.h"
 #include "portswindow.h"
+#include "preferences.h"
 #include "ui_about.h"
 
 #include <QDockWidget>
@@ -72,6 +73,15 @@ MainWindow::~MainWindow()
     localServer_->terminate();
     localServer_->waitForFinished();
     delete localServer_;
+}
+
+void MainWindow::on_actionPreferences_triggered()
+{
+    Preferences *preferences = new Preferences();
+
+    preferences->exec();
+
+    delete preferences;
 }
 
 void MainWindow::on_actionHelpAbout_triggered()

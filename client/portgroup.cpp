@@ -19,9 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portgroup.h"
 
+#include "settings.h"
+
 #include <QApplication>
 #include <QCursor>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QProcess>
 #include <QTemporaryFile>
 #include <QtGlobal>
@@ -661,20 +664,26 @@ void PortGroup::processViewCaptureAck(PbRpcController *controller)
 {
     QFile *capFile = static_cast<QFile*>(controller->binaryBlob());
 
-#ifdef Q_OS_WIN32
-    QString viewer("C:/Program Files/Wireshark/wireshark.exe");
-#else
-    QString viewer("/usr/bin/wireshark");
-#endif
+    QString viewer = appSettings->value(kWiresharkPathKey, 
+            kWiresharkPathDefaultValue).toString();
 
     qDebug("In %s", __FUNCTION__);
 
     capFile->flush();
     capFile->close();
 
+    if (!QFile::exists(viewer))
+    {
+        QMessageBox::warning(NULL, "Can't find Wireshark", 
+                viewer + QString(" does not exist!\n\nPlease correct the path"
+                " to Wireshark in the Preferences."));
+        goto _exit;
+    }
+
     if (!QProcess::startDetached(viewer, QStringList() << capFile->fileName()))
         qDebug("Failed starting Wireshark");
 
+_exit:
     delete controller;
 }
 

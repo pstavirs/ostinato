@@ -26,6 +26,7 @@
     <property name="title" >
      <string>File</string>
     </property>
+    <addaction name="actionPreferences" />
     <addaction name="actionFileExit" />
    </widget>
    <widget class="QMenu" name="menuHelp" >
@@ -48,7 +49,17 @@
     <string>&amp;About</string>
    </property>
   </action>
+  <action name="actionPreferences" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/preferences.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Preferences</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
  <connections/>
 </ui>

@@ -37,6 +37,8 @@ HEADERS += \
     portstatsfilterdialog.h \
     portstatswindow.h \
     portswindow.h \
+    preferences.h \
+    settings.h \
     streamconfigdialog.h \
     streamlistdelegate.h \
     streammodel.h 
@@ -47,6 +49,7 @@ FORMS += \
     portstatsfilter.ui \
     portstatswindow.ui \
     portswindow.ui \
+    preferences.ui \
     streamconfigdialog.ui 
 
 SOURCES += \
@@ -64,6 +67,7 @@ SOURCES += \
     portstatsfilterdialog.cpp \
     portstatswindow.cpp \
     portswindow.cpp \
+    preferences.cpp \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp 

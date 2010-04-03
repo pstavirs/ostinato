@@ -17,37 +17,40 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _MAIN_WINDOW_H
-#define _MAIN_WINDOW_H
+#include "preferences.h"
 
-#include "ui_mainwindow.h"
-#include <QMainWindow>
+#include "settings.h"
 
-class PortsWindow;
-class PortStatsWindow;
+#include <QFileDialog>
 
-class QDockWidget;
-class QProcess;
-
-class MainWindow : public QMainWindow, private Ui::MainWindow
+Preferences::Preferences()
 {
-    Q_OBJECT
+    Q_ASSERT(appSettings);
 
-private:
-    QProcess        *localServer_;
-    PortsWindow        *portsWindow;
-    PortStatsWindow *statsWindow;
-    QDockWidget        *portsDock;
-    QDockWidget        *statsDock;
+    setupUi(this);
 
-public:
-    MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    wiresharkPathEdit->setText(appSettings->value(kWiresharkPathKey, 
+            kWiresharkPathDefaultValue).toString());
+}
 
-public slots:
-    void on_actionPreferences_triggered();
-    void on_actionHelpAbout_triggered();
-};
+Preferences::~Preferences()
+{
+}
 
-#endif
+void Preferences::accept()
+{
+    appSettings->setValue(kWiresharkPathKey, wiresharkPathEdit->text());
 
+    QDialog::accept();
+}
+
+void Preferences::on_wiresharkPathButton_clicked()
+{
+    QString path;
+
+    path = QFileDialog::getOpenFileName(0, "Locate Wireshark",
+            wiresharkPathEdit->text()); 
+
+    if (!path.isEmpty())
+        wiresharkPathEdit->setText(path);
+}

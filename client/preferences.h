@@ -17,37 +17,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _MAIN_WINDOW_H
-#define _MAIN_WINDOW_H
+#ifndef _PREFERENCES_H
+#define _PREFERENCES_H
 
-#include "ui_mainwindow.h"
-#include <QMainWindow>
+#include "ui_preferences.h"
 
-class PortsWindow;
-class PortStatsWindow;
+#include <QDialog>
 
-class QDockWidget;
-class QProcess;
-
-class MainWindow : public QMainWindow, private Ui::MainWindow
+class Preferences : public QDialog, public Ui::Preferences
 {
     Q_OBJECT
-
-private:
-    QProcess        *localServer_;
-    PortsWindow        *portsWindow;
-    PortStatsWindow *statsWindow;
-    QDockWidget        *portsDock;
-    QDockWidget        *statsDock;
-
 public:
-    MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    Preferences();
+    ~Preferences();
 
 public slots:
-    void on_actionPreferences_triggered();
-    void on_actionHelpAbout_triggered();
+    void accept();
+
+private slots:
+    void on_wiresharkPathButton_clicked();
 };
 
 #endif
-
