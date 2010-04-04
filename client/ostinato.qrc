@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/" >
+        <file>icons/about.png</file>
         <file>icons/arrow_down.png</file>
         <file>icons/arrow_left.png</file>
         <file>icons/arrow_right.png</file>
@@ -14,6 +15,7 @@
         <file>icons/control_stop.png</file>
         <file>icons/deco_exclusive.png</file>
         <file>icons/delete.png</file>
+        <file>icons/exit.png</file>
         <file>icons/logo.png</file>
         <file>icons/magnifier.png</file>
         <file>icons/name.png</file>
@@ -25,6 +27,7 @@
         <file>icons/portstats_clear_all.png</file>
         <file>icons/portstats_filter.png</file>
         <file>icons/preferences.png</file>
+        <file>icons/qt.png</file>
         <file>icons/sound_mute.png</file>
         <file>icons/sound_none.png</file>
         <file>icons/stream_add.png</file>

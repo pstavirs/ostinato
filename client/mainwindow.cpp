@@ -40,18 +40,28 @@ PortGroupList    *pgl;
 MainWindow::MainWindow(QWidget *parent) 
     : QMainWindow (parent)
 {
+    QString serverApp = QCoreApplication::applicationDirPath();
+
+#ifdef Q_OS_WIN32
+    serverApp.append("/drone.exe");
+#else
+    serverApp.append("/drone");
+#endif
+
     localServer_ = new QProcess(this);
     localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
-    localServer_->start("./drone.exe");
+    localServer_->start(serverApp);
 
     pgl = new PortGroupList;
 
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
-    portsDock = new QDockWidget(tr("Ports"), this);
-    statsDock = new QDockWidget(tr("Stats"), this);
+    portsDock = new QDockWidget(tr("Ports and Streams"), this);
+    statsDock = new QDockWidget(tr("Statistics"), this);
 
     setupUi(this);
+
+    menuFile->insertActions(menuFile->actions().at(0), portsWindow->actions());
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);
@@ -59,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
     connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 #if 0
     {
         DbgThread *dbg = new DbgThread(pgl);

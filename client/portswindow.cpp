@@ -55,6 +55,12 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->addAction(actionEdit_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
+    addActions(tvPortList->actions());
+    QAction *sep = new QAction(this);
+    sep->setSeparator(true);
+    addAction(sep);
+    addActions(tvStreamList->actions());
+
     tvStreamList->setModel(plm->getStreamModel());
     tvPortList->setModel(plm->getPortModel());
     
@@ -220,7 +226,10 @@ void PortsWindow::updateStreamViewActions()
     else
     {
         qDebug("No selection");
-        actionNew_Stream->setEnabled(true);
+        if (plm->isPort(tvPortList->currentIndex()))
+            actionNew_Stream->setEnabled(true);
+        else
+            actionNew_Stream->setDisabled(true);
         actionEdit_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }

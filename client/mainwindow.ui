@@ -26,6 +26,7 @@
     <property name="title" >
      <string>File</string>
     </property>
+    <addaction name="separator" />
     <addaction name="actionPreferences" />
     <addaction name="actionFileExit" />
    </widget>
@@ -34,17 +35,24 @@
      <string>Help</string>
     </property>
     <addaction name="actionHelpAbout" />
+    <addaction name="actionAboutQt" />
    </widget>
    <addaction name="menuFile" />
    <addaction name="menuHelp" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
   <action name="actionFileExit" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/exit.png</iconset>
+   </property>
    <property name="text" >
     <string>E&amp;xit</string>
    </property>
   </action>
   <action name="actionHelpAbout" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/about.png</iconset>
+   </property>
    <property name="text" >
     <string>&amp;About</string>
    </property>
@@ -55,6 +63,14 @@
    </property>
    <property name="text" >
     <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionAboutQt" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/qt.png</iconset>
+   </property>
+   <property name="text" >
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

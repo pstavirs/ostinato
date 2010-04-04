@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QDialog>
 
-class Preferences : public QDialog, public Ui::Preferences
+class Preferences : public QDialog, private Ui::Preferences
 {
     Q_OBJECT
 public:

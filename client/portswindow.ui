@@ -227,7 +227,7 @@
     <bool>true</bool>
    </property>
    <property name="text" >
-    <string>Exclusive Control (EXPERIMENTAL)</string>
+    <string>Exclusive Port Control (EXPERIMENTAL)</string>
    </property>
   </action>
  </widget>
