@@ -9,7 +9,7 @@ win32:revtarget.commands = echo "const char *version = \"$$APP_VERSION\";" \
         > $$APP_VERSION_FILE
 unix:revtarget.commands = echo \
         "\"const char *version = \\\"$$APP_VERSION\\\";" \
-	"const char *revision = \\\"$APP_REVISION\\\";\"" \
+	"const char *revision = \\\"$$APP_REVISION\\\";\"" \
         > $$APP_VERSION_FILE
 revtarget.depends = $$SOURCES $$HEADERS $$FORMS $$POST_TARGETDEPS
 
