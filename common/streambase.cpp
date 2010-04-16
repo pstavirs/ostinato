@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
 
-extern ProtocolManager OstProtocolManager;
+extern ProtocolManager *OstProtocolManager;
 
 StreamBase::StreamBase() :
     mStreamId(new OstProto::StreamId),
@@ -39,12 +39,12 @@ StreamBase::StreamBase() :
 
     iter = createProtocolListIterator();
     // By default newly created streams have the mac and payload protocols
-    proto = OstProtocolManager.createProtocol(
+    proto = OstProtocolManager->createProtocol(
             OstProto::Protocol::kMacFieldNumber, this);
     iter->insert(proto);
     qDebug("stream: mac = %p", proto);
 
-    proto = OstProtocolManager.createProtocol(
+    proto = OstProtocolManager->createProtocol(
             OstProto::Protocol::kPayloadFieldNumber, this);
     iter->insert(proto);
     qDebug("stream: payload = %p", proto);
@@ -89,7 +89,7 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
     iter = createProtocolListIterator();
     for (int i=0; i < stream.protocol_size(); i++)
     {
-        proto = OstProtocolManager.createProtocol(
+        proto = OstProtocolManager->createProtocol(
             stream.protocol(i).protocol_id().id(), this);
         proto->protoDataCopyFrom(stream.protocol(i));
         iter->insert(proto);
@@ -208,7 +208,7 @@ quint16    StreamBase::frameLen(int streamIndex) const
         case OstProto::StreamCore::e_fl_random:
             //! \todo (MED) This 'random' sequence is same across iterations
             pktLen = 64; // to avoid the 'maybe used uninitialized' warning
-            qsrand(((uint) this));
+            qsrand(reinterpret_cast<ulong>(this));
             for (int i = 0; i <= streamIndex; i++)
                 pktLen = qrand();
             pktLen = frameLenMin() + (pktLen %

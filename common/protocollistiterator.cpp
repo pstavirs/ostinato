@@ -33,12 +33,12 @@ ProtocolListIterator::~ProtocolListIterator()
 
 bool ProtocolListIterator::findNext(const AbstractProtocol* value) const
 {
-    return _iter->findNext((AbstractProtocol*)((uint)value));
+    return _iter->findNext(const_cast<AbstractProtocol*>(value));
 }
 
 bool ProtocolListIterator::findPrevious(const AbstractProtocol* value)
 {
-    return _iter->findPrevious((AbstractProtocol*)((uint)value));
+    return _iter->findPrevious(const_cast<AbstractProtocol*>(value));
 }
 
 bool ProtocolListIterator::hasNext() const
@@ -69,7 +69,7 @@ void ProtocolListIterator::insert(AbstractProtocol* value)
     else
         value->next = NULL;
 
-    _iter->insert((AbstractProtocol*)((uint)value));
+    _iter->insert(const_cast<AbstractProtocol*>(value));
 }
 
 AbstractProtocol* ProtocolListIterator::next()
@@ -109,7 +109,7 @@ void ProtocolListIterator::setValue(AbstractProtocol* value) const
         _iter->value()->next->prev = value;
     value->prev = _iter->value()->prev;
     value->next = _iter->value()->next;
-    _iter->setValue((AbstractProtocol*)((uint)value));
+    _iter->setValue(const_cast<AbstractProtocol*>(value));
 }
 
 void ProtocolListIterator::toBack()

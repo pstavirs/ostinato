@@ -18,19 +18,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "mainwindow.h"
+#include "../common/protocolmanager.h"
 
 #include <QApplication>
 #include <QFile>
 #include <QSettings>
 
-QSettings *appSettings;
+extern ProtocolManager *OstProtocolManager;
 
+QSettings *appSettings;
 QMainWindow *mainWindow;
 
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     int exitCode;
+
+    OstProtocolManager = new ProtocolManager();
 
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location

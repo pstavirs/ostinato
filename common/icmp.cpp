@@ -215,7 +215,6 @@ QVariant IcmpProtocol::fieldData(int index, FieldAttrib attrib,
                     cksum = 0; // avoid the 'maybe used unitialized' warning
                     break;
             }
-            printf("%s: attrib = %d, cksum = %d\n", __FUNCTION__, attrib, cksum);
 
             switch(attrib)
             {

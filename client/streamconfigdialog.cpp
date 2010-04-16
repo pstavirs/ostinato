@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 // FIXME(HI) - remove
 #include "../common/protocolmanager.h"
-extern ProtocolManager OstProtocolManager;
+extern ProtocolManager *OstProtocolManager;
 
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
 
@@ -95,7 +95,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
                     if (id2 != ButtonIdNone && id2 != ButtonIdOther)
                     {
-                        if (OstProtocolManager.isValidNeighbour(id1, id2))
+                        if (OstProtocolManager->isValidNeighbour(id1, id2))
                         {
                             connect(btn1, SIGNAL(toggled(bool)), 
                                     btn2, SLOT(setEnabled(bool)));
@@ -117,7 +117,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     }
 
     mpAvailableProtocolsModel = new QStringListModel(
-        OstProtocolManager.protocolDatabase(), this);
+        OstProtocolManager->protocolDatabase(), this);
     lvAllProtocols->setModel(mpAvailableProtocolsModel);
     mpSelectedProtocolsModel = new QStringListModel(this);
     lvSelectedProtocols->setModel(mpSelectedProtocolsModel);
@@ -375,7 +375,7 @@ void StreamConfigDialog::on_tbAdd_clicked()
     }
 
     foreach(QModelIndex idx, selection)
-        _iter->insert(OstProtocolManager.createProtocol(
+        _iter->insert(OstProtocolManager->createProtocol(
             mpAvailableProtocolsModel->stringList().at(idx.row()), mpStream));
 
     updateSelectProtocolsAdvancedWidget();
@@ -689,7 +689,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
         switch (oldId)
         {
             case ButtonIdNone:
-                _iter->insert(OstProtocolManager.createProtocol(
+                _iter->insert(OstProtocolManager->createProtocol(
                         newId, mpStream));
                 break;
 
@@ -699,7 +699,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
                 p =_iter->next();
 
                 if (newId)
-                    _iter->setValue(OstProtocolManager.createProtocol(
+                    _iter->setValue(OstProtocolManager->createProtocol(
                             newId, mpStream));
                 else
                     _iter->remove();

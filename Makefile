@@ -1,3 +1,4 @@
+debug: QMAKE_CONFIG=-config debug
 release: QMAKE_CONFIG=-config release
 
 all:
@@ -7,7 +8,7 @@ all:
 	$(MAKE) -C client
 
 release: qmake all
-
+debug: qmake all
 
 clean:
 	-$(MAKE) -C client $@

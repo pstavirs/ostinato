@@ -130,28 +130,28 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
             // Statistics
             case e_STAT_FRAMES_RCVD:
-                return stats.rx_pkts();
+                return quint64(stats.rx_pkts());
 
             case e_STAT_FRAMES_SENT:
-                return stats.tx_pkts();
+                return quint64(stats.tx_pkts());
 
             case e_STAT_FRAME_SEND_RATE:
-                return stats.tx_pps();
+                return quint64(stats.tx_pps());
 
             case e_STAT_FRAME_RECV_RATE:
-                return stats.rx_pps();
+                return quint64(stats.rx_pps());
 
             case e_STAT_BYTES_RCVD:
-                return stats.rx_bytes();
+                return quint64(stats.rx_bytes());
 
             case e_STAT_BYTES_SENT:
-                return stats.tx_bytes();
+                return quint64(stats.tx_bytes());
 
             case e_STAT_BYTE_SEND_RATE:
-                return stats.tx_bps();
+                return quint64(stats.tx_bps());
 
             case e_STAT_BYTE_RECV_RATE:
-                return stats.rx_bps();
+                return quint64(stats.rx_bps());
 
 #if 0
             case e_STAT_FRAMES_RCVD_NIC:
