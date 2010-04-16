@@ -80,52 +80,48 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
 
 void PortStatsFilterDialog::on_tbSelectIn_clicked()
 {
-    QStandardItem    *item;
-    while (lvUnselected->selectionModel()->selectedIndexes().size())
+    QList<int> rows;
+
+    foreach(QModelIndex idx, lvUnselected->selectionModel()->selectedIndexes())
+        rows.append(idx.row());
+    qSort(rows.begin(), rows.end(), qGreater<int>());
+
+    int count = mSelected.rowCount();
+
+    foreach(int row, rows)
     {
-        item = mUnselected.takeItem(lvUnselected->selectionModel()->
-                selectedIndexes().at(0).row());
-        if (mUnselected.removeRow(lvUnselected->selectionModel()->
-                selectedIndexes().at(0).row()))
-            mSelected.appendRow(item);
+        QList<QStandardItem*> items = mUnselected.takeRow(row);
+        mSelected.insertRow(count, items);
     }
 }
 
 void PortStatsFilterDialog::on_tbSelectOut_clicked()
 {
-    QStandardItem    *item;
+    QList<int> rows;
 
-    while (lvSelected->selectionModel()->selectedIndexes().size())
+    foreach(QModelIndex idx, lvSelected->selectionModel()->selectedIndexes())
+        rows.append(idx.row());
+    qSort(rows.begin(), rows.end(), qGreater<int>());
+
+    foreach(int row, rows)
     {
-        item = mSelected.takeItem(lvSelected->selectionModel()->
-                selectedIndexes().at(0).row());
-        if (mSelected.removeRow(lvSelected->selectionModel()->
-                selectedIndexes().at(0).row()))
-        {
-            mUnselected.appendRow(item);
-            mUnselected.sort(0);
-        }
+        QList<QStandardItem*> items = mSelected.takeRow(row);
+        mUnselected.appendRow(items);
     }
+
+    mUnselected.sort(0);
 }
 
 void PortStatsFilterDialog::on_lvUnselected_doubleClicked(const QModelIndex &index)
 {
-    QStandardItem    *item;
-
-    item = mUnselected.takeItem(index.row());
-    if (mUnselected.removeRow(index.row()))
-        mSelected.appendRow(item);
+    QList<QStandardItem*> items = mUnselected.takeRow(index.row());
+    mSelected.appendRow(items);
 }
 
 void PortStatsFilterDialog::on_lvSelected_doubleClicked(const QModelIndex &index)
 {
-    QStandardItem    *item;
-
-    item = mSelected.takeItem(index.row());
-    if (mSelected.removeRow(index.row()))
-    {
-        mUnselected.appendRow(item);
-        mUnselected.sort(0);
-    }
+    QList<QStandardItem*> items = mSelected.takeRow(index.row());
+    mUnselected.appendRow(items);
+    mUnselected.sort(0);
 }
 
