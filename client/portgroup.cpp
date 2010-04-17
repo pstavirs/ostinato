@@ -78,7 +78,16 @@ PortGroup::~PortGroup()
 void PortGroup::on_rpcChannel_stateChanged(QAbstractSocket::SocketState state)
 {
     qDebug("state changed %d", state);
-    emit portGroupDataChanged(mPortGroupId);
+
+    switch (state)
+    {
+        case QAbstractSocket::UnconnectedState:
+        case QAbstractSocket::ClosingState:
+            break;
+
+        default:
+            emit portGroupDataChanged(mPortGroupId);
+    }
 }
 
 void PortGroup::on_rpcChannel_connected()
