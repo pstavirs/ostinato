@@ -86,12 +86,13 @@ void PortStatsFilterDialog::on_tbSelectIn_clicked()
         rows.append(idx.row());
     qSort(rows.begin(), rows.end(), qGreater<int>());
 
-    int count = mSelected.rowCount();
+    QModelIndex idx = lvSelected->selectionModel()->currentIndex();
+    int insertAt = idx.isValid() ? idx.row() : mSelected.rowCount();
 
     foreach(int row, rows)
     {
         QList<QStandardItem*> items = mUnselected.takeRow(row);
-        mSelected.insertRow(count, items);
+        mSelected.insertRow(insertAt, items);
     }
 }
 
@@ -115,7 +116,10 @@ void PortStatsFilterDialog::on_tbSelectOut_clicked()
 void PortStatsFilterDialog::on_lvUnselected_doubleClicked(const QModelIndex &index)
 {
     QList<QStandardItem*> items = mUnselected.takeRow(index.row());
-    mSelected.appendRow(items);
+    QModelIndex idx = lvSelected->selectionModel()->currentIndex();
+    int insertAt = idx.isValid() ? idx.row() : mSelected.rowCount();
+
+    mSelected.insertRow(insertAt, items);
 }
 
 void PortStatsFilterDialog::on_lvSelected_doubleClicked(const QModelIndex &index)
