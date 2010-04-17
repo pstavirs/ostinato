@@ -1,0 +1,29 @@
+syntax: glob
+
+# generated object files
+*.o
+*.a
+*.exe
+
+# Qt generated files
+ui_*.h
+moc_*.cpp
+qrc_*.cpp
+
+# QMake generated files
+*\Makefile*
+*\object_script.*
+
+# protobuf generated files
+*.pb.h
+*.pb.cc
+
+# ostinato generated files
+version.cpp
+
+# vim swap files
+*.swp
+
+# ctags
+tags
+
