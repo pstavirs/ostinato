@@ -48,45 +48,49 @@ class AbstractProtocol
     friend class ProtocolListIterator;
 
 private:
-    mutable int        metaCount;
-    mutable int        protoSize;
+    mutable int metaCount;
+    mutable int protoSize;
     mutable QString protoAbbr;
 
 protected:
-    StreamBase            *mpStream;
-    AbstractProtocol    *parent;
-    AbstractProtocol    *prev;
-    AbstractProtocol    *next;
+    StreamBase          *mpStream; //!< Stream that this protocol belongs to
+    AbstractProtocol    *parent;   //!< Parent protocol, if any
+    AbstractProtocol    *prev;     //!< Protocol preceding this protocol
+    AbstractProtocol    *next;     //!< Protocol succeeding this protocol 
 
 public:
+    //! Properties of a field, can be OR'd
     enum FieldFlag {
-        FieldIsNormal = 0x0,
-        FieldIsMeta   = 0x1,
-        FieldIsCksum  = 0x2
+        FieldIsNormal = 0x0, //!< field appears in frame content
+        FieldIsMeta   = 0x1, //!< field does not appear in frame, is meta data
+        FieldIsCksum  = 0x2  //!< field is a checksum, appears in frame content
     };
-    Q_DECLARE_FLAGS(FieldFlags, FieldFlag);
+    Q_DECLARE_FLAGS(FieldFlags, FieldFlag);  //!< \private abcd
 
+    //! Various attributes of a field
     enum FieldAttrib {
-        FieldName,            //! name
-        FieldValue,            //! value in host byte order (user editable)
-        FieldTextValue,        //! value as text
-        FieldFrameValue,    //! frame encoded value in network byte order
-        FieldBitSize,        //! size in bits
+        FieldName,          //!< name
+        FieldValue,         //!< value in host byte order (user editable)
+        FieldTextValue,     //!< value as text
+        FieldFrameValue,    //!< frame encoded value in network byte order
+        FieldBitSize,       //!< size in bits
     };
 
+    //! Supported Protocol Id types 
     enum ProtocolIdType {
-        ProtocolIdNone,
-        ProtocolIdLlc,
-        ProtocolIdEth,
-        ProtocolIdIp,
+        ProtocolIdNone,     //!< Marker representing non-existent protocol id
+        ProtocolIdLlc,      //!< LLC (802.2)
+        ProtocolIdEth,      //!< Ethernet II
+        ProtocolIdIp,       //!< IP
     };
 
+    //! Supported checksum types 
     enum CksumType {
-        CksumIp,
-        CksumIpPseudo,
-        CksumTcpUdp,
+        CksumIp,        //!< Standard IP Checksum
+        CksumIpPseudo,  //!< Standard checksum for Pseudo-IP header
+        CksumTcpUdp,    //!< Standard TCP/UDP checksum including pseudo-IP
 
-        CksumMax
+        CksumMax        //!< Marker for number of cksum types
     };
 
     AbstractProtocol(StreamBase *stream, AbstractProtocol *parent = 0);

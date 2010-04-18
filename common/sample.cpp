@@ -30,6 +30,7 @@ SampleConfigForm::SampleConfigForm(QWidget *parent)
 SampleProtocol::SampleProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
+    /* The configWidget is created lazily */
     configForm = NULL;
 }
 
@@ -459,6 +460,7 @@ bool SampleProtocol::isProtocolFrameSizeVariable() const
 
 QWidget* SampleProtocol::configWidget()
 {
+    /* Lazy creation of the configWidget */
     if (configForm == NULL)
     {
         configForm = new SampleConfigForm;
