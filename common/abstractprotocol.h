@@ -93,6 +93,12 @@ public:
         CksumMax        //!< Marker for number of cksum types
     };
 
+    //! Supported checksum scopes  
+    enum CksumScope {
+        CksumScopeAdjacentProtocol,   //!< Cksum only the adjacent protocol
+        CksumScopeAllProtocols,       //!< Cksum over all the protocols
+    };
+
     AbstractProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~AbstractProtocol();
 
@@ -134,9 +140,11 @@ public:
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const;
+        CksumType cksumType = CksumIp,
+        CksumScope cksumScope = CksumScopeAdjacentProtocol) const;
     quint32 protocolFramePayloadCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const;
+        CksumType cksumType = CksumIp,
+        CksumScope cksumScope = CksumScopeAllProtocols) const;
 
     virtual QWidget* configWidget() = 0;
     virtual void loadConfigWidget() = 0;

@@ -672,15 +672,19 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
 }
 
 /*!
-  Returns the checksum of the requested type for the protocol's header
+  Returns the checksum of the requested type for the protocol's header 
 
   This is useful for subclasses which needs the header's checksum e.g. TCP/UDP
-  require a "Pseudo-IP" checksum
+  require a "Pseudo-IP" checksum. The checksum is limited to the specified
+  scope.
 
   Currently the default implementation supports only type CksumIpPseudo
+
+  \note The default value for cksumScope is different for
+  protocolFrameHeaderCksum() and protocolFramePayloadCksum()
 */
 quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex, 
-    CksumType cksumType) const
+    CksumType cksumType, CksumScope cksumScope) const
 {
     quint32 sum = 0;
     quint16 cksum;
@@ -692,15 +696,19 @@ quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex,
     {
         cksum = p->protocolFrameCksum(streamIndex, cksumType);
         sum += (quint16) ~cksum;
-        p = p->prev;
         qDebug("%s: sum = %u, cksum = %u", __FUNCTION__, sum, cksum);
+        if (cksumScope == CksumScopeAdjacentProtocol)
+            goto out;
+        p = p->prev;
     }
     if (parent)
     {
-        cksum = parent->protocolFrameHeaderCksum(streamIndex, cksumType);
+        cksum = parent->protocolFrameHeaderCksum(streamIndex, cksumType, 
+                cksumScope);
         sum += (quint16) ~cksum;
     }
 
+out:
     while(sum>>16)
         sum = (sum & 0xFFFF) + (sum >> 16);
 
@@ -712,12 +720,16 @@ quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex,
 
   This is useful for subclasses which needs the payload's checksum e.g. TCP/UDP
   require a IP checksum of the payload (to be combined with other checksums to
-  derive the final checksum)
+  derive the final checksum). The checksum is limited to the specified
+  scope.
 
   Currently the default implementation supports only type CksumIp
+
+  \note The default value for cksumScope is different for
+  protocolFrameHeaderCksum() and protocolFramePayloadCksum()
 */
 quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
-    CksumType cksumType) const
+    CksumType cksumType, CksumScope cksumScope) const
 {
     quint32 sum = 0;
     quint16 cksum;
@@ -729,15 +741,19 @@ quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
     {
         cksum = p->protocolFrameCksum(streamIndex, cksumType);
         sum += (quint16) ~cksum;
+        if (cksumScope == CksumScopeAdjacentProtocol)
+            goto out;
         p = p->next;
     }
 
     if (parent)
     {
-        cksum = parent->protocolFramePayloadCksum(streamIndex, cksumType);
+        cksum = parent->protocolFramePayloadCksum(streamIndex, cksumType,
+                cksumScope);
         sum += (quint16) ~cksum;
     }
 
+out:
     while(sum>>16)
         sum = (sum & 0xFFFF) + (sum >> 16);
 
