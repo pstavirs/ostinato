@@ -362,14 +362,67 @@ _exit:
     return true;
 }
 
-int StreamBase::frameValue(uchar *buf, int bufMaxSize, int n) const
+bool StreamBase::isFrameSizeVariable() const
+{
+    ProtocolListIterator    *iter;
+
+    iter = createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        AbstractProtocol    *proto;
+
+        proto = iter->next();
+        if (proto->isProtocolFrameSizeVariable())
+            goto _exit;
+    }
+    delete iter;
+    return false;
+
+_exit:
+    delete iter;
+    return true;
+}
+
+// frameProtocolLength() returns the sum of all the individual protocol sizes
+// which may be different from frameLen()
+int StreamBase::frameProtocolLength(int frameIndex) const
+{
+    int len = 0;
+    ProtocolListIterator *iter = createProtocolListIterator();
+
+    while (iter->hasNext())
+    {
+        AbstractProtocol *proto = iter->next();
+
+        len += proto->protocolFrameSize(frameIndex);
+    }
+    delete iter;
+
+    return len;
+}
+
+int StreamBase::frameCount() const
+{
+    int count;
+
+    switch (sendUnit())
+    {
+    case e_su_packets: count = numPackets(); break;
+    case e_su_bursts: count =  numBursts() * burstSize(); break;
+    default: Q_ASSERT(false); // unreachable
+    }
+
+    return count;
+}
+
+int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 {
     int        pktLen, len = 0;
 
-    pktLen = frameLen(n);
+    pktLen = frameLen(frameIndex);
 
     // pktLen is adjusted for CRC/FCS which will be added by the NIC
-    pktLen -=  4;
+    pktLen -= kFcsSize;
 
     if ((pktLen < 0) || (pktLen > bufMaxSize))
         return 0;
@@ -383,7 +436,7 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int n) const
         QByteArray            ba;
 
         proto = iter->next();
-        ba = proto->protocolFrameValue(n);
+        ba = proto->protocolFrameValue(frameIndex);
 
         if (len + ba.size() < bufMaxSize)
             memcpy(buf+len, ba.constData(), ba.size());
@@ -392,6 +445,26 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int n) const
     delete iter;
 
     return pktLen;
+}
+
+bool StreamBase::preflightCheck(QString &result) const
+{
+    int count = isFrameSizeVariable() ? frameCount() : 1;
+
+    for (int i = 0; i < count; i++)
+    {
+        if (frameLen(i) < (frameProtocolLength(i) + kFcsSize))
+        {
+            result += QString("One or more frames may be truncated - "
+                "frame length should be at least %1.\n")
+                .arg(frameProtocolLength(i) + kFcsSize);
+            goto _fail;
+        }
+    }
+    return true;
+
+_fail:
+    return false;
 }
 
 bool StreamBase::StreamLessThan(StreamBase* stream1, StreamBase* stream2)

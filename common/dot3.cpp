@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dot3.h"
 #include "streambase.h"
 
-#define SZ_FCS        4
 
 Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
     : QWidget(parent)
@@ -95,7 +94,6 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     quint16 len;
 
-                    //len = mpStream->frameLen() - SZ_FCS;
                     len = protocolFramePayloadSize(streamIndex);
                     return len;
                 }
@@ -103,7 +101,6 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     quint16 len;
 
-                    //len = mpStream->frameLen() - SZ_FCS;
                     len = protocolFramePayloadSize(streamIndex);
                     return QString("%1").arg(len);
                 }
@@ -112,7 +109,6 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
                     quint16 len;
                     QByteArray fv;
 
-                    //len = mpStream->frameLen() - SZ_FCS;
                     len = protocolFramePayloadSize(streamIndex);
                     fv.resize(2);
                     qToBigEndian(len, (uchar*) fv.data());

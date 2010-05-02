@@ -1199,30 +1199,14 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
  </resources>
  <connections>
   <connection>
-   <sender>pbOk</sender>
-   <signal>clicked()</signal>
-   <receiver>StreamConfigDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>496</x>
-     <y>552</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>533</x>
-     <y>433</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pbCancel</sender>
    <signal>clicked()</signal>
    <receiver>StreamConfigDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>579</x>
-     <y>552</y>
+     <x>558</x>
+     <y>453</y>
     </hint>
     <hint type="destinationlabel" >
      <x>533</x>
@@ -1237,12 +1221,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>158</x>
-     <y>149</y>
+     <x>169</x>
+     <y>207</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>158</x>
-     <y>149</y>
+     <x>169</x>
+     <y>207</y>
     </hint>
    </hints>
   </connection>
@@ -1253,12 +1237,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>59</x>
-     <y>120</y>
+     <x>125</x>
+     <y>207</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>59</x>
-     <y>149</y>
+     <x>125</x>
+     <y>207</y>
     </hint>
    </hints>
   </connection>
@@ -1269,12 +1253,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>59</x>
-     <y>123</y>
+     <x>125</x>
+     <y>207</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>59</x>
-     <y>149</y>
+     <x>125</x>
+     <y>207</y>
     </hint>
    </hints>
   </connection>
@@ -1285,12 +1269,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>59</x>
-     <y>123</y>
+     <x>125</x>
+     <y>207</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>145</x>
-     <y>149</y>
+     <x>156</x>
+     <y>207</y>
     </hint>
    </hints>
   </connection>

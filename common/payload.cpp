@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "payload.h"
 #include "streambase.h"
 
-#define SZ_FCS        4
 
 PayloadConfigForm::PayloadConfigForm(QWidget *parent)
     : QWidget(parent)
@@ -94,19 +93,22 @@ QString PayloadProtocol::shortName() const
     return QString("DATA");
 }
 
-int    PayloadProtocol::protocolFrameSize(int streamIndex) const
+int PayloadProtocol::protocolFrameSize(int streamIndex) const
 {
     int len;
 
     len = mpStream->frameLen(streamIndex) - protocolFrameOffset(streamIndex) 
-        - SZ_FCS;
+        - kFcsSize;
+
+    if (len < 0)
+        len = 0;
 
     qDebug("%s: this = %p, streamIndex = %d, len = %d", __FUNCTION__, this,
             streamIndex, len);
     return len;
 }
 
-int    PayloadProtocol::fieldCount() const
+int PayloadProtocol::fieldCount() const
 {
     return payload_fieldCount;
 }

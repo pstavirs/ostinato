@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
+const int kFcsSize = 4;
+
 class AbstractProtocol;
 class ProtocolList;
 class ProtocolListIterator;
@@ -130,7 +132,11 @@ public:
     bool setBurstRate(quint32 burstsPerSec);
 
     bool isFrameVariable() const;
-    int frameValue(uchar *buf, int bufMaxSize, int n) const;
+    bool isFrameSizeVariable() const;
+    int frameProtocolLength(int frameIndex) const;
+    int frameCount() const;
+    int frameValue(uchar *buf, int bufMaxSize, int frameIndex) const;
+    bool preflightCheck(QString &result) const;
 
     static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
 };

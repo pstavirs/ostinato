@@ -926,10 +926,19 @@ void StreamConfigDialog::StoreCurrentStream()
 
 void StreamConfigDialog::on_pbOk_clicked()
 {
-    OstProto::Stream    s;
+    QString log;
+    OstProto::Stream s;
 
     // Store dialog contents into stream
     StoreCurrentStream();
+
+    if (!mpStream->preflightCheck(log))
+    {
+        if (QMessageBox::warning(this, "Preflight Check", log + "\nContinue?",
+                    QMessageBox::Yes | QMessageBox::No, QMessageBox::No) 
+                == QMessageBox::No)
+            return;
+    }
 
     // Copy the data from the "local working copy of stream" to "actual stream"
     mpStream->protoDataCopyInto(s);
@@ -938,5 +947,7 @@ void StreamConfigDialog::on_pbOk_clicked()
     qDebug("stream stored");
 
     lastTopLevelTabIndex = twTopLevel->currentIndex();
+
+    accept();
 }
 
