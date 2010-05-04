@@ -168,10 +168,10 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
     if ((tvPortList->currentIndex() >= topLeft) &&
         (tvPortList->currentIndex() <= bottomRight))
 #endif
-    if ((topLeft < tvPortList->currentIndex()) || 
-            (topLeft == tvPortList->currentIndex()) &&
-        ((tvPortList->currentIndex() < bottomRight)) || 
-            (tvPortList->currentIndex() == bottomRight))
+    if (((topLeft < tvPortList->currentIndex()) || 
+            (topLeft == tvPortList->currentIndex())) &&
+        (((tvPortList->currentIndex() < bottomRight)) || 
+            (tvPortList->currentIndex() == bottomRight)))
     {
         updatePortViewActions(tvPortList->currentIndex());
     }

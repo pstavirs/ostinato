@@ -76,7 +76,7 @@ StreamBase* AbstractPort::stream(int streamId)
 {
     for (int i = 0; i < streamList_.size(); i++)
     {
-        if (streamId == streamList_.at(i)->id())
+        if ((uint)streamId == streamList_.at(i)->id())
             return streamList_.at(i);
     }
 
@@ -96,7 +96,7 @@ bool AbstractPort::deleteStream(int streamId)
     {
         StreamBase *stream;
 
-        if (streamId == streamList_.at(i)->id())
+        if ((uint)streamId == streamList_.at(i)->id())
         {
             stream = streamList_.takeAt(i);
             delete stream;
@@ -157,6 +157,7 @@ void AbstractPort::updatePacketList()
             if (streamList_[i]->isFrameVariable())
             {
                 isVariable = true;
+                len = 0; // avoid compiler warning; get len value for each pkt
             }
             else
             {
@@ -216,7 +217,7 @@ void AbstractPort::updatePacketList()
                      */
 
                     setPacketListLoopMode(true, streamList_[i]->sendUnit() == 
-                          OstProto::StreamControl::e_su_bursts ? ibg : ipg);
+                          StreamBase::e_su_bursts ? ibg : ipg);
                     goto _stop_no_more_pkts;
 
                 case ::OstProto::StreamControl::e_nw_goto_next:

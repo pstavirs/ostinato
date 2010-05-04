@@ -78,4 +78,4 @@ QMAKE_DISTCLEAN += object_script.*
 include(../version.pri)
 
 # TODO(LOW): Test only
-include(modeltest.pri)
+CONFIG(debug, debug|release):include(modeltest.pri)

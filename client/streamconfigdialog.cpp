@@ -135,7 +135,9 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
+#ifndef QT_NO_DEBUG
     mpPacketModelTester = new ModelTest(mpPacketModel);
+#endif
     tvPacketTree->header()->hide();
     vwPacketDump->setModel(mpPacketModel);
     vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
@@ -386,7 +388,7 @@ void StreamConfigDialog::on_tbDelete_clicked()
 {
     int n;
     QModelIndex idx;
-    AbstractProtocol *p;
+    AbstractProtocol *p = NULL;
 
     idx = lvSelectedProtocols->currentIndex();
 
@@ -405,6 +407,7 @@ void StreamConfigDialog::on_tbDelete_clicked()
         p = _iter->next();
     }
 
+    Q_CHECK_PTR(p);
     _iter->remove();
     delete p;
 
@@ -416,7 +419,7 @@ void StreamConfigDialog::on_tbUp_clicked()
 {
     int m, n;
     QModelIndex idx;
-    AbstractProtocol *p;
+    AbstractProtocol *p = NULL;
 
     idx = lvSelectedProtocols->currentIndex();
 
@@ -435,6 +438,7 @@ void StreamConfigDialog::on_tbUp_clicked()
         p = _iter->next();
     }
 
+    Q_CHECK_PTR(p);
     _iter->remove();
     _iter->previous();
     _iter->insert(p);
@@ -447,7 +451,7 @@ void StreamConfigDialog::on_tbDown_clicked()
 {
     int m, n;
     QModelIndex idx;
-    AbstractProtocol *p;
+    AbstractProtocol *p = NULL;
 
     idx = lvSelectedProtocols->currentIndex();
 
@@ -466,6 +470,7 @@ void StreamConfigDialog::on_tbDown_clicked()
         p = _iter->next();
     }
 
+    Q_CHECK_PTR(p);
     _iter->remove();
     _iter->next();
     _iter->insert(p);

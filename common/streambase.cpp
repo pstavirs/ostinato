@@ -403,7 +403,7 @@ int StreamBase::frameProtocolLength(int frameIndex) const
 
 int StreamBase::frameCount() const
 {
-    int count;
+    int count = 0;
 
     switch (sendUnit())
     {

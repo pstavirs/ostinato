@@ -29,11 +29,13 @@ PortGroupList::PortGroupList()
 {
     PortGroup    *pg;
 
+#ifndef QT_NO_DEBUG
     // TODO(LOW): Remove
     streamModelTester_ = new ModelTest(getStreamModel());
     portModelTester_ = new ModelTest(getPortModel());
     portStatsModelTester_ = new ModelTest(getPortStatsModel());
-    
+#endif 
+
     // Add the "Local" Port Group
     pg = new PortGroup;
     addPortGroup(*pg);

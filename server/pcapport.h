@@ -36,7 +36,7 @@ public:
     void init();
 
     virtual bool hasExclusiveControl() { return false; }
-    virtual bool setExclusiveControl(bool exclusive) { return false; }
+    virtual bool setExclusiveControl(bool /*exclusive*/) { return false; }
 
     virtual void clearPacketList() { 
         transmitter_->clearPacketList();

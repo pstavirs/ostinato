@@ -69,7 +69,8 @@ void RpcServer::done(PbRpcController *controller)
 {
     google::protobuf::Message *response = controller->response();
     QIODevice *blob;
-    char msg[MSGBUF_SIZE];
+    char msgBuf[MSGBUF_SIZE];
+    char* const msg = &msgBuf[0];
     int len;
 
     //qDebug("In RpcServer::done");
@@ -86,9 +87,9 @@ void RpcServer::done(PbRpcController *controller)
         len = blob->size();
         qDebug("is binary blob of len %d", len);
 
-        *((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_BINBLOB); // type
-        *((quint16*)(&msg[2])) = HTONS(pendingMethodId); // method
-        (*(quint32*)(&msg[4])) = HTONL(len); // len
+        *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_BINBLOB); // type
+        *((quint16*)(msg+2)) = HTONS(pendingMethodId); // method
+        (*(quint32*)(msg+4)) = HTONL(len); // len
 
         clientSock->write(msg, PB_HDR_SIZE);
 
@@ -97,7 +98,7 @@ void RpcServer::done(PbRpcController *controller)
         {    
             int l;
 
-            len = blob->read(msg, sizeof(msg));
+            len = blob->read(msg, sizeof(msgBuf));
             l = clientSock->write(msg, len);
             Q_ASSERT(l == len);
         }
@@ -108,18 +109,18 @@ void RpcServer::done(PbRpcController *controller)
     if (!response->IsInitialized())
     {
         qWarning("response missing required fields!!");
-        qDebug(response->InitializationErrorString().c_str());
+        qDebug("%s", response->InitializationErrorString().c_str());
         qFatal("exiting");
         goto _exit;
     }
 
-    response->SerializeToArray((void*) &msg[PB_HDR_SIZE], sizeof(msg));
+    response->SerializeToArray((void*)(msg+PB_HDR_SIZE), sizeof(msgBuf)-PB_HDR_SIZE);
 
     len = response->ByteSize();
 
-    *((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_RESPONSE); // type
-    *((quint16*)(&msg[2])) = HTONS(pendingMethodId); // method
-    *((quint32*)(&msg[4])) = HTONL(len); // len
+    *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_RESPONSE); // type
+    *((quint16*)(msg+2)) = HTONS(pendingMethodId); // method
+    *((quint32*)(msg+4)) = HTONL(len); // len
 
     // Avoid printing stats since it happens once every couple of seconds
     if (pendingMethodId != 13)
@@ -248,7 +249,7 @@ void RpcServer::when_dataAvail()
     if (!req->IsInitialized())
     {
         qWarning("Missing required fields in request");
-        qDebug(req->InitializationErrorString().c_str());
+        qDebug("%s", req->InitializationErrorString().c_str());
         qFatal("exiting");
         delete req;
         delete resp;

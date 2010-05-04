@@ -82,7 +82,8 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Message *response,
     ::google::protobuf::Closure* done)
 {
-    char    msg[MSGBUF_SIZE];
+    char    msgBuf[MSGBUF_SIZE];
+    char* const msg = &msgBuf[0];
     int     len;
     bool    ret;
   
@@ -110,7 +111,7 @@ void PbRpcChannel::CallMethod(
     if (!req->IsInitialized())
     {
         qWarning("RpcChannel: missing required fields in request");
-        qDebug(req->InitializationErrorString().c_str());
+        qDebug("%s", req->InitializationErrorString().c_str());
 
         qFatal("exiting");
 
@@ -125,13 +126,13 @@ void PbRpcChannel::CallMethod(
     this->response=response;
     isPending = true;
 
-    ret = req->SerializeToArray((void*) (&msg[PB_HDR_SIZE]), sizeof(msg));
+    ret = req->SerializeToArray((void*)(msg+PB_HDR_SIZE), sizeof(msgBuf)-PB_HDR_SIZE);
     Q_ASSERT(ret == true);
 
     len = req->ByteSize();
-    *((quint16*)(&msg[0])) = HTONS(PB_MSG_TYPE_REQUEST); // type
-    *((quint16*)(&msg[2])) = HTONS(method->index()); // method id
-    *((quint32*)(&msg[4])) = HTONL(len); // len
+    *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_REQUEST); // type
+    *((quint16*)(msg+2)) = HTONS(method->index()); // method id
+    *((quint32*)(msg+4)) = HTONL(len); // len
 
     // Avoid printing stats since it happens every couple of seconds
     if (pendingMethodId != 13)
@@ -260,7 +261,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
             if (!response->IsInitialized())
             {
                 qWarning("RpcChannel: missing required fields in response");
-                qDebug(response->InitializationErrorString().c_str());
+                qDebug("%s", response->InitializationErrorString().c_str());
 
                 controller->SetFailed("Required fields missing");
             }

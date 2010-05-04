@@ -132,6 +132,7 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
         ret = pcap_setdirection(handle_, PCAP_D_OUT);
         break;
     default:
+        ret = -1; // avoid 'may be used uninitialized' warning
         Q_ASSERT(false);
     }
 #endif
@@ -351,8 +352,7 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
     struct pcap_pkthdr *hdr = (struct pcap_pkthdr*) queue->buffer;
     char *end = queue->buffer + queue->len;
 
-    if (sync)
-        ts = hdr->ts;
+    ts = hdr->ts;
 
     while (1)
     {
