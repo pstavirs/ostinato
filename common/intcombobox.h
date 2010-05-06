@@ -28,6 +28,7 @@ public:
     IntComboBox(QWidget *parent = 0)
         : QComboBox(parent)
     {
+        setEditable(true);
     }
     void addItem(int value, const QString &text) 
     {

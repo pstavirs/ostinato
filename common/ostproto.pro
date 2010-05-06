@@ -16,6 +16,7 @@ FORMS += \
     icmp.ui \
     tcp.ui \
     udp.ui \
+    textproto.ui \
     userscript.ui \
     sample.ui 
 PROTOS += \
@@ -36,6 +37,7 @@ PROTOS += \
     icmp.proto \
     tcp.proto \
     udp.proto \
+    textproto.proto \
     userscript.proto \
     sample.proto
 HEADERS += \
@@ -61,6 +63,7 @@ HEADERS += \
     icmp.h \
     tcp.h \
     udp.h \
+    textproto.h \
     userscript.h \
     sample.h
 SOURCES += \
@@ -82,6 +85,7 @@ SOURCES += \
     icmp.cpp \
     tcp.cpp \
     udp.cpp \
+    textproto.cpp \
     userscript.cpp \
     sample.cpp
 

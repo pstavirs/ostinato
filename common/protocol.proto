@@ -106,6 +106,8 @@ message Protocol {
         kUdpFieldNumber = 141;
         kIcmpFieldNumber = 142;
         kIgmpFieldNumber = 143;
+
+        kTextProtocolFieldNumber = 150;
     }
 }
 

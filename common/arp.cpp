@@ -722,6 +722,8 @@ bool ArpProtocol::setFieldData(int index, const QVariant &value,
             uint mode = value.toUInt(&isOk);
             if (isOk && data.HwAddrMode_IsValid(mode))
                 data.set_sender_hw_addr_mode((OstProto::Arp::HwAddrMode) mode);
+            else
+                isOk = false;
             break;
         }
         case arp_senderHwAddrCount:
@@ -745,6 +747,8 @@ bool ArpProtocol::setFieldData(int index, const QVariant &value,
             if (isOk && data.ProtoAddrMode_IsValid(mode))
                 data.set_sender_proto_addr_mode(
                         (OstProto::Arp::ProtoAddrMode)mode);
+            else
+                isOk = false;
             break;
         }
         case arp_senderProtoAddrCount:
@@ -774,6 +778,8 @@ bool ArpProtocol::setFieldData(int index, const QVariant &value,
             uint mode = value.toUInt(&isOk);
             if (isOk && data.HwAddrMode_IsValid(mode))
                 data.set_target_hw_addr_mode((OstProto::Arp::HwAddrMode)mode);
+            else
+                isOk = false;
             break;
         }
         case arp_targetHwAddrCount:
@@ -797,6 +803,8 @@ bool ArpProtocol::setFieldData(int index, const QVariant &value,
             if (isOk && data.ProtoAddrMode_IsValid(mode))
                 data.set_target_proto_addr_mode(
                         (OstProto::Arp::ProtoAddrMode)mode);
+            else
+                isOk = false;
             break;
         }
         case arp_targetProtoAddrCount:

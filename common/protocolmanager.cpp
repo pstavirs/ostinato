@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "icmp.h"    
 #include "tcp.h"    
 #include "udp.h"    
+#include "textproto.h"
 #include "userscript.h"
 #include "sample.h"
 
@@ -48,8 +49,6 @@ ProtocolManager::ProtocolManager()
      */
     registerProtocol(OstProto::Protocol::kMacFieldNumber,
             (void*) MacProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
-            (void*) PayloadProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot3FieldNumber,
@@ -78,6 +77,12 @@ ProtocolManager::ProtocolManager()
             (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
             (void*) UdpProtocol::createInstance);
+
+    registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
+            (void*) TextProtocol::createInstance);
+
+    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
+            (void*) PayloadProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
             (void*) UserScriptProtocol::createInstance);
