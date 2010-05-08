@@ -14,14 +14,18 @@
   </property>
   <layout class="QGridLayout" >
    <item row="0" column="0" >
-    <widget class="QLabel" name="label_28" >
+    <widget class="QCheckBox" name="cbTcpSrcPortOverride" >
      <property name="text" >
-      <string>Source Port</string>
+      <string>Override Source Port</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1" >
-    <widget class="QLineEdit" name="leTcpSrcPort" />
+    <widget class="QLineEdit" name="leTcpSrcPort" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item rowspan="6" row="0" column="2" >
     <widget class="Line" name="line_3" >
@@ -48,14 +52,18 @@
     </widget>
    </item>
    <item row="1" column="0" >
-    <widget class="QLabel" name="label_32" >
+    <widget class="QCheckBox" name="cbTcpDstPortOverride" >
      <property name="text" >
-      <string>Destination Port</string>
+      <string>Override Destination Port</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1" >
-    <widget class="QLineEdit" name="leTcpDstPort" />
+    <widget class="QLineEdit" name="leTcpDstPort" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item row="1" column="3" >
     <widget class="QLabel" name="label_37" >
@@ -221,6 +229,38 @@
     <hint type="destinationlabel" >
      <x>384</x>
      <y>17</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbTcpSrcPortOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpSrcPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>159</x>
+     <y>16</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>178</x>
+     <y>18</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbTcpDstPortOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leTcpDstPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>147</x>
+     <y>45</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>180</x>
+     <y>44</y>
     </hint>
    </hints>
   </connection>

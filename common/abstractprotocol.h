@@ -82,6 +82,7 @@ public:
         ProtocolIdLlc,      //!< LLC (802.2)
         ProtocolIdEth,      //!< Ethernet II
         ProtocolIdIp,       //!< IP
+        ProtocolIdTcpUdp,   //!< TCP/UDP Port Number
     };
 
     //! Supported checksum types 

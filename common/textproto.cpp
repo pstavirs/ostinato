@@ -83,7 +83,7 @@ quint32 TextProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
     {
-        //case ProtocolIdTcpUdp: return data.port_num();
+        case ProtocolIdTcpUdp: return data.port_num();
         default:break;
     }
 
@@ -220,7 +220,8 @@ _exit:
 
 int TextProtocol::protocolFrameSize(int streamIndex) const
 {
-    return fieldData(textProto_text, FieldFrameValue).toByteArray().size() ;
+    return fieldData(textProto_text, FieldFrameValue, streamIndex)
+            .toByteArray().size() ;
 }
 
 QWidget* TextProtocol::configWidget()

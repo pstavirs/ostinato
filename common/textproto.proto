@@ -27,7 +27,7 @@ message TextProtocol {
         kUtf8 = 0;
     }
 
-    optional uint32 port_num = 1 [default = 0]; 
+    optional uint32 port_num = 1 [default = 80]; 
     optional TextEncoding encoding = 2 [default = kUtf8];
     optional string text = 3;
 }

@@ -44,6 +44,8 @@ private:
         udp_totLen,
         udp_cksum,
 
+        udp_isOverrideSrcPort,
+        udp_isOverrideDstPort,
         udp_isOverrideTotLen,
         udp_isOverrideCksum,
 
@@ -63,9 +65,11 @@ public:
 
     virtual QString name() const;
     virtual QString shortName() const;
+
+    virtual ProtocolIdType protocolIdType() const;
     virtual quint32 protocolId(ProtocolIdType type) const;
 
-    virtual int    fieldCount() const;
+    virtual int fieldCount() const;
 
     virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,

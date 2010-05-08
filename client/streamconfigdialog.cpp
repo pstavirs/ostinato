@@ -66,6 +66,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbL1None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbFtNone, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbL3None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
+    connect(rbL4None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
 
     // If L1/L2(FT)/L3/L4 = Other, force subsequent protocol to Other and 
     // disable the subsequent protocol group as well
@@ -78,8 +79,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
     connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
 
-    // Setup valid subsequent protocols for L2 and L3 protocols
-    for (int i = ProtoL2; i <= ProtoL3; i++)
+    // Setup valid subsequent protocols for L2 to L4 protocols
+    for (int i = ProtoL2; i <= ProtoL4; i++)
     {
         foreach(QAbstractButton *btn1, bgProto[i]->buttons())
         {
@@ -207,12 +208,23 @@ void StreamConfigDialog::setupUiExtra()
     foreach(QRadioButton *btn, gbL4Proto->findChildren<QRadioButton*>())
         bgProto[ProtoL4]->addButton(btn);
 #else
-    bgProto[ProtoL4]->addButton(rbL4None, 0);
+    bgProto[ProtoL4]->addButton(rbL4None, ButtonIdNone);
     bgProto[ProtoL4]->addButton(rbL4Tcp, OstProto::Protocol::kTcpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Icmp, OstProto::Protocol::kIcmpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Igmp, OstProto::Protocol::kIgmpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Other, ButtonIdOther);
+#endif
+
+    bgProto[ProtoL5] = new QButtonGroup();
+#if 0
+    foreach(QRadioButton *btn, gbL5Proto->findChildren<QRadioButton*>())
+        bgProto[ProtoL5]->addButton(btn);
+#else
+    bgProto[ProtoL5]->addButton(rbL5None, ButtonIdNone);
+    bgProto[ProtoL5]->addButton(rbL5Text, 
+                                OstProto::Protocol::kTextProtocolFieldNumber);
+    bgProto[ProtoL5]->addButton(rbL5Other, ButtonIdOther);
 #endif
 
     bgProto[ProtoPayload] = new QButtonGroup();
@@ -639,13 +651,19 @@ void StreamConfigDialog::forceProtocolNone(bool checked)
             bgProto[ProtoL3]->button(ButtonIdNone)->click();
         disableProtocols(bgProto[ProtoL3], checked);
     }
-       else if (btn == rbL3None)
+    else if (btn == rbL3None)
     {
         if (checked)
             bgProto[ProtoL4]->button(ButtonIdNone)->click();
         disableProtocols(bgProto[ProtoL4], checked);
     }
-       else
+    else if (btn == rbL4None)
+    {
+        if (checked)
+            bgProto[ProtoL5]->button(ButtonIdNone)->click();
+        disableProtocols(bgProto[ProtoL5], checked);
+    }
+    else
     {
         Q_ASSERT(1 == 0); // Unreachable code!
     }
@@ -927,6 +945,15 @@ void StreamConfigDialog::StoreCurrentStream()
         pStream->setPacketRate(lePacketsPerSec->text().toULong(&isOk));
         pStream->setBurstRate(leBurstsPerSec->text().toULong(&isOk));
     }
+}
+
+void StreamConfigDialog::on_tbProtocolData_currentChanged(int /*index*/)
+{
+    // Refresh protocol widgets in case there is any dependent data between 
+    // protocols e.g. TCP/UDP port numbers are dependent on Port/Protocol 
+    // selection in TextProtocol
+    mpStream->storeProtocolWidgets();
+    mpStream->loadProtocolWidgets();
 }
 
 void StreamConfigDialog::on_pbOk_clicked()

@@ -61,7 +61,8 @@ private:
         ProtoL2 = 2,
         ProtoL3 = 3,
         ProtoL4 = 4,
-        ProtoPayload = 5,
+        ProtoL5 = 5,
+        ProtoPayload = 6,
         ProtoMax
     };
 
@@ -87,7 +88,6 @@ private:
     static int        lastTopLevelTabIndex;
 
     void setupUiExtra();
-    void updateSelectedProtocols();
     void LoadCurrentStream();
     void StoreCurrentStream();
 
@@ -121,6 +121,9 @@ private slots:
     void on_tbDown_clicked();
 
     void updateSelectProtocolsAdvancedWidget();
+
+    // "Protocol Data" related
+    void on_tbProtocolData_currentChanged(int index);
 
     void on_pbPrev_clicked();
     void on_pbNext_clicked();

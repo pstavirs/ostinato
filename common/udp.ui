@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>217</width>
+    <width>246</width>
     <height>144</height>
    </rect>
   </property>
@@ -16,24 +16,32 @@
    <item row="0" column="0" >
     <layout class="QGridLayout" >
      <item row="0" column="0" >
-      <widget class="QLabel" name="label_35" >
+      <widget class="QCheckBox" name="cbUdpSrcPortOverride" >
        <property name="text" >
-        <string>Source Port</string>
+        <string>Override Source Port</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1" >
-      <widget class="QLineEdit" name="leUdpSrcPort" />
+      <widget class="QLineEdit" name="leUdpSrcPort" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
      <item row="1" column="0" >
-      <widget class="QLabel" name="label_38" >
+      <widget class="QCheckBox" name="cbUdpDstPortOverride" >
        <property name="text" >
-        <string>Destination Port</string>
+        <string>Override Destination Port</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1" >
-      <widget class="QLineEdit" name="leUdpDstPort" />
+      <widget class="QLineEdit" name="leUdpDstPort" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0" >
       <widget class="QCheckBox" name="cbUdpLengthOverride" >
@@ -109,8 +117,8 @@
      <y>63</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>149</x>
-     <y>63</y>
+     <x>209</x>
+     <y>81</y>
     </hint>
    </hints>
   </connection>
@@ -125,8 +133,40 @@
      <y>106</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>158</x>
-     <y>106</y>
+     <x>209</x>
+     <y>107</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUdpDstPortOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpDstPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>131</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>166</x>
+     <y>46</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUdpSrcPortOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leUdpSrcPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>125</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>167</x>
+     <y>20</y>
     </hint>
    </hints>
   </connection>

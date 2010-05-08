@@ -73,6 +73,11 @@ QString UdpProtocol::shortName() const
     return QString("UDP");
 }
 
+AbstractProtocol::ProtocolIdType UdpProtocol::protocolIdType() const
+{
+    return ProtocolIdTcpUdp;
+}
+
 quint32 UdpProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
@@ -84,7 +89,7 @@ quint32 UdpProtocol::protocolId(ProtocolIdType type) const
     return AbstractProtocol::protocolId(type);
 }
 
-int    UdpProtocol::fieldCount() const
+int UdpProtocol::fieldCount() const
 {
     return udp_fieldCount;
 }
@@ -106,12 +111,16 @@ AbstractProtocol::FieldFlags UdpProtocol::fieldFlags(int index) const
             flags |= FieldIsCksum;
             break;
 
+        case udp_isOverrideSrcPort:
+        case udp_isOverrideDstPort:
         case udp_isOverrideTotLen:
         case udp_isOverrideCksum:
             flags |= FieldIsMeta;
             break;
 
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
@@ -124,47 +133,81 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
     switch (index)
     {
         case udp_srcPort:
+        {
+            quint16 srcPort;
+
+            switch(attrib)
+            {
+                case FieldValue:
+                case FieldFrameValue:
+                case FieldTextValue:
+                    if (data.is_override_src_port())
+                        srcPort = data.src_port();
+                    else
+                        srcPort = payloadProtocolId(ProtocolIdTcpUdp);
+                    break;
+                default:
+                    srcPort = 0; // avoid the 'maybe used unitialized' warning
+                    break;
+            }
             switch(attrib)
             {
                 case FieldName:            
                     return QString("Source Port");
                 case FieldValue:
-                    return data.src_port();
+                    return srcPort;
                 case FieldTextValue:
-                    return QString("%1").arg(data.src_port());
+                    return QString("%1").arg(srcPort);
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
-                    qToBigEndian((quint16) data.src_port(), (uchar*) fv.data());
+                    qToBigEndian(srcPort, (uchar*) fv.data());
                     return fv;
                 }
                 default:
                     break;
             }
             break;
-
+        }
         case udp_dstPort:
+        {
+            quint16 dstPort;
+
+            switch(attrib)
+            {
+                case FieldValue:
+                case FieldFrameValue:
+                case FieldTextValue:
+                    if (data.is_override_dst_port())
+                        dstPort = data.dst_port();
+                    else
+                        dstPort = payloadProtocolId(ProtocolIdTcpUdp);
+                    break;
+                default:
+                    dstPort = 0; // avoid the 'maybe used unitialized' warning
+                    break;
+            }
             switch(attrib)
             {
                 case FieldName:            
                     return QString("Destination Port");
                 case FieldValue:
-                    return data.dst_port();
+                    return dstPort;
                 case FieldTextValue:
-                    return QString("%1").arg(data.dst_port());
+                    return QString("%1").arg(dstPort);
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
-                    qToBigEndian((quint16) data.dst_port(), (uchar*) fv.data());
+                    qToBigEndian(dstPort, (uchar*) fv.data());
                     return fv;
                 }
                 default:
                     break;
             }
             break;
-
+        }
         case udp_totLen:
         {
 
@@ -253,30 +296,132 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+
         // Meta fields
-        case udp_isOverrideTotLen:
-        case udp_isOverrideCksum:
+        case udp_isOverrideSrcPort:
+        {
             switch(attrib)
             {
-                case FieldIsMeta:
-                    return true;
+                case FieldValue:
+                    return data.is_override_src_port();
                 default:
                     break;
             }
             break;
+        }
+        case udp_isOverrideDstPort:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_dst_port();
+                default:
+                    break;
+            }
+            break;
+        }
+        case udp_isOverrideTotLen:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_totlen();
+                default:
+                    break;
+            }
+            break;
+        }
+        case udp_isOverrideCksum:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_cksum();
+                default:
+                    break;
+            }
+            break;
+        }
 
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool UdpProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool UdpProtocol::setFieldData(int index, const QVariant& value, 
+        FieldAttrib attrib)
 {
-    //! implement UdpProtocol::setFieldData() 
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        goto _exit;
+
+    switch (index)
+    {
+        case udp_isOverrideSrcPort:
+        {
+            data.set_is_override_src_port(value.toBool());
+            isOk = true;
+            break;
+        }
+        case udp_isOverrideDstPort:
+        {
+            data.set_is_override_dst_port(value.toBool());
+            isOk = true;
+            break;
+        }
+        case udp_isOverrideTotLen:
+        {
+            data.set_is_override_totlen(value.toBool());
+            isOk = true;
+            break;
+        }
+        case udp_isOverrideCksum:
+        {
+            data.set_is_override_cksum(value.toBool());
+            isOk = true;
+            break;
+        }
+        case udp_srcPort:
+        {
+            uint srcPort = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_port(srcPort);
+            break;
+        }
+        case udp_dstPort:
+        {
+            uint dstPort = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_port(dstPort);
+            break;
+        }
+        case udp_totLen:
+        {
+            uint totLen = value.toUInt(&isOk);
+            if (isOk)
+                data.set_totlen(totLen);
+            break;
+        }
+        case udp_cksum:
+        {
+            uint cksum = value.toUInt(&isOk);
+            if (isOk)
+                data.set_cksum(cksum);
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+
+_exit:
+    return isOk;
 }
 
 bool UdpProtocol::isProtocolFrameValueVariable() const
@@ -301,15 +446,24 @@ void UdpProtocol::loadConfigWidget()
 {
     configWidget();
 
-    configForm->leUdpSrcPort->setText(fieldData(udp_srcPort, FieldValue).toString());
-    configForm->leUdpDstPort->setText(fieldData(udp_dstPort, FieldValue).toString());
+    configForm->leUdpSrcPort->setText(
+        fieldData(udp_srcPort, FieldValue).toString());
+    configForm->cbUdpSrcPortOverride->setChecked(
+        fieldData(udp_isOverrideSrcPort, FieldValue).toBool());
+    configForm->leUdpDstPort->setText(
+        fieldData(udp_dstPort, FieldValue).toString());
+    configForm->cbUdpDstPortOverride->setChecked(
+        fieldData(udp_isOverrideDstPort, FieldValue).toBool());
 
-    configForm->leUdpLength->setText(fieldData(udp_totLen, FieldValue).toString());
-    configForm->cbUdpLengthOverride->setChecked(data.is_override_totlen());
+    configForm->leUdpLength->setText(
+        fieldData(udp_totLen, FieldValue).toString());
+    configForm->cbUdpLengthOverride->setChecked(
+        fieldData(udp_isOverrideTotLen, FieldValue).toBool());
 
     configForm->leUdpCksum->setText(QString("%1").arg(
         fieldData(udp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
-    configForm->cbUdpCksumOverride->setChecked(data.is_override_cksum());
+    configForm->cbUdpCksumOverride->setChecked(
+        fieldData(udp_isOverrideCksum, FieldValue).toBool());
 }
 
 void UdpProtocol::storeConfigWidget()
@@ -318,13 +472,20 @@ void UdpProtocol::storeConfigWidget()
 
     configWidget();
 
-    data.set_src_port(configForm->leUdpSrcPort->text().toULong(&isOk));
-    data.set_dst_port(configForm->leUdpDstPort->text().toULong(&isOk));
+    setFieldData(udp_srcPort, configForm->leUdpSrcPort->text());
+    setFieldData(udp_isOverrideSrcPort, 
+        configForm->cbUdpSrcPortOverride->isChecked());
+    setFieldData(udp_dstPort, configForm->leUdpDstPort->text());
+    setFieldData(udp_isOverrideDstPort, 
+        configForm->cbUdpDstPortOverride->isChecked());
 
-    data.set_totlen(configForm->leUdpLength->text().toULong(&isOk));
-    data.set_is_override_totlen(configForm->cbUdpLengthOverride->isChecked());
+    setFieldData(udp_totLen, configForm->leUdpLength->text());
+    setFieldData(udp_isOverrideTotLen, 
+        configForm->cbUdpLengthOverride->isChecked());
 
-    data.set_cksum(configForm->leUdpCksum->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));
-    data.set_is_override_cksum(configForm->cbUdpCksumOverride->isChecked());
+    setFieldData(udp_cksum, configForm->leUdpCksum->text().toUInt(
+        &isOk, BASE_HEX));
+    setFieldData(udp_isOverrideCksum, 
+        configForm->cbUdpCksumOverride->isChecked());
 }
 

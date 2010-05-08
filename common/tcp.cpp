@@ -73,6 +73,11 @@ QString TcpProtocol::shortName() const
     return QString("TCP");
 }
 
+AbstractProtocol::ProtocolIdType TcpProtocol::protocolIdType() const
+{
+    return ProtocolIdTcpUdp;
+}
+
 quint32 TcpProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
@@ -84,7 +89,7 @@ quint32 TcpProtocol::protocolId(ProtocolIdType type) const
     return AbstractProtocol::protocolId(type);
 }
 
-int    TcpProtocol::fieldCount() const
+int TcpProtocol::fieldCount() const
 {
     return tcp_fieldCount;
 }
@@ -114,12 +119,16 @@ AbstractProtocol::FieldFlags TcpProtocol::fieldFlags(int index) const
         case tcp_urg_ptr:
             break;
 
+        case tcp_is_override_src_port:
+        case tcp_is_override_dst_port:
         case tcp_is_override_hdrlen:
         case tcp_is_override_cksum:
             flags |= FieldIsMeta;
             break;
 
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
@@ -132,47 +141,81 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
     switch (index)
     {
         case tcp_src_port:
+        {
+            quint16 srcPort;
+
+            switch(attrib)
+            {
+                case FieldValue:
+                case FieldFrameValue:
+                case FieldTextValue:
+                    if (data.is_override_src_port())
+                        srcPort = data.src_port();
+                    else
+                        srcPort = payloadProtocolId(ProtocolIdTcpUdp);
+                    break;
+                default:
+                    srcPort = 0; // avoid the 'maybe used unitialized' warning
+                    break;
+            }
             switch(attrib)
             {
                 case FieldName:            
                     return QString("Source Port");
                 case FieldValue:
-                    return data.src_port();
+                    return srcPort;
                 case FieldTextValue:
-                    return QString("%1").arg(data.src_port());
+                    return QString("%1").arg(srcPort);
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
-                    qToBigEndian((quint16) data.src_port(), (uchar*) fv.data());
+                    qToBigEndian(srcPort, (uchar*) fv.data());
                     return fv;
                 }
                 default:
                     break;
             }
             break;
-
+        }
         case tcp_dst_port:
+        {
+            quint16 dstPort;
+
+            switch(attrib)
+            {
+                case FieldValue:
+                case FieldFrameValue:
+                case FieldTextValue:
+                    if (data.is_override_dst_port())
+                        dstPort = data.dst_port();
+                    else
+                        dstPort = payloadProtocolId(ProtocolIdTcpUdp);
+                    break;
+                default:
+                    dstPort = 0; // avoid the 'maybe used unitialized' warning
+                    break;
+            }
             switch(attrib)
             {
                 case FieldName:            
                     return QString("Destination Port");
                 case FieldValue:
-                    return data.dst_port();
+                    return dstPort;
                 case FieldTextValue:
-                    return QString("%1").arg(data.dst_port());
+                    return QString("%1").arg(dstPort);
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
-                    qToBigEndian((quint16) data.dst_port(), (uchar*) fv.data());
+                    qToBigEndian(dstPort, (uchar*) fv.data());
                     return fv;
                 }
                 default:
                     break;
             }
             break;
-
+        }
         case tcp_seq_num:
             switch(attrib)
             {
@@ -384,19 +427,174 @@ QVariant TcpProtocol::fieldData(int index, FieldAttrib attrib,
             break;
 
         // Meta fields
+        case tcp_is_override_src_port:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_src_port();
+                default:
+                    break;
+            }
+            break;
+        }
+        case tcp_is_override_dst_port:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_dst_port();
+                default:
+                    break;
+            }
+            break;
+        }
         case tcp_is_override_hdrlen:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_hdrlen();
+                default:
+                    break;
+            }
+            break;
+        }
         case tcp_is_override_cksum:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_cksum();
+                default:
+                    break;
+            }
+            break;
+        }
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool TcpProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool TcpProtocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        goto _exit;
+
+    switch (index)
+    {
+        case tcp_src_port:
+        {
+            uint srcPort = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_port(srcPort);
+            break;
+        }
+        case tcp_dst_port:
+        {
+            uint dstPort = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_port(dstPort);
+            break;
+        }
+        case tcp_seq_num:
+        {
+            uint seqNum = value.toUInt(&isOk);
+            if (isOk)
+                data.set_seq_num(seqNum);
+            break;
+        }
+        case tcp_ack_num:
+        {
+            uint ackNum = value.toUInt(&isOk);
+            if (isOk)
+                data.set_ack_num(ackNum);
+            break;
+        }
+        case tcp_hdrlen:
+        {
+            uint hdrLen = value.toUInt(&isOk);
+            if (isOk)
+                data.set_hdrlen_rsvd(
+                    (data.hdrlen_rsvd() & 0x0F) | (hdrLen << 4));
+            break;
+        }
+        case tcp_rsvd:
+        {
+            uint rsvd = value.toUInt(&isOk);
+            if (isOk)
+                data.set_hdrlen_rsvd(
+                    (data.hdrlen_rsvd() & 0xF0) | (rsvd & 0x0F));
+            break;
+        }
+        case tcp_flags:
+        {
+            uint flags = value.toUInt(&isOk);
+            if (isOk)
+                data.set_flags(flags);
+            break;
+        }
+        case tcp_window:
+        {
+            uint window = value.toUInt(&isOk);
+            if (isOk)
+                data.set_window(window);
+            break;
+        }
+        case tcp_cksum:
+        {
+            uint cksum = value.toUInt(&isOk);
+            if (isOk)
+                data.set_cksum(cksum);
+            break;
+        }
+        case tcp_urg_ptr:
+        {
+            uint urgPtr = value.toUInt(&isOk);
+            if (isOk)
+                data.set_urg_ptr(urgPtr);
+            break;
+        }
+        case tcp_is_override_src_port:
+        {
+            data.set_is_override_src_port(value.toBool());
+            isOk = true;
+            break;
+        }
+        case tcp_is_override_dst_port:
+        {
+            data.set_is_override_dst_port(value.toBool());
+            isOk = true;
+            break;
+        }
+        case tcp_is_override_hdrlen:
+        {
+            data.set_is_override_hdrlen(value.toBool());
+            isOk = true;
+            break;
+        }
+        case tcp_is_override_cksum:
+        {
+            data.set_is_override_cksum(value.toBool());
+            isOk = true;
+            break;
+        }
+
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+
+_exit:
+    return isOk;
 }
 
 bool TcpProtocol::isProtocolFrameValueVariable() const
@@ -421,53 +619,73 @@ void TcpProtocol::loadConfigWidget()
 {
     configWidget();
 
-    configForm->leTcpSrcPort->setText(QString().setNum(data.src_port()));
-    configForm->leTcpDstPort->setText(QString().setNum(data.dst_port()));
+    configForm->leTcpSrcPort->setText(
+        fieldData(tcp_src_port, FieldValue).toString());
+    configForm->cbTcpSrcPortOverride->setChecked(
+        fieldData(tcp_is_override_src_port, FieldValue).toBool());
 
-    configForm->leTcpSeqNum->setText(QString().setNum(data.seq_num()));
-    configForm->leTcpAckNum->setText(QString().setNum(data.ack_num()));
+    configForm->leTcpDstPort->setText(
+        fieldData(tcp_dst_port, FieldValue).toString());
+    configForm->cbTcpDstPortOverride->setChecked(
+        fieldData(tcp_is_override_dst_port, FieldValue).toBool());
 
-    configForm->leTcpHdrLen->setText(fieldData(tcp_hdrlen, FieldValue).toString());
-    configForm->cbTcpHdrLenOverride->setChecked(data.is_override_hdrlen());
+    configForm->leTcpSeqNum->setText(
+        fieldData(tcp_seq_num, FieldValue).toString());
+    configForm->leTcpAckNum->setText(
+        fieldData(tcp_ack_num, FieldValue).toString());
 
-    configForm->leTcpWindow->setText(QString().setNum(data.window()));
+    configForm->leTcpHdrLen->setText(
+        fieldData(tcp_hdrlen, FieldValue).toString());
+    configForm->cbTcpHdrLenOverride->setChecked(
+        fieldData(tcp_is_override_hdrlen, FieldValue).toBool());
+
+    configForm->leTcpWindow->setText(
+        fieldData(tcp_window, FieldValue).toString());
 
     configForm->leTcpCksum->setText(QString("%1").arg(
         fieldData(tcp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
-    configForm->cbTcpCksumOverride->setChecked(data.is_override_cksum());
+    configForm->cbTcpCksumOverride->setChecked(
+        fieldData(tcp_is_override_cksum, FieldValue).toBool());
 
-    configForm->leTcpUrgentPointer->setText(QString().setNum(data.urg_ptr()));
-
-    configForm->cbTcpFlagsUrg->setChecked((data.flags() & TCP_FLAG_URG) > 0);
-    configForm->cbTcpFlagsAck->setChecked((data.flags() & TCP_FLAG_ACK) > 0);
-    configForm->cbTcpFlagsPsh->setChecked((data.flags() & TCP_FLAG_PSH) > 0);
-    configForm->cbTcpFlagsRst->setChecked((data.flags() & TCP_FLAG_RST) > 0);
-    configForm->cbTcpFlagsSyn->setChecked((data.flags() & TCP_FLAG_SYN) > 0);
-    configForm->cbTcpFlagsFin->setChecked((data.flags() & TCP_FLAG_FIN) > 0);
+    configForm->leTcpUrgentPointer->setText(
+        fieldData(tcp_urg_ptr, FieldValue).toString());
+    
+    uint flags = fieldData(tcp_flags, FieldValue).toUInt();
+    configForm->cbTcpFlagsUrg->setChecked((flags & TCP_FLAG_URG) > 0);
+    configForm->cbTcpFlagsAck->setChecked((flags & TCP_FLAG_ACK) > 0);
+    configForm->cbTcpFlagsPsh->setChecked((flags & TCP_FLAG_PSH) > 0);
+    configForm->cbTcpFlagsRst->setChecked((flags & TCP_FLAG_RST) > 0);
+    configForm->cbTcpFlagsSyn->setChecked((flags & TCP_FLAG_SYN) > 0);
+    configForm->cbTcpFlagsFin->setChecked((flags & TCP_FLAG_FIN) > 0);
 }
 
 void TcpProtocol::storeConfigWidget()
 {
-    bool isOk;
     int ff = 0;
 
     configWidget();
 
-    data.set_src_port(configForm->leTcpSrcPort->text().toULong(&isOk));
-    data.set_dst_port(configForm->leTcpDstPort->text().toULong(&isOk));
+    setFieldData(tcp_src_port, configForm->leTcpSrcPort->text());
+    setFieldData(tcp_is_override_src_port, 
+        configForm->cbTcpSrcPortOverride->isChecked());
+    setFieldData(tcp_dst_port, configForm->leTcpDstPort->text());
+    setFieldData(tcp_is_override_dst_port, 
+        configForm->cbTcpDstPortOverride->isChecked());
 
-    data.set_seq_num(configForm->leTcpSeqNum->text().toULong(&isOk));
-    data.set_ack_num(configForm->leTcpAckNum->text().toULong(&isOk));
+    setFieldData(tcp_seq_num, configForm->leTcpSeqNum->text());
+    setFieldData(tcp_ack_num, configForm->leTcpAckNum->text());
 
-    data.set_hdrlen_rsvd((configForm->leTcpHdrLen->text().toULong(&isOk) << 4) & 0xF0);
-    data.set_is_override_hdrlen(configForm->cbTcpHdrLenOverride->isChecked());
+    setFieldData(tcp_hdrlen, configForm->leTcpHdrLen->text());
+    setFieldData(tcp_is_override_hdrlen, 
+        configForm->cbTcpHdrLenOverride->isChecked());
 
-    data.set_window(configForm->leTcpWindow->text().toULong(&isOk));
+    setFieldData(tcp_window, configForm->leTcpWindow->text());
 
-    data.set_cksum(configForm->leTcpCksum->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));
-    data.set_is_override_cksum(configForm->cbTcpCksumOverride->isChecked());
+    setFieldData(tcp_cksum, configForm->leTcpCksum->text());
+    setFieldData(tcp_is_override_cksum, 
+        configForm->cbTcpCksumOverride->isChecked());
 
-    data.set_urg_ptr(configForm->leTcpUrgentPointer->text().toULong(&isOk));
+    setFieldData(tcp_urg_ptr, configForm->leTcpUrgentPointer->text());
 
     if (configForm->cbTcpFlagsUrg->isChecked()) ff |= TCP_FLAG_URG;
     if (configForm->cbTcpFlagsAck->isChecked()) ff |= TCP_FLAG_ACK;
@@ -475,6 +693,6 @@ void TcpProtocol::storeConfigWidget()
     if (configForm->cbTcpFlagsRst->isChecked()) ff |= TCP_FLAG_RST;
     if (configForm->cbTcpFlagsSyn->isChecked()) ff |= TCP_FLAG_SYN;
     if (configForm->cbTcpFlagsFin->isChecked()) ff |= TCP_FLAG_FIN;
-    data.set_flags(ff);
+    setFieldData(tcp_flags, ff);
 }
 
