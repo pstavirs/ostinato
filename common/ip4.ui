@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>527</width>
-    <height>296</height>
+    <width>493</width>
+    <height>308</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -35,7 +35,8 @@
      <item row="1" column="0" >
       <widget class="QCheckBox" name="cbIpHdrLenOverride" >
        <property name="text" >
-        <string>Override Header Length (x4)</string>
+        <string>Override Header
+Length (x4)</string>
        </property>
       </widget>
      </item>
@@ -63,16 +64,6 @@
        </property>
        <property name="text" >
         <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2" >
-      <widget class="QToolButton" name="toolButton" >
-       <property name="enabled" >
-        <bool>false</bool>
-       </property>
-       <property name="text" >
-        <string>...</string>
        </property>
       </widget>
      </item>
@@ -105,13 +96,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="0" column="1" >
-    <widget class="Line" name="line_2" >
-     <property name="orientation" >
-      <enum>Qt::Vertical</enum>
-     </property>
-    </widget>
    </item>
    <item row="0" column="2" >
     <layout class="QGridLayout" >

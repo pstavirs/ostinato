@@ -8,7 +8,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>569</width>
+    <width>579</width>
     <height>481</height>
    </rect>
   </property>
@@ -173,7 +173,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>527</width>
+            <width>537</width>
             <height>243</height>
            </rect>
           </property>
@@ -339,6 +339,19 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                </widget>
               </item>
               <item row="1" column="1" >
+               <widget class="QRadioButton" name="rbL3Ip4over4" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IP 4over4</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" >
                <widget class="QRadioButton" name="rbL3Other" >
                 <property name="enabled" >
                  <bool>false</bool>

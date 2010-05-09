@@ -34,6 +34,7 @@ PROTOS += \
     vlanstack.proto \
     arp.proto \
     ip4.proto \
+    ip4over4.proto \
     icmp.proto \
     tcp.proto \
     udp.proto \
@@ -60,6 +61,7 @@ HEADERS += \
     vlanstack.h \
     arp.h \
     ip4.h \
+    ip4over4.h \
     icmp.h \
     tcp.h \
     udp.h \

@@ -200,6 +200,8 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoL3]->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ipv6, 0xFFFF);
     bgProto[ProtoL3]->addButton(rbL3Arp, OstProto::Protocol::kArpFieldNumber);
+    bgProto[ProtoL3]->addButton(rbL3Ip4over4, 
+            OstProto::Protocol::kIp4over4FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Other, ButtonIdOther);
 #endif
 
@@ -952,8 +954,10 @@ void StreamConfigDialog::on_tbProtocolData_currentChanged(int /*index*/)
     // Refresh protocol widgets in case there is any dependent data between 
     // protocols e.g. TCP/UDP port numbers are dependent on Port/Protocol 
     // selection in TextProtocol
+#if 0 // FIXME: temp mask to avoid crash till we fix it
     mpStream->storeProtocolWidgets();
     mpStream->loadProtocolWidgets();
+#endif
 }
 
 void StreamConfigDialog::on_pbOk_clicked()

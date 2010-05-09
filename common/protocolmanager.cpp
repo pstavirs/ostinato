@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "vlanstack.h"    
 #include "arp.h"    
 #include "ip4.h"    
+#include "ip4over4.h"    
 #include "icmp.h"    
 #include "tcp.h"    
 #include "udp.h"    
@@ -49,6 +50,7 @@ ProtocolManager::ProtocolManager()
      */
     registerProtocol(OstProto::Protocol::kMacFieldNumber,
             (void*) MacProtocol::createInstance);
+
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot3FieldNumber,
@@ -61,23 +63,27 @@ ProtocolManager::ProtocolManager()
             (void*) Dot2LlcProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
             (void*) Dot2SnapProtocol::createInstance);
+
     registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
             (void*) SVlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanFieldNumber,
             (void*) VlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
             (void*) VlanStackProtocol::createInstance);
+
     registerProtocol(OstProto::Protocol::kArpFieldNumber,
             (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
             (void*) Ip4Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIp4over4FieldNumber,
+            (void*) Ip4over4Protocol::createInstance);
+
     registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
             (void*) IcmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
             (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
             (void*) UdpProtocol::createInstance);
-
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
             (void*) TextProtocol::createInstance);
 

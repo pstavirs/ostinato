@@ -101,6 +101,7 @@ message Protocol {
 
         kIp4FieldNumber = 130;
         kArpFieldNumber = 131;
+        kIp4over4FieldNumber = 132;
 
         kTcpFieldNumber = 140;
         kUdpFieldNumber = 141;

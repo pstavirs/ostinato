@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 template <int protoNumber, class ProtoA, class ProtoB>
 class ComboProtocol : public AbstractProtocol
 {
-private:
+protected:
     ProtoA    *protoA;
     ProtoB    *protoB;
     QWidget *configForm;
@@ -82,8 +82,7 @@ public:
 
             // NOTE: To use protoX->protoDataCopyFrom() we need to arrange
             // so that it sees its own protocolNumber() - but since the
-            // input param 'protocol' is 'const', we make a copy first
-
+            // input param 'protocol' is 'const', we work on a copy
             proto.CopyFrom(protocol);
 
             proto.mutable_protocol_id()->set_id(protoA->protocolNumber());
