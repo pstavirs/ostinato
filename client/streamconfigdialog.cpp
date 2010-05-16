@@ -136,7 +136,9 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
-#ifndef QT_NO_DEBUG
+#ifdef QT_NO_DEBUG
+    mpPacketModelTester = NULL;
+#else
     mpPacketModelTester = new ModelTest(mpPacketModel);
 #endif
     tvPacketTree->header()->hide();

@@ -29,8 +29,11 @@ PortGroupList::PortGroupList()
 {
     PortGroup    *pg;
 
-#ifndef QT_NO_DEBUG
-    // TODO(LOW): Remove
+#ifdef QT_NO_DEBUG
+    streamModelTester_ = NULL;
+    portModelTester_ = NULL;
+    portStatsModelTester_ = NULL;
+#else
     streamModelTester_ = new ModelTest(getStreamModel());
     portModelTester_ = new ModelTest(getPortModel());
     portStatsModelTester_ = new ModelTest(getPortStatsModel());
