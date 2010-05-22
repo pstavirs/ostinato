@@ -249,7 +249,7 @@ AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int /*index*/) const
 
   \note If a subclass uses any of the below functions to derive 
   FieldFrameValue, the subclass should handle and return a value for 
-  FieldBitSize to prevent endless recrusion -
+  FieldBitSize to prevent endless recursion -
   - protocolFrameCksum()
   - protocolFramePayloadSize()
 */
@@ -454,7 +454,10 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
             }
             else
                 field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
-            qDebug("<<< %d, %d/%d >>>>", proto.size(), bits, field.size());
+            qDebug("<<< (%d, %db) %s >>>", proto.size(), lastbitpos,
+                    QString(proto.toHex()).toAscii().constData());
+            qDebug("  < (%db/%dB) %s >", bits, field.size(),
+                    QString(field.toHex()).toAscii().constData());
 
             if (bits == (uint) field.size() * 8)
             {
@@ -465,10 +468,12 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
                     Q_ASSERT(field.size() > 0);
 
                     char c = proto[proto.size() - 1];
-                    proto[proto.size() - 1] =  c | (field.at(0) >> lastbitpos);
+                    proto[proto.size() - 1] =  
+                        c | ((uchar)field.at(0) >> lastbitpos);
                     for (int j = 0; j < field.size() - 1; j++)
                         proto.append(field.at(j) << lastbitpos |
-                                field.at(j+1) >> lastbitpos);
+                                (uchar)field.at(j+1) >> lastbitpos);
+                    proto.append(field.at(field.size() - 1) << lastbitpos);
                 }
             }
             else if (bits < (uint) field.size() * 8)

@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "vlanstack.h"    
 #include "arp.h"    
 #include "ip4.h"    
+#include "ip6.h"    
 #include "ip4over4.h"    
 #include "icmp.h"    
 #include "tcp.h"    
@@ -75,6 +76,8 @@ ProtocolManager::ProtocolManager()
             (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
             (void*) Ip4Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIp6FieldNumber,
+            (void*) Ip6Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4over4FieldNumber,
             (void*) Ip4over4Protocol::createInstance);
 

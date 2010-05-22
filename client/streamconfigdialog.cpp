@@ -147,8 +147,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // TODO(MED):
 
-    //! \todo Implement then enable these protocols - IPv6, IGMP
-    rbL3Ipv6->setHidden(true);
+    //! \todo Implement then enable these protocols - IGMP
     rbL4Igmp->setHidden(true);
     //! \todo Enable navigation of streams
     pbPrev->setDisabled(true);
@@ -200,7 +199,7 @@ void StreamConfigDialog::setupUiExtra()
 #else
     bgProto[ProtoL3]->addButton(rbL3None, ButtonIdNone);
     bgProto[ProtoL3]->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
-    bgProto[ProtoL3]->addButton(rbL3Ipv6, 0xFFFF);
+    bgProto[ProtoL3]->addButton(rbL3Ipv6, OstProto::Protocol::kIp6FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Arp, OstProto::Protocol::kArpFieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ip4over4, 
             OstProto::Protocol::kIp4over4FieldNumber);
