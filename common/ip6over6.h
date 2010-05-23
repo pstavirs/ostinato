@@ -17,29 +17,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _IP_4_OVER_4_H
-#define _IP_4_OVER_4_H
+#ifndef _IP_6_OVER_6_H
+#define _IP_6_OVER_6_H
 
-#include "ip4over4.pb.h"
+#include "ip6over6.pb.h"
 
 #include "comboprotocol.h"
-#include "ip4.h"
+#include "ip6.h"
 
-typedef ComboProtocol<OstProto::Protocol::kIp4over4FieldNumber, 
-    Ip4Protocol, Ip4Protocol> Ip4over4Combo;
+typedef ComboProtocol<OstProto::Protocol::kIp6over6FieldNumber, 
+    Ip6Protocol, Ip6Protocol> Ip6over6Combo;
 
-class Ip4over4Protocol : public Ip4over4Combo 
+class Ip6over6Protocol : public Ip6over6Combo 
 {
 public:
-    Ip4over4Protocol(StreamBase *stream, AbstractProtocol *parent = 0)
-        : Ip4over4Combo(stream, parent) 
+    Ip6over6Protocol(StreamBase *stream, AbstractProtocol *parent = 0)
+        : Ip6over6Combo(stream, parent) 
     {
     }
 
-    static Ip4over4Protocol* createInstance(StreamBase *stream,
+    static Ip6over6Protocol* createInstance(StreamBase *stream,
         AbstractProtocol *parent)
     {
-        return new Ip4over4Protocol(stream, parent);
+        return new Ip6over6Protocol(stream, parent);
     }
 
     virtual void protoDataCopyInto(OstProto::Protocol &protocol) const
@@ -47,16 +47,16 @@ public:
         OstProto::Protocol tempProto;
 
         protoA->protoDataCopyInto(tempProto);
-        protocol.MutableExtension(OstProto::ip4over4)
-            ->MutableExtension(OstProto::ip4_outer)
-            ->CopyFrom(tempProto.GetExtension(OstProto::ip4));
+        protocol.MutableExtension(OstProto::ip6over6)
+            ->MutableExtension(OstProto::ip6_outer)
+            ->CopyFrom(tempProto.GetExtension(OstProto::ip6));
 
         tempProto.Clear();
 
         protoB->protoDataCopyInto(tempProto);
-        protocol.MutableExtension(OstProto::ip4over4)
-            ->MutableExtension(OstProto::ip4_inner)
-            ->CopyFrom(tempProto.GetExtension(OstProto::ip4));
+        protocol.MutableExtension(OstProto::ip6over6)
+            ->MutableExtension(OstProto::ip6_inner)
+            ->CopyFrom(tempProto.GetExtension(OstProto::ip6));
 
         protocol.mutable_protocol_id()->set_id(protocolNumber());
     }
@@ -64,7 +64,7 @@ public:
     virtual void protoDataCopyFrom(const OstProto::Protocol &protocol)
     {
         if (protocol.protocol_id().id() == protocolNumber()
-                && protocol.HasExtension(OstProto::ip4over4))
+                && protocol.HasExtension(OstProto::ip6over6))
         {
             OstProto::Protocol    tempProto;
 
@@ -72,17 +72,17 @@ public:
             // so that it sees its own protocolNumber() and its own extension
             // in 'protocol'
             tempProto.mutable_protocol_id()->set_id(protoA->protocolNumber());
-            tempProto.MutableExtension(OstProto::ip4)->CopyFrom(
-                    protocol.GetExtension(OstProto::ip4over4).GetExtension(
-                        OstProto::ip4_outer));
+            tempProto.MutableExtension(OstProto::ip6)->CopyFrom(
+                    protocol.GetExtension(OstProto::ip6over6).GetExtension(
+                        OstProto::ip6_outer));
             protoA->protoDataCopyFrom(tempProto);
 
             tempProto.Clear();
 
             tempProto.mutable_protocol_id()->set_id(protoB->protocolNumber());
-            tempProto.MutableExtension(OstProto::ip4)->CopyFrom(
-                    protocol.GetExtension(OstProto::ip4over4).GetExtension(
-                        OstProto::ip4_inner));
+            tempProto.MutableExtension(OstProto::ip6)->CopyFrom(
+                    protocol.GetExtension(OstProto::ip6over6).GetExtension(
+                        OstProto::ip6_inner));
             protoB->protoDataCopyFrom(tempProto);
         }
     }

@@ -36,7 +36,10 @@ PROTOS += \
     arp.proto \
     ip4.proto \
     ip6.proto \
+    ip6over4.proto \
+    ip4over6.proto \
     ip4over4.proto \
+    ip6over6.proto \
     icmp.proto \
     tcp.proto \
     udp.proto \
@@ -64,7 +67,10 @@ HEADERS += \
     arp.h \
     ip4.h \
     ip6.h \
+    ip6over4.h \
+    ip4over6.h \
     ip4over4.h \
+    ip6over6.h \
     icmp.h \
     tcp.h \
     udp.h \

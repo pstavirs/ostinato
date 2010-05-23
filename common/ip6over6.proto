@@ -18,20 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 import "protocol.proto";
-import "ip4.proto";
+import "ip6.proto";
 
 package OstProto;
 
-// IP 4over4 (also called IPIP)
-message Ip4over4 {
+// IP Tunnelling - IP 6over6
+message Ip6over6 {
     extensions 1 to 2;
 }
 
-extend Ip4over4 {
-    optional Ip4 ip4_outer = 1;
-    optional Ip4 ip4_inner = 2;
+extend Ip6over6 {
+    optional Ip6 ip6_outer = 1;
+    optional Ip6 ip6_inner = 2;
 }
 
 extend Protocol {
-    optional Ip4over4 ip4over4 = 135;
+    optional Ip6over6 ip6over6 = 136;
 }

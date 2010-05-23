@@ -99,10 +99,13 @@ message Protocol {
         kDot2SnapFieldNumber = 128;
         kVlanStackFieldNumber = 129;
 
-        kIp4FieldNumber = 130;
-        kArpFieldNumber = 131;
-        kIp4over4FieldNumber = 132;
-        kIp6FieldNumber = 133;
+        kArpFieldNumber = 130;
+        kIp4FieldNumber = 131;
+        kIp6FieldNumber = 132;
+        kIp6over4FieldNumber = 133;
+        kIp4over6FieldNumber = 134;
+        kIp4over4FieldNumber = 135;
+        kIp6over6FieldNumber = 136;
 
         kTcpFieldNumber = 140;
         kUdpFieldNumber = 141;

@@ -819,13 +819,13 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
                 .toByteArray();
         Q_ASSERT(addr.size() == 16);
         for (int i = 0; i < addr.size(); i+=2)
-            sum += (addr.at(i) << 8) + addr.at(i+1);
+            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
 
         addr = fieldData(ip6_dstAddress, FieldFrameValue, streamIndex)
                 .toByteArray();
         Q_ASSERT(addr.size() == 16);
         for (int i = 0; i < addr.size(); i+=2)
-            sum += (addr.at(i) << 8) + addr.at(i+1);
+            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
 
         sum += fieldData(ip6_payloadLength, FieldValue, streamIndex)
                 .toUInt() & 0xFFFF;

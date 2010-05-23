@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>579</width>
-    <height>481</height>
+    <width>626</width>
+    <height>507</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -173,8 +173,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>537</width>
-            <height>243</height>
+            <width>584</width>
+            <height>269</height>
            </rect>
           </property>
           <attribute name="label" >
@@ -306,6 +306,16 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                </widget>
               </item>
               <item row="0" column="1" >
+               <widget class="QRadioButton" name="rbL3Arp" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>ARP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" >
                <widget class="QRadioButton" name="rbL3Ipv4" >
                 <property name="enabled" >
                  <bool>false</bool>
@@ -318,7 +328,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                 </property>
                </widget>
               </item>
-              <item row="0" column="2" >
+              <item row="1" column="0" >
                <widget class="QRadioButton" name="rbL3Ipv6" >
                 <property name="enabled" >
                  <bool>false</bool>
@@ -328,17 +338,33 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                 </property>
                </widget>
               </item>
-              <item row="1" column="0" >
-               <widget class="QRadioButton" name="rbL3Arp" >
+              <item row="1" column="1" >
+               <widget class="QRadioButton" name="rbL3Ip6over4" >
                 <property name="enabled" >
                  <bool>false</bool>
                 </property>
                 <property name="text" >
-                 <string>ARP</string>
+                 <string>IP 6over4</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
-              <item row="1" column="1" >
+              <item row="1" column="2" >
+               <widget class="QRadioButton" name="rbL3Ip4over6" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IP 4over6</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" >
                <widget class="QRadioButton" name="rbL3Ip4over4" >
                 <property name="enabled" >
                  <bool>false</bool>
@@ -351,7 +377,20 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
                 </property>
                </widget>
               </item>
-              <item row="1" column="2" >
+              <item row="2" column="1" >
+               <widget class="QRadioButton" name="rbL3Ip6over6" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>IP 6over6</string>
+                </property>
+                <property name="checked" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2" >
                <widget class="QRadioButton" name="rbL3Other" >
                 <property name="enabled" >
                  <bool>false</bool>
@@ -520,19 +559,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item rowspan="2" row="2" column="3" >
-            <spacer>
-             <property name="orientation" >
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" >
-              <size>
-               <width>20</width>
-               <height>71</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
            <item row="3" column="2" >
             <widget class="QGroupBox" name="gbL5Proto" >
              <property name="enabled" >
@@ -574,6 +600,19 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               </item>
              </layout>
             </widget>
+           </item>
+           <item row="3" column="3" >
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

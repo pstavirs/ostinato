@@ -17,21 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-import "protocol.proto";
-import "ip4.proto";
+#ifndef _IP_6_OVER_4_H
+#define _IP_6_OVER_4_H
 
-package OstProto;
+#include "comboprotocol.h"
+#include "ip4.h"
+#include "ip6.h"
 
-// IP 4over4 (also called IPIP)
-message Ip4over4 {
-    extensions 1 to 2;
-}
+typedef ComboProtocol<OstProto::Protocol::kIp6over4FieldNumber, 
+    Ip4Protocol, Ip6Protocol> Ip6over4Protocol;
 
-extend Ip4over4 {
-    optional Ip4 ip4_outer = 1;
-    optional Ip4 ip4_inner = 2;
-}
-
-extend Protocol {
-    optional Ip4over4 ip4over4 = 135;
-}
+#endif

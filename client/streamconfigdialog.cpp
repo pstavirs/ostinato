@@ -198,11 +198,17 @@ void StreamConfigDialog::setupUiExtra()
         bgProto[ProtoL3]->addButton(btn);
 #else
     bgProto[ProtoL3]->addButton(rbL3None, ButtonIdNone);
+    bgProto[ProtoL3]->addButton(rbL3Arp, OstProto::Protocol::kArpFieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ipv4, OstProto::Protocol::kIp4FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ipv6, OstProto::Protocol::kIp6FieldNumber);
-    bgProto[ProtoL3]->addButton(rbL3Arp, OstProto::Protocol::kArpFieldNumber);
+    bgProto[ProtoL3]->addButton(rbL3Ip6over4, 
+            OstProto::Protocol::kIp6over4FieldNumber);
+    bgProto[ProtoL3]->addButton(rbL3Ip4over6, 
+            OstProto::Protocol::kIp4over6FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Ip4over4, 
             OstProto::Protocol::kIp4over4FieldNumber);
+    bgProto[ProtoL3]->addButton(rbL3Ip6over6, 
+            OstProto::Protocol::kIp6over6FieldNumber);
     bgProto[ProtoL3]->addButton(rbL3Other, ButtonIdOther);
 #endif
 

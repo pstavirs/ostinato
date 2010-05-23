@@ -61,5 +61,5 @@ message Ip4 {
 }
 
 extend Protocol {
-    optional Ip4 ip4 = 130;
+    optional Ip4 ip4 = 131;
 }

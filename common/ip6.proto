@@ -57,5 +57,5 @@ message Ip6 {
 }
 
 extend Protocol {
-    optional Ip6 ip6 = 133;
+    optional Ip6 ip6 = 132;
 }

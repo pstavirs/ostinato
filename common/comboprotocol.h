@@ -170,9 +170,17 @@ public:
             || protoB->isProtocolFrameSizeVariable());
     }
 
-#if 0
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const;
+        CksumType cksumType = CksumIp) const
+    {
+        // For a Pseudo IP cksum, we assume it is the succeeding protocol
+        // that is requesting it and hence return protoB's cksum;
+        if (cksumType == CksumIpPseudo)
+            return protoB->protocolFrameCksum(streamIndex, cksumType);
+
+        return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+    }
+#if 0
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;
     quint32 protocolFramePayloadCksum(int streamIndex = 0,
