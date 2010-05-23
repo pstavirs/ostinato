@@ -622,6 +622,9 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
             sum += fieldData(ip4_proto, FieldValue, streamIndex).toUInt() & 0x00FF;
             sum += (fieldData(ip4_totLen, FieldValue, streamIndex).toUInt() & 0xFFFF) - 20;
 
+            while(sum>>16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+
             // Above calculation done assuming 'big endian' 
             // - so convert to host order
             //return qFromBigEndian(sum);
