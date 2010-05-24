@@ -33,7 +33,7 @@ public:
     }
     ~IPv6AddressValidator() {}
 
-    virtual QValidator::State validate(QString &input, int &pos) const
+    virtual QValidator::State validate(QString &input, int& /*pos*/) const
     {
         QValidator::State state;
         QHostAddress addr(input);
