@@ -75,6 +75,7 @@ SOURCES += \
 
 QMAKE_DISTCLEAN += object_script.*
 
+include(../install.pri)
 include(../version.pri)
 
 # TODO(LOW): Test only

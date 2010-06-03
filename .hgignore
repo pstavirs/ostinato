@@ -11,7 +11,7 @@ moc_*.cpp
 qrc_*.cpp
 
 # QMake generated files
-*\Makefile*
+Makefile*
 *\object_script.*
 
 # protobuf generated files
