@@ -17,9 +17,31 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
 
 #include "icmp.h"
+
+#include <QSet>
+#include <qendian.h>
+
+const int kIcmpEchoReply                = 0;
+const int kIcmpDestinationUnreachable   = 3;
+const int kIcmpSourceQuench             = 4;
+const int kIcmpRedirect                 = 5;
+const int kIcmpEchoRequest              = 8;
+const int kIcmpTimeExceeded             = 11;
+const int kIcmpParameterProblem         = 12;
+const int kIcmpTimestampRequest         = 13;
+const int kIcmpTimestampReply           = 14;
+const int kIcmpInformationRequest       = 15;
+const int kIcmpInformationReply         = 16;
+const int kIcmpAddressMaskRequest       = 17;
+const int kIcmpAddressMaskReply         = 18;
+
+static QSet<int> idSeqSet = QSet<int>()
+    << kIcmpEchoRequest
+    << kIcmpEchoReply
+    << kIcmpInformationRequest
+    << kIcmpInformationReply;
 
 IcmpConfigForm::IcmpConfigForm(QWidget *parent)
     : QWidget(parent)
@@ -27,20 +49,27 @@ IcmpConfigForm::IcmpConfigForm(QWidget *parent)
     setupUi(this);
 
     typeCombo->setValidator(new QIntValidator(0, 0xFF, this));
-    typeCombo->addItem(0, "Echo Reply");
-    typeCombo->addItem(3, "Destination Unreachable");
-    typeCombo->addItem(4, "Source Quench");
-    typeCombo->addItem(5, "Redirect");
-    typeCombo->addItem(8, "Echo Request");
-    typeCombo->addItem(11, "Time Exceeded");
-    typeCombo->addItem(12, "Parameter Problem");
-    typeCombo->addItem(13, "Timestamp Request");
-    typeCombo->addItem(14, "Timestamp Reply");
-    typeCombo->addItem(17, "Address Mask Request");
-    typeCombo->addItem(18, "Address Mask Reply");
+    typeCombo->addItem(kIcmpEchoReply, "Echo Reply");
+    typeCombo->addItem(kIcmpDestinationUnreachable, "Destination Unreachable");
+    typeCombo->addItem(kIcmpSourceQuench, "Source Quench");
+    typeCombo->addItem(kIcmpRedirect, "Redirect");
+    typeCombo->addItem(kIcmpEchoRequest, "Echo Request");
+    typeCombo->addItem(kIcmpTimeExceeded, "Time Exceeded");
+    typeCombo->addItem(kIcmpParameterProblem, "Parameter Problem");
+    typeCombo->addItem(kIcmpTimestampRequest, "Timestamp Request");
+    typeCombo->addItem(kIcmpTimestampReply, "Timestamp Reply");
+    typeCombo->addItem(kIcmpInformationRequest, "Information Request");
+    typeCombo->addItem(kIcmpInformationReply, "Information Reply");
+    typeCombo->addItem(kIcmpAddressMaskRequest, "Address Mask Request");
+    typeCombo->addItem(kIcmpAddressMaskReply, "Address Mask Reply");
 
     idEdit->setValidator(new QIntValidator(0, 0xFFFF, this));
     seqEdit->setValidator(new QIntValidator(0, 0xFFFF, this));
+}
+
+void IcmpConfigForm::on_typeCombo_currentIndexChanged(int /*index*/)
+{
+    idSeqFrame->setVisible(idSeqSet.contains(typeCombo->currentValue()));
 }
 
 IcmpProtocol::IcmpProtocol(StreamBase *stream, AbstractProtocol *parent)
@@ -104,6 +133,16 @@ int IcmpProtocol::fieldCount() const
     return icmp_fieldCount;
 }
 
+int IcmpProtocol::frameFieldCount() const
+{
+    int count = AbstractProtocol::frameFieldCount();
+
+    if (!idSeqSet.contains(fieldData(icmp_type, FieldValue).toUInt()))
+        count -=2;
+    
+    return count;
+}
+
 AbstractProtocol::FieldFlags IcmpProtocol::fieldFlags(int index) const
 {
     AbstractProtocol::FieldFlags flags;
@@ -122,6 +161,8 @@ AbstractProtocol::FieldFlags IcmpProtocol::fieldFlags(int index) const
 
         case icmp_identifier:
         case icmp_sequence:
+            if (!idSeqSet.contains(fieldData(icmp_type, FieldValue).toUInt()))
+                flags |= FieldIsMeta;
             break;
 
         case icmp_is_override_checksum:
@@ -169,7 +210,7 @@ QVariant IcmpProtocol::fieldData(int index, FieldAttrib attrib,
             switch(attrib)
             {
                 case FieldName:            
-                    return QString("code");
+                    return QString("Code");
                 case FieldValue:
                     return code;
                 case FieldTextValue:

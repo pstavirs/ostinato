@@ -119,7 +119,7 @@ public:
 
     virtual int    fieldCount() const;
     int metaFieldCount() const;
-    int    frameFieldCount() const;
+    virtual int frameFieldCount() const;
 
     virtual FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,

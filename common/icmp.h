@@ -27,11 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 /* 
 Icmp Protocol Frame Format -
-    +-----+------+------+-----+-----+
-    | TYP | CODE | CSUM | ID  | SEQ |
-    | (1) | (1)  | (2)  | (2) | (2) |
-    +-----+------+------+-----+-----+
-Figures in brackets represent field width in bytes
+    +-----+------+------+------+-------+
+    | TYP | CODE | CSUM | [ID] | [SEQ] |
+    | (1) | (1)  | (2)  | (2)  |  (2)  |
+    +-----+------+------+------+-------+
+Fields within [] are applicable only to certain TYPEs
+Figures in braces represent field width in bytes
 */
 
 class IcmpConfigForm : public QWidget, public Ui::Icmp
@@ -40,6 +41,7 @@ class IcmpConfigForm : public QWidget, public Ui::Icmp
 public:
     IcmpConfigForm(QWidget *parent = 0);
 private slots:
+    void on_typeCombo_currentIndexChanged(int index);
 };
 
 class IcmpProtocol : public AbstractProtocol
@@ -79,6 +81,7 @@ public:
     virtual QString shortName() const;
 
     virtual int fieldCount() const;
+    virtual int frameFieldCount() const;
 
     virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,

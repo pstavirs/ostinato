@@ -41,6 +41,11 @@ void PacketModel::setSelectedProtocols(ProtocolListIterator &iter)
         mSelectedProtocols = currentProtocols;
         reset();
     }
+    else
+    {
+        emit layoutAboutToBeChanged();
+        emit layoutChanged();
+    }
 }
 
 int PacketModel::rowCount(const QModelIndex &parent) const

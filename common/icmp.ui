@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>258</width>
-    <height>168</height>
+    <width>291</width>
+    <height>190</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -66,41 +66,53 @@
      </property>
     </spacer>
    </item>
-   <item row="3" column="0" >
-    <widget class="QLabel" name="label_4" >
-     <property name="text" >
-      <string>Identifier</string>
+   <item row="3" column="0" colspan="2" >
+    <widget class="QFrame" name="idSeqFrame" >
+     <property name="frameShape" >
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="buddy" >
-      <cstring>idEdit</cstring>
+     <property name="frameShadow" >
+      <enum>QFrame::Plain</enum>
      </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_4" >
+        <property name="text" >
+         <string>Identifier</string>
+        </property>
+        <property name="buddy" >
+         <cstring>idEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLineEdit" name="idEdit" />
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_5" >
+        <property name="text" >
+         <string>Sequence</string>
+        </property>
+        <property name="buddy" >
+         <cstring>seqEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="seqEdit" />
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="3" column="1" >
-    <widget class="QLineEdit" name="idEdit" />
-   </item>
-   <item row="4" column="0" >
-    <widget class="QLabel" name="label_5" >
-     <property name="text" >
-      <string>Sequence</string>
-     </property>
-     <property name="buddy" >
-      <cstring>seqEdit</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1" >
-    <widget class="QLineEdit" name="seqEdit" />
-   </item>
-   <item row="5" column="1" >
+   <item row="4" column="0" colspan="2" >
     <spacer>
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>
      <property name="sizeHint" >
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>137</width>
+       <height>16</height>
       </size>
      </property>
     </spacer>
