@@ -113,7 +113,7 @@ AbstractProtocol::FieldFlags TcpProtocol::fieldFlags(int index) const
             break;
 
         case tcp_cksum:
-            flags |= FieldIsCksum;
+            flags |= CksumField;
             break;
 
         case tcp_urg_ptr:
@@ -123,7 +123,8 @@ AbstractProtocol::FieldFlags TcpProtocol::fieldFlags(int index) const
         case tcp_is_override_dst_port:
         case tcp_is_override_hdrlen:
         case tcp_is_override_cksum:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

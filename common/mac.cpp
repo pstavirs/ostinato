@@ -136,7 +136,8 @@ AbstractProtocol::FieldFlags MacProtocol::fieldFlags(int index) const
         case mac_srcMacMode:
         case mac_srcMacCount:
         case mac_srcMacStep:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
     }
 

@@ -108,7 +108,8 @@ AbstractProtocol::FieldFlags TextProtocol::fieldFlags(int index) const
 
         case textProto_portNum:
         case textProto_encoding:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

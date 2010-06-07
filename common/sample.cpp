@@ -110,6 +110,20 @@ int SampleProtocol::fieldCount() const
 }
 
 /*!
+  TODO Return the number of frame fields for your protocol. A frame field
+  is a field which has the FrameField flag set \n
+
+  If your protocol has different sets of fields based on a OpCode/Type field
+  (e.g. icmp), you MUST re-implement this function; however, if your protocol
+  has a fixed set of frame fields always, you don't need to reimplement this 
+  method - the base class implementation will do the right thing
+*/
+int SampleProtocol::frameFieldCount() const
+{
+    return 0;
+}
+
+/*!
   TODO Edit this function to return the appropriate flags for each field \n
 
   See AbstractProtocol::FieldFlags for more info
@@ -128,7 +142,7 @@ AbstractProtocol::FieldFlags SampleProtocol::fieldFlags(int index) const
             break;
 
         case sample_checksum:
-            flags |= FieldIsCksum;
+            flags |= CksumField;
             break;
 
         case sample_x:
@@ -136,7 +150,8 @@ AbstractProtocol::FieldFlags SampleProtocol::fieldFlags(int index) const
             break;
 
         case sample_is_override_checksum:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

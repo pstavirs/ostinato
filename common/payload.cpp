@@ -126,7 +126,8 @@ AbstractProtocol::FieldFlags PayloadProtocol::fieldFlags(int index) const
 
         // Meta fields
         case payload_dataPatternMode:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
     }
 

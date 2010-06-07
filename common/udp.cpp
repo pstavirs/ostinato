@@ -108,14 +108,15 @@ AbstractProtocol::FieldFlags UdpProtocol::fieldFlags(int index) const
             break;
 
         case udp_cksum:
-            flags |= FieldIsCksum;
+            flags |= CksumField;
             break;
 
         case udp_isOverrideSrcPort:
         case udp_isOverrideDstPort:
         case udp_isOverrideTotLen:
         case udp_isOverrideCksum:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

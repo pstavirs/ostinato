@@ -48,7 +48,8 @@ class AbstractProtocol
     friend class ProtocolListIterator;
 
 private:
-    mutable int metaCount;
+    mutable int _metaFieldCount;
+    mutable int _frameFieldCount;
     mutable int protoSize;
     mutable QString protoAbbr;
 
@@ -61,9 +62,9 @@ protected:
 public:
     //! Properties of a field, can be OR'd
     enum FieldFlag {
-        FieldIsNormal = 0x0, //!< field appears in frame content
-        FieldIsMeta   = 0x1, //!< field does not appear in frame, is meta data
-        FieldIsCksum  = 0x2  //!< field is a checksum, appears in frame content
+        FrameField = 0x1, //!< field appears in frame content
+        MetaField  = 0x2, //!< field does not appear in frame, is meta data
+        CksumField = 0x4  //!< field is a checksum and appears in frame content
     };
     Q_DECLARE_FLAGS(FieldFlags, FieldFlag);  //!< \private abcd
 

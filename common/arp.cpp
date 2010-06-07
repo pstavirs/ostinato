@@ -203,7 +203,8 @@ AbstractProtocol::FieldFlags ArpProtocol::fieldFlags(int index) const
         case arp_targetProtoAddrMode:
         case arp_targetProtoAddrCount:
         case arp_targetProtoAddrMask:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

@@ -172,8 +172,7 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 
         while (n)
         {
-            if (!(p->fieldFlags(fieldIdx).testFlag(
-                            AbstractProtocol::FieldIsMeta)))
+            if (p->fieldFlags(fieldIdx).testFlag(AbstractProtocol::FrameField))
                 n--;
             fieldIdx++;
         }

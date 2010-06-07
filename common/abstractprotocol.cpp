@@ -76,7 +76,8 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     mpStream = stream;
     this->parent = parent;
     prev = next = NULL;
-    metaCount = -1;
+    _metaFieldCount = -1;
+    _frameFieldCount = -1;
     protoSize = -1;
 }
 
@@ -184,45 +185,59 @@ int AbstractProtocol::fieldCount() const
   Returns the number of meta fields 
 
   The default implementation counts and returns the number of fields for which
-  the FieldIsMeta flag is set\n
+  the MetaField flag is set\n
   The default implementation caches the count on its first invocation
   and subsequently returns the cached count 
 */
 int AbstractProtocol::metaFieldCount() const
 {
-    if (metaCount < 0)
+    if (_metaFieldCount < 0)
     {
         int c = 0;
         for (int i = 0; i < fieldCount() ; i++) 
-            if (fieldFlags(i).testFlag(FieldIsMeta))
+            if (fieldFlags(i).testFlag(MetaField))
                 c++;
-        metaCount = c;
+        _metaFieldCount = c;
     }
 
-    return metaCount;
+    return _metaFieldCount;
 }
 
 /*! 
   Returns the number of frame fields
 
-  Convenience method - same as fieldCount() minus metaFieldCount() 
+  The default implementation counts and returns the number of fields for which
+  the FrameField flag is set\n
+  The default implementation caches the count on its first invocation
+  and subsequently returns the cached count
+
+  Subclasses which export different sets of fields based on a opcode/type
+  (e.g. icmp) should re-implement this function
 */
 int AbstractProtocol::frameFieldCount() const
 {
-    //qDebug("%s:%d, %d", __FUNCTION__, fieldCount(), metaFieldCount());
-    return (fieldCount() - metaFieldCount());
+    if (_frameFieldCount < 0)
+    {
+        int c = 0;
+        for (int i = 0; i < fieldCount() ; i++) 
+            if (fieldFlags(i).testFlag(FrameField))
+                c++;
+        _frameFieldCount = c;
+    }
+
+    return _frameFieldCount;
 }
 
 /*!
   Returns the field flags for the passed in field index
 
   The default implementation assumes all fields to be frame fields and returns
-  'FieldIsNormal'. Subclasses must reimplement this method if they have any
+  'FrameField'. Subclasses must reimplement this method if they have any
   meta fields or checksum fields. See the SampleProtocol for an example.
 */
 AbstractProtocol::FieldFlags AbstractProtocol::fieldFlags(int /*index*/) const
 {
-    return FieldIsNormal;
+    return FrameField;
 }
 
 /*! 
@@ -261,7 +276,7 @@ QVariant AbstractProtocol::fieldData(int index, FieldAttrib attrib,
         case FieldName:
             return QString();
         case FieldBitSize:
-            Q_ASSERT_X(!fieldFlags(index).testFlag(FieldIsCksum),
+            Q_ASSERT_X(!fieldFlags(index).testFlag(CksumField),
                 "AbstractProtocol::fieldData()",
                 "FieldBitSize for checksum fields need to be handled by the subclass");
             return fieldData(index, FieldFrameValue, streamIndex).
@@ -366,7 +381,7 @@ int AbstractProtocol::protocolFrameSize(int streamIndex) const
 
         for (int i = 0; i < fieldCount(); i++)
         {
-            if (!fieldFlags(i).testFlag(FieldIsMeta))
+            if (fieldFlags(i).testFlag(FrameField))
                 bitsize += fieldData(i, FieldBitSize, streamIndex).toUInt();
         }
         protoSize = (bitsize+7)/8;
@@ -440,14 +455,14 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
     for (int i=0; i < fieldCount() ; i++) 
     {
         flags = fieldFlags(i);
-        if (!flags.testFlag(FieldIsMeta))
+        if (flags.testFlag(FrameField))
         {
             bits = fieldData(i, FieldBitSize, streamIndex).toUInt();
             if (bits == 0)
                 continue;
             Q_ASSERT(bits > 0);
 
-            if (forCksum && flags.testFlag(FieldIsCksum))
+            if (forCksum && flags.testFlag(CksumField))
             {
                 field.resize((bits+7)/8);
                 field.fill('\0');

@@ -93,7 +93,8 @@ AbstractProtocol::FieldFlags VlanProtocol::fieldFlags(int index) const
 
         // meta-fields
         case vlan_isOverrideTpid:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
     }
 

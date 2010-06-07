@@ -156,7 +156,7 @@ AbstractProtocol::FieldFlags Ip4Protocol::fieldFlags(int index) const
             break;
 
         case ip4_cksum:
-            flags |= FieldIsCksum;
+            flags |= CksumField;
             break;
 
         case ip4_srcAddr:
@@ -173,7 +173,8 @@ AbstractProtocol::FieldFlags Ip4Protocol::fieldFlags(int index) const
         case ip4_dstAddrMode:
         case ip4_dstAddrCount:
         case ip4_dstAddrMask:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

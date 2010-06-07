@@ -165,7 +165,8 @@ AbstractProtocol::FieldFlags Ip6Protocol::fieldFlags(int index) const
         case ip6_dstAddrMode:
         case ip6_dstAddrCount:
         case ip6_dstAddrPrefix:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:

@@ -159,17 +159,18 @@ AbstractProtocol::FieldFlags IcmpProtocol::fieldFlags(int index) const
             break;
 
         case icmp_checksum:
-            flags |= FieldIsCksum;
+            flags |= CksumField;
             break;
 
         case icmp_identifier:
         case icmp_sequence:
             if (!idSeqSet.contains(fieldData(icmp_type, FieldValue).toUInt()))
-                flags |= FieldIsMeta;
+                flags &= ~FrameField;
             break;
 
         case icmp_is_override_checksum:
-            flags |= FieldIsMeta;
+            flags &= ~FrameField;
+            flags |= MetaField;
             break;
 
         default:
