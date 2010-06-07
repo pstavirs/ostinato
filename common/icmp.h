@@ -55,11 +55,14 @@ private:
         icmp_type = 0,
         icmp_code,
         icmp_checksum,
-        icmp_identifier,
+        icmp_commonFrameFieldCount,
+
+        icmp_identifier = icmp_commonFrameFieldCount,
         icmp_sequence,
+        icmp_idSeqFrameFieldCount,
 
         // Meta Fields
-        icmp_is_override_checksum,
+        icmp_is_override_checksum = icmp_idSeqFrameFieldCount,
 
         icmp_fieldCount
     };

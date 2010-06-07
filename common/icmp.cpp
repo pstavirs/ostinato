@@ -135,12 +135,15 @@ int IcmpProtocol::fieldCount() const
 
 int IcmpProtocol::frameFieldCount() const
 {
-    int count = AbstractProtocol::frameFieldCount();
+    int count;
 
-    if (!idSeqSet.contains(fieldData(icmp_type, FieldValue).toUInt()))
-        count -=2;
-    
+    if (idSeqSet.contains(fieldData(icmp_type, FieldValue).toUInt()))
+        count = icmp_idSeqFrameFieldCount;
+    else
+        count = icmp_commonFrameFieldCount;
+
     return count;
+    
 }
 
 AbstractProtocol::FieldFlags IcmpProtocol::fieldFlags(int index) const
