@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractprotocol.h"
 
+#include <QButtonGroup>
+
 /* 
 Icmp Protocol Frame Format -
     +-----+------+------+------+-------+
@@ -39,9 +41,12 @@ class IcmpConfigForm : public QWidget, public Ui::Icmp
 {
     Q_OBJECT
 public:
+    QButtonGroup *versionGroup;
+
     IcmpConfigForm(QWidget *parent = 0);
 private slots:
     void on_typeCombo_currentIndexChanged(int index);
+    void when_versionGroup_buttonClicked(int id);
 };
 
 class IcmpProtocol : public AbstractProtocol
@@ -63,9 +68,21 @@ private:
 
         // Meta Fields
         icmp_is_override_checksum = icmp_idSeqFrameFieldCount,
+        icmp_version,
 
         icmp_fieldCount
     };
+
+    OstProto::Icmp::Version icmpVersion() const
+    {
+        return OstProto::Icmp::Version(
+                fieldData(icmp_version, FieldValue).toUInt());
+    }
+
+    int icmpType() const
+    {
+        return fieldData(icmp_type, FieldValue).toInt();
+    }
 
 public:
     IcmpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
