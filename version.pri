@@ -1,7 +1,7 @@
-APP_VERSION = 0.1
+APP_VERSION = 0.1.1
 APP_REVISION = $(shell hg identify -i)
 #uncomment the below line in a source package and fill-in the correct revision
-#APP_REVISION = <rev-hash>
+#APP_REVISION = <rev-hash>@
 APP_VERSION_FILE = version.cpp
 revtarget.target = $$APP_VERSION_FILE
 win32:revtarget.commands = echo "const char *version = \"$$APP_VERSION\";" \
