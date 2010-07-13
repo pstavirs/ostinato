@@ -63,5 +63,5 @@ message Arp {
 }
 
 extend Protocol {
-    optional Arp arp = 130;
+    optional Arp arp = 300;
 }

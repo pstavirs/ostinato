@@ -17,15 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-import "protocol.proto";
+#include <QtGlobal>
 
-package OstProto;
+quint32 checksumCrc32C(quint8 *buffer, uint length);
 
-// IP Tunelling - IP 4over6 
-message Ip4over6 {
-    // Empty since this is a 'combo' protocol
-}
-
-extend Protocol {
-    optional Ip4over6 ip4over6 = 304;
-}

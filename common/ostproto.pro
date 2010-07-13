@@ -22,6 +22,7 @@ FORMS += \
     sample.ui 
 PROTOS += \
     protocol.proto \
+    fileformat.proto \
     mac.proto \
     payload.proto \
     eth2.proto \
@@ -45,10 +46,11 @@ PROTOS += \
     udp.proto \
     textproto.proto \
     userscript.proto \
-    sample.proto
+    sample.proto 
 HEADERS += \
     abstractprotocol.h    \
     comboprotocol.h    \
+    fileformat.h \
     protocolmanager.h \
     protocollist.h \
     protocollistiterator.h \
@@ -79,6 +81,8 @@ HEADERS += \
     sample.h
 SOURCES += \
     abstractprotocol.cpp \
+    crc32c.cpp \
+    fileformat.cpp \
     protocolmanager.cpp \
     protocollist.cpp \
     protocollistiterator.cpp \
@@ -101,19 +105,6 @@ SOURCES += \
     userscript.cpp \
     sample.cpp
 
-protobuf_decl.name  = protobuf header
-protobuf_decl.input = PROTOS
-protobuf_decl.output  = ${QMAKE_FILE_BASE}.pb.h
-protobuf_decl.commands = protoc --cpp_out="." ${QMAKE_FILE_NAME}
-protobuf_decl.variable_out = GENERATED_FILES 
-QMAKE_EXTRA_COMPILERS += protobuf_decl 
-
-protobuf_impl.name  = protobuf implementation
-protobuf_impl.input = PROTOS
-protobuf_impl.output  = ${QMAKE_FILE_BASE}.pb.cc
-protobuf_impl.depends  = ${QMAKE_FILE_BASE}.pb.h
-protobuf_impl.commands = $$escape_expand(\n)
-protobuf_impl.variable_out = GENERATED_SOURCES
-QMAKE_EXTRA_COMPILERS += protobuf_impl 
-
 QMAKE_DISTCLEAN += object_script.*
+
+include(../protobuf.pri)

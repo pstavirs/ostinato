@@ -17,12 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <vector>
-
-#include <google/protobuf/descriptor.h>
-
 #include "port.h"
-#include "pbhelper.h"
+
+#include "fileformat.h"
+
+#include <QApplication>
+#include <QVariant>
+#include <google/protobuf/descriptor.h>
+#include <vector>
 
 uint Port::mAllocStreamId = 0;
 
@@ -218,3 +220,43 @@ void Port::updateStats(OstProto::PortStats *portStats)
     }
 }
 
+bool Port::openStreams(QString fileName, bool append, QString &error)
+{
+    OstProto::StreamConfigList streams;
+
+    if (!fileFormat.openStreams(fileName, streams, error))
+        goto _fail;
+
+    if (!append)
+    {
+        while (numStreams())
+            deleteStreamAt(0);
+    }
+
+    for (int i = 0; i < streams.stream_size(); i++)
+    {
+        newStreamAt(mStreams.size());
+        streamByIndex(mStreams.size()-1)->protoDataCopyFrom(streams.stream(i));
+    }
+
+    emit streamListChanged(mPortGroupId, mPortId);
+
+    return true;
+
+_fail:
+    return false;
+}
+
+bool Port::saveStreams(QString fileName, QString &error)
+{
+    OstProto::StreamConfigList streams;
+
+    streams.mutable_port_id()->set_id(0);
+    for (int i = 0; i < mStreams.size(); i++)
+    {
+        OstProto::Stream *s = streams.add_stream();
+        mStreams[i]->protoDataCopyInto(*s);
+    }
+
+    return fileFormat.saveStreams(streams, fileName, error);
+}

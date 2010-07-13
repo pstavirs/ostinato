@@ -33,5 +33,5 @@ extend Ip6over6 {
 }
 
 extend Protocol {
-    optional Ip6over6 ip6over6 = 136;
+    optional Ip6over6 ip6over6 = 306;
 }

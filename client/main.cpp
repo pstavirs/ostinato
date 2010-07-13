@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QFile>
 #include <QSettings>
 
+extern const char* version;
+extern const char* revision;
 extern ProtocolManager *OstProtocolManager;
 
 QSettings *appSettings;
@@ -33,6 +35,11 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     int exitCode;
+
+    app.setApplicationName("Ostinato");
+    app.setOrganizationName("Ostinato");
+    app.setProperty("version", version);
+    app.setProperty("revision", revision);
 
     OstProtocolManager = new ProtocolManager();
 
@@ -44,7 +51,7 @@ int main(int argc, char* argv[])
     if (QFile::exists(portableIni))
         appSettings = new QSettings(portableIni, QSettings::IniFormat);
     else
-        appSettings = new QSettings("Ostinato", "Ostinato");
+        appSettings = new QSettings();
 
     mainWindow = new MainWindow;
     mainWindow->show();

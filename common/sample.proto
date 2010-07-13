@@ -34,5 +34,5 @@ message Sample {
 }
 
 extend Protocol {
-    optional Sample sample = 53;
+    optional Sample sample = 102;
 }

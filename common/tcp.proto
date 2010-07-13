@@ -42,6 +42,6 @@ message Tcp {
 }
 
 extend Protocol {
-    optional Tcp tcp = 140;
+    optional Tcp tcp = 400;
 }
 

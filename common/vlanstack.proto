@@ -27,5 +27,5 @@ message VlanStack {
 }
 
 extend Protocol {
-    optional VlanStack vlanStack = 129;
+    optional VlanStack vlanStack = 208;
 }

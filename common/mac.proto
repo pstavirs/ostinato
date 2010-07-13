@@ -44,5 +44,5 @@ message Mac {
 }
 
 extend Protocol {
-    optional Mac mac = 51;
+    optional Mac mac = 100;
 }

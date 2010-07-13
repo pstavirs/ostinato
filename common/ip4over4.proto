@@ -33,5 +33,5 @@ extend Ip4over4 {
 }
 
 extend Protocol {
-    optional Ip4over4 ip4over4 = 135;
+    optional Ip4over4 ip4over4 = 305;
 }

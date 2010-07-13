@@ -37,5 +37,5 @@ message Payload {
 }
 
 extend Protocol {
-    optional Payload payload = 52;
+    optional Payload payload = 101;
 }

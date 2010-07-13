@@ -71,6 +71,8 @@ class StreamModel : public QAbstractTableModel
     public slots:
         void setCurrentPortIndex(const QModelIndex &current);
 
+    private slots:
+        void when_mCurrentPort_streamListChanged(int portGroupId, int portId);
 };
 
 #endif

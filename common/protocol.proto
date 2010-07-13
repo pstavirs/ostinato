@@ -78,41 +78,41 @@ message Protocol {
 
     required ProtocolId protocol_id = 1;
 
-    extensions 51 to 100;    // Reserved for Ostinato Use
-    extensions 101 to 200;    // Available for use by protocols
+    extensions 100 to 199;    // Reserved for Ostinato Use
+    extensions 200 to 500;    // Available for use by protocols
 
     enum k {
-        kMacFieldNumber = 51;
-        kPayloadFieldNumber = 52;
-        kSampleFieldNumber = 53;
-        kUserScriptFieldNumber = 54;
+        kMacFieldNumber = 100;
+        kPayloadFieldNumber = 101;
+        kSampleFieldNumber = 102;
+        kUserScriptFieldNumber = 103;
 
-        kEth2FieldNumber = 121;
-        kDot3FieldNumber = 122;
-        kLlcFieldNumber = 123;
-        kSnapFieldNumber = 124;
+        kEth2FieldNumber = 200;
+        kDot3FieldNumber = 201;
+        kLlcFieldNumber = 202;
+        kSnapFieldNumber = 203;
 
-        kSvlanFieldNumber = 125;
-        kVlanFieldNumber = 126;
+        kSvlanFieldNumber = 204;
+        kVlanFieldNumber = 205;
 
-        kDot2LlcFieldNumber = 127;
-        kDot2SnapFieldNumber = 128;
-        kVlanStackFieldNumber = 129;
+        kDot2LlcFieldNumber = 206;
+        kDot2SnapFieldNumber = 207;
+        kVlanStackFieldNumber = 208;
 
-        kArpFieldNumber = 130;
-        kIp4FieldNumber = 131;
-        kIp6FieldNumber = 132;
-        kIp6over4FieldNumber = 133;
-        kIp4over6FieldNumber = 134;
-        kIp4over4FieldNumber = 135;
-        kIp6over6FieldNumber = 136;
+        kArpFieldNumber = 300;
+        kIp4FieldNumber = 301;
+        kIp6FieldNumber = 302;
+        kIp6over4FieldNumber = 303;
+        kIp4over6FieldNumber = 304;
+        kIp4over4FieldNumber = 305;
+        kIp6over6FieldNumber = 306;
 
-        kTcpFieldNumber = 140;
-        kUdpFieldNumber = 141;
-        kIcmpFieldNumber = 142;
-        kIgmpFieldNumber = 143;
+        kTcpFieldNumber = 400;
+        kUdpFieldNumber = 401;
+        kIcmpFieldNumber = 402;
+        kIgmpFieldNumber = 403;
 
-        kTextProtocolFieldNumber = 150;
+        kTextProtocolFieldNumber = 500;
     }
 }
 

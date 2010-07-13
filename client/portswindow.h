@@ -48,17 +48,13 @@ private:
     QString        lastNewPortGroup;
     QAbstractItemDelegate *delegate;
 
+private slots:
     void updatePortViewActions(const QModelIndex& current);
-    //void updateStreamViewActions(const QModelIndex& current);
     void updateStreamViewActions();
 
-private slots:
     void on_tvStreamList_activated(const QModelIndex & index);
     void when_portView_currentChanged(const QModelIndex& current,
         const QModelIndex& previous);
-    void when_streamView_currentChanged(const QModelIndex& current,
-        const QModelIndex& previous);
-    void when_streamView_selectionChanged();
     void when_portModel_dataChanged(const QModelIndex& topLeft,
         const QModelIndex& bottomRight);
     void when_portModel_reset();
@@ -75,6 +71,9 @@ private slots:
     void on_actionNew_Stream_triggered();
     void on_actionEdit_Stream_triggered();
     void on_actionDelete_Stream_triggered();
+
+    void on_actionOpen_Streams_triggered();
+    void on_actionSave_Streams_triggered();
 };
 
 #endif

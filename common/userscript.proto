@@ -29,5 +29,5 @@ message UserScript {
 }
 
 extend Protocol {
-    optional UserScript userScript = 54;
+    optional UserScript userScript = 103;
 }

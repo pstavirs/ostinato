@@ -30,5 +30,5 @@ message Vlan {
 }
 
 extend Protocol {
-    optional Vlan vlan = 126;
+    optional Vlan vlan = 205;
 }

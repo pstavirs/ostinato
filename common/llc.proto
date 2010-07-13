@@ -28,5 +28,5 @@ message Llc {
 }
 
 extend Protocol {
-    optional Llc llc = 123;
+    optional Llc llc = 202;
 }

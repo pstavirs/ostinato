@@ -27,5 +27,5 @@ message Snap {
 }
 
 extend Protocol {
-    optional Snap snap = 124;
+    optional Snap snap = 203;
 }

@@ -27,5 +27,5 @@ message Ip6over4 {
 }
 
 extend Protocol {
-    optional Ip6over4 ip6over4 = 133;
+    optional Ip6over4 ip6over4 = 303;
 }

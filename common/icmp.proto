@@ -40,5 +40,5 @@ message Icmp {
 }
 
 extend Protocol {
-    optional Icmp icmp = 142;
+    optional Icmp icmp = 402;
 }

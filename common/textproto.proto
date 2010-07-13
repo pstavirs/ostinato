@@ -33,5 +33,5 @@ message TextProtocol {
 }
 
 extend Protocol {
-    optional TextProtocol textProtocol = 150;
+    optional TextProtocol textProtocol = 500;
 }

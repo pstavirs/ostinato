@@ -27,5 +27,5 @@ message Eth2 {
 }
 
 extend Protocol {
-    optional Eth2 eth2 = 121;
+    optional Eth2 eth2 = 200;
 }

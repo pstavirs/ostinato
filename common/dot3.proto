@@ -27,5 +27,5 @@ message Dot3 {
 }
 
 extend Protocol {
-    optional Dot3 dot3 = 122;
+    optional Dot3 dot3 = 201;
 }

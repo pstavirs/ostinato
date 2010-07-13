@@ -29,5 +29,5 @@ message Dot2Llc {
 }
 
 extend Protocol {
-    optional Dot2Llc dot2Llc = 127;
+    optional Dot2Llc dot2Llc = 206;
 }

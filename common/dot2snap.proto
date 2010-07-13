@@ -27,5 +27,5 @@ message Dot2Snap {
 }
 
 extend Protocol {
-    optional Dot2Snap dot2Snap = 128;
+    optional Dot2Snap dot2Snap = 207;
 }

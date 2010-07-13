@@ -114,13 +114,16 @@ public:
     void getModifiedStreamsSinceLastSync(
         OstProto::StreamConfigList &streamConfigList);
 
-
     void when_syncComplete();
 
     void updateStats(OstProto::PortStats *portStats);
 
+    bool openStreams(QString fileName, bool append, QString &error);
+    bool saveStreams(QString fileName, QString &error);
+
 signals:
     void portDataChanged(int portGroupId, int portId);
+    void streamListChanged(int portGroupId, int portId);
 
 };
 

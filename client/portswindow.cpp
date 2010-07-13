@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent)
 {
+    QAction *sep;
+
     delegate = new StreamListDelegate;
     //slm = new StreamListModel();
     //plm = new PortGroupList();
@@ -43,7 +45,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->verticalHeader()->setDefaultSectionSize(
             tvStreamList->verticalHeader()->minimumSectionSize());
 
-    // Populate Context Menu Actions
+    // Populate PortList Context Menu Actions
     tvPortList->addAction(actionNew_Port_Group);
     tvPortList->addAction(actionDelete_Port_Group);
     tvPortList->addAction(actionConnect_Port_Group);
@@ -51,12 +53,21 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     tvPortList->addAction(actionExclusive_Control);
 
+    // Populate StramList Context Menu Actions
     tvStreamList->addAction(actionNew_Stream);
     tvStreamList->addAction(actionEdit_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
+    sep = new QAction(this);
+    sep->setSeparator(true);
+    tvStreamList->addAction(sep);
+
+    tvStreamList->addAction(actionOpen_Streams);
+    tvStreamList->addAction(actionSave_Streams);
+
+    // PortList and StreamList actions combined make this window's actions
     addActions(tvPortList->actions());
-    QAction *sep = new QAction(this);
+    sep = new QAction(this);
     sep->setSeparator(true);
     addAction(sep);
     addActions(tvStreamList->actions());
@@ -77,26 +88,24 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
         this, SLOT(when_portView_currentChanged(const QModelIndex&, 
             const QModelIndex&)));
 
-    connect( tvStreamList->selectionModel(), 
-        SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
-        this, SLOT(when_streamView_currentChanged(const QModelIndex&, 
-            const QModelIndex&)));
-    connect( tvStreamList->selectionModel(), 
-        SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
-        this, SLOT(when_streamView_selectionChanged()));
+    connect(plm->getStreamModel(), SIGNAL(rowsInserted(QModelIndex, int, int)), 
+        SLOT(updateStreamViewActions()));
+    connect(plm->getStreamModel(), SIGNAL(rowsRemoved(QModelIndex, int, int)), 
+        SLOT(updateStreamViewActions()));
 
-#if 0
-    connect( tvPortList->selectionModel(), 
+    connect(tvStreamList->selectionModel(), 
         SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
-        plm->getStreamModel(), SLOT(setCurrentPortIndex(const QModelIndex&)));
-#endif
+        SLOT(updateStreamViewActions()));
+    connect(tvStreamList->selectionModel(), 
+        SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
+        SLOT(updateStreamViewActions()));
 
     tvStreamList->resizeColumnToContents(StreamModel::StreamIcon);
     tvStreamList->resizeColumnToContents(StreamModel::StreamStatus);
 
     // Initially we don't have any ports/streams - so send signal triggers
     when_portView_currentChanged(QModelIndex(), QModelIndex());
-    when_streamView_currentChanged(QModelIndex(), QModelIndex());
+    updateStreamViewActions();
 
     //! \todo Hide the Aggregate Box till we add support
     frAggregate->setHidden(true);
@@ -148,19 +157,6 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
     }
 }
 
-void PortsWindow::when_streamView_currentChanged(const QModelIndex& /*current*/,
-    const QModelIndex& /*previous*/)
-{
-    qDebug("stream view current changed");
-    updateStreamViewActions();
-}
-
-void PortsWindow::when_streamView_selectionChanged()
-{
-    qDebug("stream view selection changed");
-    updateStreamViewActions();
-}
-
 void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
     const QModelIndex& bottomRight)
 {
@@ -181,16 +177,6 @@ void PortsWindow::when_portModel_reset()
 {
     when_portView_currentChanged(QModelIndex(), tvPortList->currentIndex());
 }
-
-#if 0
-void PortsWindow::updateStreamViewActions(const QModelIndex& current)
-{
-    if (current.isValid())
-        actionDelete_Stream->setEnabled(true);
-    else
-        actionDelete_Stream->setDisabled(true);
-}
-#endif
 
 void PortsWindow::updateStreamViewActions()
 {
@@ -233,6 +219,9 @@ void PortsWindow::updateStreamViewActions()
         actionEdit_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }
+    actionOpen_Streams->setEnabled(plm->isPort(
+                tvPortList->selectionModel()->currentIndex()));
+    actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& current)
@@ -406,26 +395,6 @@ void PortsWindow::on_actionExclusive_Control_triggered(bool checked)
         plm->portGroup(current.parent()).modifyPort(current.row(), checked);
 }
 
-#if 0
-void PortsWindow::on_actionNew_Stream_triggered()
-{
-    qDebug("New Stream Action");
-
-    int row = 0;
-
-    if (tvStreamList->currentIndex().isValid())
-        row = tvStreamList->currentIndex().row();
-    plm->getStreamModel()->insertRows(row, 1);    
-}
-
-void PortsWindow::on_actionDelete_Stream_triggered()
-{
-    qDebug("Delete Stream Action");
-    if (tvStreamList->currentIndex().isValid())
-        plm->getStreamModel()->removeRows(tvStreamList->currentIndex().row(), 1);    
-}
-#endif
-
 void PortsWindow::on_actionNew_Stream_triggered()
 {
     qDebug("New Stream Action");
@@ -475,6 +444,75 @@ void PortsWindow::on_actionDelete_Stream_triggered()
     }
     else
         qDebug("No selection");
+}
+
+void PortsWindow::on_actionOpen_Streams_triggered()
+{
+    qDebug("Open Streams Action");
+
+    QModelIndex current = tvPortList->selectionModel()->currentIndex();
+    QString fileName;
+    QString errorStr;
+    bool append = true;
+
+    Q_ASSERT(plm->isPort(current));
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"));
+    if (fileName.isEmpty())
+        goto _exit;
+
+    if (tvStreamList->model()->rowCount())
+    {
+        QMessageBox msgBox(QMessageBox::Question, qApp->applicationName(),
+                tr("Append to existing streams? Or overwrite?"));
+        QPushButton *appendBtn = msgBox.addButton(tr("Append"), 
+                QMessageBox::ActionRole);
+        QPushButton *overwriteBtn = msgBox.addButton(tr("Overwrite"), 
+                QMessageBox::ActionRole);
+        QPushButton *cancelBtn = msgBox.addButton(QMessageBox::Cancel);
+
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == cancelBtn)
+            goto _exit;
+        else if (msgBox.clickedButton() == appendBtn)
+            append = true;
+        else if (msgBox.clickedButton() == overwriteBtn)
+            append = false;
+        else
+            Q_ASSERT(false);
+    }
+
+    if (!plm->port(current).openStreams(fileName, append, errorStr))
+        QMessageBox::critical(this, qApp->applicationName(), errorStr);
+    else if (!errorStr.isEmpty())
+        QMessageBox::warning(this, qApp->applicationName(), errorStr);
+_exit:
+    return;
+}
+
+void PortsWindow::on_actionSave_Streams_triggered()
+{
+    qDebug("Save Streams Action");
+
+    QModelIndex current = tvPortList->selectionModel()->currentIndex();
+    QString fileName;
+    QString errorStr;
+
+    Q_ASSERT(plm->isPort(current));
+
+    fileName = QFileDialog::getSaveFileName(this, tr("Save Streams"));
+    if (fileName.isEmpty())
+        goto _exit;
+
+    // TODO: all or selected?
+
+    if (!plm->port(current).saveStreams(fileName, errorStr))
+        QMessageBox::critical(this, qApp->applicationName(), errorStr);
+    else if (!errorStr.isEmpty())
+        QMessageBox::warning(this, qApp->applicationName(), errorStr);
+_exit:
+    return;
 }
 
 

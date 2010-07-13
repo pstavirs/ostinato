@@ -230,6 +230,16 @@
     <string>Exclusive Port Control (EXPERIMENTAL)</string>
    </property>
   </action>
+  <action name="actionOpen_Streams" >
+   <property name="text" >
+    <string>Open Streams ...</string>
+   </property>
+  </action>
+  <action name="actionSave_Streams" >
+   <property name="text" >
+    <string>Save Streams ...</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="ostinato.qrc" />
