@@ -12,6 +12,9 @@
   <property name="windowTitle" >
    <string>Ostinato</string>
   </property>
+  <property name="windowIcon" >
+   <iconset resource="ostinato.qrc" >:/icons/about.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget" />
   <widget class="QMenuBar" name="menubar" >
    <property name="geometry" >
