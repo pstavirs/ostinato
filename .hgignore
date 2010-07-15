@@ -4,6 +4,8 @@ syntax: glob
 *.o
 *.a
 *.exe
+drone.app
+ostinato.app
 
 # Qt generated files
 ui_*.h
@@ -23,6 +25,7 @@ version.cpp
 
 # vim swap files
 *.swp
+.DS_Store
 
 # ctags
 tags

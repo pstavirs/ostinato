@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG += qt
-RC_FILE = ostinato.rc
+win32:RC_FILE = ostinato.rc
+macx:ICON = icons/logo.icns
 QT += network script
 INCLUDEPATH += "../rpc/" "../common/"
 LIBS += -lprotobuf

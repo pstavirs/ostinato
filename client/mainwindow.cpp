@@ -42,6 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     QString serverApp = QCoreApplication::applicationDirPath();
 
+#ifdef Q_OS_MAC
+    // applicationDirPath() does not return bundle, but executable inside bundle
+    serverApp.replace("ostinato.app", "drone.app");
+#endif
+
 #ifdef Q_OS_WIN32
     serverApp.append("/drone.exe");
 #else
