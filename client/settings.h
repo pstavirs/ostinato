@@ -26,9 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 extern QSettings *appSettings;
 
 const QString kWiresharkPathKey("WiresharkPath");
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
 const QString kWiresharkPathDefaultValue(
         "C:/Program Files/Wireshark/wireshark.exe");
+#elif defined(Q_OS_MAC)
+const QString kWiresharkPathDefaultValue(
+        "/Applications/Wireshark.app/Contents/Resources/bin/wireshark");
 #else
 const QString kWiresharkPathDefaultValue("/usr/bin/wireshark");
 #endif

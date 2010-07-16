@@ -4,8 +4,7 @@ syntax: glob
 *.o
 *.a
 *.exe
-drone.app
-ostinato.app
+*.app
 
 # Qt generated files
 ui_*.h

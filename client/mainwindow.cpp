@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 #ifdef Q_OS_MAC
     // applicationDirPath() does not return bundle, but executable inside bundle
-    serverApp.replace("ostinato.app", "drone.app");
+    serverApp.replace("Ostinato.app", "drone.app");
 #endif
 
 #ifdef Q_OS_WIN32
