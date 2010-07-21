@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 //#include "pbhelper.h"
 #include "rpcserver.h"
 
+#include <qendian.h>
+
 RpcServer::RpcServer()
 {
     server = NULL;
@@ -87,9 +89,9 @@ void RpcServer::done(PbRpcController *controller)
         len = blob->size();
         qDebug("is binary blob of len %d", len);
 
-        *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_BINBLOB); // type
-        *((quint16*)(msg+2)) = HTONS(pendingMethodId); // method
-        (*(quint32*)(msg+4)) = HTONL(len); // len
+        *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_BINBLOB)); // type
+        *((quint16*)(msg+2)) = qToBigEndian(quint16(pendingMethodId)); // method
+        (*(quint32*)(msg+4)) = qToBigEndian(quint32(len)); // len
 
         clientSock->write(msg, PB_HDR_SIZE);
 
@@ -118,9 +120,9 @@ void RpcServer::done(PbRpcController *controller)
 
     len = response->ByteSize();
 
-    *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_RESPONSE); // type
-    *((quint16*)(msg+2)) = HTONS(pendingMethodId); // method
-    *((quint32*)(msg+4)) = HTONL(len); // len
+    *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_RESPONSE)); // type
+    *((quint16*)(msg+2)) = qToBigEndian(quint16(pendingMethodId)); // method
+    *((quint32*)(msg+4)) = qToBigEndian(quint32(len)); // len
 
     // Avoid printing stats since it happens once every couple of seconds
     if (pendingMethodId != 13)
@@ -187,7 +189,7 @@ void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 
 void RpcServer::when_dataAvail()
 {
-    char    msg[MSGBUF_SIZE];
+    uchar    msg[MSGBUF_SIZE];
     int        msgLen;
     static bool parsing = false;
     static quint16    type, method;
@@ -201,13 +203,13 @@ void RpcServer::when_dataAvail()
         if (clientSock->bytesAvailable() < PB_HDR_SIZE)
             return;
 
-        msgLen = clientSock->read(msg, PB_HDR_SIZE);
+        msgLen = clientSock->read((char*)msg, PB_HDR_SIZE);
 
         Q_ASSERT(msgLen == PB_HDR_SIZE);
 
-        type = NTOHS(GET16(&msg[0]));
-        method = NTOHS(GET16(&msg[2]));
-        len = NTOHL(GET32(&msg[4]));
+        type = qFromBigEndian<quint16>(&msg[0]);
+        method = qFromBigEndian<quint16>(&msg[2]);
+        len = qFromBigEndian<quint32>(&msg[4]);
         //qDebug("type = %d, method = %d, len = %d", type, method, len);
 
         parsing = true;
@@ -216,7 +218,7 @@ void RpcServer::when_dataAvail()
     if (clientSock->bytesAvailable() < len)
         return;
 
-    msgLen = clientSock->read(msg, sizeof(msg));
+    msgLen = clientSock->read((char*)msg, sizeof(msg));
     Q_ASSERT((unsigned) msgLen == len);
 
     if (type != PB_MSG_TYPE_REQUEST)

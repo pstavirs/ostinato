@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pbrpcchannel.h"
 
+#include <qendian.h>
+
 PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port)
 {
     isPending = false;
@@ -130,9 +132,9 @@ void PbRpcChannel::CallMethod(
     Q_ASSERT(ret == true);
 
     len = req->ByteSize();
-    *((quint16*)(msg+0)) = HTONS(PB_MSG_TYPE_REQUEST); // type
-    *((quint16*)(msg+2)) = HTONS(method->index()); // method id
-    *((quint32*)(msg+4)) = HTONL(len); // len
+    *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_REQUEST)); // type
+    *((quint16*)(msg+2)) = qToBigEndian(quint16(method->index())); // method id
+    *((quint32*)(msg+4)) = qToBigEndian(quint32(len)); // len
 
     // Avoid printing stats since it happens every couple of seconds
     if (pendingMethodId != 13)
@@ -147,8 +149,8 @@ void PbRpcChannel::CallMethod(
 
 void PbRpcChannel::on_mpSocket_readyRead()
 {
-    char    msg[MSGBUF_SIZE];
-    char    *p = (char*)&msg;
+    uchar   msg[MSGBUF_SIZE];
+    uchar   *p = (uchar*) &msg;
     int        msgLen;
     static bool parsing = false;
     static quint16    type, method;
@@ -165,13 +167,13 @@ void PbRpcChannel::on_mpSocket_readyRead()
             return;
         }
 
-        msgLen = mpSocket->read(msg, PB_HDR_SIZE);
+        msgLen = mpSocket->read((char*)msg, PB_HDR_SIZE);
 
         Q_ASSERT(msgLen == PB_HDR_SIZE);
 
-        type = NTOHS(GET16(p+0));
-        method = NTOHS(GET16(p+2));
-        len = NTOHL(GET32(p+4));
+        type = qFromBigEndian<quint16>(p+0);
+        method = qFromBigEndian<quint16>(p+2);
+        len = qFromBigEndian<quint32>(p+4);
 
         //BUFDUMP(msg, PB_HDR_SIZE);
         //qDebug("type = %hu, method = %hu, len = %u", type, method, len);
@@ -193,8 +195,8 @@ void PbRpcChannel::on_mpSocket_readyRead()
             {
                 int l;
 
-                l = mpSocket->read(msg, sizeof(msg));
-                blob->write(msg, l);
+                l = mpSocket->read((char*)msg, sizeof(msg));
+                blob->write((char*)msg, l);
                 cumLen += l;
             }
 
@@ -229,7 +231,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 return;
             }
             
-            msgLen = mpSocket->read(msg, sizeof(msg));
+            msgLen = mpSocket->read((char*)msg, sizeof(msg));
 
             Q_ASSERT((unsigned) msgLen == len);
 
