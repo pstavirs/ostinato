@@ -5,6 +5,8 @@ syntax: glob
 *.a
 *.exe
 *.app
+drone
+ostinato
 
 # Qt generated files
 ui_*.h
