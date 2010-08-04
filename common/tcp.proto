@@ -1,0 +1,47 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+// Tcp
+message Tcp {
+    optional bool is_override_src_port = 1;
+    optional bool is_override_dst_port = 2;
+    optional bool is_override_hdrlen = 3;    
+    optional bool is_override_cksum = 4;    
+
+    optional uint32 src_port = 5 [default = 49152];
+    optional uint32 dst_port = 6 [default = 49153];
+
+    optional uint32 seq_num = 7 [default = 129018];
+    optional uint32 ack_num = 8;
+
+    optional uint32 hdrlen_rsvd = 9 [default = 0x50];
+    optional uint32 flags = 10;
+
+    optional uint32 window = 11 [default = 1024];
+    optional uint32 cksum = 12;
+    optional uint32 urg_ptr = 13;
+}
+
+extend Protocol {
+    optional Tcp tcp = 400;
+}
+

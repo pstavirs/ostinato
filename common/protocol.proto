@@ -1,0 +1,234 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+package OstProto;
+
+message StreamId {
+    required uint32 id = 1;
+}
+
+message StreamCore {
+    enum FrameLengthMode {
+        e_fl_fixed = 0;
+        e_fl_inc = 1;
+        e_fl_dec = 2;
+        e_fl_random = 3;
+    }
+    
+    // Basics
+    optional string name = 1;
+    optional bool is_enabled = 2;
+    optional uint32 ordinal = 3;
+
+    // Frame Length (includes CRC)
+    optional FrameLengthMode len_mode = 14 [default = e_fl_fixed];
+    optional uint32 frame_len = 15 [default = 64];
+    optional uint32 frame_len_min = 16 [default = 64];
+    optional uint32 frame_len_max = 17 [default = 1518];
+}
+
+message StreamControl {
+    enum SendUnit {
+        e_su_packets = 0;
+        e_su_bursts = 1;
+    }
+
+    enum SendMode {
+        e_sm_fixed = 0;
+        e_sm_continuous = 1;
+    }
+
+    enum NextWhat {
+        e_nw_stop = 0;
+        e_nw_goto_next = 1;
+        e_nw_goto_id = 2;
+    }
+
+    optional SendUnit unit = 1 [default = e_su_packets];
+    optional SendMode mode = 2 [default = e_sm_fixed];
+    optional uint32 num_packets = 3 [default = 1];
+    optional uint32 num_bursts = 4 [default = 1];
+    optional uint32 packets_per_burst = 5 [default = 10];
+    optional NextWhat next = 6 [default = e_nw_goto_next];
+    optional uint32 packets_per_sec = 7 [default = 1];
+    optional uint32 bursts_per_sec = 8 [default = 1];
+}
+
+message ProtocolId {
+    required uint32 id = 1;
+}
+
+message Protocol {
+
+    required ProtocolId protocol_id = 1;
+
+    extensions 100 to 199;    // Reserved for Ostinato Use
+    extensions 200 to 500;    // Available for use by protocols
+
+    enum k {
+        kMacFieldNumber = 100;
+        kPayloadFieldNumber = 101;
+        kSampleFieldNumber = 102;
+        kUserScriptFieldNumber = 103;
+
+        kEth2FieldNumber = 200;
+        kDot3FieldNumber = 201;
+        kLlcFieldNumber = 202;
+        kSnapFieldNumber = 203;
+
+        kSvlanFieldNumber = 204;
+        kVlanFieldNumber = 205;
+
+        kDot2LlcFieldNumber = 206;
+        kDot2SnapFieldNumber = 207;
+        kVlanStackFieldNumber = 208;
+
+        kArpFieldNumber = 300;
+        kIp4FieldNumber = 301;
+        kIp6FieldNumber = 302;
+        kIp6over4FieldNumber = 303;
+        kIp4over6FieldNumber = 304;
+        kIp4over4FieldNumber = 305;
+        kIp6over6FieldNumber = 306;
+
+        kTcpFieldNumber = 400;
+        kUdpFieldNumber = 401;
+        kIcmpFieldNumber = 402;
+        kIgmpFieldNumber = 403;
+        kMldFieldNumber = 404;
+
+        kTextProtocolFieldNumber = 500;
+    }
+}
+
+message Stream {
+
+    required StreamId stream_id = 1;
+    optional StreamCore core = 2;
+    optional StreamControl control = 3;
+
+    repeated Protocol protocol = 4;
+}
+
+message Void {
+    // nothing!
+}
+
+message Ack {
+    //! \todo (LOW) do we need any fields in 'Ack'
+}
+
+message PortId {
+    required uint32 id = 1;
+}
+
+message PortIdList {
+    repeated PortId port_id = 1;
+}
+
+message StreamIdList {
+    required PortId port_id = 1;
+    repeated StreamId stream_id = 2;
+}
+
+message Port {
+    required PortId port_id = 1;
+    optional string name = 2;
+    optional string description = 3;
+    optional string notes = 4;
+    optional bool is_enabled = 5;
+    optional bool is_exclusive_control = 6;
+}
+
+message PortConfigList {
+    repeated Port port = 1;
+}
+
+message StreamConfigList {
+    required PortId port_id = 1;
+    repeated Stream stream = 2;
+}
+
+message CaptureBuffer {
+    //! \todo (HIGH) define CaptureBuffer
+}
+
+message CaptureBufferList {
+    repeated CaptureBuffer list = 1;
+}
+
+enum LinkState {
+    LinkStateUnknown = 0;
+    LinkStateDown = 1;
+    LinkStateUp = 2;
+}
+
+message PortState {
+    optional LinkState link_state = 1 [default = LinkStateUnknown];
+    optional bool is_transmit_on = 2 [default = false];
+    optional bool is_capture_on = 3 [default = false];
+}
+
+message PortStats {
+
+    required PortId    port_id = 1;
+
+    optional PortState state = 2;
+
+    optional uint64 rx_pkts = 11;
+    optional uint64 rx_bytes = 12;
+    optional uint64 rx_pkts_nic = 13;
+    optional uint64 rx_bytes_nic = 14;
+    optional uint64 rx_pps = 15;
+    optional uint64 rx_bps = 16;
+
+    optional uint64 tx_pkts = 21;
+    optional uint64 tx_bytes = 22;
+    optional uint64 tx_pkts_nic = 23;
+    optional uint64 tx_bytes_nic = 24;
+    optional uint64 tx_pps = 25;
+    optional uint64 tx_bps = 26;
+}
+
+message PortStatsList {
+    repeated PortStats port_stats = 1;
+}
+
+service OstService {
+    rpc getPortIdList(Void) returns (PortIdList);
+    rpc getPortConfig(PortIdList) returns (PortConfigList);
+    rpc modifyPort(PortConfigList) returns (Ack);
+
+    rpc getStreamIdList(PortId) returns (StreamIdList);
+    rpc getStreamConfig(StreamIdList) returns (StreamConfigList);
+    rpc addStream(StreamIdList) returns (Ack);
+    rpc deleteStream(StreamIdList) returns (Ack);
+    rpc modifyStream(StreamConfigList) returns (Ack);
+
+    rpc startTx(PortIdList) returns (Ack);
+    rpc stopTx(PortIdList) returns (Ack);
+
+    rpc startCapture(PortIdList) returns (Ack);
+    rpc stopCapture(PortIdList) returns (Ack);
+    rpc getCaptureBuffer(PortId) returns (CaptureBuffer);
+
+    rpc getStats(PortIdList) returns (PortStatsList);
+    rpc clearStats(PortIdList) returns (Ack);
+}
+

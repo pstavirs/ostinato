@@ -1,0 +1,63 @@
+<ui version="4.0" >
+ <class>snap</class>
+ <widget class="QWidget" name="snap" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>194</width>
+    <height>72</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" >
+   <item>
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>SNAP</string>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QLabel" name="lblOui" >
+        <property name="text" >
+         <string>OUI</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leOui" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH HH HH; </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblType" >
+        <property name="text" >
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leType" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH HH; </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

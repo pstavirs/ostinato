@@ -1,0 +1,469 @@
+<ui version="4.0" >
+ <class>ip4</class>
+ <widget class="QWidget" name="ip4" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>493</width>
+    <height>308</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <layout class="QGridLayout" >
+     <item row="0" column="0" >
+      <widget class="QCheckBox" name="cbIpVersionOverride" >
+       <property name="text" >
+        <string>Override Version</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLineEdit" name="leIpVersion" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QCheckBox" name="cbIpHdrLenOverride" >
+       <property name="text" >
+        <string>Override Header
+Length (x4)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLineEdit" name="leIpHdrLen" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" >
+      <widget class="QLabel" name="label_22" >
+       <property name="text" >
+        <string>TOS/DSCP</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLineEdit" name="leIpTos" >
+       <property name="inputMask" >
+        <string>>HH; </string>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" >
+      <widget class="QCheckBox" name="cbIpLengthOverride" >
+       <property name="text" >
+        <string>Override Length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" >
+      <widget class="QLineEdit" name="leIpLength" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" >
+      <widget class="QLabel" name="label_24" >
+       <property name="text" >
+        <string>Identification</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" >
+      <widget class="QLineEdit" name="leIpId" >
+       <property name="inputMask" >
+        <string>>HH HH; </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2" >
+    <layout class="QGridLayout" >
+     <item row="0" column="0" >
+      <widget class="QLabel" name="label_25" >
+       <property name="text" >
+        <string>Fragment Offset (x8)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLineEdit" name="leIpFragOfs" />
+     </item>
+     <item row="1" column="0" >
+      <widget class="QCheckBox" name="cbIpFlagsDf" >
+       <property name="text" >
+        <string>Don't Fragment</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QCheckBox" name="cbIpFlagsMf" >
+       <property name="text" >
+        <string>More Fragments</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" >
+      <widget class="QLabel" name="label_26" >
+       <property name="text" >
+        <string>Time To Live (TTL)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLineEdit" name="leIpTtl" >
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" >
+      <widget class="QLabel" name="label_27" >
+       <property name="text" >
+        <string>Protocol</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" >
+      <widget class="QLineEdit" name="leIpProto" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" >
+      <widget class="QCheckBox" name="cbIpCksumOverride" >
+       <property name="text" >
+        <string>Override Checksum</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" >
+      <widget class="QLineEdit" name="leIpCksum" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="inputMask" >
+        <string>>HH HH; </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="3" >
+    <widget class="QGroupBox" name="groupBox_7" >
+     <property name="title" >
+      <string/>
+     </property>
+     <property name="flat" >
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" colspan="2" >
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>101</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_31" >
+        <property name="text" >
+         <string>Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="label_23" >
+        <property name="text" >
+         <string>Count</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QLabel" name="label_30" >
+        <property name="text" >
+         <string>Mask</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_20" >
+        <property name="text" >
+         <string>Source</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="leIpSrcAddr" >
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QComboBox" name="cmbIpSrcAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="leIpSrcAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4" >
+       <widget class="QLineEdit" name="leIpSrcAddrMask" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QLabel" name="label_21" >
+        <property name="text" >
+         <string>Destination</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QLineEdit" name="leIpDstAddr" >
+        <property name="inputMask" >
+         <string>000.000.000.000; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" >
+       <widget class="QComboBox" name="cmbIpDstAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="3" >
+       <widget class="QLineEdit" name="leIpDstAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4" >
+       <widget class="QLineEdit" name="leIpDstAddrMask" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="3" >
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QLabel" name="label_29" >
+       <property name="text" >
+        <string>Options</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="leIpOptions" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>TODO</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="tbIpOptionsEdit" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="1" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cbIpVersionOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpVersion</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>108</x>
+     <y>11</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>195</x>
+     <y>11</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpHdrLenOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpHdrLen</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>118</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>166</x>
+     <y>43</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpLengthOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>79</x>
+     <y>97</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>172</x>
+     <y>97</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpCksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpCksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>345</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>406</x>
+     <y>122</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

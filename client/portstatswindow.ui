@@ -1,0 +1,182 @@
+<ui version="4.0" >
+ <class>PortStatsWindow</class>
+ <widget class="QWidget" name="PortStatsWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>502</width>
+    <height>415</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="QFrame" name="frame" >
+     <property name="frameShape" >
+      <enum>QFrame::Panel</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QToolButton" name="tbStartTransmit" >
+        <property name="toolTip" >
+         <string>Start Tx</string>
+        </property>
+        <property name="statusTip" >
+         <string>Starts transmit on selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Start Transmit</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/control_play.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStopTransmit" >
+        <property name="toolTip" >
+         <string>Stop Tx</string>
+        </property>
+        <property name="statusTip" >
+         <string>Stops transmit on selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Stop Trasmit</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/control_stop.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbClear" >
+        <property name="toolTip" >
+         <string>Clear Selected Port Stats</string>
+        </property>
+        <property name="statusTip" >
+         <string>Clears statistics of the selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Clear</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/portstats_clear.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbClearAll" >
+        <property name="toolTip" >
+         <string>Clear All Ports Stats</string>
+        </property>
+        <property name="statusTip" >
+         <string>Clears statistics of all ports</string>
+        </property>
+        <property name="text" >
+         <string>Clear All</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/portstats_clear_all.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStartCapture" >
+        <property name="toolTip" >
+         <string>Start Capture</string>
+        </property>
+        <property name="statusTip" >
+         <string>Captures packets on the selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Start Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/sound_none.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbStopCapture" >
+        <property name="toolTip" >
+         <string>Stop Capture</string>
+        </property>
+        <property name="statusTip" >
+         <string>End capture on selecteed port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Stop Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/sound_mute.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbViewCapture" >
+        <property name="toolTip" >
+         <string>View Capture Buffer</string>
+        </property>
+        <property name="statusTip" >
+         <string>View captured packets on selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>View Capture</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/magnifier.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbFilter" >
+        <property name="statusTip" >
+         <string>Select which ports to view</string>
+        </property>
+        <property name="text" >
+         <string>Filter</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/portstats_filter.png</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableView" name="tvPortStats" />
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,108 @@
+<ui version="4.0" >
+ <class>llc</class>
+ <widget class="QWidget" name="llc" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>304</width>
+    <height>72</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" >
+   <item>
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>LLC</string>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QLabel" name="lblDsap" >
+        <property name="text" >
+         <string>DSAP</string>
+        </property>
+        <property name="buddy" >
+         <cstring>leDsap</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leDsap" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblSsap" >
+        <property name="text" >
+         <string>SSAP</string>
+        </property>
+        <property name="buddy" >
+         <cstring>leSsap</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leSsap" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblControl" >
+        <property name="text" >
+         <string>Control</string>
+        </property>
+        <property name="buddy" >
+         <cstring>leControl</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leControl" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
