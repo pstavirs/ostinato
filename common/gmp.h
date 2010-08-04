@@ -62,6 +62,8 @@ public:
     GmpConfigForm(QWidget *parent = 0);
 private slots:
     void on_msgTypeCombo_currentIndexChanged(int index);
+    void on_addSource_clicked();
+    void on_deleteSource_clicked();
 };
 
 class GmpProtocol : public AbstractProtocol

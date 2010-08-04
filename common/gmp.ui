@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>586</width>
-    <height>321</height>
+    <height>281</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -171,6 +171,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="inputMask" >
+         <string>/900; </string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -179,7 +182,7 @@
    <item>
     <widget class="QStackedWidget" name="ssmWidget" >
      <property name="currentIndex" >
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page" >
       <layout class="QHBoxLayout" >
@@ -200,13 +203,13 @@
          <property name="title" >
           <string/>
          </property>
-         <layout class="QGridLayout" >
-          <item row="0" column="0" >
+         <layout class="QHBoxLayout" >
+          <item>
            <layout class="QGridLayout" >
-            <item row="0" column="0" >
+            <item row="0" column="0" colspan="3" >
              <widget class="QCheckBox" name="sFlag" >
               <property name="text" >
-               <string>S Flag</string>
+               <string>S Flag (Suppress Router Processing)</string>
               </property>
              </widget>
             </item>
@@ -221,6 +224,9 @@
              </widget>
             </item>
             <item row="1" column="1" >
+             <widget class="QLineEdit" name="qrv" />
+            </item>
+            <item row="1" column="2" >
              <spacer>
               <property name="orientation" >
                <enum>Qt::Horizontal</enum>
@@ -232,9 +238,6 @@
                </size>
               </property>
              </spacer>
-            </item>
-            <item row="1" column="2" >
-             <widget class="QLineEdit" name="qrv" />
             </item>
             <item row="2" column="0" >
              <widget class="QLabel" name="label_6" >
@@ -246,73 +249,109 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="2" >
+            <item row="2" column="1" >
              <widget class="QLineEdit" name="qqi" />
             </item>
-           </layout>
-          </item>
-          <item rowspan="2" row="0" column="1" >
-           <layout class="QGridLayout" >
-            <item row="0" column="0" >
-             <widget class="QLabel" name="label_13" >
-              <property name="text" >
-               <string>Source List</string>
-              </property>
-              <property name="buddy" >
-               <cstring>groupRecordAddress</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1" >
+            <item row="3" column="1" >
              <spacer>
               <property name="orientation" >
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Vertical</enum>
               </property>
               <property name="sizeHint" >
                <size>
-                <width>40</width>
-                <height>20</height>
+                <width>61</width>
+                <height>41</height>
                </size>
               </property>
              </spacer>
             </item>
-            <item row="0" column="2" >
-             <widget class="QCheckBox" name="overrideSourceCount" >
-              <property name="text" >
-               <string>Count</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3" >
-             <widget class="QLineEdit" name="sourceCount" >
-              <property name="enabled" >
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy" >
-               <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0" colspan="4" >
-             <widget class="QTextEdit" name="sourceList" />
-            </item>
            </layout>
           </item>
-          <item row="1" column="0" >
-           <spacer>
-            <property name="orientation" >
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" >
-             <size>
-              <width>61</width>
-              <height>81</height>
-             </size>
-            </property>
-           </spacer>
+          <item>
+           <layout class="QVBoxLayout" >
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QLabel" name="label_13" >
+                <property name="text" >
+                 <string>Source List</string>
+                </property>
+                <property name="buddy" >
+                 <cstring>groupRecordAddress</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>16</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="addSource" >
+                <property name="text" >
+                 <string>A</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="deleteSource" >
+                <property name="text" >
+                 <string>D</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QListWidget" name="sourceList" >
+              <property name="dragEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropMode" >
+               <enum>QAbstractItemView::InternalMove</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="overrideSourceCount" >
+                <property name="text" >
+                 <string>Count</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sourceCount" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -587,7 +626,6 @@
   <tabstop>qqi</tabstop>
   <tabstop>overrideSourceCount</tabstop>
   <tabstop>sourceCount</tabstop>
-  <tabstop>sourceList</tabstop>
  </tabstops>
  <resources/>
  <connections>

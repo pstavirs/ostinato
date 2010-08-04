@@ -36,6 +36,24 @@ GmpConfigForm::GmpConfigForm(QWidget *parent)
     msgTypeCombo->addItem(kIgmpV3Report, "IGMPv3 Report");
 }
 
+void GmpConfigForm::on_addSource_clicked()
+{
+    QListWidgetItem *item=new QListWidgetItem("0.0.0.0");
+    item->setFlags(item->flags() | Qt::ItemIsEditable);
+    sourceList->insertItem(sourceList->currentRow(), item);
+
+    if (!overrideSourceCount->isChecked())
+        sourceCount->setText(QString().setNum(sourceList->count()));
+}
+
+void GmpConfigForm::on_deleteSource_clicked()
+{
+    delete sourceList->takeItem(sourceList->currentRow());
+
+    if (!overrideSourceCount->isChecked())
+        sourceCount->setText(QString().setNum(sourceList->count()));
+}
+
 void GmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
 {
     switch(msgTypeCombo->currentValue())
