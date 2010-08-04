@@ -146,9 +146,6 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
     // TODO(MED):
-
-    //! \todo Implement then enable these protocols - IGMP
-    rbL4Igmp->setHidden(true);
     //! \todo Enable navigation of streams
     pbPrev->setDisabled(true);
     pbNext->setDisabled(true);
@@ -222,6 +219,7 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoL4]->addButton(rbL4Udp, OstProto::Protocol::kUdpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Icmp, OstProto::Protocol::kIcmpFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Igmp, OstProto::Protocol::kIgmpFieldNumber);
+    bgProto[ProtoL4]->addButton(rbL4Mld, OstProto::Protocol::kMldFieldNumber);
     bgProto[ProtoL4]->addButton(rbL4Other, ButtonIdOther);
 #endif
 

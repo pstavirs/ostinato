@@ -111,6 +111,7 @@ message Protocol {
         kUdpFieldNumber = 401;
         kIcmpFieldNumber = 402;
         kIgmpFieldNumber = 403;
+        kMldFieldNumber = 404;
 
         kTextProtocolFieldNumber = 500;
     }

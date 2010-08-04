@@ -28,11 +28,14 @@ public:
     IntComboBox(QWidget *parent = 0)
         : QComboBox(parent)
     {
+        valueMask_ = 0xFFFFFFFF;
         setEditable(true);
     }
     void addItem(int value, const QString &text) 
     {
-        QComboBox::addItem(QString("%1 - %2").arg(value).arg(text), value);
+        QComboBox::addItem(
+                QString("%1 - %2").arg(value & valueMask_).arg(text), 
+                value);
     }
     int currentValue() 
     {
@@ -51,6 +54,16 @@ public:
         else
             setEditText(QString().setNum(value));
     }
+    uint valueMask()
+    {
+        return valueMask_;
+    }
+    void setValueMask(uint mask)
+    {
+        valueMask_ = mask;
+    }
+private:
+    uint valueMask_;
 };
 
 #endif

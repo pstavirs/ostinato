@@ -15,6 +15,7 @@ FORMS += \
     ip4.ui \
     ip6.ui \
     icmp.ui \
+    gmp.ui \
     tcp.ui \
     udp.ui \
     textproto.ui \
@@ -42,6 +43,9 @@ PROTOS += \
     ip4over4.proto \
     ip6over6.proto \
     icmp.proto \
+    gmp.proto \
+    igmp.proto \
+    mld.proto \
     tcp.proto \
     udp.proto \
     textproto.proto \
@@ -74,6 +78,9 @@ HEADERS += \
     ip4over4.h \
     ip6over6.h \
     icmp.h \
+    gmp.h \
+    igmp.h \
+    mld.h \
     tcp.h \
     udp.h \
     textproto.h \
@@ -99,6 +106,9 @@ SOURCES += \
     ip4.cpp \
     ip6.cpp \
     icmp.cpp \
+    gmp.cpp \
+    igmp.cpp \
+    mld.cpp \
     tcp.cpp \
     udp.cpp \
     textproto.cpp \

@@ -39,6 +39,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4over4.h"    
 #include "ip6over6.h"    
 #include "icmp.h"    
+#include "igmp.h"    
+#include "mld.h"    
 #include "tcp.h"    
 #include "udp.h"    
 #include "textproto.h"
@@ -92,6 +94,10 @@ ProtocolManager::ProtocolManager()
 
     registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
             (void*) IcmpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIgmpFieldNumber,
+            (void*) IgmpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kMldFieldNumber,
+            (void*) MldProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
             (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
