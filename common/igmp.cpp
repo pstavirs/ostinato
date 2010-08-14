@@ -20,12 +20,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "igmp.h"
 
 #include <QHostAddress>
+#include <QItemDelegate>
 #include <qendian.h>
 
+class IpAddressDelegate : public QItemDelegate
+{
+public:
+    IpAddressDelegate(QObject *parent = 0)
+        : QItemDelegate(parent) { }
+    ~IpAddressDelegate() {}
+    QWidget* createEditor(QWidget *parent, 
+            const QStyleOptionViewItem &option, const QModelIndex &index) const
+    {
+        QLineEdit *ipEdit;
+
+        ipEdit = static_cast<QLineEdit*>(QItemDelegate::createEditor(
+                    parent, option, index));
+
+        ipEdit->setInputMask("009.009.009.009;"); // FIXME: use validator
+
+        return ipEdit;
+    }
+};
 
 IgmpConfigForm::IgmpConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
 {
+    _defaultSourceIp = "0.0.0.0";
+
+    sourceList->setItemDelegate(new IpAddressDelegate(this));
+    groupRecordSourceList->setItemDelegate(new IpAddressDelegate(this));
 }
 
 IgmpProtocol::IgmpProtocol(StreamBase *stream, AbstractProtocol *parent)
@@ -90,7 +114,7 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
     {
         case kRsvdMrtCode:
         {
-            quint8 mrt = 0, mrc;
+            quint8 mrt = 0, mrc = 0;
 
             if (msgType() == kIgmpV3Query)
             {
@@ -111,7 +135,7 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
             case FieldValue:
                 return mrt;
             case FieldTextValue:
-                return QString("%1 ms").arg(mrt);
+                return QString("%1").arg(mrt);
             case FieldFrameValue:
                 return QByteArray(1, mrc);
             default:
@@ -156,13 +180,19 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
             case FieldName:            
                 return QString("Source List");
             case FieldValue:
-                return QVariant(); // FIXME
+            {
+                QStringList list;
+
+                for (int i = 0; i < data.sources_size(); i++)
+                    list.append(QHostAddress(data.sources(i).v4()).toString());
+                return list;
+            }
             case FieldFrameValue:
             {
                 QByteArray fv;
                 fv.resize(4 * data.sources_size());
                 for (int i = 0; i < data.sources_size(); i++)
-                    qToBigEndian(data.sources(i), (uchar*) (fv.data()+4*i));
+                    qToBigEndian(data.sources(i).v4(), (uchar*)(fv.data()+4*i));
                 return fv;
             }
             case FieldTextValue:
@@ -292,8 +322,17 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
             break;
         }
         case kSources:
-            //TODO
+        {
+            QStringList list = value.toStringList();
+
+            data.clear_sources();
+            foreach(QString str, list)
+            {
+                quint32 ip = QHostAddress(str).toIPv4Address();
+                data.add_sources()->set_v4(ip);
+            }
             break;
+        }
 
         case kGroupRecords:
             //TODO
@@ -306,6 +345,18 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
 
 _exit:
     return isOk;
+}
+
+QWidget* IgmpProtocol::configWidget()
+{
+    /* Lazy creation of the configWidget */
+    if (configForm == NULL)
+    {
+        configForm = new IgmpConfigForm;
+        loadConfigWidget();
+    }
+
+    return configForm;
 }
 
 void IgmpProtocol::loadConfigWidget()
