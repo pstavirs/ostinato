@@ -60,10 +60,21 @@ class GmpConfigForm : public QWidget, public Ui::Gmp
     Q_OBJECT
 public:
     GmpConfigForm(QWidget *parent = 0);
+    ~GmpConfigForm();
+protected:
+    QString _defaultSourceIp;
 private slots:
     void on_msgTypeCombo_currentIndexChanged(int index);
     void on_addSource_clicked();
     void on_deleteSource_clicked();
+
+    void on_addGroupRecord_clicked();
+    void on_deleteGroupRecord_clicked();
+    void on_groupList_currentItemChanged(QListWidgetItem *current,
+            QListWidgetItem *previous);
+    void on_addGroupRecordSource_clicked();
+    void on_deleteGroupRecordSource_clicked();
+    void on_auxData_textChanged(const QString &text);
 };
 
 class GmpProtocol : public AbstractProtocol
@@ -87,7 +98,6 @@ public:
 
     virtual bool isProtocolFrameValueVariable() const;
 
-    virtual QWidget* configWidget();
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
 

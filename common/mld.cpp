@@ -19,12 +19,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mld.h"
 
+#include "ipv6addressvalidator.h"
+
 #include <QHostAddress>
+#include <QItemDelegate>
 #include <qendian.h>
+
+class IpAddressDelegate : public QItemDelegate
+{
+public:
+    IpAddressDelegate(QObject *parent = 0)
+        : QItemDelegate(parent) { }
+    ~IpAddressDelegate() {}
+    QWidget* createEditor(QWidget *parent, 
+            const QStyleOptionViewItem &option, const QModelIndex &index) const
+    {
+        QLineEdit *ipEdit;
+
+        ipEdit = static_cast<QLineEdit*>(QItemDelegate::createEditor(
+                    parent, option, index));
+
+        // FIXME: const problem!!!
+        //ipEdit->setValidator(new IPv6AddressValidator(this));
+
+        return ipEdit;
+    }
+};
 
 MldConfigForm::MldConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
 {
+    _defaultSourceIp = "::";
+    sourceList->setItemDelegate(new IpAddressDelegate(this));
+    groupRecordSourceList->setItemDelegate(new IpAddressDelegate(this));
 }
 
 MldProtocol::MldProtocol(StreamBase *stream, AbstractProtocol *parent)
@@ -290,6 +317,18 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
 
 _exit:
     return isOk;
+}
+
+QWidget* MldProtocol::configWidget()
+{
+    /* Lazy creation of the configWidget */
+    if (configForm == NULL)
+    {
+        configForm = new MldConfigForm;
+        loadConfigWidget();
+    }
+
+    return configForm;
 }
 
 void MldProtocol::loadConfigWidget()

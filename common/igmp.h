@@ -52,6 +52,7 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
+    virtual QWidget* configWidget();
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
 
