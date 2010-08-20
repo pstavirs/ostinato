@@ -435,7 +435,14 @@
              </layout>
             </item>
             <item>
-             <widget class="QListWidget" name="groupList" />
+             <widget class="QListWidget" name="groupList" >
+              <property name="dragEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropMode" >
+               <enum>QAbstractItemView::InternalMove</enum>
+              </property>
+             </widget>
             </item>
             <item>
              <layout class="QHBoxLayout" >
@@ -580,7 +587,14 @@
                 </layout>
                </item>
                <item>
-                <widget class="QListWidget" name="groupRecordSourceList" />
+                <widget class="QListWidget" name="groupRecordSourceList" >
+                 <property name="dragEnabled" >
+                  <bool>true</bool>
+                 </property>
+                 <property name="dragDropMode" >
+                  <enum>QAbstractItemView::InternalMove</enum>
+                 </property>
+                </widget>
                </item>
                <item>
                 <layout class="QHBoxLayout" >
@@ -646,7 +660,7 @@
                <item row="0" column="2" >
                 <widget class="QCheckBox" name="overrideAuxDataLength" >
                  <property name="text" >
-                  <string>Length</string>
+                  <string>Length (x4)</string>
                  </property>
                 </widget>
                </item>

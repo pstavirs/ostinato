@@ -42,19 +42,13 @@ GmpConfigForm::GmpConfigForm(QWidget *parent)
 
 GmpConfigForm::~GmpConfigForm()
 {
-    // delete UserRole itemdata for grpRecords
-    for (int i = 0; i < groupList->count(); i++)
-    {
-        QListWidgetItem *item = groupList->item(i);
+}
 
-        if (item)
-        {
-            OstProto::Gmp::GroupRecord *rec = (OstProto::Gmp::GroupRecord*)
-                item->data(Qt::UserRole).value<void*>();
-            item->setData(Qt::UserRole, QVariant());
-            delete rec;
-        }
-    }
+void GmpConfigForm::update()
+{
+    // save the current group Record by simulating a currentItemChanged()
+    on_groupList_currentItemChanged(groupList->currentItem(), 
+            groupList->currentItem());
 }
 
 void GmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
@@ -114,11 +108,23 @@ void GmpConfigForm::on_deleteSource_clicked()
 
 void GmpConfigForm::on_addGroupRecord_clicked()
 {
-    OstProto::Gmp::GroupRecord *record = new OstProto::Gmp::GroupRecord;
+    OstProto::Gmp::GroupRecord defRec;
+    QVariantMap grpRec;
     QListWidgetItem *item = new QListWidgetItem;
 
-    item->setData(Qt::UserRole, QVariant::fromValue((void*)record));
-    item->setText("xxx"); // FIXME
+    grpRec["groupRecordType"] = defRec.type()-1;
+    grpRec["groupRecordAddress"] = _defaultSourceIp;
+    grpRec["overrideGroupRecordSourceCount"] = defRec.is_override_source_count();
+    grpRec["groupRecordSourceCount"] = defRec.source_count();
+    grpRec["groupRecordSourceList"] = QStringList();
+    grpRec["overrideAuxDataLength"] = defRec.is_override_aux_data_length();
+    grpRec["auxDataLength"] = defRec.aux_data_length();
+    grpRec["auxData"] = QString().fromStdString(defRec.aux_data());
+
+    item->setData(Qt::UserRole, grpRec);
+    item->setText(QString("%1: %2")
+            .arg(groupRecordType->itemText(grpRec["groupRecordType"].toInt()))
+            .arg(grpRec["groupRecordAddress"].toString()));
 
     groupList->insertItem(groupList->currentRow(), item);
 
@@ -128,13 +134,7 @@ void GmpConfigForm::on_addGroupRecord_clicked()
 
 void GmpConfigForm::on_deleteGroupRecord_clicked()
 {
-    QListWidgetItem *item = groupList->takeItem(groupList->currentRow());
-    if (item)
-    {
-        delete (OstProto::Gmp::GroupRecord*)item->data(Qt::UserRole)
-            .value<void*>();
-        delete item;
-    }
+    delete groupList->takeItem(groupList->currentRow());
 
     if (!overrideGroupRecordCount->isChecked())
         groupRecordCount->setText(QString().setNum(groupList->count()));
@@ -143,8 +143,8 @@ void GmpConfigForm::on_deleteGroupRecord_clicked()
 void GmpConfigForm::on_groupList_currentItemChanged(QListWidgetItem *current,
         QListWidgetItem *previous)
 {
-    OstProto::Gmp::GroupRecord *prevRec;
-    OstProto::Gmp::GroupRecord *currRec;
+    QVariantMap rec;
+    QStringList strList;
     
     qDebug("in %s", __FUNCTION__);
 
@@ -152,46 +152,52 @@ void GmpConfigForm::on_groupList_currentItemChanged(QListWidgetItem *current,
     if (previous == NULL)
         goto _load_current_record;
 
-    prevRec = (OstProto::Gmp::GroupRecord*)previous->data(Qt::UserRole)
-        .value<void*>();
+    rec["groupRecordType"] = groupRecordType->currentIndex();
+    rec["groupRecordAddress"] = groupRecordAddress->text();
+    strList.clear();
+    while (groupRecordSourceList->count())
+    {
+        QListWidgetItem *item = groupRecordSourceList->takeItem(0);
+        strList.append(item->text());
+        delete item;
+    }
+    rec["groupRecordSourceList"] = strList;
+    rec["overrideGroupRecordSourceCount"] = 
+                            overrideGroupRecordSourceCount->isChecked();
+    rec["groupRecordSourceCount"] = groupRecordSourceCount->text().toUInt();
+    rec["overrideAuxDataLength"] = overrideAuxDataLength->isChecked();
+    rec["auxDataLength"] = auxDataLength->text().toUInt();
+    rec["auxData"] = auxData->text();
 
-    prevRec->set_type(OstProto::Gmp::GroupRecord::RecordType(
-                groupRecordType->currentIndex()+1));
-    // FIXME: groupRecordAddress, sources
-
-    prevRec->set_is_override_source_count(
-            overrideGroupRecordSourceCount->isChecked());
-    prevRec->set_source_count(groupRecordSourceCount->text().toUInt());
-
-    prevRec->set_is_override_aux_data_length(
-            overrideAuxDataLength->isChecked());
-    prevRec->set_aux_data(QString(QByteArray::fromHex(
-            QByteArray().append(auxData->text()))).toStdString());
+    previous->setData(Qt::UserRole, rec);
+    previous->setText(QString("%1: %2")
+            .arg(groupRecordType->itemText(rec["groupRecordType"].toInt()))
+            .arg(rec["groupRecordAddress"].toString()));
 
 _load_current_record:
     // ... and load current record
     if (current == NULL)
         goto _exit;
 
-    currRec = (OstProto::Gmp::GroupRecord*)current->data(Qt::UserRole)
-        .value<void*>();
+    rec = current->data(Qt::UserRole).toMap();
 
-    groupRecordType->setCurrentIndex(int(currRec->type()) - 1);
-    // FIXME: groupRecordAddress, sources
-
-    overrideGroupRecordSourceCount->setChecked(
-            currRec->is_override_source_count());
-    if (overrideGroupRecordSourceCount->isChecked())
+    groupRecordType->setCurrentIndex(rec["groupRecordType"].toInt());
+    groupRecordAddress->setText(rec["groupRecordAddress"].toString());
+    strList = rec["groupRecordSourceList"].toStringList();
+    groupRecordSourceList->clear();
+    foreach (QString str, strList)
     {
-        groupRecordSourceCount->setText(
-                QString().setNum(currRec->source_count()));
+        QListWidgetItem *item = new QListWidgetItem(str, groupRecordSourceList);
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
     }
+    overrideGroupRecordSourceCount->setChecked(
+                        rec["overrideGroupRecordSourceCount"].toBool());
+    groupRecordSourceCount->setText(QString().setNum(
+                        rec["groupRecordSourceCount"].toUInt()));
+    overrideAuxDataLength->setChecked(rec["overrideAuxDataLength"].toBool());
+    auxDataLength->setText(QString().setNum(rec["auxDataLength"].toUInt()));
+    auxData->setText(rec["auxData"].toString());
 
-    overrideAuxDataLength->setChecked(currRec->is_override_aux_data_length());
-    if (overrideAuxDataLength->isChecked())
-        auxDataLength->setText(QString().setNum(currRec->aux_data_length()));
-    auxData->setText(QString(QByteArray().append(
-                QString().fromStdString(currRec->aux_data())).toHex()));
 _exit:
     groupRecord->setEnabled(current != NULL);
     return;
@@ -219,8 +225,9 @@ void GmpConfigForm::on_deleteGroupRecordSource_clicked()
 
 void GmpConfigForm::on_auxData_textChanged(const QString &text)
 {
+    // auxDataLength is in units of words and each byte is 2 chars in text()
     if (!overrideAuxDataLength->isChecked())
-        auxDataLength->setText(QString().setNum(auxData->text().length()/2));
+        auxDataLength->setText(QString().setNum((auxData->text().size()+7)/8));
 }
 
 GmpProtocol::GmpProtocol(StreamBase *stream, AbstractProtocol *parent)
@@ -596,8 +603,120 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
             break;
         }
         case kGroupRecords:
-            // XXX:Handled by each subclass
+        {
+            switch(attrib)
+            {
+            case FieldName:            
+                return QString("Group List");
+            case FieldValue:
+            {
+                QVariantList grpRecords;
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    QVariantMap grpRec;
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+
+                    grpRec["groupRecordType"] = rec.type()-1;
+                    // grpRec["groupRecordAddress"] = subclass responsibility
+                    grpRec["overrideGroupRecordSourceCount"] = 
+                                rec.is_override_source_count();
+                    grpRec["groupRecordSourceCount"] = rec.source_count();
+
+                    // grpRec["groupRecordSourceList"] = subclass responsibility
+                    grpRec["overrideAuxDataLength"] = 
+                                rec.is_override_aux_data_length();
+                    grpRec["auxDataLength"] = rec.aux_data_length();
+                    grpRec["auxData"] = QByteArray().append(
+                            QString::fromStdString(rec.aux_data())).toHex();
+
+                    grpRecords.append(grpRec);
+                }
+                return grpRecords;
+            }
+            case FieldFrameValue:
+            {
+                QVariantList fv;
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+                    QByteArray rv;
+
+                    rv.resize(4);
+                    rv[0] = rec.type();
+                    rv[1] = rec.is_override_aux_data_length() ? 
+                        rec.aux_data_length() : rec.aux_data().size()/4;
+                    if (rec.is_override_source_count())
+                    {
+                        qToBigEndian(quint16(rec.source_count()),
+                                (uchar*)(rv.data()+2));
+                    }
+                    else
+                    {
+                        qToBigEndian(quint16(rec.sources_size()),
+                                    (uchar*)(rv.data()+2));
+                    }
+
+                    // group_address => subclass responsibility
+                    // source list => subclass responsibility
+
+                    rv.append(QString().fromStdString(rec.aux_data()).toUtf8());
+
+                    fv.append(rv);
+                }
+                return fv;
+            }
+            case FieldTextValue:
+            {
+                QStringList list;
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+                    QString str;
+
+                    str.append("  Type: ");
+                    switch(rec.type())
+                    {
+                    case OstProto::Gmp::GroupRecord::kIsInclude: 
+                        str.append("IS_INCLUDE"); break;
+                    case OstProto::Gmp::GroupRecord::kIsExclude: 
+                        str.append("IS_EXCLUDE"); break;
+                    case OstProto::Gmp::GroupRecord::kToInclude: 
+                        str.append("TO_INCLUDE"); break;
+                    case OstProto::Gmp::GroupRecord::kToExclude: 
+                        str.append("TO_EXCLUDE"); break;
+                    case OstProto::Gmp::GroupRecord::kAllowNew: 
+                        str.append("ALLOW_NEW"); break;
+                    case OstProto::Gmp::GroupRecord::kBlockOld: 
+                        str.append("BLOCK_OLD"); break;
+                    default: 
+                        str.append("UNKNOWN"); break;
+                    }
+                    str.append(QString("; AuxLen: %1").arg(
+                        rec.is_override_aux_data_length() ? 
+                            rec.aux_data_length() : rec.aux_data().size()/4));
+                    str.append(QString("; Source Count: %1").arg(
+                        rec.is_override_source_count() ?
+                            rec.source_count(): rec.sources_size()));
+
+                    // NOTE: subclass should replace the XXX below with
+                    // group address and source list
+                    str.append(QString("; XXX"));
+
+                    str.append(QString("; AuxData: ").append(
+                                QByteArray().append(QString().fromStdString(
+                                        rec.aux_data())).toHex()));
+
+                    list.append(str);
+                }
+                return list;
+            }
+            default:
+                break;
+            }
             break;
+        }
 
         // Meta Fields
         case kIsOverrideChecksum:
@@ -750,8 +869,36 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
             break;
         }
         case kGroupRecords:
-            // XXX: Handled by subclass
+        {
+            QVariantList list = value.toList();
+
+            data.clear_group_records();
+
+            for (int i = 0; i < list.count(); i++)
+            {
+                QVariantMap grpRec = list.at(i).toMap();
+                OstProto::Gmp::GroupRecord *rec = data.add_group_records();
+                
+                rec->set_type(OstProto::Gmp::GroupRecord::RecordType(
+                            grpRec["groupRecordType"].toInt() + 1));
+                // NOTE: rec->group_address => subclass responsibility
+                rec->set_is_override_source_count(
+                            grpRec["overrideGroupRecordSourceCount"].toBool());
+                rec->set_source_count(grpRec["groupRecordSourceCount"].toUInt());
+                // NOTE: rec->sources => subclass responsibility
+                rec->set_is_override_aux_data_length(
+                            grpRec["overrideAuxDataLength"].toBool());
+                rec->set_aux_data_length(grpRec["auxDataLength"].toUInt());
+                QByteArray ba = QByteArray::fromHex(
+                                        grpRec["auxData"].toByteArray());
+                // pad to word boundary
+                if (ba.size() % 4)
+                    ba.append(QByteArray(4 - (ba.size() % 4), char(0)));
+                rec->set_aux_data(std::string(ba.constData(), ba.size()));
+            }
+
             break;
+        }
 
         // Meta Fields
         case kIsOverrideChecksum:
@@ -821,16 +968,18 @@ int GmpProtocol::protocolFrameSize(int streamIndex) const
     return AbstractProtocol::protocolFrameValue(streamIndex, true).size();
 }
 
-/*!
-  TODO: If your protocol has any variable fields, return true \n
-
-  Otherwise you don't need to reimplement this method - the base class always
-  returns false
-*/
 bool GmpProtocol::isProtocolFrameValueVariable() const
 {
-    // TODO: check msg types and then return value appropriately
-    return true;
+    // No fields vary for Ssm Query and Report
+    if (isSsmReport() || isSsmQuery())
+        return false;
+
+    // For all other msg types, check the group mode
+    if (fieldData(kGroupMode, FieldValue).toUInt() 
+            != uint(OstProto::Gmp::kFixed))
+        return true;
+
+    return false;
 }
 
 void GmpProtocol::loadConfigWidget()
@@ -862,16 +1011,33 @@ void GmpProtocol::loadConfigWidget()
     configForm->sourceList->addItems(
             fieldData(kSources, FieldValue).toStringList());
 
+    // NOTE: SourceCount should be loaded after sourceList
     configForm->overrideSourceCount->setChecked(
             fieldData(kIsOverrideSourceCount, FieldValue).toBool());
     configForm->sourceCount->setText(
             fieldData(kSourceCount, FieldValue).toString());
 
+    QVariantList list = fieldData(kGroupRecords, FieldValue).toList();
+    configForm->groupList->clear();
+    foreach (QVariant rec, list)
+    {
+        QVariantMap grpRec = rec.toMap();
+        QListWidgetItem *item = new QListWidgetItem;
+
+        item->setData(Qt::UserRole, grpRec);
+        item->setText(QString("%1: %2")
+                .arg(configForm->groupRecordType->itemText(
+                        grpRec["groupRecordType"].toInt()))
+                .arg(grpRec["groupRecordAddress"].toString()));
+        configForm->groupList->addItem(item);
+    }
+
+    // NOTE: recordCount should be loaded after recordList
     configForm->overrideGroupRecordCount->setChecked(
             fieldData(kIsOverrideGroupRecordCount, FieldValue).toBool());
     configForm->groupRecordCount->setText(
             fieldData(kGroupRecordCount, FieldValue).toString());
-    // TODO: groups
+
 }
 
 void GmpProtocol::storeConfigWidget()
@@ -879,6 +1045,8 @@ void GmpProtocol::storeConfigWidget()
     bool isOk;
 
     configWidget();
+
+    configForm->update();
 
     setFieldData(kType, configForm->msgTypeCombo->currentValue());
     setFieldData(kMldMrt, configForm->maxResponseTime->text());
@@ -901,27 +1069,21 @@ void GmpProtocol::storeConfigWidget()
         list.append(configForm->sourceList->item(i)->text());
     setFieldData(kSources, list);
 
-    // XXX: sourceCount should be AFTER sources
+    // sourceCount should be AFTER sources
     setFieldData(kIsOverrideSourceCount, 
             configForm->overrideSourceCount->isChecked());
     setFieldData(kSourceCount, configForm->sourceCount->text());
 
-    // TODO: Group Records
+    QVariantList grpList;
+    for (int i = 0; i < configForm->groupList->count(); i++)
+    {
+        grpList.append(configForm->groupList->item(i)->data(Qt::UserRole)
+                            .toMap());
+    }
+    setFieldData(kGroupRecords, grpList);
 
-    // XXX: groupRecordCount should be AFTER groupRecords
+    // groupRecordCount should be AFTER groupRecords
     setFieldData(kIsOverrideGroupRecordCount, 
             configForm->overrideGroupRecordCount->isChecked());
     setFieldData(kGroupRecordCount, configForm->groupRecordCount->text());
-#if 0
-    setFieldData(kA, configForm->gmpA->text());
-    setFieldData(kB, configForm->gmpB->text());
-
-    setFieldData(kPayloadLength, configForm->gmpPayloadLength->text());
-    setFieldData(kIs_override_checksum, 
-        configForm->isChecksumOverride->isChecked());
-    setFieldData(kChecksum, configForm->gmpChecksum->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(kX, configForm->gmpX->text());
-    setFieldData(kY, configForm->gmpY->text());
-#endif
 }

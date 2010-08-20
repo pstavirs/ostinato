@@ -54,6 +54,7 @@ Gmp Protocol Frame Format -
     +-----+------+------+------+------+------+
 Figures in brackets represent field width in bits
 */
+class GmpProtocol;
 
 class GmpConfigForm : public QWidget, public Ui::Gmp
 {
@@ -61,6 +62,7 @@ class GmpConfigForm : public QWidget, public Ui::Gmp
 public:
     GmpConfigForm(QWidget *parent = 0);
     ~GmpConfigForm();
+    void update();
 protected:
     QString _defaultSourceIp;
 private slots:
