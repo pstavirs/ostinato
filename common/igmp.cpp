@@ -212,32 +212,47 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
         {
             switch(attrib)
             {
-            case FieldName:            
-                return QString("Group List");
             case FieldValue:
-                return QVariant(); // FIXME
+            {
+                QVariantList grpRecords = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toList();
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    QVariantMap grpRec = grpRecords.at(i).toMap();
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+
+                    grpRec["groupRecordAddress"] = QHostAddress(
+                                rec.group_address().v4()).toString();
+
+                    QStringList l;
+                    for (int j = 0; j < rec.sources_size(); j++)
+                        l.append(QHostAddress(rec.sources(j).v4()).toString());
+                    grpRec["groupRecordSourceList"] = l;
+
+                    grpRecords.replace(i, grpRec);
+                }
+                return grpRecords;
+            }
             case FieldFrameValue:
             {
+                QVariantList list = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toList();
                 QByteArray fv;
+
                 for (int i = 0; i < data.group_records_size(); i++)
                 {
                     OstProto::Gmp::GroupRecord rec = data.group_records(i);
-                    QByteArray rv;
+                    QByteArray rv = list.at(i).toByteArray();
 
-                    rv.resize(4 + 4 + 4*data.group_records(i).sources_size() 
-                            + data.group_records(i).aux_data().size());
-                    rv[0] = rec.type();
-                    rv[1] = rec.is_override_aux_data_length() ? 
-                        rec.aux_data_length() : rec.aux_data().size();
-                    if (rec.is_override_source_count())
-                        qToBigEndian(rec.source_count(),(uchar*)(rv.data()+2));
-                    else
-                        qToBigEndian(rec.sources_size(),(uchar*)(rv.data()+2));
+                    rv.insert(4, QByteArray(4+4*rec.sources_size(), char(0)));
                     qToBigEndian(rec.group_address().v4(), 
-                            (uchar*)(fv.data()+4));
+                            (uchar*)(rv.data()+4));
                     for (int j = 0; j < rec.sources_size(); j++)
-                        qToBigEndian(rec.sources(j),(uchar*)(rv.data()+8+4*j));
-                    rv.append(QString().fromStdString(rec.aux_data()).toUtf8());
+                    {
+                        qToBigEndian(rec.sources(j).v4(),
+                                (uchar*)(rv.data()+8+4*j));
+                    }
 
                     fv.append(rv);
                 }
@@ -245,38 +260,16 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
             }
             case FieldTextValue:
             {
-                QStringList list;
+                QStringList list = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toStringList();
 
                 for (int i = 0; i < data.group_records_size(); i++)
                 {
                     OstProto::Gmp::GroupRecord rec = data.group_records(i);
+                    QString recStr = list.at(i);
                     QString str;
 
-                    str.append("Type: ");
-                    switch(rec.type())
-                    {
-                    case OstProto::Gmp::GroupRecord::kIsInclude: 
-                        str.append("IS_INCLUDE"); break;
-                    case OstProto::Gmp::GroupRecord::kIsExclude: 
-                        str.append("IS_EXCLUDE"); break;
-                    case OstProto::Gmp::GroupRecord::kToInclude: 
-                        str.append("TO_INCLUDE"); break;
-                    case OstProto::Gmp::GroupRecord::kToExclude: 
-                        str.append("TO_EXCLUDE"); break;
-                    case OstProto::Gmp::GroupRecord::kAllowNew: 
-                        str.append("ALLOW_NEW"); break;
-                    case OstProto::Gmp::GroupRecord::kBlockOld: 
-                        str.append("BLOCK_OLD"); break;
-                    default: 
-                        str.append("UNKNOWN"); break;
-                    }
-                    str.append(QString("; AuxLen: %1").arg(
-                        rec.is_override_aux_data_length() ? 
-                            rec.aux_data_length() : rec.aux_data().size()));
-                    str.append(QString("; Source Count: %1").arg(
-                        rec.is_override_source_count() ?
-                            rec.source_count(): rec.sources_size()));
-                    str.append(QString("; Group: %1").arg(
+                    str.append(QString("Group: %1").arg(
                         QHostAddress(rec.group_address().v4()).toString()));
 
                     str.append("; Sources: ");
@@ -284,11 +277,11 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
                     for (int j = 0; j < rec.sources_size(); j++)
                         l.append(QHostAddress(rec.sources(j).v4()).toString());
                     str.append(l.join(", "));
-                    str.append(QString().fromStdString(rec.aux_data()));
 
-                    list.append(str);
+                    recStr.replace("XXX", str);
+                    list.replace(i, recStr);
                 }
-                return list.join("\n");
+                return list.join("\n").insert(0, "\n");
             }
             default:
                 break;
@@ -335,8 +328,30 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
         }
 
         case kGroupRecords:
-            //TODO
+        {
+            GmpProtocol::setFieldData(index, value, attrib);
+            QVariantList list = value.toList();
+
+            for (int i = 0; i < list.count(); i++)
+            {
+                QVariantMap grpRec = list.at(i).toMap();
+                OstProto::Gmp::GroupRecord *rec = data.mutable_group_records(i);
+                
+                rec->mutable_group_address()->set_v4(QHostAddress(
+                            grpRec["groupRecordAddress"].toString())
+                            .toIPv4Address());
+
+                QStringList srcList = grpRec["groupRecordSourceList"]
+                                            .toStringList();
+                foreach (QString src, srcList)
+                {
+                    rec->add_sources()->set_v4(
+                            QHostAddress(src).toIPv4Address());
+                }
+            }
+
             break;
+        }
 
         default:
             isOk = GmpProtocol::setFieldData(index, value, attrib);
