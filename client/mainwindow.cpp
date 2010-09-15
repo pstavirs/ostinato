@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     localServer_ = new QProcess(this);
     localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
-    localServer_->start(serverApp);
+    localServer_->start(serverApp, QStringList());
     // TODO: waitForReadyRead() is a kludge till we implement auto-retry!
     localServer_->waitForReadyRead(1000);
 
