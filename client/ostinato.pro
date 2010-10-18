@@ -5,7 +5,6 @@ win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
 QT += network script
 INCLUDEPATH += "../rpc/" "../common/"
-LIBS += -lprotobuf
 win32 {
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostproto
@@ -25,6 +24,7 @@ win32 {
     LIBS += -L"../rpc" -lpbrpc
     POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 }
+LIBS += -lprotobuf
 RESOURCES += ostinato.qrc 
 HEADERS += \
     dumpview.h \

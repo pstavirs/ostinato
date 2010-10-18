@@ -36,6 +36,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define PB_MSG_TYPE_RESPONSE    2
 #define PB_MSG_TYPE_BINBLOB        3
 
-#define MSGBUF_SIZE        4096
-
 #endif

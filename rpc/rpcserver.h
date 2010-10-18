@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -39,6 +40,8 @@ class RpcServer : public QObject
     QTcpSocket *clientSock;
 
     ::google::protobuf::Service *service;
+    ::google::protobuf::io::CopyingInputStreamAdaptor  *inStream;
+    ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
     bool isPending;
     int pendingMethodId;
