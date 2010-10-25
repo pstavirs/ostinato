@@ -65,12 +65,15 @@ void Port::reorderStreamsByOrdinals()
     qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
 }
 
-bool Port::newStreamAt(int index)
+bool Port::newStreamAt(int index, OstProto::Stream const *stream)
 {
     Stream    *s = new Stream;
 
     if (index > mStreams.size())
         return false;
+
+    if (stream)
+        s->protoDataCopyFrom(*stream);
 
     s->setId(newStreamId());
     mStreams.insert(index, s);
@@ -235,8 +238,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
 
     for (int i = 0; i < streams.stream_size(); i++)
     {
-        newStreamAt(mStreams.size());
-        streamByIndex(mStreams.size()-1)->protoDataCopyFrom(streams.stream(i));
+        newStreamAt(mStreams.size(), &streams.stream(i));
     }
 
     emit streamListChanged(mPortGroupId, mPortId);
