@@ -1,6 +1,7 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
 QT += network script
+INCLUDEPATH += "../extra/qhexedit2/src"
 LIBS += \
     -lprotobuf
 FORMS += \
@@ -19,6 +20,7 @@ FORMS += \
     udp.ui \
     textproto.ui \
     userscript.ui \
+    hexdump.ui \
     sample.ui 
 PROTOS += \
     protocol.proto \
@@ -46,6 +48,7 @@ PROTOS += \
     udp.proto \
     textproto.proto \
     userscript.proto \
+    hexdump.proto \
     sample.proto 
 HEADERS += \
     abstractprotocol.h    \
@@ -78,6 +81,7 @@ HEADERS += \
     udp.h \
     textproto.h \
     userscript.h \
+    hexdump.h \
     sample.h
 SOURCES += \
     abstractprotocol.cpp \
@@ -103,6 +107,7 @@ SOURCES += \
     udp.cpp \
     textproto.cpp \
     userscript.cpp \
+    hexdump.cpp \
     sample.cpp
 
 QMAKE_DISTCLEAN += object_script.*

@@ -43,6 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "udp.h"    
 #include "textproto.h"
 #include "userscript.h"
+#include "hexdump.h"
 #include "sample.h"
 
 ProtocolManager *OstProtocolManager;
@@ -99,6 +100,8 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
             (void*) TextProtocol::createInstance);
 
+    registerProtocol(OstProto::Protocol::kHexDumpFieldNumber,
+            (void*) HexDumpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
             (void*) PayloadProtocol::createInstance);
 
