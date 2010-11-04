@@ -49,7 +49,7 @@ private:
     // Native file format version
     static const uint kFileFormatVersionMajor = 0;
     static const uint kFileFormatVersionMinor = 1;
-    static const uint kFileFormatVersionRevision = 0;
+    static const uint kFileFormatVersionRevision = 1;
 
     void initFileMetaData(OstProto::FileMetaData &metaData);
 };

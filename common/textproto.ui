@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
+    <width>535</width>
     <height>300</height>
    </rect>
   </property>
@@ -33,7 +33,36 @@
      </property>
     </widget>
    </item>
+   <item row="0" column="2" >
+    <widget class="QLabel" name="label_3" >
+     <property name="text" >
+      <string>Line Ending</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="3" >
+    <widget class="QComboBox" name="eolCombo" >
+     <property name="currentIndex" >
+      <number>2</number>
+     </property>
+     <item>
+      <property name="text" >
+       <string>CR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>LF</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>CRLF</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="4" >
     <widget class="QLabel" name="label" >
      <property name="text" >
       <string>Encode as</string>
@@ -43,7 +72,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="4" >
+   <item row="0" column="5" >
     <widget class="QComboBox" name="encodingCombo" >
      <property name="sizePolicy" >
       <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
@@ -58,7 +87,7 @@
      </item>
     </widget>
    </item>
-   <item row="1" column="0" colspan="5" >
+   <item row="1" column="0" colspan="6" >
     <widget class="QTextEdit" name="protoText" >
      <property name="acceptRichText" >
       <bool>false</bool>

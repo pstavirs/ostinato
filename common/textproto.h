@@ -27,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 /* 
 TextProtocol Protocol Frame Format -
-   specified text encoded with the specified encoding 
+   specified text with the specified line ending and encoded with the
+   specified encoding 
 */
 
 class TextProtocolConfigForm : public QWidget, public Ui::TextProtocol
@@ -50,6 +51,7 @@ private:
 
         // Meta Fields
         textProto_portNum,
+        textProto_eol,
         textProto_encoding,
 
         textProto_fieldCount
