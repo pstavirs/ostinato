@@ -58,6 +58,13 @@ public:
 
 protected:
     virtual quint16 checksum(int streamIndex) const;
+private:
+    int mrc(int value) const;
 };
+
+inline int IgmpProtocol::mrc(int value) const
+{
+    return quint8(value); // TODO: if value > 128, convert to mantissa/exp form
+}
 
 #endif

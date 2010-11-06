@@ -25,34 +25,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractprotocol.h"
 
-    enum GmpMsgType
-    {
-        kIgmpV1Query = 0x11,
-        kIgmpV1Report = 0x12,
+#include <QHash>
 
-        kIgmpV2Query = 0xFF11,
-        kIgmpV2Report = 0x16,
-        kIgmpV2Leave = 0x17,
+// Both IGMP and MLD use the same msg type value for 'Query' message 
+// across versions despite the fields being different. To distinguish 
+// Query messages of different versions, we use an additional upper byte
+enum GmpMsgType
+{
+    // IGMP
+    kIgmpV1Query = 0x11,
+    kIgmpV1Report = 0x12,
 
-        kIgmpV3Query = 0xFE11,
-        kIgmpV3Report = 0x22,
+    kIgmpV2Query = 0xFF11,
+    kIgmpV2Report = 0x16,
+    kIgmpV2Leave = 0x17,
 
-        kMldV1Query = 0x82,
-        kMldV1Report = 0x83,
-        kMldV1Done = 0x84,
+    kIgmpV3Query = 0xFE11,
+    kIgmpV3Report = 0x22,
 
-        kMldV2Query = 0xFF82,
-        kMldV2Report = 0x8F
-    };
+    // MLD
+    kMldV1Query = 0x82,
+    kMldV1Report = 0x83,
+    kMldV1Done = 0x84,
+
+    kMldV2Query = 0xFF82,
+    kMldV2Report = 0x8F
+};
 
 /* 
-TODO:FIXME
-Gmp Protocol Frame Format -
-    +-----+------+------+------+------+------+
-    |  A  |   B  |  LEN | CSUM |   X  |   Y  |
-    | (3) | (13) | (16) | (16) | (32) | (32) |
-    +-----+------+------+------+------+------+
-Figures in brackets represent field width in bits
+Gmp Protocol Frame Format - TODO: for now see the respective RFCs
 */
 class GmpProtocol;
 
@@ -64,9 +65,16 @@ public:
     ~GmpConfigForm();
     void update();
 protected:
+    QString _defaultGroupIp;
     QString _defaultSourceIp;
+private:
+    enum {
+        kSsmQueryPage = 0,
+        kSsmReportPage = 1
+    };
 private slots:
     void on_msgTypeCombo_currentIndexChanged(int index);
+    void on_groupMode_currentIndexChanged(int index);
     void on_addSource_clicked();
     void on_deleteSource_clicked();
 
@@ -109,24 +117,18 @@ protected:
       // ------------
       // Frame Fields
       // ------------
+        // Fields used in all ASM and SSM messages, unless otherwise specified
         kType = 0,
         kRsvdMrtCode,
         kChecksum,
         kMldMrt,    // MLD Only (except MLDv2 Report)
         kMldRsvd,   // MLD Only (except MLDv2 Report)
        
-        // Used ONLY in - 
-        //   IGMPv1: Query, Report
-        //   IGMPv2: Report, Leave (v2 uses v1 Query only)
-        //   IGMPv3: Query
-        //    MLDv1: Query, Report, Done
-        //    MLDv2: Query
+        // Field used in ASM messages
         kGroupAddress,
         FIELD_COUNT_ASM_ALL,
 
-        // Used ONLY in -
-        //   IGMPv3: Query
-        //    MLDv2: Query
+        // Fields used in SSM Query
         kRsvd1 = FIELD_COUNT_ASM_ALL,
         kSFlag,
         kQrv,
@@ -135,9 +137,7 @@ protected:
         kSources,
         FIELD_COUNT_SSM_QUERY,
 
-        // Used ONLY in -
-        //   IGMPv3: Report
-        //    MLDv2: Report
+        // Fields used in SSM Report
         kRsvd2 = FIELD_COUNT_SSM_QUERY,
         kGroupRecordCount,
         kGroupRecords,
@@ -163,30 +163,48 @@ protected:
     OstProto::Gmp    data;
     GmpConfigForm    *configForm;
 
-    GmpMsgType msgType() const 
-    { 
-        return GmpMsgType(fieldData(kType, FieldValue).toUInt()); 
-    }
-    bool isSsmReport() const
-    {
-        return ((msgType() == kIgmpV3Report) 
-             || (msgType() == kMldV2Report ));
-    }
-    bool isQuery() const
-    {
-        return ((msgType() == kIgmpV1Query) 
-             || (msgType() == kIgmpV2Query)
-             || (msgType() == kIgmpV3Query)
-             || (msgType() == kMldV1Query )
-             || (msgType() == kMldV2Query ));
-    }
-    bool isSsmQuery() const
-    {
-        return ((msgType() == kIgmpV3Query) 
-             || (msgType() == kMldV2Query ));
-    }
+    GmpMsgType msgType() const;
+
+    virtual bool isSsmReport() const;
+    virtual bool isQuery() const;
+    virtual bool isSsmQuery() const;
+
+    int qqic(int value) const;
 
     virtual quint16 checksum(int streamIndex) const = 0;
+private:
+    static QHash<int, int> frameFieldCountMap;
 };
+
+inline GmpMsgType GmpProtocol::msgType() const 
+{ 
+    return GmpMsgType(fieldData(kType, FieldValue).toUInt()); 
+}
+
+inline bool GmpProtocol::isSsmReport() const
+{
+    return ((msgType() == kIgmpV3Report) 
+         || (msgType() == kMldV2Report ));
+}
+
+inline bool GmpProtocol::isQuery() const
+{
+    return ((msgType() == kIgmpV1Query) 
+         || (msgType() == kIgmpV2Query)
+         || (msgType() == kIgmpV3Query)
+         || (msgType() == kMldV1Query )
+         || (msgType() == kMldV2Query ));
+}
+
+inline bool GmpProtocol::isSsmQuery() const
+{
+    return ((msgType() == kIgmpV3Query) 
+         || (msgType() == kMldV2Query ));
+}
+
+inline int GmpProtocol::qqic(int value) const
+{
+    return quint8(value); // TODO: if value > 128 convert to mantissa/exp form
+}
 
 #endif

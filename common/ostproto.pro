@@ -73,6 +73,7 @@ HEADERS += \
     arp.h \
     ip4.h \
     ip6.h \
+    ipv4addressdelegate.h \
     ip6over4.h \
     ip4over6.h \
     ip4over4.h \
