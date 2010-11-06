@@ -504,6 +504,11 @@
                 <widget class="QComboBox" name="groupRecordType" >
                  <item>
                   <property name="text" >
+                   <string>Reserved</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
                    <string>Is Include</string>
                   </property>
                  </item>

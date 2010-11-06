@@ -123,7 +123,7 @@ void GmpConfigForm::on_addGroupRecord_clicked()
     QVariantMap grpRec;
     QListWidgetItem *item = new QListWidgetItem;
 
-    grpRec["groupRecordType"] = defRec.type()-1;
+    grpRec["groupRecordType"] = defRec.type();
     grpRec["groupRecordAddress"] = _defaultGroupIp;
     grpRec["overrideGroupRecordSourceCount"] =defRec.is_override_source_count();
     grpRec["groupRecordSourceCount"] = defRec.source_count();
@@ -615,7 +615,7 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     QVariantMap grpRec;
                     OstProto::Gmp::GroupRecord rec = data.group_records(i);
 
-                    grpRec["groupRecordType"] = rec.type()-1;
+                    grpRec["groupRecordType"] = rec.type();
                     // grpRec["groupRecordAddress"] = subclass responsibility
                     grpRec["overrideGroupRecordSourceCount"] = 
                                 rec.is_override_source_count();
@@ -877,7 +877,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
                 OstProto::Gmp::GroupRecord *rec = data.add_group_records();
                 
                 rec->set_type(OstProto::Gmp::GroupRecord::RecordType(
-                            grpRec["groupRecordType"].toInt() + 1));
+                            grpRec["groupRecordType"].toInt()));
                 // NOTE: rec->group_address => subclass responsibility
                 rec->set_is_override_source_count(
                             grpRec["overrideGroupRecordSourceCount"].toBool());
