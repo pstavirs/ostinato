@@ -23,13 +23,14 @@ package OstProto;
 
 // Group Management Protocol (i.e. IGMP and MLD)
 message Gmp {
-    // TODO: field numbers and default values
-
-    optional uint32 type = 1; // TODO: default value
+    //
+    // Common fields for both ASM and SSM messages
+    //
+    optional uint32 type = 1;
     optional bool is_override_rsvd_code = 2;
-    optional uint32 rsvd_code = 3 [default = 0];
+    optional uint32 rsvd_code = 3;
     // MaxRespTime is in milliseconds - MaxRespCode will be derived
-    optional uint32 max_response_time = 4[default = 100]; 
+    optional uint32 max_response_time = 4 [default = 100]; 
     optional bool is_override_checksum = 5;
     optional uint32 checksum = 6;
 
@@ -39,35 +40,34 @@ message Gmp {
         optional fixed64 v6_lo = 3;
     }
 
-    // used by
-    //   IGMPv1: Query, Report
-    //   IGMPv2: Report, Leave (v2 uses v1 Query only)
-    //    MLDv1: Query, Report, Done
+    //
+    // Fields used in ASM messages
+    //
     enum GroupMode {
         kFixed = 0;
         kIncrementGroup = 1;
         kDecrementGroup = 2;
         kRandomGroup = 3;
     }
-    optional IpAddress group_address = 10; // TODO: default value
+    optional IpAddress group_address = 10;
     optional GroupMode group_mode = 11 [default = kFixed];
     optional uint32 group_count = 12 [default = 16];
-    optional uint32 group_prefix = 13 [default = 24]; // TODO: verify mcast ip range
+    optional uint32 group_prefix = 13 [default = 24];
 
-    // used by
-    //   IGMPv3: Query
-    //    MLDv2: Query
+    //
+    // Fields used in SSM Query
+    //
     optional bool s_flag = 20;
     optional uint32 qrv = 21 [default = 2];
     // QuerierQueryInterval is in seconds - QQIC will be derived
-    optional uint32 qqi = 22;
+    optional uint32 qqi = 22 [default = 125];
     repeated IpAddress sources = 23;
     optional bool is_override_source_count = 24;
     optional uint32 source_count = 25;
 
-    // used by
-    //   IGMPv3: Report
-    //    MLDv2: Report
+    //
+    // Fields used in SSM Reports
+    //
     message GroupRecord {
         enum RecordType {
             kIsInclude = 1;
@@ -79,7 +79,7 @@ message Gmp {
         }
 
         optional RecordType type = 1 [default = kIsInclude];
-        optional IpAddress group_address = 2; // TODO: default
+        optional IpAddress group_address = 2;
         repeated IpAddress sources = 3;
         optional bool is_override_source_count = 4;
         optional uint32 source_count = 5;

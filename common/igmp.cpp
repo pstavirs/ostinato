@@ -19,37 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "igmp.h"
 
+#include "ipv4addressdelegate.h"
+#include "iputils.h"
+
 #include <QHostAddress>
-#include <QItemDelegate>
 #include <qendian.h>
-
-class IpAddressDelegate : public QItemDelegate
-{
-public:
-    IpAddressDelegate(QObject *parent = 0)
-        : QItemDelegate(parent) { }
-    ~IpAddressDelegate() {}
-    QWidget* createEditor(QWidget *parent, 
-            const QStyleOptionViewItem &option, const QModelIndex &index) const
-    {
-        QLineEdit *ipEdit;
-
-        ipEdit = static_cast<QLineEdit*>(QItemDelegate::createEditor(
-                    parent, option, index));
-
-        ipEdit->setInputMask("009.009.009.009;"); // FIXME: use validator
-
-        return ipEdit;
-    }
-};
 
 IgmpConfigForm::IgmpConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
 {
+    _defaultGroupIp = "0.0.0.0";
     _defaultSourceIp = "0.0.0.0";
 
-    sourceList->setItemDelegate(new IpAddressDelegate(this));
-    groupRecordSourceList->setItemDelegate(new IpAddressDelegate(this));
+    groupAddress->setInputMask("009.009.009.009;"); // FIXME: use validator
+    groupRecordAddress->setInputMask("009.009.009.009;"); // FIXME:use validator
+    sourceList->setItemDelegate(new IPv4AddressDelegate(this));
+    groupRecordSourceList->setItemDelegate(new IPv4AddressDelegate(this));
 }
 
 IgmpProtocol::IgmpProtocol(StreamBase *stream, AbstractProtocol *parent)
@@ -114,15 +99,19 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
     {
         case kRsvdMrtCode:
         {
-            quint8 mrt = 0, mrc = 0;
+            uint mrt = 0;
+            quint8 mrcode = 0;
 
             if (msgType() == kIgmpV3Query)
             {
                 mrt = data.max_response_time();
-                mrc = mrt;  // TODO: MR Code
+                mrcode = quint8(mrc(mrt));
             }
             else if (msgType() == kIgmpV2Query)
-                mrc = mrt = data.max_response_time() & 0xFF;
+            {
+                mrt = data.max_response_time();
+                mrcode = mrt & 0xFF;
+            }
 
 
             switch(attrib)
@@ -137,7 +126,7 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
             case FieldTextValue:
                 return QString("%1").arg(mrt);
             case FieldFrameValue:
-                return QByteArray(1, mrc);
+                return QByteArray(1, mrcode);
             default:
                 break;
             }
@@ -145,14 +134,12 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case kGroupAddress:
         {
-            quint32 grpIp = data.group_address().v4();  // FIXME
-#if 0 // TODO
-            getip(
-                    data.group_address().v4(),
-                    data.group_mode(),
-                    data.group_count(),
-                    data.group_prefix());
-#endif
+            quint32 grpIp = ipUtils::ipAddress(
+                data.group_address().v4(),
+                data.group_prefix(),
+                ipUtils::AddrMode(data.group_mode()),
+                data.group_count(),
+                streamIndex);
 
             switch(attrib)
             {
@@ -225,10 +212,10 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
                     grpRec["groupRecordAddress"] = QHostAddress(
                                 rec.group_address().v4()).toString();
 
-                    QStringList l;
+                    QStringList sl;
                     for (int j = 0; j < rec.sources_size(); j++)
-                        l.append(QHostAddress(rec.sources(j).v4()).toString());
-                    grpRec["groupRecordSourceList"] = l;
+                        sl.append(QHostAddress(rec.sources(j).v4()).toString());
+                    grpRec["groupRecordSourceList"] = sl;
 
                     grpRecords.replace(i, grpRec);
                 }
@@ -273,10 +260,10 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
                         QHostAddress(rec.group_address().v4()).toString()));
 
                     str.append("; Sources: ");
-                    QStringList l;
+                    QStringList sl;
                     for (int j = 0; j < rec.sources_size(); j++)
-                        l.append(QHostAddress(rec.sources(j).v4()).toString());
-                    str.append(l.join(", "));
+                        sl.append(QHostAddress(rec.sources(j).v4()).toString());
+                    str.append(sl.join(", "));
 
                     recStr.replace("XXX", str);
                     list.replace(i, recStr);
@@ -305,6 +292,13 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
 
     switch (index)
     {
+        case kRsvdMrtCode:
+        {
+            uint mrt = value.toUInt(&isOk);
+            if (isOk)
+                data.set_max_response_time(mrt);
+            break;
+        }
         case kGroupAddress:
         {
             QHostAddress addr(value.toString());
@@ -343,6 +337,7 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
 
                 QStringList srcList = grpRec["groupRecordSourceList"]
                                             .toStringList();
+                rec->clear_sources();
                 foreach (QString src, srcList)
                 {
                     rec->add_sources()->set_v4(
@@ -380,48 +375,20 @@ void IgmpProtocol::loadConfigWidget()
 
     configForm->maxResponseTime->setText(
             fieldData(kRsvdMrtCode, FieldValue).toString());
-#if 0
-    configForm->igmpA->setText(fieldData(igmp_a, FieldValue).toString());
-    configForm->igmpB->setText(fieldData(igmp_b, FieldValue).toString());
-
-    configForm->igmpPayloadLength->setText(
-        fieldData(igmp_payloadLength, FieldValue).toString());
-
-    configForm->isChecksumOverride->setChecked(
-        fieldData(igmp_is_override_checksum, FieldValue).toBool());
-    configForm->igmpChecksum->setText(uintToHexStr(
-        fieldData(igmp_checksum, FieldValue).toUInt(), 2));
-
-    configForm->igmpX->setText(fieldData(igmp_x, FieldValue).toString());
-    configForm->igmpY->setText(fieldData(igmp_y, FieldValue).toString());
-#endif
 }
 
 void IgmpProtocol::storeConfigWidget()
 {
-    bool isOk;
-
     GmpProtocol::storeConfigWidget();
 
-#if 0
-    setFieldData(igmp_a, configForm->igmpA->text());
-    setFieldData(igmp_b, configForm->igmpB->text());
-
-    setFieldData(igmp_payloadLength, configForm->igmpPayloadLength->text());
-    setFieldData(igmp_is_override_checksum, 
-        configForm->isChecksumOverride->isChecked());
-    setFieldData(igmp_checksum, configForm->igmpChecksum->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(igmp_x, configForm->igmpX->text());
-    setFieldData(igmp_y, configForm->igmpY->text());
-#endif
+    setFieldData(kRsvdMrtCode, configForm->maxResponseTime->text());
 }
 
 quint16 IgmpProtocol::checksum(int streamIndex) const
 {
     quint16 cks;
     quint32 sum = 0;
-#if 0 // FIXME
+#if 1 // FIXME
     // TODO: add as a new CksumType (CksumIgmp?) and implement in AbsProto 
     cks = protocolFrameCksum(streamIndex, CksumIp);
     sum += (quint16) ~cks;

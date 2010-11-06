@@ -22,11 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QHeaderView>
 #include <qendian.h>
 
+QHash<int, int> GmpProtocol::frameFieldCountMap;
+
 GmpConfigForm::GmpConfigForm(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
 
+    // TODO: this should be in subclass
     msgTypeCombo->setValueMask(0xFF);
     msgTypeCombo->addItem(kIgmpV1Query,  "IGMPv1 Query");
     msgTypeCombo->addItem(kIgmpV1Report, "IGMPv1 Report");
@@ -70,14 +73,14 @@ void GmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
     case kIgmpV3Query:
     case kMldV2Query:
         asmGroup->hide();
-        ssmWidget->setCurrentIndex(0);
+        ssmWidget->setCurrentIndex(kSsmQueryPage);
         ssmWidget->show();
         break;
 
     case kIgmpV3Report:
     case kMldV2Report:
         asmGroup->hide();
-        ssmWidget->setCurrentIndex(1);
+        ssmWidget->setCurrentIndex(kSsmReportPage);
         ssmWidget->show();
         break;
 
@@ -86,6 +89,14 @@ void GmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
         ssmWidget->hide();
         break;
     }
+}
+
+void GmpConfigForm::on_groupMode_currentIndexChanged(int index)
+{
+    bool disabled = (index == 0);
+
+    groupCount->setDisabled(disabled);
+    groupPrefix->setDisabled(disabled);
 }
 
 void GmpConfigForm::on_addSource_clicked()
@@ -113,13 +124,14 @@ void GmpConfigForm::on_addGroupRecord_clicked()
     QListWidgetItem *item = new QListWidgetItem;
 
     grpRec["groupRecordType"] = defRec.type()-1;
-    grpRec["groupRecordAddress"] = _defaultSourceIp;
-    grpRec["overrideGroupRecordSourceCount"] = defRec.is_override_source_count();
+    grpRec["groupRecordAddress"] = _defaultGroupIp;
+    grpRec["overrideGroupRecordSourceCount"] =defRec.is_override_source_count();
     grpRec["groupRecordSourceCount"] = defRec.source_count();
     grpRec["groupRecordSourceList"] = QStringList();
     grpRec["overrideAuxDataLength"] = defRec.is_override_aux_data_length();
     grpRec["auxDataLength"] = defRec.aux_data_length();
-    grpRec["auxData"] = QString().fromStdString(defRec.aux_data());
+    grpRec["auxData"] = QByteArray().append(
+            QString().fromStdString(defRec.aux_data()));
 
     item->setData(Qt::UserRole, grpRec);
     item->setText(QString("%1: %2")
@@ -167,7 +179,7 @@ void GmpConfigForm::on_groupList_currentItemChanged(QListWidgetItem *current,
     rec["groupRecordSourceCount"] = groupRecordSourceCount->text().toUInt();
     rec["overrideAuxDataLength"] = overrideAuxDataLength->isChecked();
     rec["auxDataLength"] = auxDataLength->text().toUInt();
-    rec["auxData"] = auxData->text();
+    rec["auxData"] = QByteArray().fromHex(QByteArray().append(auxData->text()));
 
     previous->setData(Qt::UserRole, rec);
     previous->setText(QString("%1: %2")
@@ -196,7 +208,7 @@ _load_current_record:
                         rec["groupRecordSourceCount"].toUInt()));
     overrideAuxDataLength->setChecked(rec["overrideAuxDataLength"].toBool());
     auxDataLength->setText(QString().setNum(rec["auxDataLength"].toUInt()));
-    auxData->setText(rec["auxData"].toString());
+    auxData->setText(QString(rec["auxData"].toByteArray().toHex()));
 
 _exit:
     groupRecord->setEnabled(current != NULL);
@@ -254,46 +266,24 @@ int GmpProtocol::fieldCount() const
 
 int GmpProtocol::frameFieldCount() const
 {
-    int count = 0;
+    int type = msgType();
 
-    // TODO: optimize!!!!!
+    // frameFieldCountMap contains the frameFieldCounts for each
+    // msgType - this is built on demand and cached for subsequent use
+
+    // lookup if we have already cached ...
+    if (frameFieldCountMap.contains(type))
+        return frameFieldCountMap.value(type);
+
+    // ... otherwise calculate and cache 
+    int count = 0;
     for (int i = 0; i < FIELD_COUNT; i++)
     {
         if (fieldFlags(i).testFlag(AbstractProtocol::FrameField))
             count++;
     }
+    frameFieldCountMap.insert(type, count);
     return count;
-#if 0
-    switch(msgType())
-    {
-        // IGMP
-    	case kIgmpV1Query:
-    	case kIgmpV1Report:
-    	case kIgmpV2Query:
-    	case kIgmpV2Report:
-    	case kIgmpV2Leave:
-            return FIELD_COUNT_ASM_ALL;
-
-    	case kIgmpV3Query:
-            return FIELD_COUNT_SSM_QUERY;
-    	case kIgmpV3Report:
-            return FIELD_COUNT_SSM_REPORT;
-
-        // MLD
-    	case kMldV1Query:
-    	case kMldV1Report:
-    	case kMldV1Done:
-            return FIELD_COUNT_ASM_ALL;
-
-    	case kMldV2Query:
-            return FIELD_COUNT_SSM_QUERY;
-    	case kMldV2Report:
-            return FIELD_COUNT_SSM_REPORT;
-
-        default:
-            return FIELD_COUNT_ASM_ALL;
-    }
-#endif
 }
 
 AbstractProtocol::FieldFlags GmpProtocol::fieldFlags(int index) const
@@ -316,6 +306,7 @@ AbstractProtocol::FieldFlags GmpProtocol::fieldFlags(int index) const
             break;
         case kMldMrt:
         case kMldRsvd:
+            // MLD subclass should handle suitably 
             break;
 
         case kGroupAddress:
@@ -404,13 +395,21 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case kChecksum:
         {
+            switch(attrib)
+            {
+            case FieldName:            
+                return QString("Checksum");
+            case FieldBitSize:
+                return 16;
+            default:
+                break;
+            }
+
             quint16 cksum = data.is_override_checksum() ?  
                 data.checksum() : checksum(streamIndex); 
 
             switch(attrib)
             {
-            case FieldName:            
-                return QString("Checksum");
             case FieldValue:
                 return cksum;
             case FieldFrameValue:
@@ -423,14 +422,13 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
             }
             case FieldTextValue:
                 return QString("0x%1").arg(cksum, 4, BASE_HEX, QChar('0'));
-            case FieldBitSize:
-                return 16;
             default:
                 break;
             }
             break;
         }
         case kMldMrt:
+        case kMldRsvd:
             // XXX: Present only in MLD - hence handled by the mld subclass
             break;
 
@@ -440,7 +438,7 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
 
         case kRsvd1:
         {
-            int rsvd = 0;
+            quint8 rsvd = 0;
 
             switch(attrib)
             {
@@ -513,8 +511,8 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     return QString("%1").arg(qqi);
                 case FieldFrameValue:
                 {
-                    quint8 qqic = qqi; // TODO: derive code from qqi
-                    return QByteArray(1, char(qqic));
+                    char qqicode = char(qqic(qqi));
+                    return QByteArray(1, qqicode);
                 }
                 default:
                     break;
@@ -628,7 +626,7 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                                 rec.is_override_aux_data_length();
                     grpRec["auxDataLength"] = rec.aux_data_length();
                     grpRec["auxData"] = QByteArray().append(
-                            QString::fromStdString(rec.aux_data())).toHex();
+                            QString::fromStdString(rec.aux_data()));
 
                     grpRecords.append(grpRec);
                 }
@@ -641,26 +639,23 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                 {
                     OstProto::Gmp::GroupRecord rec = data.group_records(i);
                     QByteArray rv;
+                    quint16 srcCount;
 
                     rv.resize(4);
                     rv[0] = rec.type();
                     rv[1] = rec.is_override_aux_data_length() ? 
                         rec.aux_data_length() : rec.aux_data().size()/4;
+
                     if (rec.is_override_source_count())
-                    {
-                        qToBigEndian(quint16(rec.source_count()),
-                                (uchar*)(rv.data()+2));
-                    }
+                        srcCount = rec.source_count();
                     else
-                    {
-                        qToBigEndian(quint16(rec.sources_size()),
-                                    (uchar*)(rv.data()+2));
-                    }
+                        srcCount = rec.sources_size();
+                    qToBigEndian(srcCount, (uchar*)(rv.data()+2));
 
                     // group_address => subclass responsibility
                     // source list => subclass responsibility
 
-                    rv.append(QString().fromStdString(rec.aux_data()).toUtf8());
+                    rv.append(QString().fromStdString(rec.aux_data()));
 
                     fv.append(rv);
                 }
@@ -823,6 +818,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
         }
         case kGroupAddress:
             // XXX: Handled by subclass
+            isOk = false;
             break;
         case kRsvd1:
             isOk = false;
@@ -843,7 +839,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
         }
         case kQqic:
         {
-            uint qqi = value.toUInt(&isOk); // TODO: QQIC or QQI??
+            uint qqi = value.toUInt(&isOk);
             if (isOk)
                 data.set_qqi(qqi);
             break;
@@ -857,6 +853,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
         }
         case kSources:
             // XXX: Handled by subclass
+            isOk = false;
             break;
         case kRsvd2:
             isOk = false;
@@ -889,8 +886,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
                 rec->set_is_override_aux_data_length(
                             grpRec["overrideAuxDataLength"].toBool());
                 rec->set_aux_data_length(grpRec["auxDataLength"].toUInt());
-                QByteArray ba = QByteArray::fromHex(
-                                        grpRec["auxData"].toByteArray());
+                QByteArray ba = grpRec["auxData"].toByteArray();
                 // pad to word boundary
                 if (ba.size() % 4)
                     ba.append(QByteArray(4 - (ba.size() % 4), char(0)));
@@ -956,12 +952,6 @@ _exit:
     return isOk;
 }
 
-/*!
-  TODO: Return the protocol frame size in bytes\n
-
-  If your protocol has a fixed size - you don't need to reimplement this; the
-  base class implementation is good enough
-*/
 int GmpProtocol::protocolFrameSize(int streamIndex) const
 {
     // TODO: Calculate to reduce processing cost
@@ -987,8 +977,7 @@ void GmpProtocol::loadConfigWidget()
     configWidget();
 
     configForm->msgTypeCombo->setValue(fieldData(kType, FieldValue).toUInt());
-    configForm->maxResponseTime->setText(QString("%1").arg(
-                data.max_response_time()));
+    // XXX: configForm->maxResponseTime set by subclass
     configForm->overrideChecksum->setChecked(
             fieldData(kIsOverrideChecksum, FieldValue).toBool());
     configForm->checksum->setText(uintToHexStr(
@@ -1049,7 +1038,7 @@ void GmpProtocol::storeConfigWidget()
     configForm->update();
 
     setFieldData(kType, configForm->msgTypeCombo->currentValue());
-    setFieldData(kMldMrt, configForm->maxResponseTime->text());
+    // XXX: configForm->maxResponseTime handled by subclass
     setFieldData(kIsOverrideChecksum, 
             configForm->overrideChecksum->isChecked());
     setFieldData(kChecksum, 
@@ -1077,8 +1066,8 @@ void GmpProtocol::storeConfigWidget()
     QVariantList grpList;
     for (int i = 0; i < configForm->groupList->count(); i++)
     {
-        grpList.append(configForm->groupList->item(i)->data(Qt::UserRole)
-                            .toMap());
+        QVariant grp = configForm->groupList->item(i)->data(Qt::UserRole);
+        grpList.append(grp.toMap());
     }
     setFieldData(kGroupRecords, grpList);
 
