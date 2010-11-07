@@ -98,11 +98,11 @@ void inline ipAddress(quint64 baseIpHi, quint64 baseIpLo, int prefix,
             prefixHi = baseIpHi & maskHi;
             prefixLo = baseIpLo & maskLo;
             if (mode == kIncrement) {
-                hostHi = ((baseIpHi & ~maskHi) + u) & ~maskHi;
+                hostHi = ((baseIpHi & ~maskHi) + 0) & ~maskHi;
                 hostLo = ((baseIpLo & ~maskLo) + u) & ~maskLo;
             } 
             else if (mode == kDecrement) {
-                hostHi = ((baseIpHi & ~maskHi) - u) & ~maskHi;
+                hostHi = ((baseIpHi & ~maskHi) - 0) & ~maskHi;
                 hostLo = ((baseIpLo & ~maskLo) - u) & ~maskLo;
             } 
             else if (mode==kRandom) {
