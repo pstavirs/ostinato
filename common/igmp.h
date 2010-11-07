@@ -81,6 +81,7 @@ protected:
     virtual bool isSsmQuery() const;
 
     virtual quint16 checksum(int streamIndex) const;
+
 private:
     int mrc(int value) const;
 };

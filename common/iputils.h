@@ -28,7 +28,7 @@ enum AddrMode {
     kRandom = 3
 };
 
-quint32 ipAddress(quint32 baseIp, int prefix, AddrMode mode, int count, 
+quint32 inline ipAddress(quint32 baseIp, int prefix, AddrMode mode, int count, 
                     int index)
 {
     int u;
@@ -64,6 +64,57 @@ quint32 ipAddress(quint32 baseIp, int prefix, AddrMode mode, int count,
     }
 
     return ip;
+}
+
+void inline ipAddress(quint64 baseIpHi, quint64 baseIpLo, int prefix, 
+        AddrMode mode, int count, int index, quint64 &ipHi, quint64 &ipLo)
+{
+    int u, p, q;
+    quint64 maskHi = 0, maskLo = 0;
+    quint64 prefixHi, prefixLo;
+    quint64 hostHi, hostLo;
+
+    switch(mode)
+    {
+        case kFixed:
+            ipHi = baseIpHi;
+            ipLo = baseIpLo;
+            break;
+        case kIncrement:
+        case kDecrement:
+        case kRandom:
+            u = index % count;
+            if (prefix > 64) {
+                p = 64;
+                q = prefix - 64;
+            } else {
+                p = prefix;
+                q = 0;
+            }
+            if (p > 0) 
+                maskHi = ~((quint64(1) << p) - 1);
+            if (q > 0) 
+                maskLo = ~((quint64(1) << q) - 1);
+            prefixHi = baseIpHi & maskHi;
+            prefixLo = baseIpLo & maskLo;
+            if (mode == kIncrement) {
+                hostHi = ((baseIpHi & ~maskHi) + u) & ~maskHi;
+                hostLo = ((baseIpLo & ~maskLo) + u) & ~maskLo;
+            } 
+            else if (mode == kDecrement) {
+                hostHi = ((baseIpHi & ~maskHi) - u) & ~maskHi;
+                hostLo = ((baseIpLo & ~maskLo) - u) & ~maskLo;
+            } 
+            else if (mode==kRandom) {
+                hostHi = qrand() & ~maskHi;
+                hostLo = qrand() & ~maskLo;
+            }
+            ipHi = prefixHi | hostHi;
+            ipLo = prefixLo | hostLo;
+            break;
+        default:
+            qWarning("Unhandled mode = %d", mode);
+    }
 }
 
 } // namespace ipUtils

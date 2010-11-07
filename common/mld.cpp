@@ -19,32 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mld.h"
 
+#include "ipv6addressdelegate.h"
 #include "ipv6addressvalidator.h"
+#include "iputils.h"
 
 #include <QHostAddress>
-#include <QItemDelegate>
 #include <qendian.h>
-
-class IpAddressDelegate : public QItemDelegate
-{
-public:
-    IpAddressDelegate(QObject *parent = 0)
-        : QItemDelegate(parent) { }
-    ~IpAddressDelegate() {}
-    QWidget* createEditor(QWidget *parent, 
-            const QStyleOptionViewItem &option, const QModelIndex &index) const
-    {
-        QLineEdit *ipEdit;
-
-        ipEdit = static_cast<QLineEdit*>(QItemDelegate::createEditor(
-                    parent, option, index));
-
-        // FIXME: const problem!!!
-        //ipEdit->setValidator(new IPv6AddressValidator(this));
-
-        return ipEdit;
-    }
-};
 
 MldConfigForm::MldConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
@@ -52,9 +32,20 @@ MldConfigForm::MldConfigForm(QWidget *parent)
     connect(msgTypeCombo, SIGNAL(currentIndexChanged(int)),
             SLOT(on_msgTypeCombo_currentIndexChanged(int)));
 
+    msgTypeCombo->setValueMask(0xFF);
+    msgTypeCombo->addItem(kMldV1Query,  "MLDv1 Query");
+    msgTypeCombo->addItem(kMldV1Report, "MLDv1 Report");
+    msgTypeCombo->addItem(kMldV1Done,   "MLDv1 Done");
+    msgTypeCombo->addItem(kMldV2Query,  "MLDv2 Query");
+    msgTypeCombo->addItem(kMldV2Report, "MLDv2 Report");
+
+    _defaultGroupIp  = "::";
     _defaultSourceIp = "::";
-    sourceList->setItemDelegate(new IpAddressDelegate(this));
-    groupRecordSourceList->setItemDelegate(new IpAddressDelegate(this));
+
+    groupAddress->setValidator(new IPv6AddressValidator(this));
+    groupRecordAddress->setValidator(new IPv6AddressValidator(this));
+    sourceList->setItemDelegate(new IPv6AddressDelegate(this));
+    groupRecordSourceList->setItemDelegate(new IPv6AddressDelegate(this));
 }
 
 void MldConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
@@ -90,6 +81,8 @@ void MldConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
 MldProtocol::MldProtocol(StreamBase *stream, AbstractProtocol *parent)
     : GmpProtocol(stream, parent)
 {
+    _hasPayload = false;
+
     data.set_type(kMldV1Query);
 }
 
@@ -179,15 +172,15 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
 
         case kMldMrt:
         {
-            quint16 mrt = 0, mrc;
+            quint16 mrt = 0, mrcode = 0;
 
             if (msgType() == kMldV2Query)
             {
                 mrt = data.max_response_time();  
-                mrc = mrt; // TODO: MR Code
+                mrcode = mrc(mrt);
             }
-            if (msgType() == kMldV1Query)
-                mrc = mrt = data.max_response_time() & 0xFFFF;
+            else if (msgType() == kMldV1Query)
+                mrcode = mrt = data.max_response_time() & 0xFFFF;
 
             switch(attrib)
             {
@@ -204,7 +197,32 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                 QByteArray fv;
 
                 fv.resize(2);
-                qToBigEndian(mrc, (uchar*) fv.data());
+                qToBigEndian(mrcode, (uchar*) fv.data());
+                return fv;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        case kMldRsvd:
+        {
+            quint16 rsvd = 0;
+
+            switch(attrib)
+            {
+            case FieldName:
+                return QString("Reserved");
+            case FieldValue:
+                return rsvd;
+            case FieldTextValue:
+                return QString("%1").arg(rsvd);
+            case FieldFrameValue:
+            {
+                QByteArray fv;
+
+                fv.resize(2);
+                qToBigEndian(rsvd, (uchar*) fv.data());
                 return fv;
             }
             default:
@@ -215,24 +233,24 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
         case kGroupAddress:
         {
             quint64 grpHi, grpLo;
-#if 0 
-            AbstractProtocol::getip(
+
+            ipUtils::ipAddress(
                     data.group_address().v6_hi(),
                     data.group_address().v6_lo(),
-                    data.group_mode(),
-                    data.group_count(),
                     data.group_prefix(),
-                    &grpHi, 
-                    &grpLo);
-#endif
+                    ipUtils::AddrMode(data.group_mode()),
+                    data.group_count(),
+                    streamIndex,
+                    grpHi, 
+                    grpLo);
 
             switch(attrib)
             {
             case FieldName:            
                 return QString("Group Address");
             case FieldValue:
-            case FieldFrameValue:
             case FieldTextValue:
+            case FieldFrameValue:
             {
                 QByteArray fv;
                 fv.resize(16);
@@ -250,22 +268,36 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case kSources:
         {
-            quint64 grpHi, grpLo;
-            
             switch(attrib)
             {
             case FieldName:            
                 return QString("Source List");
             case FieldValue:
-                return QVariant(); // FIXME
+            {
+                QStringList list;
+                QByteArray fv;
+                fv.resize(16);
+                for (int i = 0; i < data.sources_size(); i++)
+                {
+                    qToBigEndian(data.group_address().v6_hi(), 
+                            (uchar*)fv.data());
+                    qToBigEndian(data.group_address().v6_hi(),
+                            (uchar*)fv.data()+8);
+
+                    list << QHostAddress((quint8*)fv.constData()).toString();
+                }
+                return list;
+            }
             case FieldFrameValue:
             {
                 QByteArray fv;
                 fv.resize(16 * data.sources_size());
                 for (int i = 0; i < data.sources_size(); i++)
                 {
-                    qToBigEndian(grpHi, (uchar*)(fv.data() + i*16));
-                    qToBigEndian(grpLo, (uchar*)(fv.data() + i*16 + 8));
+                    qToBigEndian(data.group_address().v6_hi(), 
+                            (uchar*)(fv.data() + i*16));
+                    qToBigEndian(data.group_address().v6_lo(),
+                            (uchar*)(fv.data() + i*16 + 8));
                 }
                 return fv;
             }
@@ -276,8 +308,10 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                 fv.resize(16);
                 for (int i = 0; i < data.sources_size(); i++)
                 {
-                    qToBigEndian(grpHi, (uchar*)fv.data());
-                    qToBigEndian(grpLo, (uchar*)fv.data()+8);
+                    qToBigEndian(data.group_address().v6_hi(), 
+                            (uchar*)fv.data());
+                    qToBigEndian(data.group_address().v6_hi(),
+                            (uchar*)fv.data()+8);
 
                     list << QHostAddress((quint8*)fv.constData()).toString();
                 }
@@ -289,8 +323,117 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
             break;
         }
         case kGroupRecords:
-            // TODO
+        {
+            switch(attrib)
+            {
+            case FieldValue:
+            {
+                QVariantList grpRecords = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toList();
+                QByteArray ip;
+
+                ip.resize(16);
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    QVariantMap grpRec = grpRecords.at(i).toMap();
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+
+                    qToBigEndian(rec.group_address().v6_hi(), 
+                            (uchar*)(ip.data()));
+                    qToBigEndian(rec.group_address().v6_lo(),
+                            (uchar*)(ip.data() + 8));
+                    grpRec["groupRecordAddress"] = QHostAddress(ip.constData())
+                            .toString();
+
+                    QStringList sl;
+                    for (int j = 0; j < rec.sources_size(); j++)
+                    {
+                        qToBigEndian(rec.sources(j).v6_hi(), 
+                                (uchar*)(ip.data()));
+                        qToBigEndian(rec.sources(j).v6_lo(),
+                                (uchar*)(ip.data() + 8));
+                        sl.append(QHostAddress(ip.constData()).toString());
+                    }
+                    grpRec["groupRecordSourceList"] = sl;
+
+                    grpRecords.replace(i, grpRec);
+                }
+                return grpRecords;
+            }
+            case FieldFrameValue:
+            {
+                QVariantList list = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toList();
+                QByteArray fv;
+                QByteArray ip;
+                ip.resize(16);
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+                    QByteArray rv = list.at(i).toByteArray();
+
+                    rv.insert(4, QByteArray(16+16*rec.sources_size(), char(0)));
+                    qToBigEndian(rec.group_address().v6_hi(), 
+                            (uchar*)(rv.data()+4));
+                    qToBigEndian(rec.group_address().v6_hi(), 
+                            (uchar*)(rv.data()+4+8));
+                    for (int j = 0; j < rec.sources_size(); j++)
+                    {
+                        qToBigEndian(rec.sources(j).v6_hi(),
+                                (uchar*)(rv.data()+12+16*j));
+                        qToBigEndian(rec.sources(j).v6_lo(),
+                                (uchar*)(rv.data()+12+16*j));
+                    }
+
+                    fv.append(rv);
+                }
+                return fv;
+            }
+            case FieldTextValue:
+            {
+                QStringList list = GmpProtocol::fieldData(
+                        index, attrib, streamIndex).toStringList();
+                QByteArray ip;
+
+                ip.resize(16);
+
+                for (int i = 0; i < data.group_records_size(); i++)
+                {
+                    OstProto::Gmp::GroupRecord rec = data.group_records(i);
+                    QString recStr = list.at(i);
+                    QString str;
+
+                    qToBigEndian(rec.group_address().v6_hi(), 
+                            (uchar*)(ip.data()));
+                    qToBigEndian(rec.group_address().v6_lo(),
+                            (uchar*)(ip.data() + 8));
+                    str.append(QString("Group: %1").arg(
+                        QHostAddress(ip.constData()).toString()));
+
+                    str.append("; Sources: ");
+                    QStringList sl;
+                    for (int j = 0; j < rec.sources_size(); j++)
+                    {
+                        qToBigEndian(rec.sources(j).v6_hi(), 
+                                (uchar*)(ip.data()));
+                        qToBigEndian(rec.sources(j).v6_lo(),
+                                (uchar*)(ip.data() + 8));
+                        sl.append(QHostAddress(ip.constData()).toString());
+                    }
+                    str.append(sl.join(", "));
+
+                    recStr.replace("XXX", str);
+                    list.replace(i, recStr);
+                }
+                return list.join("\n").insert(0, "\n");
+            }
+            default:
+                break;
+            }
             break;
+        }
         default:
             break;
     }
@@ -336,12 +479,106 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
         }
 
         case kSources:
-            //TODO
+        {
+            QStringList list = value.toStringList();
+
+            data.clear_sources();
+            foreach(QString str, list)
+            {
+                OstProto::Gmp::IpAddress *src = data.add_sources();
+                Q_IPV6ADDR addr = QHostAddress(str).toIPv6Address();
+                quint64 x;
+
+                x =   (quint64(addr[0]) << 56)
+                    | (quint64(addr[1]) << 48)
+                    | (quint64(addr[2]) << 40)
+                    | (quint64(addr[3]) << 32)
+                    | (quint64(addr[4]) << 24)
+                    | (quint64(addr[5]) << 16)
+                    | (quint64(addr[6]) <<  8)
+                    | (quint64(addr[7]) <<  0);
+                src->set_v6_hi(x);
+
+                x =   (quint64(addr[ 8]) << 56)
+                    | (quint64(addr[ 9]) << 48)
+                    | (quint64(addr[10]) << 40)
+                    | (quint64(addr[11]) << 32)
+                    | (quint64(addr[12]) << 24)
+                    | (quint64(addr[13]) << 16)
+                    | (quint64(addr[14]) <<  8)
+                    | (quint64(addr[15]) <<  0);
+                src->set_v6_lo(x);
+            }
             break;
+        }
 
         case kGroupRecords:
-            //TODO
+        {
+            GmpProtocol::setFieldData(index, value, attrib);
+            QVariantList list = value.toList();
+
+            for (int i = 0; i < list.count(); i++)
+            {
+                QVariantMap grpRec = list.at(i).toMap();
+                OstProto::Gmp::GroupRecord *rec = data.mutable_group_records(i);
+                Q_IPV6ADDR addr = QHostAddress(
+                        grpRec["groupRecordAddress"].toString())
+                        .toIPv6Address();
+                quint64 x;
+
+                x =   (quint64(addr[0]) << 56)
+                    | (quint64(addr[1]) << 48)
+                    | (quint64(addr[2]) << 40)
+                    | (quint64(addr[3]) << 32)
+                    | (quint64(addr[4]) << 24)
+                    | (quint64(addr[5]) << 16)
+                    | (quint64(addr[6]) <<  8)
+                    | (quint64(addr[7]) <<  0);
+                rec->mutable_group_address()->set_v6_hi(x);
+
+                x =   (quint64(addr[ 8]) << 56)
+                    | (quint64(addr[ 9]) << 48)
+                    | (quint64(addr[10]) << 40)
+                    | (quint64(addr[11]) << 32)
+                    | (quint64(addr[12]) << 24)
+                    | (quint64(addr[13]) << 16)
+                    | (quint64(addr[14]) <<  8)
+                    | (quint64(addr[15]) <<  0);
+                rec->mutable_group_address()->set_v6_lo(x);
+                
+                QStringList srcList = grpRec["groupRecordSourceList"]
+                                            .toStringList();
+                rec->clear_sources();
+                foreach (QString str, srcList)
+                {
+                    OstProto::Gmp::IpAddress *src = rec->add_sources();
+                    Q_IPV6ADDR addr = QHostAddress(str).toIPv6Address();
+                    quint64 x;
+
+                    x =   (quint64(addr[0]) << 56)
+                        | (quint64(addr[1]) << 48)
+                        | (quint64(addr[2]) << 40)
+                        | (quint64(addr[3]) << 32)
+                        | (quint64(addr[4]) << 24)
+                        | (quint64(addr[5]) << 16)
+                        | (quint64(addr[6]) <<  8)
+                        | (quint64(addr[7]) <<  0);
+                    src->set_v6_hi(x);
+
+                    x =   (quint64(addr[ 8]) << 56)
+                        | (quint64(addr[ 9]) << 48)
+                        | (quint64(addr[10]) << 40)
+                        | (quint64(addr[11]) << 32)
+                        | (quint64(addr[12]) << 24)
+                        | (quint64(addr[13]) << 16)
+                        | (quint64(addr[14]) <<  8)
+                        | (quint64(addr[15]) <<  0);
+                    src->set_v6_lo(x);
+                }
+            }
+
             break;
+        }
 
         default:
             isOk = GmpProtocol::setFieldData(index, value, attrib);
@@ -370,41 +607,13 @@ void MldProtocol::loadConfigWidget()
 
     configForm->maxResponseTime->setText(
             fieldData(kMldMrt, FieldValue).toString());
-#if 0
-    configForm->mldA->setText(fieldData(mld_a, FieldValue).toString());
-    configForm->mldB->setText(fieldData(mld_b, FieldValue).toString());
-
-    configForm->mldPayloadLength->setText(
-        fieldData(mld_payloadLength, FieldValue).toString());
-
-    configForm->isChecksumOverride->setChecked(
-        fieldData(mld_is_override_checksum, FieldValue).toBool());
-    configForm->mldChecksum->setText(uintToHexStr(
-        fieldData(mld_checksum, FieldValue).toUInt(), 2));
-
-    configForm->mldX->setText(fieldData(mld_x, FieldValue).toString());
-    configForm->mldY->setText(fieldData(mld_y, FieldValue).toString());
-#endif
 }
 
 void MldProtocol::storeConfigWidget()
 {
-    bool isOk;
-
     GmpProtocol::storeConfigWidget();
 
-#if 0
-    setFieldData(mld_a, configForm->mldA->text());
-    setFieldData(mld_b, configForm->mldB->text());
-
-    setFieldData(mld_payloadLength, configForm->mldPayloadLength->text());
-    setFieldData(mld_is_override_checksum, 
-        configForm->isChecksumOverride->isChecked());
-    setFieldData(mld_checksum, configForm->mldChecksum->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(mld_x, configForm->mldX->text());
-    setFieldData(mld_y, configForm->mldY->text());
-#endif
+    setFieldData(kMldMrt, configForm->maxResponseTime->text());
 }
 
 quint16 MldProtocol::checksum(int streamIndex) const
