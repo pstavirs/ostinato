@@ -949,9 +949,14 @@ void GmpProtocol::loadConfigWidget()
     configForm->qrv->setText(fieldData(kQrv, FieldValue).toString());
     configForm->qqi->setText(fieldData(kQqic, FieldValue).toString());
 
+    QStringList sl = fieldData(kSources, FieldValue).toStringList();
     configForm->sourceList->clear();
-    configForm->sourceList->addItems(
-            fieldData(kSources, FieldValue).toStringList());
+    foreach(QString src, sl)
+    {
+        QListWidgetItem *item = new QListWidgetItem(src);
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        configForm->sourceList->addItem(item);
+    }
 
     // NOTE: SourceCount should be loaded after sourceList
     configForm->overrideSourceCount->setChecked(
