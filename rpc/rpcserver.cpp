@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 //#include "pbhelper.h"
 #include "rpcserver.h"
+#include "pbqtio.h"
 
 #include <qendian.h>
 
@@ -28,6 +29,9 @@ RpcServer::RpcServer()
     clientSock = NULL;
 
     service = NULL; 
+
+    inStream = NULL;
+    outStream = NULL;
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
@@ -71,7 +75,7 @@ void RpcServer::done(PbRpcController *controller)
 {
     google::protobuf::Message *response = controller->response();
     QIODevice *blob;
-    char msgBuf[MSGBUF_SIZE];
+    char msgBuf[PB_HDR_SIZE];
     char* const msg = &msgBuf[0];
     int len;
 
@@ -116,8 +120,6 @@ void RpcServer::done(PbRpcController *controller)
         goto _exit;
     }
 
-    response->SerializeToArray((void*)(msg+PB_HDR_SIZE), sizeof(msgBuf)-PB_HDR_SIZE);
-
     len = response->ByteSize();
 
     *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_RESPONSE)); // type
@@ -132,7 +134,9 @@ void RpcServer::done(PbRpcController *controller)
         //BUFDUMP(msg, len + 8);
     }
 
-    clientSock->write(msg, PB_HDR_SIZE + len);
+    clientSock->write(msg, PB_HDR_SIZE);
+    response->SerializeToZeroCopyStream(outStream);
+    outStream->Flush();
 
 _exit:
     delete controller;
@@ -159,6 +163,12 @@ void RpcServer::when_newConnection()
     qDebug("accepting new connection from %s: %d", 
             clientSock->peerAddress().toString().toAscii().constData(),
             clientSock->peerPort());
+    inStream = new google::protobuf::io::CopyingInputStreamAdaptor(
+            new PbQtInputStream(clientSock));
+    inStream->SetOwnsCopyingStream(true);
+    outStream = new google::protobuf::io::CopyingOutputStreamAdaptor(
+            new PbQtOutputStream(clientSock));
+    outStream->SetOwnsCopyingStream(true);
 
     connect(clientSock, SIGNAL(readyRead()), 
         this, SLOT(when_dataAvail()));
@@ -177,6 +187,9 @@ void RpcServer::when_disconnected()
             clientSock->peerAddress().toString().toAscii().constData(),
             clientSock->peerPort());
 
+    delete inStream;
+    delete outStream;
+
     clientSock->deleteLater();
     clientSock = NULL;
 }
@@ -189,7 +202,7 @@ void RpcServer::when_error(QAbstractSocket::SocketError socketError)
 
 void RpcServer::when_dataAvail()
 {
-    uchar    msg[MSGBUF_SIZE];
+    uchar    msg[PB_HDR_SIZE];
     int        msgLen;
     static bool parsing = false;
     static quint16    type, method;
@@ -214,12 +227,6 @@ void RpcServer::when_dataAvail()
 
         parsing = true;
     }
-
-    if (clientSock->bytesAvailable() < len)
-        return;
-
-    msgLen = clientSock->read((char*)msg, sizeof(msg));
-    Q_ASSERT((unsigned) msgLen == len);
 
     if (type != PB_MSG_TYPE_REQUEST)
     {
@@ -247,7 +254,9 @@ void RpcServer::when_dataAvail()
     req = service->GetRequestPrototype(methodDesc).New();
     resp = service->GetResponsePrototype(methodDesc).New();
 
-    req->ParseFromArray((void*)msg, len);
+    if (len)
+        req->ParseFromBoundedZeroCopyStream(inStream, len);
+
     if (!req->IsInitialized())
     {
         qWarning("Missing required fields in request");
@@ -256,7 +265,7 @@ void RpcServer::when_dataAvail()
         delete req;
         delete resp;
 
-        goto _error_exit;
+        goto _error_exit2;
     }
     //qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
         //resp->DebugString().c_str());
@@ -273,6 +282,8 @@ void RpcServer::when_dataAvail()
     return;
 
 _error_exit:
+    inStream->Skip(len);
+_error_exit2:
     parsing = false;
     qDebug("server(%s): discarding msg from client", __FUNCTION__);
     return;

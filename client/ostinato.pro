@@ -25,6 +25,7 @@ win32 {
     POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 }
 LIBS += -lprotobuf
+LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
 HEADERS += \
     dumpview.h \

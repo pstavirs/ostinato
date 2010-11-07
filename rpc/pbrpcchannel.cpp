@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "pbrpcchannel.h"
+#include "pbqtio.h"
 
 #include <qendian.h>
 
@@ -33,6 +34,13 @@ PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port)
     mServerAddress = ip;
     mServerPort = port;
     mpSocket = new QTcpSocket(this);
+
+    inStream = new google::protobuf::io::CopyingInputStreamAdaptor(
+            new PbQtInputStream(mpSocket));
+    inStream->SetOwnsCopyingStream(true);
+    outStream = new google::protobuf::io::CopyingOutputStreamAdaptor(
+            new PbQtOutputStream(mpSocket));
+    outStream->SetOwnsCopyingStream(true);
 
     // FIXME: Not quite sure why this ain't working!
     // QMetaObject::connectSlotsByName(this);
@@ -53,6 +61,8 @@ PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port)
 
 PbRpcChannel::~PbRpcChannel()
 {
+    delete inStream;
+    delete outStream;
     delete mpSocket;
 }
 
@@ -84,7 +94,7 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Message *response,
     ::google::protobuf::Closure* done)
 {
-    char    msgBuf[MSGBUF_SIZE];
+    char    msgBuf[PB_HDR_SIZE];
     char* const msg = &msgBuf[0];
     int     len;
     bool    ret;
@@ -128,9 +138,6 @@ void PbRpcChannel::CallMethod(
     this->response=response;
     isPending = true;
 
-    ret = req->SerializeToArray((void*)(msg+PB_HDR_SIZE), sizeof(msgBuf)-PB_HDR_SIZE);
-    Q_ASSERT(ret == true);
-
     len = req->ByteSize();
     *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_REQUEST)); // type
     *((quint16*)(msg+2)) = qToBigEndian(quint16(method->index())); // method id
@@ -141,15 +148,18 @@ void PbRpcChannel::CallMethod(
     {
         qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, 
                 PB_HDR_SIZE + len, req->DebugString().c_str());
-        BUFDUMP(msg, PB_HDR_SIZE + len);
+        BUFDUMP(msg, PB_HDR_SIZE);
     }
 
-    mpSocket->write(msg, PB_HDR_SIZE + len);
+    mpSocket->write(msg, PB_HDR_SIZE);
+    ret = req->SerializeToZeroCopyStream(outStream);
+    Q_ASSERT(ret == true);
+    outStream->Flush();
 }
 
 void PbRpcChannel::on_mpSocket_readyRead()
 {
-    uchar   msg[MSGBUF_SIZE];
+    uchar   msg[PB_HDR_SIZE];
     uchar   *p = (uchar*) &msg;
     int        msgLen;
     static bool parsing = false;
@@ -210,31 +220,20 @@ void PbRpcChannel::on_mpSocket_readyRead()
             if (!isPending)
             {
                 qDebug("not waiting for response");
-                goto _error_exit;
+                goto _error_exit2;
             }
 
             if (pendingMethodId != method)
             {
                 qDebug("invalid method id %d (expected = %d)", method, 
                     pendingMethodId);
-                goto _error_exit;
+                goto _error_exit2;
             }
 
             break;
         }
 
         case PB_MSG_TYPE_RESPONSE:
-            // Wait till we have the entire message
-            if (mpSocket->bytesAvailable() < len)
-            {
-                qDebug("client: not enough data available for a complete msg");
-                return;
-            }
-            
-            msgLen = mpSocket->read((char*)msg, sizeof(msg));
-
-            Q_ASSERT((unsigned) msgLen == len);
-
             //qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
             //BUFDUMP(msg, msgLen);
 
@@ -251,7 +250,8 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 goto _error_exit;
             }
 
-            response->ParseFromArray((void*) msg, len);
+            if (len)
+                response->ParseFromBoundedZeroCopyStream(inStream, len);
 
             // Avoid printing stats
             if (method != 13)
@@ -295,6 +295,8 @@ void PbRpcChannel::on_mpSocket_readyRead()
     return;
 
 _error_exit:
+    inStream->Skip(len);
+_error_exit2:
     parsing = false;
     qDebug("client(%s) discarding received msg", __FUNCTION__);
     return;

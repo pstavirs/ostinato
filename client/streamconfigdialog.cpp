@@ -250,6 +250,7 @@ void StreamConfigDialog::setupUiExtra()
 #else
     bgProto[ProtoPayload]->addButton(rbPayloadNone, ButtonIdNone);
     bgProto[ProtoPayload]->addButton(rbPayloadPattern, OstProto::Protocol::kPayloadFieldNumber);
+    bgProto[ProtoPayload]->addButton(rbPayloadHexDump, OstProto::Protocol::kHexDumpFieldNumber);
     bgProto[ProtoPayload]->addButton(rbPayloadOther, ButtonIdOther);
 #endif
     /*

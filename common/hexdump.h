@@ -17,49 +17,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _TEXT_PROTOCOL_H
-#define _TEXT_PROTOCOL_H
+#ifndef _HEXDUMP_H
+#define _HEXDUMP_H
 
-#include "textproto.pb.h"
-#include "ui_textproto.h"
+#include "hexdump.pb.h"
+#include "ui_hexdump.h"
 
 #include "abstractprotocol.h"
 
 /* 
-TextProtocol Protocol Frame Format -
-   specified text with the specified line ending and encoded with the
-   specified encoding 
+HexDump Protocol Frame Format -
+    +---------+---------+
+    |   User  |   Zero  |
+    | HexDump | Padding |
+    +---------+---------+
 */
 
-class TextProtocolConfigForm : public QWidget, public Ui::TextProtocol
+class HexDumpConfigForm : public QWidget, public Ui::HexDump
 {
     Q_OBJECT
 public:
-    TextProtocolConfigForm(QWidget *parent = 0);
+    HexDumpConfigForm(QWidget *parent = 0);
 private slots:
+    void on_hexEdit_overwriteModeChanged(bool isOverwriteMode);
 };
 
-class TextProtocol : public AbstractProtocol
+class HexDumpProtocol : public AbstractProtocol
 {
-private:
-    OstProto::TextProtocol    data;
-    TextProtocolConfigForm    *configForm;
-    enum textProtocolField
-    {
-        // Frame Fields
-        textProto_text = 0,
-
-        // Meta Fields
-        textProto_portNum,
-        textProto_eol,
-        textProto_encoding,
-
-        textProto_fieldCount
-    };
-
 public:
-    TextProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-    virtual ~TextProtocol();
+    HexDumpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
+    virtual ~HexDumpProtocol();
 
     static AbstractProtocol* createInstance(StreamBase *stream,
         AbstractProtocol *parent = 0);
@@ -67,8 +54,6 @@ public:
 
     virtual void protoDataCopyInto(OstProto::Protocol &protocol) const;
     virtual void protoDataCopyFrom(const OstProto::Protocol &protocol);
-
-    virtual quint32 protocolId(ProtocolIdType type) const;
 
     virtual QString name() const;
     virtual QString shortName() const;
@@ -86,6 +71,19 @@ public:
     virtual QWidget* configWidget();
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
-};
 
+private:
+    OstProto::HexDump    data;
+    HexDumpConfigForm    *configForm;
+    enum hexDumpfield
+    {
+        // Frame Fields
+        hexDump_content = 0,
+
+        // Meta Fields
+        hexDump_pad_until_end,
+
+        hexDump_fieldCount
+    };
+};
 #endif

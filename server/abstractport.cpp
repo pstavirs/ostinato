@@ -34,7 +34,7 @@ AbstractPort::AbstractPort(int id, const char *device)
 
     data_.set_is_exclusive_control(false);
 
-    isSendQueueDirty_ = true;
+    isSendQueueDirty_ = false;
     linkState_ = OstProto::LinkStateUnknown;
 
     memset((void*) &stats_, 0, sizeof(stats_));
