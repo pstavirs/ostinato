@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QTcpServer>
 #include <QTcpSocket>
 
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
@@ -63,6 +64,9 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     QHostAddress    mServerAddress;
     quint16            mServerPort;
     QTcpSocket        *mpSocket;
+
+    ::google::protobuf::io::CopyingInputStreamAdaptor  *inStream;
+    ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
 public:
     PbRpcChannel(QHostAddress ip, quint16 port);

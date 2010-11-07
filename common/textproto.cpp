@@ -107,6 +107,7 @@ AbstractProtocol::FieldFlags TextProtocol::fieldFlags(int index) const
             break;
 
         case textProto_portNum:
+        case textProto_eol:
         case textProto_encoding:
             flags &= ~FrameField;
             flags |= MetaField;
@@ -136,8 +137,18 @@ QVariant TextProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldTextValue:
                     return QString().fromStdString(data.text());
                 case FieldFrameValue:
+                {
+                    QString text;
                     Q_ASSERT(data.encoding() == OstProto::TextProtocol::kUtf8);
-                    return QString().fromStdString(data.text()).toUtf8();
+                    text = QString().fromStdString(data.text());
+
+                    if (data.eol() == OstProto::TextProtocol::kCrLf)
+                        text.replace('\n', "\r\n");
+                    else if (data.eol() == OstProto::TextProtocol::kCr)
+                        text.replace('\n', '\r');
+
+                    return text.toUtf8();
+                }
                 default:
                     break;
             }
@@ -152,6 +163,17 @@ QVariant TextProtocol::fieldData(int index, FieldAttrib attrib,
             {
                 case FieldValue:
                     return data.port_num();
+                default:
+                    break;
+            }
+            break;
+        }
+        case textProto_eol:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.eol();
                 default:
                     break;
             }
@@ -200,6 +222,15 @@ bool TextProtocol::setFieldData(int index, const QVariant &value,
                 data.set_port_num(portNum);
             break;
         }
+        case textProto_eol:
+        {
+            uint eol = value.toUInt(&isOk);
+            if (isOk && data.EndOfLine_IsValid(eol))
+                data.set_eol((OstProto::TextProtocol::EndOfLine) eol);
+            else
+                isOk = false;
+            break;
+        }
         case textProto_encoding:
         {
             uint enc = value.toUInt(&isOk);
@@ -243,6 +274,8 @@ void TextProtocol::loadConfigWidget()
 
     configForm->portNumCombo->setValue(
             fieldData(textProto_portNum, FieldValue).toUInt());
+    configForm->eolCombo->setCurrentIndex(
+            fieldData(textProto_eol, FieldValue).toUInt());
     configForm->encodingCombo->setCurrentIndex(
             fieldData(textProto_encoding, FieldValue).toUInt());
     configForm->protoText->setText(
@@ -254,6 +287,7 @@ void TextProtocol::storeConfigWidget()
     configWidget();
 
     setFieldData(textProto_portNum, configForm->portNumCombo->currentValue());
+    setFieldData(textProto_eol, configForm->eolCombo->currentIndex());
     setFieldData(textProto_encoding, configForm->encodingCombo->currentIndex());
 
     setFieldData(textProto_text, configForm->protoText->toPlainText());

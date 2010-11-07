@@ -86,6 +86,7 @@ message Protocol {
         kPayloadFieldNumber = 101;
         kSampleFieldNumber = 102;
         kUserScriptFieldNumber = 103;
+        kHexDumpFieldNumber = 104;
 
         kEth2FieldNumber = 200;
         kDot3FieldNumber = 201;

@@ -99,7 +99,7 @@ public:
     
     //! Used by StreamModel
     //@{
-    bool newStreamAt(int index);
+    bool newStreamAt(int index, OstProto::Stream const *stream = NULL);
     bool deleteStreamAt(int index);
     //@}
 
