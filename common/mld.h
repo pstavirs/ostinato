@@ -16,14 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-
 #ifndef _MLD_H
 #define _MLD_H
 
 #include "mld.pb.h"
 #include "gmp.h"
-
-#include "abstractprotocol.h"
 
 // MLD uses the same msg type value for 'Query' messages across
 // versions despite the fields being different. To distinguish 
@@ -75,12 +72,16 @@ public:
     virtual QWidget* configWidget();
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
+
 protected:
     virtual bool isSsmReport() const;
     virtual bool isQuery() const;
     virtual bool isSsmQuery() const;
 
     virtual quint16 checksum(int streamIndex) const;
+
+private:
+    int mrc(int value) const;
 };
 
 inline bool MldProtocol::isSsmReport() const
@@ -99,5 +100,9 @@ inline bool MldProtocol::isSsmQuery() const
     return (msgType() == kMldV2Query);
 }
 
+inline int MldProtocol::mrc(int value) const
+{
+    return quint16(value); // TODO: if value > 128, convert to mantissa/exp form
+}
 
 #endif
