@@ -113,6 +113,15 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
                 if (validProtocolCount == 0)
                     connect(btn1, SIGNAL(clicked(bool)),
                         bgProto[i+1]->button(ButtonIdNone), SLOT(click()));
+
+                // If the id1 protocol doesn't have a payload (e.g. IGMP)
+                // force payload protocol to 'None'
+                if (!OstProtocolManager->protocolHasPayload(id1))
+                {
+                    connect(btn1, SIGNAL(clicked(bool)),
+                        bgProto[ProtoPayload]->button(ButtonIdNone), 
+                        SLOT(click()));
+                }
             }
         }
     }

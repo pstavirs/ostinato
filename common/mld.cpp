@@ -49,9 +49,42 @@ public:
 MldConfigForm::MldConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
 {
+    connect(msgTypeCombo, SIGNAL(currentIndexChanged(int)),
+            SLOT(on_msgTypeCombo_currentIndexChanged(int)));
+
     _defaultSourceIp = "::";
     sourceList->setItemDelegate(new IpAddressDelegate(this));
     groupRecordSourceList->setItemDelegate(new IpAddressDelegate(this));
+}
+
+void MldConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
+{
+    switch(msgTypeCombo->currentValue())
+    {
+    case kMldV1Query:
+    case kMldV1Report:
+    case kMldV1Done:
+        asmGroup->show();
+        ssmWidget->hide();
+        break;
+
+    case kMldV2Query:
+        asmGroup->hide();
+        ssmWidget->setCurrentIndex(kSsmQueryPage);
+        ssmWidget->show();
+        break;
+
+    case kMldV2Report:
+        asmGroup->hide();
+        ssmWidget->setCurrentIndex(kSsmReportPage);
+        ssmWidget->show();
+        break;
+
+    default:
+        asmGroup->hide();
+        ssmWidget->hide();
+        break;
+    }
 }
 
 MldProtocol::MldProtocol(StreamBase *stream, AbstractProtocol *parent)

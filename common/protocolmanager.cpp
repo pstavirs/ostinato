@@ -122,8 +122,9 @@ ProtocolManager::~ProtocolManager()
     nameToNumberMap.clear();
     neighbourProtocols.clear();
     factory.clear();
-    while (!protocolList.isEmpty())
-        delete protocolList.takeFirst();
+    QList<AbstractProtocol*> pl = protocolList.values();
+    while (!pl.isEmpty())
+        delete pl.takeFirst();
 }
 
 void ProtocolManager::registerProtocol(int protoNumber,
@@ -136,7 +137,7 @@ void ProtocolManager::registerProtocol(int protoNumber,
     factory.insert(protoNumber, protoInstanceCreator);
 
     p = createProtocol(protoNumber, NULL);
-    protocolList.append(p);
+    protocolList.insert(protoNumber, p);
 
     numberToNameMap.insert(protoNumber, p->shortName());
     nameToNumberMap.insert(p->shortName(), protoNumber);
@@ -188,6 +189,13 @@ bool ProtocolManager::isValidNeighbour(int protoPrefix, int protoSuffix)
         return true;
     else
         return false;
+}
+
+bool ProtocolManager::protocolHasPayload(int protoNumber)
+{
+    Q_ASSERT(protocolList.contains(protoNumber));
+
+    return protocolList.value(protoNumber)->protocolHasPayload();
 }
 
 QStringList ProtocolManager::protocolDatabase()

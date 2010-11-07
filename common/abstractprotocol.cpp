@@ -79,6 +79,7 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     _metaFieldCount = -1;
     _frameFieldCount = -1;
     protoSize = -1;
+    _hasPayload = true;
 }
 
 /*!
@@ -612,6 +613,18 @@ bool AbstractProtocol::isProtocolFramePayloadSizeVariable() const
         return true;
 
     return false;
+}
+
+/*!
+  Returns true if the protocol typically contains a payload or other protocols
+  following it e.g. TCP, UDP have payloads, while ARP, IGMP do not 
+
+  The default implementation returns true. If a subclass does not have a
+  payload, it should set the _hasPayload data member to false
+*/
+bool AbstractProtocol::protocolHasPayload() const
+{
+    return _hasPayload;
 }
 
 /*!

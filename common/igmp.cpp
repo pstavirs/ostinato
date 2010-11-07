@@ -28,6 +28,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 IgmpConfigForm::IgmpConfigForm(QWidget *parent)
     : GmpConfigForm(parent)
 {
+    connect(msgTypeCombo, SIGNAL(currentIndexChanged(int)),
+            SLOT(on_msgTypeCombo_currentIndexChanged(int)));
+
+    msgTypeCombo->setValueMask(0xFF);
+    msgTypeCombo->addItem(kIgmpV1Query,  "IGMPv1 Query");
+    msgTypeCombo->addItem(kIgmpV1Report, "IGMPv1 Report");
+    msgTypeCombo->addItem(kIgmpV2Query,  "IGMPv2 Query");
+    msgTypeCombo->addItem(kIgmpV2Report, "IGMPv2 Report");
+    msgTypeCombo->addItem(kIgmpV2Leave,  "IGMPv2 Leave");
+    msgTypeCombo->addItem(kIgmpV3Query,  "IGMPv3 Query");
+    msgTypeCombo->addItem(kIgmpV3Report, "IGMPv3 Report");
+
     _defaultGroupIp = "0.0.0.0";
     _defaultSourceIp = "0.0.0.0";
 
@@ -37,9 +49,43 @@ IgmpConfigForm::IgmpConfigForm(QWidget *parent)
     groupRecordSourceList->setItemDelegate(new IPv4AddressDelegate(this));
 }
 
+void IgmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
+{
+    switch(msgTypeCombo->currentValue())
+    {
+    case kIgmpV1Query:
+    case kIgmpV1Report:
+    case kIgmpV2Query:
+    case kIgmpV2Report:
+    case kIgmpV2Leave:
+        asmGroup->show();
+        ssmWidget->hide();
+        break;
+
+    case kIgmpV3Query:
+        asmGroup->hide();
+        ssmWidget->setCurrentIndex(kSsmQueryPage);
+        ssmWidget->show();
+        break;
+
+    case kIgmpV3Report:
+        asmGroup->hide();
+        ssmWidget->setCurrentIndex(kSsmReportPage);
+        ssmWidget->show();
+        break;
+
+    default:
+        asmGroup->hide();
+        ssmWidget->hide();
+        break;
+    }
+}
+
 IgmpProtocol::IgmpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : GmpProtocol(stream, parent)
 {
+    _hasPayload = false;
+
     data.set_type(kIgmpV2Query);
 }
 
@@ -388,7 +434,7 @@ quint16 IgmpProtocol::checksum(int streamIndex) const
 {
     quint16 cks;
     quint32 sum = 0;
-#if 1 // FIXME
+
     // TODO: add as a new CksumType (CksumIgmp?) and implement in AbsProto 
     cks = protocolFrameCksum(streamIndex, CksumIp);
     sum += (quint16) ~cks;
@@ -398,6 +444,6 @@ quint16 IgmpProtocol::checksum(int streamIndex) const
         sum = (sum & 0xFFFF) + (sum >> 16);
 
     cks = (~sum) & 0xFFFF;
-#endif
+
     return cks;
 }

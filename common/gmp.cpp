@@ -29,16 +29,6 @@ GmpConfigForm::GmpConfigForm(QWidget *parent)
 {
     setupUi(this);
 
-    // TODO: this should be in subclass
-    msgTypeCombo->setValueMask(0xFF);
-    msgTypeCombo->addItem(kIgmpV1Query,  "IGMPv1 Query");
-    msgTypeCombo->addItem(kIgmpV1Report, "IGMPv1 Report");
-    msgTypeCombo->addItem(kIgmpV2Query,  "IGMPv2 Query");
-    msgTypeCombo->addItem(kIgmpV2Report, "IGMPv2 Report");
-    msgTypeCombo->addItem(kIgmpV2Leave,  "IGMPv2 Leave");
-    msgTypeCombo->addItem(kIgmpV3Query,  "IGMPv3 Query");
-    msgTypeCombo->addItem(kIgmpV3Report, "IGMPv3 Report");
-
     auxData->setValidator(new QRegExpValidator(
                 QRegExp("[0-9A-Fa-f]*"), this));
 }
@@ -52,43 +42,6 @@ void GmpConfigForm::update()
     // save the current group Record by simulating a currentItemChanged()
     on_groupList_currentItemChanged(groupList->currentItem(), 
             groupList->currentItem());
-}
-
-void GmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
-{
-    switch(msgTypeCombo->currentValue())
-    {
-    case kIgmpV1Query:
-    case kIgmpV1Report:
-    case kIgmpV2Query:
-    case kIgmpV2Report:
-    case kIgmpV2Leave:
-    case kMldV1Query:
-    case kMldV1Report:
-    case kMldV1Done:
-        asmGroup->show();
-        ssmWidget->hide();
-        break;
-
-    case kIgmpV3Query:
-    case kMldV2Query:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmQueryPage);
-        ssmWidget->show();
-        break;
-
-    case kIgmpV3Report:
-    case kMldV2Report:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmReportPage);
-        ssmWidget->show();
-        break;
-
-    default:
-        asmGroup->hide();
-        ssmWidget->hide();
-        break;
-    }
 }
 
 void GmpConfigForm::on_groupMode_currentIndexChanged(int index)
