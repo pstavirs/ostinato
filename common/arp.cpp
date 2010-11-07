@@ -88,6 +88,7 @@ void ArpConfigForm::on_targetProtoAddrMode_currentIndexChanged(int index)
 ArpProtocol::ArpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
+    _hasPayload = false;
     configForm = NULL;
 }
 

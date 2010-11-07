@@ -22,11 +22,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "igmp.pb.h"
 #include "gmp.h"
 
+// IGMP uses the same msg type value for 'Query' messages across
+// versions despite the fields being different. To distinguish 
+// Query messages of different versions, we use an additional 
+// upper byte
+enum IgmpMsgType
+{
+    kIgmpV1Query = 0x11,
+    kIgmpV1Report = 0x12,
+
+    kIgmpV2Query = 0xFF11,
+    kIgmpV2Report = 0x16,
+    kIgmpV2Leave = 0x17,
+
+    kIgmpV3Query = 0xFE11,
+    kIgmpV3Report = 0x22,
+};
+
 class IgmpConfigForm : public GmpConfigForm 
 {
+    Q_OBJECT
 public:
     IgmpConfigForm(QWidget *parent = 0);
 private slots:
+    void on_msgTypeCombo_currentIndexChanged(int index);
 };
 
 class IgmpProtocol : public GmpProtocol
@@ -57,10 +76,31 @@ public:
     virtual void storeConfigWidget();
 
 protected:
+    virtual bool isSsmReport() const;
+    virtual bool isQuery() const;
+    virtual bool isSsmQuery() const;
+
     virtual quint16 checksum(int streamIndex) const;
 private:
     int mrc(int value) const;
 };
+
+inline bool IgmpProtocol::isSsmReport() const
+{
+    return (msgType() == kIgmpV3Report);
+}
+
+inline bool IgmpProtocol::isQuery() const
+{
+    return ((msgType() == kIgmpV1Query) 
+         || (msgType() == kIgmpV2Query)
+         || (msgType() == kIgmpV3Query));
+}
+
+inline bool IgmpProtocol::isSsmQuery() const
+{
+    return (msgType() == kIgmpV3Query); 
+}
 
 inline int IgmpProtocol::mrc(int value) const
 {

@@ -27,31 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QHash>
 
-// Both IGMP and MLD use the same msg type value for 'Query' message 
-// across versions despite the fields being different. To distinguish 
-// Query messages of different versions, we use an additional upper byte
-enum GmpMsgType
-{
-    // IGMP
-    kIgmpV1Query = 0x11,
-    kIgmpV1Report = 0x12,
-
-    kIgmpV2Query = 0xFF11,
-    kIgmpV2Report = 0x16,
-    kIgmpV2Leave = 0x17,
-
-    kIgmpV3Query = 0xFE11,
-    kIgmpV3Report = 0x22,
-
-    // MLD
-    kMldV1Query = 0x82,
-    kMldV1Report = 0x83,
-    kMldV1Done = 0x84,
-
-    kMldV2Query = 0xFF82,
-    kMldV2Report = 0x8F
-};
-
 /* 
 Gmp Protocol Frame Format - TODO: for now see the respective RFCs
 */
@@ -67,13 +42,11 @@ public:
 protected:
     QString _defaultGroupIp;
     QString _defaultSourceIp;
-private:
     enum {
         kSsmQueryPage = 0,
         kSsmReportPage = 1
     };
 private slots:
-    void on_msgTypeCombo_currentIndexChanged(int index);
     void on_groupMode_currentIndexChanged(int index);
     void on_addSource_clicked();
     void on_deleteSource_clicked();
@@ -163,11 +136,11 @@ protected:
     OstProto::Gmp    data;
     GmpConfigForm    *configForm;
 
-    GmpMsgType msgType() const;
+    int msgType() const;
 
-    virtual bool isSsmReport() const;
-    virtual bool isQuery() const;
-    virtual bool isSsmQuery() const;
+    virtual bool isSsmReport() const = 0;
+    virtual bool isQuery() const = 0;
+    virtual bool isSsmQuery() const = 0;
 
     int qqic(int value) const;
 
@@ -176,30 +149,9 @@ private:
     static QHash<int, int> frameFieldCountMap;
 };
 
-inline GmpMsgType GmpProtocol::msgType() const 
+inline int GmpProtocol::msgType() const 
 { 
-    return GmpMsgType(fieldData(kType, FieldValue).toUInt()); 
-}
-
-inline bool GmpProtocol::isSsmReport() const
-{
-    return ((msgType() == kIgmpV3Report) 
-         || (msgType() == kMldV2Report ));
-}
-
-inline bool GmpProtocol::isQuery() const
-{
-    return ((msgType() == kIgmpV1Query) 
-         || (msgType() == kIgmpV2Query)
-         || (msgType() == kIgmpV3Query)
-         || (msgType() == kMldV1Query )
-         || (msgType() == kMldV2Query ));
-}
-
-inline bool GmpProtocol::isSsmQuery() const
-{
-    return ((msgType() == kIgmpV3Query) 
-         || (msgType() == kMldV2Query ));
+    return fieldData(kType, FieldValue).toInt(); 
 }
 
 inline int GmpProtocol::qqic(int value) const

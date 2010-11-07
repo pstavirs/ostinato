@@ -25,11 +25,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractprotocol.h"
 
+// MLD uses the same msg type value for 'Query' messages across
+// versions despite the fields being different. To distinguish 
+// Query messages of different versions, we use an additional 
+// upper byte
+enum MldMsgType
+{
+    kMldV1Query = 0x82,
+    kMldV1Report = 0x83,
+    kMldV1Done = 0x84,
+
+    kMldV2Query = 0xFF82,
+    kMldV2Report = 0x8F
+};
+
 class MldConfigForm : public GmpConfigForm 
 {
+    Q_OBJECT
 public:
     MldConfigForm(QWidget *parent = 0);
 private slots:
+    void on_msgTypeCombo_currentIndexChanged(int index);
 };
 
 class MldProtocol : public GmpProtocol
@@ -60,7 +76,28 @@ public:
     virtual void loadConfigWidget();
     virtual void storeConfigWidget();
 protected:
+    virtual bool isSsmReport() const;
+    virtual bool isQuery() const;
+    virtual bool isSsmQuery() const;
+
     virtual quint16 checksum(int streamIndex) const;
 };
+
+inline bool MldProtocol::isSsmReport() const
+{
+    return (msgType() == kMldV2Report);
+}
+
+inline bool MldProtocol::isQuery() const
+{
+    return ((msgType() == kMldV1Query)
+         || (msgType() == kMldV2Query));
+}
+
+inline bool MldProtocol::isSsmQuery() const
+{
+    return (msgType() == kMldV2Query);
+}
+
 
 #endif

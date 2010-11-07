@@ -59,6 +59,9 @@ protected:
     AbstractProtocol    *prev;     //!< Protocol preceding this protocol
     AbstractProtocol    *next;     //!< Protocol succeeding this protocol 
 
+    //! Is protocol typically followed by payload or another protocol
+    bool _hasPayload;
+
 public:
     //! Properties of a field, can be OR'd
     enum FieldFlag {
@@ -138,6 +141,8 @@ public:
     virtual bool isProtocolFrameSizeVariable() const;
     bool isProtocolFramePayloadValueVariable() const;
     bool isProtocolFramePayloadSizeVariable() const;
+
+    bool protocolHasPayload() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;

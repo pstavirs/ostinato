@@ -444,6 +444,10 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
     }
     delete iter;
 
+    // Pad with zero, if required
+    if (len < pktLen)
+        memset(buf+len, 0, pktLen-len);
+
     return pktLen;
 }
 

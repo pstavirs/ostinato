@@ -32,7 +32,7 @@ class ProtocolManager
     QMap<QString, int>    nameToNumberMap;
     QMultiMap<int, int> neighbourProtocols;
     QMap<int, void*>    factory;
-    QList<AbstractProtocol*>    protocolList;
+    QMap<int, AbstractProtocol*>    protocolList;
 
     void populateNeighbourProtocols();
 
@@ -48,6 +48,7 @@ public:
         AbstractProtocol *parent = 0);
 
     bool isValidNeighbour(int protoPrefix, int protoSuffix);
+    bool protocolHasPayload(int protoNumber);
 
     QStringList protocolDatabase();
 };
