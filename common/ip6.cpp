@@ -359,7 +359,7 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
             int u, p, q;
             quint64 maskHi = 0, maskLo = 0;
             quint64 prefixHi, prefixLo;
-            quint64 hostHi, hostLo;
+            quint64 hostHi = 0, hostLo = 0;
             quint64 srcHi = 0, srcLo = 0;
 
             switch(data.src_addr_mode())
@@ -433,7 +433,7 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
             int u, p, q;
             quint64 maskHi = 0, maskLo = 0;
             quint64 prefixHi, prefixLo;
-            quint64 hostHi, hostLo;
+            quint64 hostHi = 0, hostLo = 0;
             quint64 dstHi = 0, dstLo = 0;
 
             switch(data.dst_addr_mode())

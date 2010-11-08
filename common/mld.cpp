@@ -232,7 +232,7 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case kGroupAddress:
         {
-            quint64 grpHi, grpLo;
+            quint64 grpHi = 0, grpLo = 0;
 
             ipUtils::ipAddress(
                     data.group_address().v6_hi(),
