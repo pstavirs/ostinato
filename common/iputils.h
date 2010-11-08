@@ -60,6 +60,7 @@ quint32 inline ipAddress(quint32 baseIp, int prefix, AddrMode mode, int count,
         ip = subnet | host;
         break;
     default:
+        ip = 0;
         qWarning("Unhandled mode = %d", mode);
     }
 
@@ -72,7 +73,7 @@ void inline ipAddress(quint64 baseIpHi, quint64 baseIpLo, int prefix,
     int u, p, q;
     quint64 maskHi = 0, maskLo = 0;
     quint64 prefixHi, prefixLo;
-    quint64 hostHi, hostLo;
+    quint64 hostHi = 0, hostLo = 0;
 
     switch(mode)
     {

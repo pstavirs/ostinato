@@ -192,7 +192,7 @@ void GmpConfigForm::on_auxData_textChanged(const QString &text)
 {
     // auxDataLength is in units of words and each byte is 2 chars in text()
     if (!overrideAuxDataLength->isChecked())
-        auxDataLength->setText(QString().setNum((auxData->text().size()+7)/8));
+        auxDataLength->setText(QString().setNum((text.size()+7)/8));
 }
 
 GmpProtocol::GmpProtocol(StreamBase *stream, AbstractProtocol *parent)
