@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 #include <QProcess>
 #include <QTemporaryFile>
+#include <QTimer>
 #include <QtGlobal>
 
 using ::google::protobuf::NewCallback;
@@ -45,6 +46,13 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
 
     statsController = new PbRpcController(portIdList_, portStatsList_);
     isGetStatsPending_ = false;
+
+    reconnect = false;
+    reconnectAfter = kMinReconnectWaitTime;
+    reconnectTimer = new QTimer(this);
+    reconnectTimer->setSingleShot(true);
+    connect(reconnectTimer, SIGNAL(timeout()), 
+        this, SLOT(on_reconnectTimer_timeout()));
 
     rpcChannel = new PbRpcChannel(ip, port);
     serviceStub = new OstProto::OstService::Stub(rpcChannel);
@@ -75,6 +83,15 @@ PortGroup::~PortGroup()
 // ------------------------------------------------
 //                      Slots
 // ------------------------------------------------
+void PortGroup::on_reconnectTimer_timeout()
+{
+    reconnectAfter *= 2;
+    if (reconnectAfter > kMaxReconnectWaitTime)
+        reconnectAfter = kMaxReconnectWaitTime;
+
+    connectToHost();
+}
+
 void PortGroup::on_rpcChannel_stateChanged(QAbstractSocket::SocketState state)
 {
     qDebug("state changed %d", state);
@@ -98,6 +115,8 @@ void PortGroup::on_rpcChannel_connected()
     qDebug("connected\n");
     emit portGroupDataChanged(mPortGroupId);
 
+    reconnectAfter = kMinReconnectWaitTime;
+
     qDebug("requesting portlist ...");
     
     PbRpcController *controller = new PbRpcController(void_, portIdList);
@@ -115,12 +134,25 @@ void PortGroup::on_rpcChannel_disconnected()
 
     emit portListChanged(mPortGroupId);
     emit portGroupDataChanged(mPortGroupId);
+
+    if (reconnect)
+    {
+        qDebug("starting reconnect timer for %d ms ...", reconnectAfter);
+        reconnectTimer->start(reconnectAfter);
+    }
 }
 
 void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
 {
     qDebug("%s: error %d", __FUNCTION__, socketError);
     emit portGroupDataChanged(mPortGroupId);
+
+    qDebug("%s: state %d", __FUNCTION__, rpcChannel->state());
+    if ((rpcChannel->state() == QAbstractSocket::UnconnectedState) && reconnect)
+    {
+        qDebug("starting reconnect timer for %d ms...", reconnectAfter);
+        reconnectTimer->start(reconnectAfter);
+    }
 }
 
 void PortGroup::processPortIdList(PbRpcController *controller)

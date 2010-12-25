@@ -37,6 +37,7 @@ LOW
 #define DEFAULT_SERVER_PORT        7878
 
 class QFile;
+class QTimer;
 
 class PortGroup : public QObject {
     Q_OBJECT
@@ -46,6 +47,11 @@ private:
     quint32        mPortGroupId;
     QString        mUserAlias;            // user defined
 
+    bool            reconnect;
+    int             reconnectAfter;     // time in milliseconds
+    static const int kMinReconnectWaitTime = 2000; // ms
+    static const int kMaxReconnectWaitTime = 60000; // ms
+    QTimer          *reconnectTimer;
     PbRpcChannel    *rpcChannel;
     PbRpcController *statsController;
     bool            isGetStatsPending_;
@@ -63,10 +69,10 @@ public:
         quint16 port = DEFAULT_SERVER_PORT); 
     ~PortGroup();
 
-    void connectToHost() { rpcChannel->establish(); }
+    void connectToHost() { reconnect = true; rpcChannel->establish(); }
     void connectToHost(QHostAddress ip, quint16 port) 
-        { rpcChannel->establish(ip, port); }
-    void disconnectFromHost() { rpcChannel->tearDown(); }
+        { reconnect = true; rpcChannel->establish(ip, port); }
+    void disconnectFromHost() { reconnect = false; rpcChannel->tearDown(); }
 
     int numPorts() const { return mPorts.size(); }
     quint32 id() const { return mPortGroupId; } 
@@ -123,6 +129,7 @@ signals:
     void statsChanged(quint32 portGroupId);
 
 private slots:
+    void on_reconnectTimer_timeout();
     void on_rpcChannel_stateChanged(QAbstractSocket::SocketState state);
     void on_rpcChannel_connected();
     void on_rpcChannel_disconnected();
