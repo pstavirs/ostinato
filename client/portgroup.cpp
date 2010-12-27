@@ -67,6 +67,9 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
         this, SLOT(on_rpcChannel_disconnected()));
     connect(rpcChannel, SIGNAL(error(QAbstractSocket::SocketError)), 
         this, SLOT(on_rpcChannel_error(QAbstractSocket::SocketError)));
+
+    connect(this, SIGNAL(portListChanged(quint32)),
+        this, SLOT(when_portListChanged(quint32)), Qt::QueuedConnection);
 }
 
 PortGroup::~PortGroup()
@@ -155,6 +158,23 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
     }
 }
 
+void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
+{
+    if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
+    {
+        QMessageBox::warning(NULL, tr("Ostinato"),
+            QString("The portgroup %1:%2 does not contain any ports!\n\n"
+               "Packet Transmit/Capture requires elevated privileges. "
+               "Please ensure that you are running 'drone' - the server "
+               "component of Ostinato with admin/root OR setuid privilege.\n\n"
+               "For more information see "
+               "http://ostinato.googlecode.com/wiki/FAQ#"
+                   "Q._Port_group_has_no_interfaces")
+                .arg(serverAddress().toString())
+                .arg(int(serverPort())));
+    }
+}
+
 void PortGroup::processPortIdList(PbRpcController *controller)
 {
     OstProto::PortIdList *portIdList 
@@ -221,7 +241,7 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
         goto _error_exit;
     }
 
-    emit portListAboutToBeChanged(mPortGroupId);
+    //emit portListAboutToBeChanged(mPortGroupId);
 
     for(int i = 0; i < portConfigList->port_size(); i++)
     {
@@ -232,7 +252,7 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
         mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
     }
 
-    emit portListChanged(mPortGroupId);
+    //emit portListChanged(mPortGroupId);
 
     // FIXME: check if we need new signals since we are not changing the
     // number of ports, just the port data
@@ -733,6 +753,9 @@ void PortGroup::getPortStats()
     //qDebug("In %s", __FUNCTION__);
 
     if (state() != QAbstractSocket::ConnectedState)
+        goto _exit;
+
+    if (numPorts() <= 0)
         goto _exit;
 
     if (isGetStatsPending_)
