@@ -135,6 +135,8 @@ private slots:
     void on_rpcChannel_disconnected();
     void on_rpcChannel_error(QAbstractSocket::SocketError socketError);
 
+    void when_portListChanged(quint32 portGroupId);
+
 public slots:
     void when_configApply(int portIndex);
 
