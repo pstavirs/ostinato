@@ -162,7 +162,7 @@ void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
 {
     if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
     {
-        QMessageBox::warning(NULL, tr("Ostinato"),
+        QMessageBox::warning(NULL, tr("No ports in portgroup"),
             QString("The portgroup %1:%2 does not contain any ports!\n\n"
                "Packet Transmit/Capture requires elevated privileges. "
                "Please ensure that you are running 'drone' - the server "

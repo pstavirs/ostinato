@@ -94,6 +94,10 @@ protected:
 
 private:
     bool    isSendQueueDirty_;
+
+    static const int kMaxPktSize = 16384;
+    uchar   pktBuf_[kMaxPktSize];
+
     /*! \note StreamBase::id() and index into streamList[] are NOT same! */
     QList<StreamBase*>  streamList_;
 

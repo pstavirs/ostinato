@@ -315,6 +315,8 @@ void PcapPort::PortTransmitter::run()
     int i;
 
     qDebug("sendQueueList_.size = %d", sendQueueList_.size());
+    if (sendQueueList_.size() <= 0)
+        return;
 
     for(i = 0; i < sendQueueList_.size(); i++)
     {

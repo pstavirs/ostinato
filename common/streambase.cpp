@@ -453,6 +453,7 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 
 bool StreamBase::preflightCheck(QString &result) const
 {
+    bool pass = true;
     int count = isFrameSizeVariable() ? frameCount() : 1;
 
     for (int i = 0; i < count; i++)
@@ -462,13 +463,18 @@ bool StreamBase::preflightCheck(QString &result) const
             result += QString("One or more frames may be truncated - "
                 "frame length should be at least %1.\n")
                 .arg(frameProtocolLength(i) + kFcsSize);
-            goto _fail;
+            pass = false;
+        }
+
+        if (frameLen(i) > 1522)
+        {
+            result += QString("Jumbo frames may be truncated or dropped "
+                "if not supported by the hardware\n");
+            pass = false;
         }
     }
-    return true;
 
-_fail:
-    return false;
+    return pass;
 }
 
 bool StreamBase::StreamLessThan(StreamBase* stream1, StreamBase* stream2)
