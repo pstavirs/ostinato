@@ -104,15 +104,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
             <property name="enabled" >
              <bool>false</bool>
             </property>
-            <property name="inputMask" >
-             <string>0099; </string>
-            </property>
-            <property name="text" >
-             <string/>
-            </property>
-            <property name="maxLength" >
-             <number>4</number>
-            </property>
             <property name="alignment" >
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -120,15 +111,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
           </item>
           <item row="1" column="0" >
            <widget class="QLineEdit" name="lePktLen" >
-            <property name="inputMask" >
-             <string/>
-            </property>
-            <property name="text" >
-             <string/>
-            </property>
-            <property name="maxLength" >
-             <number>32767</number>
-            </property>
             <property name="alignment" >
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -145,15 +127,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <widget class="QLineEdit" name="lePktLenMax" >
             <property name="enabled" >
              <bool>false</bool>
-            </property>
-            <property name="inputMask" >
-             <string>0099; </string>
-            </property>
-            <property name="text" >
-             <string/>
-            </property>
-            <property name="maxLength" >
-             <number>4</number>
             </property>
             <property name="alignment" >
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

@@ -113,7 +113,6 @@ void AbstractPort::updatePacketList()
 {
     int     len;
     bool    isVariable;
-    uchar   pktBuf[2000];
     long    sec = 0; 
     long    usec = 0;
 
@@ -162,7 +161,7 @@ void AbstractPort::updatePacketList()
             else
             {
                 isVariable = false;
-                len = streamList_[i]->frameValue(pktBuf, sizeof(pktBuf), 0);
+                len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 0);
             }
 
             for (int j = 0; j < numBursts; j++)
@@ -171,8 +170,8 @@ void AbstractPort::updatePacketList()
                 {
                     if (isVariable)
                     {
-                        len = streamList_[i]->frameValue(pktBuf, 
-                                sizeof(pktBuf), j * numPackets + k);
+                        len = streamList_[i]->frameValue(pktBuf_, 
+                                sizeof(pktBuf_), j * numPackets + k);
                     }
                     if (len <= 0)
                         continue;
@@ -180,7 +179,7 @@ void AbstractPort::updatePacketList()
                     qDebug("q(%d, %d, %d) sec = %lu usec = %lu",
                             i, j, k, sec, usec);
 
-                    appendToPacketList(sec, usec, pktBuf, len); 
+                    appendToPacketList(sec, usec, pktBuf_, len); 
 
                     usec += ipg;
                     if (usec > 1000000)

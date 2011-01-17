@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "packetmodel.h"
 #include "modeltest.h"
 
-#define MAX_MAC_ITER_COUNT    256
+#define MAX_MAC_ITER_COUNT     256
 #define MIN_PKT_LEN            64
-#define MAX_PKT_LEN            1522
+#define MAX_PKT_LEN            16384
 
 /*
 ** TODO

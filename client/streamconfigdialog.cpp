@@ -257,8 +257,9 @@ void StreamConfigDialog::setupUiExtra()
     ** Setup Validators
     */    
     // Meta Data
-    //! \todo - doesn't seem to work -  range validator needs a spinbox?
-    //lePktLen->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN, this));
+    lePktLen->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN, this));
+    lePktLenMin->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN,this));
+    lePktLenMax->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN,this));
 
     /*
     ** Setup Connections
