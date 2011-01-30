@@ -89,8 +89,14 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
     iter = createProtocolListIterator();
     for (int i=0; i < stream.protocol_size(); i++)
     {
-        proto = OstProtocolManager->createProtocol(
-            stream.protocol(i).protocol_id().id(), this);
+        int protoId = stream.protocol(i).protocol_id().id();
+
+        if (!OstProtocolManager->isRegisteredProtocol(protoId))
+        {
+            qWarning("Skipping unregistered protocol %d", protoId);
+            continue;
+        }
+        proto = OstProtocolManager->createProtocol(protoId, this);
         proto->protoDataCopyFrom(stream.protocol(i));
         iter->insert(proto);
     }

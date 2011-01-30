@@ -164,6 +164,11 @@ void ProtocolManager::populateNeighbourProtocols()
     }
 }
 
+bool ProtocolManager::isRegisteredProtocol(int protoNumber)
+{
+    return factory.contains(protoNumber);
+}
+
 AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
     StreamBase *stream, AbstractProtocol *parent)
 {
