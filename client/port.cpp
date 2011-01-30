@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 
 #include "fileformat.h"
+#include "pdmlfileformat.h"
 
 #include <QApplication>
 #include <QVariant>
@@ -227,7 +228,8 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
 {
     OstProto::StreamConfigList streams;
 
-    if (!fileFormat.openStreams(fileName, streams, error))
+    //if (!fileFormat.openStreams(fileName, streams, error))
+    if (!pdmlFileFormat.openStreams(fileName, streams, error))
         goto _fail;
 
     if (!append)

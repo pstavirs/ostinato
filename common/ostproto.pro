@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += network script
+QT += network script xml
 INCLUDEPATH += "../extra/qhexedit2/src"
 LIBS += \
     -lprotobuf
@@ -58,6 +58,8 @@ HEADERS += \
     abstractprotocol.h    \
     comboprotocol.h    \
     fileformat.h \
+    pdmlfileformat.h \
+    pdml_p.h \
     protocolmanager.h \
     protocollist.h \
     protocollistiterator.h \
@@ -96,6 +98,8 @@ SOURCES += \
     abstractprotocol.cpp \
     crc32c.cpp \
     fileformat.cpp \
+    pdmlfileformat.cpp \
+    pdml_p.cpp \
     protocolmanager.cpp \
     protocollist.cpp \
     protocollistiterator.cpp \
