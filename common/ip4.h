@@ -64,6 +64,7 @@ private:
         ip4_isOverrideVer,
         ip4_isOverrideHdrLen,
         ip4_isOverrideTotLen,
+        ip4_isOverrideProto,
         ip4_isOverrideCksum,
 
         ip4_srcAddrMode,

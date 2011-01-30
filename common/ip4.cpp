@@ -166,6 +166,7 @@ AbstractProtocol::FieldFlags Ip4Protocol::fieldFlags(int index) const
         case ip4_isOverrideVer:
         case ip4_isOverrideHdrLen:
         case ip4_isOverrideTotLen:
+        case ip4_isOverrideProto:
         case ip4_isOverrideCksum:
         case ip4_srcAddrMode:
         case ip4_srcAddrCount:
@@ -381,17 +382,20 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                     return QString("Protocol");
                 case FieldValue:
                 {
-                    unsigned char id = payloadProtocolId(ProtocolIdIp);
+                    unsigned char id = data.is_override_proto() ?
+                        data.proto() : payloadProtocolId(ProtocolIdIp);
                     return id;
                 }
                 case FieldFrameValue:
                 {
-                    unsigned char id = payloadProtocolId(ProtocolIdIp);
+                    unsigned char id = data.is_override_proto() ?
+                        data.proto() : payloadProtocolId(ProtocolIdIp);
                     return QByteArray(1, (char) id);
                 }
                 case FieldTextValue:
                 {
-                    unsigned char id = payloadProtocolId(ProtocolIdIp);
+                    unsigned char id = data.is_override_proto() ?
+                        data.proto() : payloadProtocolId(ProtocolIdIp);
                     return  QString("0x%1").
                         arg(id, 2, BASE_HEX, QChar('0'));
                 }
@@ -559,6 +563,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
         case ip4_isOverrideVer:
         case ip4_isOverrideHdrLen:
         case ip4_isOverrideTotLen:
+        case ip4_isOverrideProto:
         case ip4_isOverrideCksum:
 
         case ip4_srcAddrMode:
@@ -669,6 +674,8 @@ void Ip4Protocol::loadConfigWidget()
     configForm->cbIpFlagsMf->setChecked((data.flags() & IP_FLAG_MF) > 0);
 
     configForm->leIpTtl->setText(QString().setNum(data.ttl()));
+
+    configForm->cbIpProtocolOverride->setChecked(data.is_override_proto());
     configForm->leIpProto->setText(uintToHexStr(
         fieldData(ip4_proto, FieldValue).toUInt(), 1));
 
@@ -712,6 +719,8 @@ void Ip4Protocol::storeConfigWidget()
     data.set_flags(ff);
 
     data.set_ttl(configForm->leIpTtl->text().toULong(&isOk));
+
+    data.set_is_override_proto(configForm->cbIpProtocolOverride->isChecked());
     data.set_proto(configForm->leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16));
     
     data.set_is_override_cksum(configForm->cbIpCksumOverride->isChecked());

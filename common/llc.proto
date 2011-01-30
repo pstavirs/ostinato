@@ -22,9 +22,13 @@ import "protocol.proto";
 package OstProto;
 
 message Llc {
-    optional uint32            dsap = 1;
-    optional uint32            ssap = 2;
-    optional uint32            ctl = 3;
+    optional bool is_override_dsap = 4;
+    optional bool is_override_ssap = 5;
+    optional bool is_override_ctl = 6;
+
+    optional uint32 dsap = 1;
+    optional uint32 ssap = 2;
+    optional uint32 ctl = 3;
 }
 
 extend Protocol {

@@ -41,6 +41,9 @@ private:
     {
         dot3_length,
 
+        // Meta-fields
+        dot3_is_override_length,
+
         dot3_fieldCount
     };
 
@@ -60,6 +63,7 @@ public:
 
     virtual int    fieldCount() const;
 
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 

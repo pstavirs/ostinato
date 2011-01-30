@@ -46,6 +46,11 @@ private:
         llc_ssap,
         llc_ctl,
 
+        // Meta fields
+        llc_is_override_dsap,
+        llc_is_override_ssap,
+        llc_is_override_ctl,
+
         llc_fieldCount
     };
 
@@ -65,8 +70,9 @@ public:
 
     virtual ProtocolIdType protocolIdType() const;
 
-    virtual int    fieldCount() const;
+    virtual int fieldCount() const;
 
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 

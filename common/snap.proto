@@ -22,8 +22,11 @@ import "protocol.proto";
 package OstProto;
 
 message Snap {
-    optional uint32            oui = 1;
-    optional uint32            type = 2;
+    optional bool is_override_oui = 3;
+    optional bool is_override_type = 4;
+
+    optional uint32 oui = 1;
+    optional uint32 type = 2;
 }
 
 extend Protocol {

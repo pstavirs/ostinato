@@ -23,7 +23,8 @@ package OstProto;
 
 // 802.3
 message Dot3 {
-    optional uint32            length = 1;
+    optional bool is_override_length = 2;
+    optional uint32 length = 1;
 }
 
 extend Protocol {
