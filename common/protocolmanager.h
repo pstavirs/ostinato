@@ -42,6 +42,7 @@ public:
 
     void registerProtocol(int protoNumber, void *protoInstanceCreator);
 
+    bool isRegisteredProtocol(int protoNumber);
     AbstractProtocol* createProtocol(int protoNumber, StreamBase *stream,
         AbstractProtocol *parent = 0);
     AbstractProtocol* createProtocol(QString protoName, StreamBase *stream,
