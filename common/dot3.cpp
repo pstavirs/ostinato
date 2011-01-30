@@ -17,17 +17,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "dot3.h"
 #include "streambase.h"
 
+#include <QHostAddress>
+#include <QIntValidator>
+#include <qendian.h>
 
 Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
+    leLength->setValidator(new QIntValidator(0, 16384, this));
 }
 
 Dot3Protocol::Dot3Protocol(StreamBase *stream, AbstractProtocol *parent)
@@ -80,6 +81,29 @@ int    Dot3Protocol::fieldCount() const
     return dot3_fieldCount;
 }
 
+AbstractProtocol::FieldFlags Dot3Protocol::fieldFlags(int index) const
+{
+    AbstractProtocol::FieldFlags flags;
+
+    flags = AbstractProtocol::fieldFlags(index);
+
+    switch (index)
+    {
+        case dot3_length:
+            break;
+
+        case dot3_is_override_length:
+            flags &= ~FrameField;
+            flags |= MetaField;
+            break;
+
+        default:
+            break;
+    }
+
+    return flags;
+}
+
 QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
         int streamIndex) const
 {
@@ -92,24 +116,23 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
                     return QString("Length");
                 case FieldValue:
                 {
-                    quint16 len;
-
-                    len = protocolFramePayloadSize(streamIndex);
+                    quint16 len = data.is_override_length() ?
+                        data.length() : protocolFramePayloadSize(streamIndex);
                     return len;
                 }
                 case FieldTextValue:
                 {
-                    quint16 len;
+                    quint16 len = data.is_override_length() ?
+                        data.length() : protocolFramePayloadSize(streamIndex);
 
-                    len = protocolFramePayloadSize(streamIndex);
                     return QString("%1").arg(len);
                 }
                 case FieldFrameValue:
                 {
-                    quint16 len;
+                    quint16 len = data.is_override_length() ?
+                        data.length() : protocolFramePayloadSize(streamIndex);
                     QByteArray fv;
 
-                    len = protocolFramePayloadSize(streamIndex);
                     fv.resize(2);
                     qToBigEndian(len, (uchar*) fv.data());
                     return fv;
@@ -121,17 +144,58 @@ QVariant Dot3Protocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
 
+        // Meta fields
+        case dot3_is_override_length:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_length();
+                default:
+                    break;
+            }
+            break;
+        }
+
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool Dot3Protocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool Dot3Protocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        return false;
+
+    switch (index)
+    {
+        case dot3_length:
+        {
+            uint len = value.toUInt(&isOk);
+            if (isOk)
+                data.set_length(len);
+            break;
+        }
+        case dot3_is_override_length:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_length(ovr);
+            isOk = true;
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+    return isOk;
 }
 
 bool Dot3Protocol::isProtocolFrameValueVariable() const
@@ -153,16 +217,18 @@ void Dot3Protocol::loadConfigWidget()
 {
     configWidget();
 
+    configForm->cbOverrideLength->setChecked(
+        fieldData(dot3_is_override_length, FieldValue).toBool());
     configForm->leLength->setText(
         fieldData(dot3_length, FieldValue).toString());
 }
 
 void Dot3Protocol::storeConfigWidget()
 {
-    bool isOk;
-
     configWidget();
 
-    data.set_length(configForm->leLength->text().toULong(&isOk));
+    setFieldData(dot3_is_override_length, 
+            configForm->cbOverrideLength->isChecked());
+    setFieldData(dot3_length,configForm->leLength->text());
 }
 

@@ -83,6 +83,33 @@ int    LlcProtocol::fieldCount() const
     return llc_fieldCount;
 }
 
+AbstractProtocol::FieldFlags LlcProtocol::fieldFlags(int index) const
+{
+    AbstractProtocol::FieldFlags flags;
+
+    flags = AbstractProtocol::fieldFlags(index);
+
+    switch (index)
+    {
+        case llc_dsap:
+        case llc_ssap:
+        case llc_ctl:
+            break;
+
+        case llc_is_override_dsap:
+        case llc_is_override_ssap:
+        case llc_is_override_ctl:
+            flags &= ~FrameField;
+            flags |= MetaField;
+            break;
+
+        default:
+            break;
+    }
+
+    return flags;
+}
+
 QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
         int streamIndex) const
 {
@@ -90,9 +117,9 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
     quint8 dsap, ssap, ctl;
 
     id = payloadProtocolId(ProtocolIdLlc);
-    dsap = (id >> 16) & 0xFF;
-    ssap = (id >> 8) & 0xFF;
-    ctl  = (id >> 0) & 0xFF;
+    dsap = data.is_override_dsap() ? data.dsap() : (id >> 16) & 0xFF;
+    ssap = data.is_override_ssap() ? data.ssap() : (id >> 8) & 0xFF;
+    ctl  = data.is_override_ctl() ? data.ctl() : (id >> 0) & 0xFF;
 
     switch (index)
     {
@@ -142,17 +169,109 @@ QVariant LlcProtocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
 
+
+        // Meta fields
+        case llc_is_override_dsap:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_dsap();
+                default:
+                    break;
+            }
+            break;
+        }
+        case llc_is_override_ssap:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_ssap();
+                default:
+                    break;
+            }
+            break;
+        }
+        case llc_is_override_ctl:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_ctl();
+                default:
+                    break;
+            }
+            break;
+        }
+
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool LlcProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool LlcProtocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        return false;
+
+    switch (index)
+    {
+        case llc_dsap:
+        {
+            uint dsap = value.toUInt(&isOk) & 0xFF;
+            if (isOk)
+                data.set_dsap(dsap);
+            break;
+        }
+        case llc_ssap:
+        {
+            uint ssap = value.toUInt(&isOk) & 0xFF;
+            if (isOk)
+                data.set_ssap(ssap);
+            break;
+        }
+        case llc_ctl:
+        {
+            uint ctl = value.toUInt(&isOk) & 0xFF;
+            if (isOk)
+                data.set_ctl(ctl);
+            break;
+        }
+        case llc_is_override_dsap:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_dsap(ovr);
+            isOk = true;
+            break;
+        }
+        case llc_is_override_ssap:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_ssap(ovr);
+            isOk = true;
+            break;
+        }
+        case llc_is_override_ctl:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_ctl(ovr);
+            isOk = true;
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+    return isOk;
 }
 
 
@@ -173,10 +292,18 @@ void LlcProtocol::loadConfigWidget()
 
     configWidget();
 
+    configForm->cbOverrideDsap->setChecked(
+        fieldData(llc_is_override_dsap, FieldValue).toBool());
     configForm->leDsap->setText(uintToHexStr(
         fieldData(llc_dsap, FieldValue).toUInt(), 1));
+
+    configForm->cbOverrideSsap->setChecked(
+        fieldData(llc_is_override_ssap, FieldValue).toBool());
     configForm->leSsap->setText(uintToHexStr(
         fieldData(llc_ssap, FieldValue).toUInt(), 1));
+
+    configForm->cbOverrideControl->setChecked(
+        fieldData(llc_is_override_ctl, FieldValue).toBool());
     configForm->leControl->setText(uintToHexStr(
         fieldData(llc_ctl, FieldValue).toUInt(), 1));
 #undef uintToHexStr
@@ -188,8 +315,17 @@ void LlcProtocol::storeConfigWidget()
 
     configWidget();
 
-    data.set_dsap(configForm->leDsap->text().toULong(&isOk, BASE_HEX));
-    data.set_ssap(configForm->leSsap->text().toULong(&isOk, BASE_HEX));
-    data.set_ctl(configForm->leControl->text().toULong(&isOk, BASE_HEX));
+    setFieldData(llc_is_override_dsap, 
+            configForm->cbOverrideDsap->isChecked());
+    setFieldData(llc_dsap, configForm->leDsap->text().toUInt(&isOk, BASE_HEX));
+
+    setFieldData(llc_is_override_ssap, 
+            configForm->cbOverrideSsap->isChecked());
+    setFieldData(llc_ssap, configForm->leSsap->text().toUInt(&isOk, BASE_HEX));
+
+    setFieldData(llc_is_override_ctl, 
+            configForm->cbOverrideControl->isChecked());
+    setFieldData(llc_ctl, 
+            configForm->leControl->text().toUInt(&isOk, BASE_HEX));
 }
 

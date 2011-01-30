@@ -83,6 +83,29 @@ int    Eth2Protocol::fieldCount() const
     return eth2_fieldCount;
 }
 
+AbstractProtocol::FieldFlags Eth2Protocol::fieldFlags(int index) const
+{
+    AbstractProtocol::FieldFlags flags;
+
+    flags = AbstractProtocol::fieldFlags(index);
+
+    switch (index)
+    {
+        case eth2_type:
+            break;
+
+        case eth2_is_override_type:
+            flags &= ~FrameField;
+            flags |= MetaField;
+            break;
+
+        default:
+            break;
+    }
+
+    return flags;
+}
+
 QVariant Eth2Protocol::fieldData(int index, FieldAttrib attrib,
         int streamIndex) const
 {
@@ -90,21 +113,27 @@ QVariant Eth2Protocol::fieldData(int index, FieldAttrib attrib,
     {
         case eth2_type:
         {
-            quint16 type;
             switch(attrib)
             {
                 case FieldName:            
                     return QString("Type");
                 case FieldValue:
-                    type = payloadProtocolId(ProtocolIdEth);
+                {
+                    quint16 type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     return type;
+                }
                 case FieldTextValue:
-                    type = payloadProtocolId(ProtocolIdEth);
+                {
+                    quint16 type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     return QString("0x%1").arg(type, 4, BASE_HEX, QChar('0'));
+                }
                 case FieldFrameValue:
                 {
                     QByteArray fv;
-                    type = payloadProtocolId(ProtocolIdEth);
+                    quint16 type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     fv.resize(2);
                     qToBigEndian((quint16) type, (uchar*) fv.data());
                     return fv;
@@ -114,7 +143,23 @@ QVariant Eth2Protocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+
+        // Meta fields
+        case eth2_is_override_type:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_type();
+                default:
+                    break;
+            }
+            break;
+        }
+
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
@@ -136,8 +181,18 @@ bool Eth2Protocol::setFieldData(int index, const QVariant &value,
             uint type = value.toUInt(&isOk);
             if (isOk)
                 data.set_type(type);
+            break;
+        }
+        case eth2_is_override_type:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_type(ovr);
+            isOk = true;
+            break;
         }
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
     return isOk;
@@ -157,6 +212,8 @@ void Eth2Protocol::loadConfigWidget()
 {
     configWidget();
 
+    configForm->cbOverrideType->setChecked(
+        fieldData(eth2_is_override_type, FieldValue).toBool());
     configForm->leType->setText(uintToHexStr(
         fieldData(eth2_type, FieldValue).toUInt(), 2));
 }
@@ -167,6 +224,8 @@ void Eth2Protocol::storeConfigWidget()
 
     configWidget();
 
+    setFieldData(eth2_is_override_type, 
+            configForm->cbOverrideType->isChecked());
     data.set_type(configForm->leType->text().remove(QChar(' ')).toULong(&isOk, 16));
 }
 

@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "snap.h"
 
+quint32 kStdOui = 0x000000;
+
 SnapConfigForm::SnapConfigForm(QWidget *parent)
     : QWidget(parent)
 {
@@ -89,9 +91,34 @@ quint32 SnapProtocol::protocolId(ProtocolIdType type) const
     return AbstractProtocol::protocolId(type);
 }
 
-int    SnapProtocol::fieldCount() const
+int SnapProtocol::fieldCount() const
 {
     return snap_fieldCount;
+}
+
+AbstractProtocol::FieldFlags SnapProtocol::fieldFlags(int index) const
+{
+    AbstractProtocol::FieldFlags flags;
+
+    flags = AbstractProtocol::fieldFlags(index);
+
+    switch (index)
+    {
+        case snap_oui:
+        case snap_type:
+            break;
+
+        case snap_is_override_oui:
+        case snap_is_override_type:
+            flags &= ~FrameField;
+            flags |= MetaField;
+            break;
+
+        default:
+            break;
+    }
+
+    return flags;
 }
 
 QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
@@ -105,14 +132,21 @@ QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("OUI");
                 case FieldValue:
-                    return data.oui();
+                {
+                    quint32 oui = data.is_override_oui() ? data.oui() : kStdOui;
+                    return oui;
+                }
                 case FieldTextValue:
-                    return QString("%1").arg(data.oui(), 6, BASE_HEX, QChar('0'));
+                {
+                    quint32 oui = data.is_override_oui() ? data.oui() : kStdOui;
+                    return QString("%1").arg(oui, 6, BASE_HEX, QChar('0'));
+                }
                 case FieldFrameValue:
                 {
+                    quint32 oui = data.is_override_oui() ? data.oui() : kStdOui;
                     QByteArray fv;
                     fv.resize(4);
-                    qToBigEndian((quint32) data.oui(), (uchar*) fv.data());
+                    qToBigEndian(oui, (uchar*) fv.data());
                     fv.remove(0, 1);
                     return fv;
                 }
@@ -129,16 +163,19 @@ QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("Type");
                 case FieldValue:
-                    type = payloadProtocolId(ProtocolIdEth);
+                    type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     return type;
                 case FieldTextValue:
-                    type = payloadProtocolId(ProtocolIdEth);
+                    type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     return QString("%1").arg(type, 4, BASE_HEX, QChar('0'));
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
-                    type = payloadProtocolId(ProtocolIdEth);
+                    type = data.is_override_type() ?
+                        data.type() : payloadProtocolId(ProtocolIdEth);
                     qToBigEndian(type, (uchar*) fv.data());
                     return fv;
                 }
@@ -147,19 +184,86 @@ QVariant SnapProtocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+
+        // Meta fields
+        case snap_is_override_oui:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_oui();
+                default:
+                    break;
+            }
+            break;
+        }
+        case snap_is_override_type:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_type();
+                default:
+                    break;
+            }
+            break;
+        }
+
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool SnapProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool SnapProtocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
-}
+    bool isOk = false;
 
+    if (attrib != FieldValue)
+        return false;
+
+    switch (index)
+    {
+        case snap_oui:
+        {
+            uint oui = value.toUInt(&isOk);
+            if (isOk)
+                data.set_oui(oui);
+            break;
+        }
+        case snap_type:
+        {
+            uint type = value.toUInt(&isOk);
+            if (isOk)
+                data.set_type(type);
+            break;
+        }
+        case snap_is_override_oui:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_oui(ovr);
+            isOk = true;
+            break;
+        }
+        case snap_is_override_type:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_type(ovr);
+            isOk = true;
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+    return isOk;
+
+}
 
 QWidget* SnapProtocol::configWidget()
 {
@@ -175,8 +279,13 @@ void SnapProtocol::loadConfigWidget()
 {
     configWidget();
 
+    configForm->cbOverrideOui->setChecked(
+        fieldData(snap_is_override_oui, FieldValue).toBool());
     configForm->leOui->setText(uintToHexStr(
         fieldData(snap_oui, FieldValue).toUInt(), 3));
+
+    configForm->cbOverrideType->setChecked(
+        fieldData(snap_is_override_type, FieldValue).toBool());
     configForm->leType->setText(uintToHexStr(
         fieldData(snap_type, FieldValue).toUInt(), 2));
 }
@@ -184,10 +293,15 @@ void SnapProtocol::loadConfigWidget()
 void SnapProtocol::storeConfigWidget()
 {
     bool isOk;
-
     configWidget();
 
-    data.set_oui(configForm->leOui->text().toULong(&isOk, BASE_HEX));
-    data.set_type(configForm->leType->text().toULong(&isOk, BASE_HEX));
-}
+    setFieldData(snap_is_override_oui, 
+            configForm->cbOverrideOui->isChecked());
+    setFieldData(snap_oui, configForm->leOui->text().remove(QChar(' '))
+            .toUInt(&isOk, BASE_HEX));
 
+    setFieldData(snap_is_override_type, 
+            configForm->cbOverrideType->isChecked());
+    setFieldData(snap_type, configForm->leType->text().remove(QChar(' '))
+            .toUInt(&isOk, BASE_HEX));
+}

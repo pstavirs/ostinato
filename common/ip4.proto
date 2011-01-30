@@ -33,7 +33,8 @@ message Ip4 {
     optional bool is_override_ver    = 1;
     optional bool is_override_hdrlen = 2;
     optional bool is_override_totlen = 3;
-    optional bool is_override_cksum    = 4;
+    optional bool is_override_proto  = 30;
+    optional bool is_override_cksum  = 4;
 
     optional uint32    ver_hdrlen = 5 [default = 0x45]; 
     optional uint32    tos = 6;

@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
+    <width>507</width>
     <height>308</height>
    </rect>
   </property>
@@ -137,17 +137,13 @@ Length (x4)</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0" >
-      <widget class="QLabel" name="label_27" >
-       <property name="text" >
-        <string>Protocol</string>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="1" >
       <widget class="QLineEdit" name="leIpProto" >
        <property name="enabled" >
         <bool>false</bool>
+       </property>
+       <property name="inputMask" >
+        <string>>HH; </string>
        </property>
        <property name="text" >
         <string/>
@@ -168,6 +164,13 @@ Length (x4)</string>
        </property>
        <property name="inputMask" >
         <string>>HH HH; </string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" >
+      <widget class="QCheckBox" name="cbIpProtocolOverride" >
+       <property name="text" >
+        <string>Override Protocol</string>
        </property>
       </widget>
      </item>
@@ -399,6 +402,34 @@ Length (x4)</string>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>cbIpVersionOverride</tabstop>
+  <tabstop>leIpVersion</tabstop>
+  <tabstop>cbIpHdrLenOverride</tabstop>
+  <tabstop>leIpHdrLen</tabstop>
+  <tabstop>leIpTos</tabstop>
+  <tabstop>cbIpLengthOverride</tabstop>
+  <tabstop>leIpLength</tabstop>
+  <tabstop>leIpId</tabstop>
+  <tabstop>leIpFragOfs</tabstop>
+  <tabstop>cbIpFlagsDf</tabstop>
+  <tabstop>cbIpFlagsMf</tabstop>
+  <tabstop>leIpTtl</tabstop>
+  <tabstop>cbIpProtocolOverride</tabstop>
+  <tabstop>leIpProto</tabstop>
+  <tabstop>cbIpCksumOverride</tabstop>
+  <tabstop>leIpCksum</tabstop>
+  <tabstop>leIpSrcAddr</tabstop>
+  <tabstop>cmbIpSrcAddrMode</tabstop>
+  <tabstop>leIpSrcAddrCount</tabstop>
+  <tabstop>leIpSrcAddrMask</tabstop>
+  <tabstop>leIpDstAddr</tabstop>
+  <tabstop>cmbIpDstAddrMode</tabstop>
+  <tabstop>leIpDstAddrCount</tabstop>
+  <tabstop>leIpDstAddrMask</tabstop>
+  <tabstop>leIpOptions</tabstop>
+  <tabstop>tbIpOptionsEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -424,8 +455,8 @@ Length (x4)</string>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>118</x>
-     <y>43</y>
+     <x>113</x>
+     <y>67</y>
     </hint>
     <hint type="destinationlabel" >
      <x>166</x>
@@ -440,12 +471,12 @@ Length (x4)</string>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>79</x>
-     <y>97</y>
+     <x>89</x>
+     <y>118</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>172</x>
-     <y>97</y>
+     <x>236</x>
+     <y>119</y>
     </hint>
    </hints>
   </connection>
@@ -456,12 +487,28 @@ Length (x4)</string>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>345</x>
-     <y>122</y>
+     <x>387</x>
+     <y>140</y>
     </hint>
     <hint type="destinationlabel" >
      <x>406</x>
      <y>122</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbIpProtocolOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leIpProto</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>363</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>398</x>
+     <y>94</y>
     </hint>
    </hints>
   </connection>

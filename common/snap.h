@@ -42,6 +42,10 @@ private:
         snap_oui = 0,
         snap_type,
 
+        // Meta fields
+        snap_is_override_oui,
+        snap_is_override_type,
+
         snap_fieldCount
     };
 
@@ -62,8 +66,9 @@ public:
     virtual ProtocolIdType protocolIdType() const;
     virtual quint32 protocolId(ProtocolIdType type) const;
 
-    virtual int    fieldCount() const;
+    virtual int fieldCount() const;
 
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
