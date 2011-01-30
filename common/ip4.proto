@@ -1,0 +1,66 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+// IPv4
+message Ip4 {
+
+    enum IpAddrMode {
+        e_im_fixed = 0;
+        e_im_inc_host = 1;
+        e_im_dec_host = 2;
+        e_im_random_host = 3;
+    }
+
+    optional bool is_override_ver    = 1;
+    optional bool is_override_hdrlen = 2;
+    optional bool is_override_totlen = 3;
+    optional bool is_override_proto  = 30;
+    optional bool is_override_cksum  = 4;
+
+    optional uint32    ver_hdrlen = 5 [default = 0x45]; 
+    optional uint32    tos = 6;
+    optional uint32    totlen = 7;
+    optional uint32    id = 8 [default = 1234];
+    optional uint32    flags = 9;
+    optional uint32    frag_ofs = 10;
+    optional uint32    ttl = 11 [default = 127];
+    optional uint32    proto = 12;
+    optional uint32    cksum = 13;
+
+    // Source IP
+    optional fixed32    src_ip = 14;
+    optional IpAddrMode    src_ip_mode = 15 [default = e_im_fixed];
+    optional uint32        src_ip_count = 16 [default = 16];
+    optional fixed32    src_ip_mask = 17 [default = 0xFFFFFF00];
+    
+    // Destination IP
+    optional fixed32    dst_ip = 18;
+    optional IpAddrMode    dst_ip_mode = 19 [default = e_im_fixed];
+    optional uint32        dst_ip_count = 20 [default = 16];
+    optional fixed32    dst_ip_mask = 21 [default = 0xFFFFFF00];
+
+    //! \todo (LOW) IPv4 Options
+}
+
+extend Protocol {
+    optional Ip4 ip4 = 301;
+}

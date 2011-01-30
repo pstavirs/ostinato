@@ -1,0 +1,467 @@
+<ui version="4.0" >
+ <class>Ip6</class>
+ <widget class="QWidget" name="Ip6" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>506</width>
+    <height>233</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <layout class="QGridLayout" >
+     <item row="0" column="0" >
+      <widget class="QCheckBox" name="isVersionOverride" >
+       <property name="text" >
+        <string>Version</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLineEdit" name="version" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="inputMask" >
+        <string/>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item rowspan="3" row="0" column="2" >
+      <widget class="Line" name="line" >
+       <property name="orientation" >
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" >
+      <widget class="QCheckBox" name="isPayloadLengthOverride" >
+       <property name="text" >
+        <string>Payload Length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4" >
+      <widget class="QLineEdit" name="payloadLength" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="label_22" >
+       <property name="text" >
+        <string>Traffic Class</string>
+       </property>
+       <property name="buddy" >
+        <cstring>trafficClass</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLineEdit" name="trafficClass" >
+       <property name="inputMask" >
+        <string>>HH; </string>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" >
+      <widget class="QCheckBox" name="isNextHeaderOverride" >
+       <property name="text" >
+        <string>Next Header</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4" >
+      <widget class="QLineEdit" name="nextHeader" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="inputMask" >
+        <string>HH; </string>
+       </property>
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" >
+      <widget class="QLabel" name="label_24" >
+       <property name="text" >
+        <string>Flow Label</string>
+       </property>
+       <property name="buddy" >
+        <cstring>flowLabel</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLineEdit" name="flowLabel" >
+       <property name="inputMask" >
+        <string>>H HH HH; </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" >
+      <widget class="QLabel" name="label_26" >
+       <property name="text" >
+        <string>Hop Limit</string>
+       </property>
+       <property name="buddy" >
+        <cstring>hopLimit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4" >
+      <widget class="QLineEdit" name="hopLimit" >
+       <property name="text" >
+        <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_7" >
+     <property name="title" >
+      <string/>
+     </property>
+     <property name="flat" >
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>51</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="label" >
+        <property name="text" >
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_31" >
+        <property name="text" >
+         <string>Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="label_23" >
+        <property name="text" >
+         <string>Count</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QLabel" name="label_30" >
+        <property name="text" >
+         <string>Prefix</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_20" >
+        <property name="text" >
+         <string>Source</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="srcAddr" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QComboBox" name="srcAddrModeCombo" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="srcAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+        <property name="maxLength" >
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4" >
+       <widget class="QLineEdit" name="srcAddrPrefix" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="inputMask" >
+         <string>/009; </string>
+        </property>
+        <property name="text" >
+         <string>/64</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QLabel" name="label_21" >
+        <property name="text" >
+         <string>Destination</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QLineEdit" name="dstAddr" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" >
+       <widget class="QComboBox" name="dstAddrModeCombo" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="3" >
+       <widget class="QLineEdit" name="dstAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+        <property name="maxLength" >
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4" >
+       <widget class="QLineEdit" name="dstAddrPrefix" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="inputMask" >
+         <string>/009; </string>
+        </property>
+        <property name="text" >
+         <string>/64</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>isVersionOverride</tabstop>
+  <tabstop>version</tabstop>
+  <tabstop>trafficClass</tabstop>
+  <tabstop>flowLabel</tabstop>
+  <tabstop>isPayloadLengthOverride</tabstop>
+  <tabstop>payloadLength</tabstop>
+  <tabstop>isNextHeaderOverride</tabstop>
+  <tabstop>nextHeader</tabstop>
+  <tabstop>hopLimit</tabstop>
+  <tabstop>srcAddr</tabstop>
+  <tabstop>srcAddrModeCombo</tabstop>
+  <tabstop>srcAddrCount</tabstop>
+  <tabstop>srcAddrPrefix</tabstop>
+  <tabstop>dstAddr</tabstop>
+  <tabstop>dstAddrModeCombo</tabstop>
+  <tabstop>dstAddrCount</tabstop>
+  <tabstop>dstAddrPrefix</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>isVersionOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>version</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>67</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>195</x>
+     <y>11</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>isPayloadLengthOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>payloadLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>319</x>
+     <y>28</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>493</x>
+     <y>29</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>isNextHeaderOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>nextHeader</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>316</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>348</x>
+     <y>46</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
