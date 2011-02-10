@@ -21,10 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
+#include <QByteArray>
 #include <QMap>
 #include <QObject>
 #include <QString>
 #include <QXmlDefaultHandler>
+
+// TODO: add const where possible
 
 class QXmlSimpleReader;
 class QXmlInputSource;
@@ -73,7 +76,6 @@ private:
 
     QMap<QString, PdmlDefaultProtocol*> protocolMap_;
     PdmlDefaultProtocol *currentPdmlProtocol_;
-    bool skipUntilEndOfPacket_;
     int skipCount_;
     int packetCount_;
     OstProto::StreamConfigList *streams_;
@@ -112,6 +114,22 @@ public:
     PdmlFrameProtocol();
 };
 
+#if 1
+class PdmlFakeFieldWrapperProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlFakeFieldWrapperProtocol();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlAttributes &attributes, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlAttributes &attributes, OstProto::Stream *stream);
+private:
+    int expPos_;
+};
+#endif
+
 class PdmlEthProtocol : public PdmlDefaultProtocol
 {
 public:
@@ -129,4 +147,26 @@ public:
             const QXmlAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
 };
+
+class PdmlIp6Protocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlIp6Protocol();
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlAttributes &attributes, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Stream *stream);
+};
+
+class PdmlTcpProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlTcpProtocol();
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlAttributes &attributes, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Stream *stream);
+private:
+    QByteArray options_;
+    QByteArray segmentData_;
+};
+
 #endif
