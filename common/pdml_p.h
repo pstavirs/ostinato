@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QObject>
 #include <QString>
 #include <QXmlDefaultHandler>
+#include <QXmlStreamReader>
 
 // TODO: add const where possible
 
@@ -35,8 +36,10 @@ class QXmlInputSource;
 class PdmlDefaultProtocol
 {
 public:
-    PdmlDefaultProtocol();
+    PdmlDefaultProtocol(); // TODO: make private
     virtual ~PdmlDefaultProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
 
     QString pdmlProtoName() const;
     int ostProtoId() const;
@@ -44,10 +47,11 @@ public:
     int fieldId(QString name) const;
 
     virtual void preProtocolHandler(QString name, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
+    virtual void prematureEndHandler(int pos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 
 protected:
     QString pdmlProtoName_; // TODO: needed? duplicated in protocolMap_
@@ -55,6 +59,7 @@ protected:
     QMap<QString, int> fieldMap_;
 };
 
+#if 0
 class PdmlParser : public QXmlDefaultHandler
 {
 public:
@@ -83,17 +88,53 @@ private:
     OstProto::Stream *currentStream_;
     google::protobuf::Message *currentProtocolMsg_;
 };
+#endif
+
+class PdmlReader : public QXmlStreamReader
+{
+public:
+    PdmlReader(OstProto::StreamConfigList *streams);
+    ~PdmlReader();
+
+    bool read(QIODevice *device);
+
+private:
+    PdmlDefaultProtocol* allocPdmlProtocol(QString protoName);
+    void freePdmlProtocol(PdmlDefaultProtocol *proto);
+
+    bool isDontCareProto();
+    void readPdml();
+    void skipElement();
+    void readUnexpectedElement();
+    void readPacket();
+    void readProto();
+    void readField(PdmlDefaultProtocol *pdmlProto, 
+            google::protobuf::Message *pbProto);
+
+    typedef PdmlDefaultProtocol* (*FactoryMethod)();
+    QMap<QString, FactoryMethod> factory_;
+
+    OstProto::StreamConfigList *streams_;
+
+    int packetCount_;
+    OstProto::Stream *currentStream_;
+    //PdmlDefaultProtocol *currentPdmlProtocol_;
+    //google::protobuf::Message *currentProtocolMsg_;
+};
 
 class PdmlUnknownProtocol : public PdmlDefaultProtocol
 {
 public:
     PdmlUnknownProtocol();
 
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void preProtocolHandler(QString name, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
+    virtual void prematureEndHandler(int pos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 private:
     int endPos_;
     int expPos_;
@@ -104,14 +145,18 @@ class PdmlGenInfoProtocol : public PdmlDefaultProtocol
 public:
     PdmlGenInfoProtocol();
 
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 };
 
 class PdmlFrameProtocol : public PdmlDefaultProtocol
 {
 public:
     PdmlFrameProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
 };
 
 #if 1
@@ -120,11 +165,13 @@ class PdmlFakeFieldWrapperProtocol : public PdmlDefaultProtocol
 public:
     PdmlFakeFieldWrapperProtocol();
 
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void preProtocolHandler(QString name, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 private:
     int expPos_;
 };
@@ -135,16 +182,21 @@ class PdmlEthProtocol : public PdmlDefaultProtocol
 public:
     PdmlEthProtocol();
 
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 };
 
 class PdmlIp4Protocol : public PdmlDefaultProtocol
 {
 public:
     PdmlIp4Protocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
 };
 
@@ -152,8 +204,11 @@ class PdmlIp6Protocol : public PdmlDefaultProtocol
 {
 public:
     PdmlIp6Protocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
 };
 
@@ -161,8 +216,11 @@ class PdmlTcpProtocol : public PdmlDefaultProtocol
 {
 public:
     PdmlTcpProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
     virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
 private:
     QByteArray options_;

@@ -58,6 +58,7 @@ HEADERS += \
     abstractprotocol.h    \
     comboprotocol.h    \
     fileformat.h \
+    pcapfileformat.h \
     pdmlfileformat.h \
     pdml_p.h \
     protocolmanager.h \
@@ -98,6 +99,7 @@ SOURCES += \
     abstractprotocol.cpp \
     crc32c.cpp \
     fileformat.cpp \
+    pcapfileformat.cpp \
     pdmlfileformat.cpp \
     pdml_p.cpp \
     protocolmanager.cpp \
