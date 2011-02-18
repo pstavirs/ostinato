@@ -30,6 +30,7 @@ PdmlFileFormat::~PdmlFileFormat()
 {
 }
 
+#if 0
 bool PdmlFileFormat::openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error)
 {
@@ -61,6 +62,32 @@ _exit:
 
     return isOk;
 }
+#else
+bool PdmlFileFormat::openStreams(const QString fileName, 
+            OstProto::StreamConfigList &streams, QString &error)
+{
+    bool isOk = false;
+    QFile file(fileName);
+    PdmlReader *reader = new PdmlReader(&streams);
+
+    if (!file.open(QIODevice::ReadOnly))
+        goto _open_fail;
+
+    // TODO: fill in error string
+
+    isOk = reader->read(&file); 
+
+    goto _exit;
+
+_open_fail:
+    isOk = false;
+
+_exit:
+    delete reader;
+
+    return isOk;
+}
+#endif
 
 bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
