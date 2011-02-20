@@ -43,18 +43,27 @@ PortManager::PortManager()
     {
         AbstractPort *port;
       
+        qDebug("%d. %s", i, device->name);
+        if (device->description)
+            qDebug(" (%s)\n", device->description);
+
 #ifdef Q_OS_WIN32
         port = new WinPcapPort(i, device->name);
 #else
         port = new PcapPort(i, device->name);
 #endif
 
+        if (!port->isUsable())
+        {
+            qDebug("%s: unable to open %s. Skipping!", __FUNCTION__,
+                    device->name);
+            delete port;
+            i--;
+            continue;
+        }
+
         port->init();
         portList_.append(port);
-
-        qDebug("%d. %s", i, device->name);
-        if (device->description)
-            qDebug(" (%s)\n", device->description);
     }
 
     pcap_freealldevs(deviceList);

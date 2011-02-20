@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 AbstractPort::AbstractPort(int id, const char *device)
 {
+    isUsable_ = true;
     data_.mutable_port_id()->set_id(id);
     data_.set_name(device);
 
