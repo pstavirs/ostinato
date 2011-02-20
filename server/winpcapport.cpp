@@ -124,7 +124,8 @@ WinPcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     AbstractPort::PortStats *stats)
     : PcapPort::PortMonitor(device, direction, stats)
 {
-    pcap_setmode(handle(), MODE_STAT);
+    if (handle())
+        pcap_setmode(handle(), MODE_STAT);
 }
 
 void WinPcapPort::PortMonitor::run()
