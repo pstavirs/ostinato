@@ -354,11 +354,11 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 #if 0
     factory_.insert("fake-field-wrapper", 
             new PdmlFakeFieldWrapperProtocol());
-#endif
     factory_.insert("eth",PdmlEthProtocol::createInstance);
     factory_.insert("ip",PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6",PdmlIp6Protocol::createInstance);
     factory_.insert("tcp",PdmlTcpProtocol::createInstance);
+#endif
 }
 
 PdmlReader::~PdmlReader()
