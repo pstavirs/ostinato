@@ -3,7 +3,7 @@ CONFIG += qt
 macx: TARGET = Ostinato
 win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
-QT += network script
+QT += network script xml
 INCLUDEPATH += "../rpc/" "../common/"
 win32 {
     CONFIG(debug, debug|release) {

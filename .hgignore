@@ -31,3 +31,5 @@ version.cpp
 # ctags
 tags
 
+
+pcaps\*
