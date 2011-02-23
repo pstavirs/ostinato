@@ -90,8 +90,10 @@ private:
 };
 #endif
 
+class PdmlUnknownProtocol;
 class PdmlReader : public QXmlStreamReader
 {
+    friend class PdmlUnknownProtocol;
 public:
     PdmlReader(OstProto::StreamConfigList *streams);
     ~PdmlReader();
@@ -106,18 +108,48 @@ private:
     void readPdml();
     void skipElement();
     void readUnexpectedElement();
+
+    void readPacketPass1();
+    void readProtoPass1();
+    void readFieldPass1();
+
     void readPacket();
     void readProto();
     void readField(PdmlDefaultProtocol *pdmlProto, 
             google::protobuf::Message *pbProto);
 
     typedef PdmlDefaultProtocol* (*FactoryMethod)();
+
+#if 0
+    class PacketFragment // TODO: find a better name!
+    {
+    public:
+    private:
+        typedef struct
+        {
+            int pos;
+            int size;
+            QByteArray value;
+        } Fragment;
+        QList<Fragment> 
+    };
+#endif
+    typedef struct
+    {
+        int pos;
+        int size;
+        QByteArray value;
+    } Fragment;
+
     QMap<QString, FactoryMethod> factory_;
 
     OstProto::StreamConfigList *streams_;
 
+    int pass_;
     int packetCount_;
     OstProto::Stream *currentStream_;
+    QList<Fragment> pktFragments_; 
+
     //PdmlDefaultProtocol *currentPdmlProtocol_;
     //google::protobuf::Message *currentProtocolMsg_;
 };

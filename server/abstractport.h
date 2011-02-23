@@ -47,6 +47,8 @@ public:
     AbstractPort(int id, const char *device);
     virtual ~AbstractPort();
 
+    bool isUsable() { return isUsable_; }
+
     virtual void init();
 
     int id() { return data_.port_id().id(); }
@@ -86,6 +88,7 @@ public:
     void resetStats() { epochStats_ = stats_; }
 
 protected:
+    bool isUsable_;
     OstProto::Port          data_;
     OstProto::LinkState     linkState_;
 

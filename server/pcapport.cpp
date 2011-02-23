@@ -35,6 +35,9 @@ PcapPort::PcapPort(int id, const char *device)
     transmitter_ = new PortTransmitter(device);
     capturer_ = new PortCapturer(device);
 
+    if (!monitorRx_->handle() || !monitorTx_->handle())
+        isUsable_ = false;
+
     if (!deviceList_)
     {
         char errbuf[PCAP_ERRBUF_SIZE];
@@ -106,16 +109,27 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
         AbstractPort::PortStats *stats)
 {
     int ret;
-    char errbuf[PCAP_ERRBUF_SIZE];
+    int flag = PCAP_OPENFLAG_PROMISCUOUS;
+    char errbuf[PCAP_ERRBUF_SIZE] = "";
 
     direction_ = direction;
     isDirectional_ = true;
     stats_ = stats;
-    handle_ = pcap_open_live(device, 64 /* FIXME */, PCAP_OPENFLAG_PROMISCUOUS,
+_retry:
+    handle_ = pcap_open_live(device, 64 /* FIXME */, flag,
             1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
-        goto _open_error;
+    {
+        if (flag && QString(errbuf).contains("promiscuous"))
+        {
+            qDebug("%s:can't set promiscuous mode, trying non-promisc", device);
+            flag = 0;
+            goto _retry;
+        }
+        else
+            goto _open_error;
+    }
 #ifdef Q_OS_WIN32
     // pcap_setdirection() API is not supported in Windows.
     // NOTE: WinPcap 4.1.1 and above exports a dummy API that returns -1
@@ -149,7 +163,7 @@ _set_direction_error:
     return;
 
 _open_error:
-    qDebug("Error opening port %s: %s\n", device, pcap_geterr(handle_));
+    qDebug("%s: Error opening port %s: %s\n", __FUNCTION__, device, errbuf);
 } 
 
 void PcapPort::PortMonitor::run()
@@ -201,7 +215,7 @@ void PcapPort::PortMonitor::run()
 
 PcapPort::PortTransmitter::PortTransmitter(const char *device)
 {
-    char errbuf[PCAP_ERRBUF_SIZE];
+    char errbuf[PCAP_ERRBUF_SIZE] = "";
 
 #ifdef Q_OS_WIN32
     LARGE_INTEGER   freq;
@@ -216,8 +230,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
     stop_ = false;
     stats_ = new AbstractPort::PortStats;
     usingInternalStats_ = true;
-    handle_ = pcap_open_live(device, 64 /* FIXME */, PCAP_OPENFLAG_PROMISCUOUS,
-            1000 /* ms */, errbuf);
+    handle_ = pcap_open_live(device, 64 /* FIXME */, 0, 1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
         goto _open_error;
@@ -227,7 +240,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
     return;
 
 _open_error:
-    qDebug("Error opening port %s: %s\n", device, pcap_geterr(handle_));
+    qDebug("%s: Error opening port %s: %s\n", __FUNCTION__, device, errbuf);
     usingInternalHandle_ = false;
 }
 
@@ -434,7 +447,8 @@ PcapPort::PortCapturer::~PortCapturer()
 
 void PcapPort::PortCapturer::run()
 {
-    char errbuf[PCAP_ERRBUF_SIZE];
+    int flag = PCAP_OPENFLAG_PROMISCUOUS;
+    char errbuf[PCAP_ERRBUF_SIZE] = "";
     
     qDebug("In %s", __PRETTY_FUNCTION__);
 
@@ -443,14 +457,25 @@ void PcapPort::PortCapturer::run()
         qWarning("temp cap file is not open");
         return;
     }
-
+_retry:
     handle_ = pcap_open_live(device_.toAscii().constData(), 65535, 
-                    PCAP_OPENFLAG_PROMISCUOUS, 1000 /* ms */, errbuf);
+                    flag, 1000 /* ms */, errbuf);
+
     if (handle_ == NULL)
     {
-        qDebug("Error opening port %s: %s\n", 
-                device_.toAscii().constData(), pcap_geterr(handle_));
-        return;
+        if (flag && QString(errbuf).contains("promiscuous"))
+        {
+            qDebug("%s:can't set promiscuous mode, trying non-promisc", 
+                    device_.toAscii().constData());
+            flag = 0;
+            goto _retry;
+        }
+        else
+        {
+            qDebug("%s: Error opening port %s: %s\n", __FUNCTION__,
+                    device_.toAscii().constData(), errbuf);
+            return;
+        }
     }
 
     dumpHandle_ = pcap_dump_open(handle_, 

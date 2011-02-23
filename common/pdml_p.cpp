@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const int kBaseHex = 16;
 
+static PdmlReader *gPdmlReader = NULL;
+
 PdmlDefaultProtocol::PdmlDefaultProtocol()
 {
     ostProtoId_ = -1;
@@ -346,6 +348,8 @@ bool PdmlParser::fatalError(const QXmlParseException &exception)
 // ---------------------------------------------------------- //
 PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 {
+    gPdmlReader = this;
+    pass_ = 0;
     streams_ = streams;
 
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
@@ -370,6 +374,28 @@ bool PdmlReader::read(QIODevice *device)
     setDevice(device);
     packetCount_ = 0;
 
+    // 1st pass - preprocessing fake fields
+    pass_ = 1;
+    qDebug("PASS %d\n", pass_);
+    while (!atEnd())
+    {
+        readNext();
+        if (isStartElement())
+        {
+            if (name() == "pdml")
+                readPdml();
+            else
+                raiseError("Not a pdml file!");
+        }
+    }
+
+    clear();
+    device->seek(0);
+    setDevice(device);
+
+    // 2nd pass - actual processing
+    pass_ = 2;
+    qDebug("PASS %d\n", pass_);
     while (!atEnd())
     {
         readNext();
@@ -451,7 +477,7 @@ void PdmlReader::readPdml()
 {
     Q_ASSERT(isStartElement() && name() == "pdml");
 
-    packetCount_ = 0;
+    packetCount_ = 1;
 
     while (!atEnd())
     {
@@ -462,8 +488,127 @@ void PdmlReader::readPdml()
         if (isStartElement())
         {
             if (name() == "packet")
-                readPacket();
+            {
+                if (pass_ == 1)
+                    readPacketPass1();
+                else if (pass_ == 2)
+                    readPacket();
+                else
+                    Q_ASSERT(false); // unreachable!
+            }
             else
+                readUnexpectedElement();
+        }
+    }
+}
+
+void PdmlReader::readPacketPass1()
+{
+    Q_ASSERT(isStartElement() && name() == "packet");
+
+    qDebug("Pass1 packetNum = %d", packetCount_);
+
+    Fragment f;
+    f.pos = -1;
+    f.size = -1;
+    f.value = QByteArray();
+
+    pktFragments_.append(f);
+
+    while (!atEnd())
+    {
+        readNext();
+
+        if (isEndElement())
+            break;
+
+        if (isStartElement())
+        {
+            if (name() == "proto")
+                readProtoPass1();
+            else if (name() == "field")
+                skipElement();
+            else 
+                readUnexpectedElement();
+        }
+    }
+    packetCount_++;
+}
+
+void PdmlReader::readProtoPass1()
+{
+    Q_ASSERT(isStartElement() && name() == "proto");
+
+    if (attributes().value("name") != "fake-field-wrapper")
+    {
+        skipElement();
+        return;
+    }
+
+    while (!atEnd())
+    {
+        readNext();
+
+        if (isEndElement())
+            break;
+
+        if (isStartElement())
+        {
+            if (name() == "proto")
+                readProtoPass1();
+            else if (name() == "field")
+                readFieldPass1();
+            else 
+                readUnexpectedElement();
+        }
+    }
+}
+
+void PdmlReader::readFieldPass1()
+{
+    Q_ASSERT(isStartElement() && name() == "field");
+
+    if (attributes().value("name") != "data.data")
+    {
+        skipElement();
+        return;
+    }
+
+    QString fieldName = attributes().value("name").toString();
+    QString valueHexStr = attributes().value("value").toString();
+    int pos = -1;
+    int size = -1;
+
+    if (!attributes().value("pos").isEmpty())
+        pos = attributes().value("pos").toString().toInt();
+    if (!attributes().value("size").isEmpty())
+        size = attributes().value("size").toString().toInt();
+
+    qDebug("\tFAKE FIELD fieldName:%s, pos:%d, size:%d value:%s",
+            fieldName.toAscii().constData(), 
+            pos, 
+            size, 
+            valueHexStr.toAscii().constData());
+
+    pktFragments_[packetCount_-1].pos = pos;
+    pktFragments_[packetCount_-1].size = size;
+    pktFragments_[packetCount_-1].value = 
+        QByteArray::fromHex(valueHexStr.toUtf8());
+
+    while (!atEnd())
+    {
+        readNext();
+
+        if (isEndElement())
+            break;
+
+        if (isStartElement())
+        {
+            if (name() == "proto")
+                readProtoPass1();
+            else if (name() == "field")
+                readFieldPass1();
+            else 
                 readUnexpectedElement();
         }
     }
@@ -471,10 +616,9 @@ void PdmlReader::readPdml()
 
 void PdmlReader::readPacket()
 {
-    Q_ASSERT(isStartElement() && name() == "packet");
+    //Q_ASSERT(isStartElement() && name() == "packet");
 
-    packetCount_++;
-    qDebug("packetNum = %d", packetCount_);
+    qDebug("%s: packetNum = %d", __FUNCTION__, packetCount_);
 
     // XXX: For now, each packet is converted to a stream
     currentStream_ = streams_->add_stream();
@@ -512,8 +656,9 @@ void PdmlReader::readPacket()
         hexDump->set_pad_until_end(false);
         currentStream_->mutable_core()->set_name("");
     }
-}
 
+    packetCount_++;
+}
 
 void PdmlReader::readProto()
 {
@@ -805,10 +950,22 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, int size,
     // Skipped field? Pad with zero!
     if ((pos > expPos_) && (expPos_ < endPos_))
     {
-        QByteArray hexVal(pos - expPos_, char(0));
+        PdmlReader::Fragment f;
 
-        hexDump->mutable_content()->append(hexVal.constData(), hexVal.size());
-        expPos_ += hexVal.size();
+        f = gPdmlReader->pktFragments_.value(stream->stream_id().id()-1);
+
+        if (expPos_ == f.pos)
+        {
+            hexDump->mutable_content()->append(f.value.constData(), f.size);
+            expPos_ += f.size;
+        }
+        else
+        {
+            QByteArray hexVal(pos - expPos_, char(0));
+
+            hexDump->mutable_content()->append(hexVal.constData(), hexVal.size());
+            expPos_ += hexVal.size();
+        }
     }
 
     if ((pos == expPos_) /*&& (pos < endPos_)*/)
