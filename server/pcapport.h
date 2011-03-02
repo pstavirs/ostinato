@@ -78,12 +78,14 @@ protected:
         pcap_t* handle() { return handle_; }
         Direction direction() { return direction_; }
         bool isDirectional() { return isDirectional_; }
+        bool isPromiscuous() { return isPromisc_; }
     protected:
         AbstractPort::PortStats *stats_;
     private:
         pcap_t *handle_;
         Direction direction_;
         bool isDirectional_;
+        bool isPromisc_;
     };
 
     class PortTransmitter: public QThread
