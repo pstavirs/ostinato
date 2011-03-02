@@ -90,18 +90,21 @@ void PcapPort::updateNotes()
 {
     QString notes;
 
+    if ((!monitorRx_->isPromiscuous()) || (!monitorTx_->isPromiscuous()))
+        notes.append("<li>Non Promiscuous Mode</li>");
+
     if (!monitorRx_->isDirectional() && !hasExclusiveControl())
-        notes.append("<i>Rx Frames/Bytes</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)<br>");
+        notes.append("<li><i>Rx Frames/Bytes</i>: Includes non Ostinato Tx pkts also (Tx by Ostinato are not included)</li>");
 
     if (!monitorTx_->isDirectional() && !hasExclusiveControl())
-        notes.append("<i>Tx Frames/Bytes</i>: Only Ostinato Tx pkts (Tx by others NOT included)<br>");
+        notes.append("<li><i>Tx Frames/Bytes</i>: Only Ostinato Tx pkts (Tx by others NOT included)</li>");
 
     if (notes.isEmpty())
         data_.set_notes("");
     else
         data_.set_notes(QString("<b>Limitation(s)</b>"
-            "<p>%1<br>"
-            "Rx/Tx Rates are also subject to above limitation(s)</p>").
+            "<ul>%1</ul>"
+            "Rx/Tx Rates are also subject to above limitation(s)").
             arg(notes).toStdString());
 }
 
@@ -109,22 +112,22 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
         AbstractPort::PortStats *stats)
 {
     int ret;
-    int flag = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
 
     direction_ = direction;
     isDirectional_ = true;
+    isPromisc_ = true;
     stats_ = stats;
 _retry:
-    handle_ = pcap_open_live(device, 64 /* FIXME */, flag,
+    handle_ = pcap_open_live(device, 64 /* FIXME */, int(isPromisc_),
             1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
     {
-        if (flag && QString(errbuf).contains("promiscuous"))
+        if (isPromisc_ && QString(errbuf).contains("promiscuous"))
         {
             qDebug("%s:can't set promiscuous mode, trying non-promisc", device);
-            flag = 0;
+            isPromisc_ = false;
             goto _retry;
         }
         else
