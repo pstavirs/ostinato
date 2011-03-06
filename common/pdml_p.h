@@ -91,6 +91,7 @@ private:
 #endif
 
 class PdmlUnknownProtocol;
+class PcapFileFormat;
 class PdmlReader : public QXmlStreamReader
 {
     friend class PdmlUnknownProtocol;
@@ -98,7 +99,7 @@ public:
     PdmlReader(OstProto::StreamConfigList *streams);
     ~PdmlReader();
 
-    bool read(QIODevice *device);
+    bool read(QIODevice *device, PcapFileFormat *pcap = NULL);
 
 private:
     PdmlDefaultProtocol* allocPdmlProtocol(QString protoName);
@@ -144,11 +145,14 @@ private:
     QMap<QString, FactoryMethod> factory_;
 
     OstProto::StreamConfigList *streams_;
+    PcapFileFormat *pcap_;
 
     int pass_;
     int packetCount_;
     OstProto::Stream *currentStream_;
     QList<Fragment> pktFragments_; 
+
+    QByteArray pktBuf_;
 
     //PdmlDefaultProtocol *currentPdmlProtocol_;
     //google::protobuf::Message *currentProtocolMsg_;
@@ -230,6 +234,8 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
+private:
+    QByteArray options_;
 };
 
 class PdmlIp6Protocol : public PdmlDefaultProtocol

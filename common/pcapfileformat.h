@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2011 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -21,11 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
+#include <QDataStream>
 #include <QObject>
 
+class PdmlReader;
 class PcapFileFormat : public QObject
 {
     Q_OBJECT
+
+    friend class PdmlReader;
 
 public:
     PcapFileFormat();
@@ -35,6 +39,28 @@ public:
             OstProto::StreamConfigList &streams, QString &error);
     bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error);
+
+private:
+    typedef struct {
+        quint32 magicNumber;   /* magic number */
+        quint16 versionMajor;  /* major version number */
+        quint16 versionMinor;  /* minor version number */
+        qint32  thisZone;      /* GMT to local correction */
+        quint32 sigfigs;       /* accuracy of timestamps */
+        quint32 snapLen;       /* max length of captured packets, in octets */
+        quint32 network;       /* data link type */
+    } PcapFileHeader;
+
+    typedef struct {
+        quint32 tsSec;         /* timestamp seconds */
+        quint32 tsUsec;        /* timestamp microseconds */
+        quint32 inclLen;       /* number of octets of packet saved in file */
+        quint32 origLen;       /* actual length of packet */
+    } PcapPacketHeader;
+
+    bool readPacket(PcapPacketHeader &pktHdr, QByteArray &pktBuf);
+
+    QDataStream fd_;
 };
 
 extern PcapFileFormat pcapFileFormat;

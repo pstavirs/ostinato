@@ -230,7 +230,8 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     OstProto::StreamConfigList streams;
 
     //if (!fileFormat.openStreams(fileName, streams, error))
-    if (!pdmlFileFormat.openStreams(fileName, streams, error))
+    //if (!pdmlFileFormat.openStreams(fileName, streams, error))
+    if (!pcapFileFormat.openStreams(fileName, streams, error))
         goto _fail;
 
     if (!append)

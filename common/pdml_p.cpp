@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdml_p.h"
 
+#include "PcapFileFormat.h"
 #include "mac.pb.h"
 #include "eth2.pb.h"
+#include "dot3.pb.h"
 #include "hexdump.pb.h"
 #include "ip4.pb.h"
 #include "ip6.pb.h"
@@ -349,6 +351,7 @@ bool PdmlParser::fatalError(const QXmlParseException &exception)
 PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 {
     gPdmlReader = this;
+    pcap_ = NULL;
     pass_ = 0;
     streams_ = streams;
 
@@ -358,20 +361,21 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 #if 0
     factory_.insert("fake-field-wrapper", 
             new PdmlFakeFieldWrapperProtocol());
+#endif
     factory_.insert("eth",PdmlEthProtocol::createInstance);
     factory_.insert("ip",PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6",PdmlIp6Protocol::createInstance);
     factory_.insert("tcp",PdmlTcpProtocol::createInstance);
-#endif
 }
 
 PdmlReader::~PdmlReader()
 {
 }
 
-bool PdmlReader::read(QIODevice *device)
+bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap)
 {
     setDevice(device);
+    pcap_ = pcap;
     packetCount_ = 0;
 
     // 1st pass - preprocessing fake fields
@@ -408,7 +412,14 @@ bool PdmlReader::read(QIODevice *device)
         }
     }
 
-    return !error();
+    if (error())
+    {
+        qDebug("Line %lld", lineNumber());
+        qDebug("Col %lld", columnNumber());
+        qDebug("%s", errorString().toAscii().constData()); // FIXME
+        return false;
+    }
+    return true;
 }
 
 // TODO: use a temp pool to avoid a lot of new/delete
@@ -501,6 +512,8 @@ void PdmlReader::readPdml()
         }
     }
 }
+
+/////////////////////// PASS 1 //////////////////////////
 
 void PdmlReader::readPacketPass1()
 {
@@ -614,16 +627,23 @@ void PdmlReader::readFieldPass1()
     }
 }
 
+/////////////////////// PASS 2 //////////////////////////
+
 void PdmlReader::readPacket()
 {
-    //Q_ASSERT(isStartElement() && name() == "packet");
+    PcapFileFormat::PcapPacketHeader pktHdr;
+
+    Q_ASSERT(isStartElement() && name() == "packet");
 
     qDebug("%s: packetNum = %d", __FUNCTION__, packetCount_);
 
-    // XXX: For now, each packet is converted to a stream
+    // XXX: we play dumb and convert each packet to a stream, for now
     currentStream_ = streams_->add_stream();
     currentStream_->mutable_stream_id()->set_id(packetCount_);
     currentStream_->mutable_core()->set_is_enabled(true);
+
+    if (pcap_)
+        pcap_->readPacket(pktHdr, pktBuf_);
 
     while (!atEnd())
     {
@@ -668,15 +688,57 @@ void PdmlReader::readProto()
     Q_ASSERT(isStartElement() && name() == "proto");
 
     QString protoName = attributes().value("name").toString();
-    qDebug("proto: %s", protoName.toAscii().constData());
+    int pos = -1;
 
-#if 0
+    if (!attributes().value("pos").isEmpty())
+        pos = attributes().value("pos").toString().toInt();
+
+    qDebug("proto: %s, pos = %d", protoName.toAscii().constData(), pos);
+
+    // This is a heuristic to skip protocols which are not part of
+    // this frame, but of a reassembled segment spanning several frames
+    if ((pos == 0) && (currentStream_->protocol_size() > 0))
+    {
+        qDebug("(skipped)");
+        skipElement();
+        return;
+    }
+
+#if 1
     if (protoName.isEmpty() || (protoName == "expert"))
     {
         skipElement();
         return;
     }
 #endif
+
+    if (!factory_.contains(protoName) && pcap_)
+    {
+        int pos = -1;
+        int size = -1;
+
+        if (!attributes().value("pos").isEmpty())
+            pos = attributes().value("pos").toString().toInt();
+        if (!attributes().value("size").isEmpty())
+            size = attributes().value("size").toString().toInt();
+
+        if (pos >= 0 && size > 0 
+                && ((pos + size) <= pktBuf_.size()))
+        {
+            OstProto::Protocol *proto = currentStream_->add_protocol();
+            OstProto::HexDump *hexDump = proto->MutableExtension(
+                    OstProto::hexDump);
+
+            proto->mutable_protocol_id()->set_id(
+                    OstProto::Protocol::kHexDumpFieldNumber);
+
+            hexDump->set_content(pktBuf_.constData() + pos, size);
+            hexDump->set_pad_until_end(false);
+
+            skipElement();
+            return;
+        }
+    }
 
     pdmlProto = allocPdmlProtocol(protoName);
     Q_ASSERT(pdmlProto != NULL);
@@ -902,6 +964,11 @@ void PdmlUnknownProtocol::preProtocolHandler(QString name,
     if (!isOk)
         goto _skip_pos_size_proc;
 
+    // If pos+size goes beyond the frame length, this is a "reassembled"
+    // protocol and should be skipped
+    if (quint32(pos + size) > stream->core().frame_len())
+        goto _skip_pos_size_proc;
+
     expPos_ = pos;
     endPos_ = expPos_ + size;
 
@@ -1048,6 +1115,8 @@ void PdmlFakeFieldWrapperProtocol::postProtocolHandler(OstProto::Stream *stream)
 
     qDebug("%s: expPos_ = %d\n", __FUNCTION__, expPos_); 
 
+    // TODO: if content size is zero, remove protocol?
+
     hexDump->set_pad_until_end(false);
     expPos_ = -1;
 }
@@ -1059,6 +1128,7 @@ void PdmlFakeFieldWrapperProtocol::unknownFieldHandler(QString name, int pos,
             stream->protocol_size()-1)->MutableExtension(OstProto::hexDump);
 
     if ((pos == expPos_) && (size >= 0) && 
+            (!name.startsWith("tcp.segment")) &&
             (!attributes.value("unmaskedvalue").isEmpty() || 
              !attributes.value("value").isEmpty()))
     {
@@ -1106,6 +1176,36 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
         eth2->set_type(attributes.value("value").toString().toUInt(&isOk, kBaseHex));
         eth2->set_is_override_type(true);
     }
+    else if (name == "eth.len")
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kDot3FieldNumber);
+
+        OstProto::Dot3 *dot3 = proto->MutableExtension(OstProto::dot3);
+
+        bool isOk;
+        dot3->set_length(attributes.value("value").toString().toUInt(&isOk, kBaseHex));
+        dot3->set_is_override_length(true);
+    }
+    else if (name == "eth.trailer")
+    {
+        QByteArray trailer = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+
+        stream->mutable_core()->mutable_name()->append(trailer.constData(),
+                trailer.size());
+    }
+    else if ((name == "eth.fcs") || 
+            attributes.value("show").toString().startsWith("Frame check sequence"))
+    {
+        QByteArray trailer = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+
+        stream->mutable_core()->mutable_name()->append(trailer.constData(),
+                trailer.size());
+    }
 }
 
 
@@ -1141,7 +1241,13 @@ void PdmlIp4Protocol::unknownFieldHandler(QString name, int pos, int size,
 {
     bool isOk;
 
-    if (name == "ip.flags")
+    if ((name == "ip.options") ||
+            attributes.value("show").toString().startsWith("Options"))
+    {
+        options_ = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+    }
+    else if (name == "ip.flags")
     {
         OstProto::Ip4 *ip4 = stream->mutable_protocol(
                 stream->protocol_size()-1)->MutableExtension(OstProto::ip4);
@@ -1160,6 +1266,21 @@ void PdmlIp4Protocol::postProtocolHandler(OstProto::Stream *stream)
     ip4->set_is_override_totlen(true); // FIXME
     ip4->set_is_override_proto(true); // FIXME
     ip4->set_is_override_cksum(true); // FIXME
+
+    if (options_.size())
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kHexDumpFieldNumber);
+
+        OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
+
+        hexDump->mutable_content()->append(options_.constData(), 
+                options_.size());
+        hexDump->set_pad_until_end(false);
+        options_.resize(0);
+    }
 }
 
 // ---------------------------------------------------------- //
@@ -1255,8 +1376,8 @@ void PdmlTcpProtocol::unknownFieldHandler(QString name, int pos, int size,
             && attributes.value("show").toString().startsWith("TCP segment data"))
     {
         segmentData_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
-        stream->mutable_core()->mutable_name()->append(segmentData_.constData(),
-                segmentData_.size());
+        stream->mutable_core()->mutable_name()->insert(0, 
+                segmentData_.constData(), segmentData_.size());
     }
 }
 
