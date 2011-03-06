@@ -26,15 +26,17 @@ int main(int argc, char* argv[])
     QString inFile(argv[1]);
     QString outFile(argv[2]);
 
-    if (!pdmlFileFormat.openStreams(inFile, streams, error))
+    if (!pcapFileFormat.openStreams(inFile, streams, error))
     {
-        fprintf(stdout, "failed reading streams from %s\n", inFile.toAscii().constData());
+        fprintf(stdout, "failed reading streams from %s:%s\n", 
+                inFile.toAscii().constData(), error.toAscii().constData());
         exit(1);
     }
 
     if (!pcapFileFormat.saveStreams(streams, outFile, error))
     {
-        fprintf(stdout, "failed writing streams to %s\n", outFile.toAscii().constData());
+        fprintf(stdout, "failed writing streams to %s:%s\n", 
+                outFile.toAscii().constData(), error.toAscii().constData());
         exit(1);
     }
 

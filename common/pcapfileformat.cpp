@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2011 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -18,11 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "pcapfileformat.h"
+
+#include "pdml_p.h"
 #include "streambase.h"
 #include "hexdump.pb.h"
 
 #include <QDataStream>
 #include <QFile>
+#include <QProcess>
+#include <QTemporaryFile>
 #include <QtGlobal>
 
 static inline quint32 swap32(quint32 val)
@@ -39,28 +43,12 @@ static inline quint16 swap16(quint16 val)
             ((val << 8) && 0xFF00));
 }
 
-typedef struct {
-    quint32 magicNumber;   /* magic number */
-    quint16 versionMajor;  /* major version number */
-    quint16 versionMinor;  /* minor version number */
-    qint32  thisZone;      /* GMT to local correction */
-    quint32 sigfigs;       /* accuracy of timestamps */
-    quint32 snapLen;       /* max length of captured packets, in octets */
-    quint32 network;       /* data link type */
-} PcapFileHeader;
-
 const quint32 kPcapFileMagic = 0xa1b2c3d4;
 const quint32 kPcapFileMagicSwapped = 0xd4c3b2a1;
 const quint16 kPcapFileVersionMajor = 2;
 const quint16 kPcapFileVersionMinor = 4;
 const quint32 kMaxSnapLen = 65535;
-
-typedef struct {
-    quint32 tsSec;         /* timestamp seconds */
-    quint32 tsUsec;        /* timestamp microseconds */
-    quint32 inclLen;       /* number of octets of packet saved in file */
-    quint32 origLen;       /* actual length of packet */
-} PcapPacketHeader;
+const quint32 kDltEthernet = 1;
 
 PcapFileFormat pcapFileFormat;
 
@@ -75,54 +63,140 @@ PcapFileFormat::~PcapFileFormat()
 bool PcapFileFormat::openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error)
 {
+    bool viaPdml = true; // TODO: shd be a param to function
+
     bool isOk = false;
+    int pktCount;
     QFile file(fileName);
-    QDataStream fd;
+    QTemporaryFile file2;
     quint32 magic;
+    uchar gzipMagic[2];
+    int len;
     PcapFileHeader fileHdr;
     PcapPacketHeader pktHdr;
-    quint32 len;
-    int pktCount = 1;
     QByteArray pktBuf;
 
     if (!file.open(QIODevice::ReadOnly))
         goto _err_open;
 
-    if (file.size() < sizeof(fileHdr))
-        goto _err_truncated;
+    len = file.peek((char*)gzipMagic, sizeof(gzipMagic));
+    if (len < int(sizeof(gzipMagic)))
+        goto _err_reading_magic;
 
-    fd.setDevice(&file);
+    if ((gzipMagic[0] == 0x1f) && (gzipMagic[1] == 0x8b))
+    {
+        QProcess gzip;
 
-    fd >> magic;
+        if (!file2.open())
+        {
+            error.append("Unable to open temporary file to uncompress .gz\n");
+            goto _err_unzip_fail;
+        }
 
+        qDebug("decompressing to %s", file2.fileName().toAscii().constData());
+
+        gzip.setStandardOutputFile(file2.fileName());
+        // FIXME: hardcoded prog name
+        gzip.start("C:/Program Files/CmdLineTools/gzip.exe", 
+                QStringList() 
+                << "-d" 
+                << "-c" 
+                << fileName);
+        if (!gzip.waitForStarted(-1))
+        {
+            error.append(QString("Unable to start gzip\n"));
+            goto _err_unzip_fail;
+        }
+
+        if (!gzip.waitForFinished(-1))
+        {
+            error.append(QString("Error running gzip\n"));
+            goto _err_unzip_fail;
+        }
+
+        file2.seek(0);
+
+        fd_.setDevice(&file2);
+    }
+    else
+    {
+        fd_.setDevice(&file);
+    }
+
+    fd_ >> magic;
+
+    qDebug("magic = %08x", magic);
 
     if (magic == kPcapFileMagicSwapped)
     {
         // Toggle Byte order
-        if (fd.byteOrder() == QDataStream::BigEndian)
-            fd.setByteOrder(QDataStream::LittleEndian);
+        if (fd_.byteOrder() == QDataStream::BigEndian)
+            fd_.setByteOrder(QDataStream::LittleEndian);
         else
-            fd.setByteOrder(QDataStream::BigEndian);
+            fd_.setByteOrder(QDataStream::BigEndian);
     }
     else if (magic != kPcapFileMagic)
         goto _err_bad_magic;
 
-    fd >> fileHdr.versionMajor;
-    fd >> fileHdr.versionMinor;
-    fd >> fileHdr.thisZone;
-    fd >> fileHdr.sigfigs;
-    fd >> fileHdr.snapLen;
-    fd >> fileHdr.network;
+    fd_ >> fileHdr.versionMajor;
+    fd_ >> fileHdr.versionMinor;
+    fd_ >> fileHdr.thisZone;
+    fd_ >> fileHdr.sigfigs;
+    fd_ >> fileHdr.snapLen;
+    fd_ >> fileHdr.network;
    
     if ((fileHdr.versionMajor != kPcapFileVersionMajor) ||
             (fileHdr.versionMinor != kPcapFileVersionMinor))
         goto _err_unsupported_version;
 
-    // TODO: what do we do about non-ethernet networks?
+#if 1
+    // XXX: we support only Ethernet, for now
+    if (fileHdr.network != kDltEthernet)
+        goto _err_unsupported_encap;
+#endif
 
     pktBuf.resize(fileHdr.snapLen);
 
-    while (!fd.atEnd())
+    if (viaPdml)
+    {
+        QTemporaryFile pdmlFile;
+        PdmlReader reader(&streams);
+        QProcess tshark;
+
+        if (!pdmlFile.open())
+        {
+            error.append("Unable to open temporary file to create PDML\n");
+            goto _non_pdml;
+        }
+
+        qDebug("generating PDML %s", pdmlFile.fileName().toAscii().constData());
+
+        tshark.setStandardOutputFile(pdmlFile.fileName());
+        // FIXME: hardcoded prog name
+        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+                QStringList() 
+                << QString("-r%1").arg(fileName)
+                << "-Tpdml");
+        if (!tshark.waitForStarted(-1))
+        {
+            error.append(QString("Unable to start tshark\n"));
+            goto _non_pdml;
+        }
+
+        if (!tshark.waitForFinished(-1))
+        {
+            error.append(QString("Error running tshark\n"));
+            goto _non_pdml;
+        }
+
+        isOk = reader.read(&pdmlFile, this); // TODO: pass error string?
+        goto _exit;
+       
+    }
+
+_non_pdml:
+    pktCount = 1;
+    while (!fd_.atEnd())
     {
         OstProto::Stream *stream = streams.add_stream();
         OstProto::Protocol *proto = stream->add_protocol();
@@ -133,20 +207,10 @@ bool PcapFileFormat::openStreams(const QString fileName,
         proto->mutable_protocol_id()->set_id(
                 OstProto::Protocol::kHexDumpFieldNumber);
 
-        // read PcapPacketHeader
-        fd >> pktHdr.tsSec;
-        fd >> pktHdr.tsUsec;
-        fd >> pktHdr.inclLen;
-        fd >> pktHdr.origLen;
-
-        // TODO: chk fd.status()
+        readPacket(pktHdr, pktBuf);
 
         // validations on inclLen <= origLen && inclLen <= snapLen
         Q_ASSERT(pktHdr.inclLen <= fileHdr.snapLen); // TODO: convert to if
-
-        // read Pkt contents
-        len = fd.readRawData(pktBuf.data(), pktHdr.inclLen); // TODO: use while?
-        Q_ASSERT(len == pktHdr.inclLen); // TODO: remove assert
 
         hexDump->set_content(pktBuf.data(), pktHdr.inclLen);
         hexDump->set_pad_until_end(false);
@@ -159,6 +223,14 @@ bool PcapFileFormat::openStreams(const QString fileName,
     isOk = true;
     goto _exit;
 
+#if 1
+_err_unsupported_encap:
+    error = QString(tr("%1 has non-ethernet encapsulation (%2) which is "
+                "not supported - Sorry!"))
+            .arg(fileName).arg(fileHdr.network);
+    goto _exit;
+#endif
+
 _err_unsupported_version:
     error = QString(tr("%1 is in PCAP version %2.%3 format which is "
                 "not supported - Sorry!"))
@@ -169,8 +241,17 @@ _err_bad_magic:
     error = QString(tr("%1 is not a valid PCAP file")).arg(fileName);
     goto _exit;
 
+#if 0
 _err_truncated:
     error = QString(tr("%1 is too short")).arg(fileName);
+    goto _exit;
+#endif 
+
+_err_unzip_fail:
+    goto _exit;
+
+_err_reading_magic:
+    error = QString(tr("Unable to read magic from %1")).arg(fileName);
     goto _exit;
 
 _err_open:
@@ -178,7 +259,40 @@ _err_open:
     goto _exit;
 
 _exit:
+    file.close();
     return isOk;
+}
+
+/*!
+  Reads packet meta data into pktHdr and packet content into buf.
+
+  Returns true if packet is read successfully, false otherwise.
+*/
+bool PcapFileFormat::readPacket(PcapPacketHeader &pktHdr, QByteArray &pktBuf)
+{
+    quint32 len;
+
+    // TODO: chk fd_.status()
+
+    // read PcapPacketHeader
+    fd_ >> pktHdr.tsSec;
+    fd_ >> pktHdr.tsUsec;
+    fd_ >> pktHdr.inclLen;
+    fd_ >> pktHdr.origLen;
+
+    // TODO: chk fd_.status()
+
+    // XXX: should never be required, but we play safe
+    if (quint32(pktBuf.size()) < pktHdr.inclLen)
+        pktBuf.resize(pktHdr.inclLen);
+
+    // read Pkt contents
+    len = fd_.readRawData(pktBuf.data(), pktHdr.inclLen); // TODO: use while?
+
+    Q_ASSERT(len == pktHdr.inclLen); // TODO: remove assert
+    pktBuf.resize(len);
+
+    return true;
 }
 
 bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
@@ -186,7 +300,6 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
 {
     bool isOk = false;
     QFile file(fileName);
-    QDataStream fd;
     PcapFileHeader fileHdr;
     PcapPacketHeader pktHdr;
     QByteArray pktBuf;
@@ -194,7 +307,7 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
     if (!file.open(QIODevice::WriteOnly))
         goto _err_open;
 
-    fd.setDevice(&file);
+    fd_.setDevice(&file);
 
     fileHdr.magicNumber = kPcapFileMagic;
     fileHdr.versionMajor = kPcapFileVersionMajor;
@@ -202,15 +315,15 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
     fileHdr.thisZone = 0;
     fileHdr.sigfigs = 0;
     fileHdr.snapLen = kMaxSnapLen;
-    fileHdr.network = 1; // Ethernet; FIXME: Hardcoding
+    fileHdr.network = kDltEthernet; 
 
-    fd << fileHdr.magicNumber;
-    fd << fileHdr.versionMajor;
-    fd << fileHdr.versionMinor;
-    fd << fileHdr.thisZone;
-    fd << fileHdr.sigfigs;
-    fd << fileHdr.snapLen;
-    fd << fileHdr.network;
+    fd_ << fileHdr.magicNumber;
+    fd_ << fileHdr.versionMajor;
+    fd_ << fileHdr.versionMinor;
+    fd_ << fileHdr.thisZone;
+    fd_ << fileHdr.sigfigs;
+    fd_ << fileHdr.snapLen;
+    fd_ << fileHdr.network;
 
     pktBuf.resize(kMaxSnapLen);
 
@@ -230,11 +343,11 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
         if (pktHdr.inclLen > fileHdr.snapLen)
             pktHdr.inclLen = fileHdr.snapLen;
 
-        fd << pktHdr.tsSec;
-        fd << pktHdr.tsUsec;
-        fd << pktHdr.inclLen;
-        fd << pktHdr.origLen;
-        fd.writeRawData(pktBuf.data(), pktHdr.inclLen);
+        fd_ << pktHdr.tsSec;
+        fd_ << pktHdr.tsUsec;
+        fd_ << pktHdr.inclLen;
+        fd_ << pktHdr.origLen;
+        fd_.writeRawData(pktBuf.data(), pktHdr.inclLen);
     }
 
     file.close();
