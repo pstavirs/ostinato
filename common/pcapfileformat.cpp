@@ -66,7 +66,6 @@ bool PcapFileFormat::openStreams(const QString fileName,
     bool viaPdml = true; // TODO: shd be a param to function
 
     bool isOk = false;
-    int pktCount;
     QFile file(fileName);
     QTemporaryFile file2;
     quint32 magic;
@@ -74,6 +73,9 @@ bool PcapFileFormat::openStreams(const QString fileName,
     int len;
     PcapFileHeader fileHdr;
     PcapPacketHeader pktHdr;
+    OstProto::Stream *prevStream = NULL;
+    uint lastUsec = 0;
+    int pktCount;
     QByteArray pktBuf;
 
     if (!file.open(QIODevice::ReadOnly))
@@ -176,6 +178,7 @@ bool PcapFileFormat::openStreams(const QString fileName,
         tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
                 QStringList() 
                 << QString("-r%1").arg(fileName)
+                << "-otcp.desegment_tcp_streams:FALSE"
                 << "-Tpdml");
         if (!tshark.waitForStarted(-1))
         {
@@ -202,8 +205,6 @@ _non_pdml:
         OstProto::Protocol *proto = stream->add_protocol();
         OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
 
-        stream->mutable_stream_id()->set_id(pktCount);
-        stream->mutable_core()->set_is_enabled(true);
         proto->mutable_protocol_id()->set_id(
                 OstProto::Protocol::kHexDumpFieldNumber);
 
@@ -215,8 +216,23 @@ _non_pdml:
         hexDump->set_content(pktBuf.data(), pktHdr.inclLen);
         hexDump->set_pad_until_end(false);
 
+        stream->mutable_stream_id()->set_id(pktCount);
+        stream->mutable_core()->set_is_enabled(true);
         stream->mutable_core()->set_frame_len(pktHdr.inclLen+4); // FCS
 
+        // setup packet rate to the timing in pcap (as close as possible)
+        const uint kUsecsInSec = uint(1e6);
+        uint usec = (pktHdr.tsSec*kUsecsInSec + pktHdr.tsUsec);
+        uint delta = usec - lastUsec;
+        
+        if ((pktCount != 1) && delta)
+            stream->mutable_control()->set_packets_per_sec(kUsecsInSec/delta);
+
+        if (prevStream)
+            prevStream->mutable_control()->CopyFrom(stream->control());
+
+        lastUsec = usec;
+        prevStream = stream;
         pktCount++;
     }
 
@@ -327,6 +343,8 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
 
     pktBuf.resize(kMaxSnapLen);
 
+    pktHdr.tsSec = 0;
+    pktHdr.tsUsec = 0;
     for (int i = 0; i < streams.stream_size(); i++)
     {
         StreamBase s;
@@ -336,10 +354,12 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
         // TODO: expand frameIndex for each stream
         s.frameValue((uchar*)pktBuf.data(), pktBuf.size(), 0); 
 
-        // TODO: write actual timing!?!?
-        pktHdr.tsSec = 0;
-        pktHdr.tsUsec = 0;
-        pktHdr.inclLen = pktHdr.origLen = s.frameLen() - 4; // FCS; FIXME: Hardcoding
+        pktHdr.inclLen = s.frameProtocolLength(0); // FIXME: stream index = 0
+        pktHdr.origLen = s.frameLen() - 4; // FCS; FIXME: Hardcoding
+
+        qDebug("savepcap i=%d, incl/orig len = %d/%d", i, 
+                pktHdr.inclLen, pktHdr.origLen);
+
         if (pktHdr.inclLen > fileHdr.snapLen)
             pktHdr.inclLen = fileHdr.snapLen;
 
@@ -348,6 +368,14 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
         fd_ << pktHdr.inclLen;
         fd_ << pktHdr.origLen;
         fd_.writeRawData(pktBuf.data(), pktHdr.inclLen);
+
+        if (s.packetRate())
+            pktHdr.tsUsec += 1000000/s.packetRate();
+        if (pktHdr.tsUsec >= 1000000)
+        {
+            pktHdr.tsSec++;
+            pktHdr.tsUsec -= 1000000;
+        }
     }
 
     file.close();
