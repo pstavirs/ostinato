@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdml_p.h"
 
-#include "PcapFileFormat.h"
+#include "abstractprotocol.h"
+#include "pcapfileformat.h"
+#include "protocolmanager.h"
+#include "streambase.h"
+
 #include "mac.pb.h"
 #include "eth2.pb.h"
 #include "dot3.pb.h"
@@ -33,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 
 #include <string>
+
+extern ProtocolManager *OstProtocolManager;
 
 const int kBaseHex = 16;
 
@@ -72,8 +78,9 @@ int PdmlDefaultProtocol::fieldId(QString name) const
     return fieldMap_.value(name);
 }
 
-void PdmlDefaultProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
+void PdmlDefaultProtocol::preProtocolHandler(QString /*name*/, 
+        const QXmlStreamAttributes& /*attributes*/, 
+        int /*expectedPos*/, OstProto::Stream* /*stream*/)
 {
     return; // do nothing!
 }
@@ -355,6 +362,9 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     pass_ = 0;
     streams_ = streams;
 
+    currentStream_ = NULL;
+    prevStream_ = NULL;
+
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
@@ -378,6 +388,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap)
     pcap_ = pcap;
     packetCount_ = 0;
 
+#if 0
     // 1st pass - preprocessing fake fields
     pass_ = 1;
     qDebug("PASS %d\n", pass_);
@@ -397,6 +408,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap)
     device->seek(0);
     setDevice(device);
 
+#endif
     // 2nd pass - actual processing
     pass_ = 2;
     qDebug("PASS %d\n", pass_);
@@ -637,10 +649,18 @@ void PdmlReader::readPacket()
 
     qDebug("%s: packetNum = %d", __FUNCTION__, packetCount_);
 
+    skipUntilEnd_ = false;
+
     // XXX: we play dumb and convert each packet to a stream, for now
+    prevStream_ = currentStream_;
     currentStream_ = streams_->add_stream();
     currentStream_->mutable_stream_id()->set_id(packetCount_);
     currentStream_->mutable_core()->set_is_enabled(true);
+
+    // Set to a high number; will get reset to correct during parse
+    currentStream_->mutable_core()->set_frame_len(16384); // FIXME: Hard coding!
+
+    expPos_ = 0;
 
     if (pcap_)
         pcap_->readPacket(pktHdr, pktBuf_);
@@ -654,7 +674,9 @@ void PdmlReader::readPacket()
 
         if (isStartElement())
         {
-            if (name() == "proto")
+            if (skipUntilEnd_)
+                skipElement();
+            else if (name() == "proto")
                 readProto();
             else if (name() == "field")
                 readField(NULL, NULL); // TODO: top level field!!!!
@@ -662,8 +684,9 @@ void PdmlReader::readPacket()
                 readUnexpectedElement();
         }
     }
-
+    // BAD Hack for TCP Segments
     if (currentStream_->core().name().size())
+#if 0
     {
         OstProto::Protocol *proto = currentStream_->add_protocol();
 
@@ -672,12 +695,39 @@ void PdmlReader::readPacket()
 
         OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
 
+        qDebug("Adding TCP Segment Data/FCS etc of size %d",
+                currentStream_->core().name().size());
+
         hexDump->set_content(currentStream_->core().name());
         hexDump->set_pad_until_end(false);
         currentStream_->mutable_core()->set_name("");
+
+        expPos_ += hexDump->content().size();
     }
+#else
+        currentStream_->mutable_core()->set_name("");
+#endif
+
+    // If trailing bytes are missing, add those from the pcap 
+    if ((expPos_ < pktBuf_.size()) && pcap_)
+    {
+        OstProto::Protocol *proto = currentStream_->add_protocol();
+        OstProto::HexDump *hexDump = proto->MutableExtension(
+                OstProto::hexDump);
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kHexDumpFieldNumber);
+
+        qDebug("adding trailing %d bytes starting from %d",
+               pktBuf_.size() - expPos_, expPos_); 
+        hexDump->set_content(pktBuf_.constData() + expPos_, 
+                pktBuf_.size() - expPos_);
+        hexDump->set_pad_until_end(false);
+    } 
 
     packetCount_++;
+    if (prevStream_)
+        prevStream_->mutable_control()->CopyFrom(currentStream_->control());
 }
 
 void PdmlReader::readProto()
@@ -689,15 +739,22 @@ void PdmlReader::readProto()
 
     QString protoName = attributes().value("name").toString();
     int pos = -1;
+    int size = -1;
 
     if (!attributes().value("pos").isEmpty())
         pos = attributes().value("pos").toString().toInt();
+    if (!attributes().value("size").isEmpty())
+        size = attributes().value("size").toString().toInt();
 
-    qDebug("proto: %s, pos = %d", protoName.toAscii().constData(), pos);
+    qDebug("proto: %s, pos = %d, expPos_ = %d", 
+            protoName.toAscii().constData(), pos, expPos_);
 
     // This is a heuristic to skip protocols which are not part of
     // this frame, but of a reassembled segment spanning several frames
-    if ((pos == 0) && (currentStream_->protocol_size() > 0))
+    //   1. Proto starting pos is 0, but we already seen some protocols
+    //   2. Protocol Size exceeds frame length
+    if (((pos == 0) && (currentStream_->protocol_size() > 0))
+        || ((pos + size) > int(currentStream_->core().frame_len())))
     {
         qDebug("(skipped)");
         skipElement();
@@ -712,15 +769,44 @@ void PdmlReader::readProto()
     }
 #endif
 
+    // detect overlaps or gaps between subsequent protocols and "fill-in"
+    // with a "hexdump" from the pcap
+    if (pos >=0 && pcap_)
+    {
+        if (pos > expPos_)
+        {
+            OstProto::Protocol *proto = currentStream_->add_protocol();
+            OstProto::HexDump *hexDump = proto->MutableExtension(
+                    OstProto::hexDump);
+
+            proto->mutable_protocol_id()->set_id(
+                    OstProto::Protocol::kHexDumpFieldNumber);
+
+            qDebug("filling in gap of %d bytes starting from %d",
+                    pos - expPos_, expPos_);
+            hexDump->set_content(pktBuf_.constData() + expPos_, pos - expPos_);
+            hexDump->set_pad_until_end(false);
+
+            expPos_ = pos;
+        } 
+    }
+
+    // for unknown protocol, read a hexdump from the pcap
     if (!factory_.contains(protoName) && pcap_)
     {
-        int pos = -1;
         int size = -1;
 
-        if (!attributes().value("pos").isEmpty())
-            pos = attributes().value("pos").toString().toInt();
         if (!attributes().value("size").isEmpty())
             size = attributes().value("size").toString().toInt();
+
+
+        // Check if this proto is a subset of previous proto - if so, do nothing
+        if ((pos >= 0) && (size > 0) && ((pos + size) <= expPos_))
+        {
+            qDebug("subset proto");
+            skipElement();
+            return;
+        }
 
         if (pos >= 0 && size > 0 
                 && ((pos + size) <= pktBuf_.size()))
@@ -732,10 +818,14 @@ void PdmlReader::readProto()
             proto->mutable_protocol_id()->set_id(
                     OstProto::Protocol::kHexDumpFieldNumber);
 
+            qDebug("missing bytes - filling in %d bytes staring from %d",
+                    size, pos);
             hexDump->set_content(pktBuf_.constData() + pos, size);
             hexDump->set_pad_until_end(false);
 
             skipElement();
+
+            expPos_ += size;
             return;
         }
     }
@@ -762,7 +852,8 @@ void PdmlReader::readProto()
 
     }
 
-    pdmlProto->preProtocolHandler(protoName, attributes(), currentStream_);
+    pdmlProto->preProtocolHandler(protoName, attributes(), expPos_, 
+            currentStream_);
 
     while (!atEnd())
     {
@@ -794,6 +885,10 @@ void PdmlReader::readProto()
                 {
                     pdmlProto->prematureEndHandler(endPos, currentStream_);
                     pdmlProto->postProtocolHandler(currentStream_);
+
+                    StreamBase s;
+                    s.protoDataCopyFrom(*currentStream_);
+                    expPos_ = s.frameProtocolLength(0);
                 }
                 readProto();
                 pdmlProto = NULL;
@@ -801,6 +896,17 @@ void PdmlReader::readProto()
             }
             else if (name() == "field")
             {
+                if ((protoName == "fake-field-wrapper") &&
+                        (attributes().value("name") == "tcp.segments"))
+                {
+                    skipElement();
+                    qDebug("[skipping reassembled tcp segments]");
+
+                    skipUntilEnd_ = true;
+                    continue;
+                }
+
+
                 if (pdmlProto == NULL)
                 {
                     pdmlProto = allocPdmlProtocol(protoName);
@@ -822,7 +928,8 @@ void PdmlReader::readProto()
                         pbProto = msgRefl->MutableMessage(proto, fieldDesc);
 
                     }
-                    pdmlProto->preProtocolHandler(protoName, attributes(), currentStream_);
+                    pdmlProto->preProtocolHandler(protoName, attributes(), 
+                            expPos_, currentStream_);
                 }
                 readField(pdmlProto, pbProto);
             }
@@ -835,6 +942,10 @@ void PdmlReader::readProto()
     {
         pdmlProto->postProtocolHandler(currentStream_);
         freePdmlProtocol(pdmlProto);
+
+        StreamBase s;
+        s.protoDataCopyFrom(*currentStream_);
+        expPos_ = s.frameProtocolLength(0);
     }
 }
 
@@ -952,13 +1063,19 @@ PdmlDefaultProtocol* PdmlUnknownProtocol::createInstance()
 }
 
 void PdmlUnknownProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
+        const QXmlStreamAttributes &attributes,
+        int expectedPos, OstProto::Stream *stream)
 {
     bool isOk;
     int size;
     int pos = attributes.value("pos").toString().toUInt(&isOk);
     if (!isOk)
-        goto _skip_pos_size_proc;
+    {
+        if (expectedPos >= 0)
+            expPos_ = pos = expectedPos;
+        else
+            goto _skip_pos_size_proc;
+    }
 
     size = attributes.value("size").toString().toUInt(&isOk);
     if (!isOk)
@@ -966,7 +1083,7 @@ void PdmlUnknownProtocol::preProtocolHandler(QString name,
 
     // If pos+size goes beyond the frame length, this is a "reassembled"
     // protocol and should be skipped
-    if (quint32(pos + size) > stream->core().frame_len())
+    if ((pos + size) > int(stream->core().frame_len()))
         goto _skip_pos_size_proc;
 
     expPos_ = pos;
@@ -1001,6 +1118,11 @@ void PdmlUnknownProtocol::postProtocolHandler(OstProto::Stream *stream)
     //Q_ASSERT(expPos_ == endPos_);
 
     hexDump->set_pad_until_end(false);
+
+    // If empty for some reason, remove the protocol
+    if (hexDump->content().size() == 0)
+        stream->mutable_protocol()->RemoveLast();
+
     endPos_ = expPos_ = -1;
 }
 
@@ -1017,6 +1139,7 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, int size,
     // Skipped field? Pad with zero!
     if ((pos > expPos_) && (expPos_ < endPos_))
     {
+#if 0
         PdmlReader::Fragment f;
 
         f = gPdmlReader->pktFragments_.value(stream->stream_id().id()-1);
@@ -1027,6 +1150,7 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, int size,
             expPos_ += f.size;
         }
         else
+#endif
         {
             QByteArray hexVal(pos - expPos_, char(0));
 
@@ -1061,11 +1185,14 @@ PdmlDefaultProtocol* PdmlGenInfoProtocol::createInstance()
     return new PdmlGenInfoProtocol();
 }
 
+#if 0 // done in frame proto
 void PdmlGenInfoProtocol::unknownFieldHandler(QString name, int pos, 
         int size, const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
 {
-    stream->mutable_core()->set_frame_len(size+4); // TODO:check FCS
+    if (name == "len")
+        stream->mutable_core()->set_frame_len(size+4); // TODO:check FCS
 }
+#endif
 
 // ---------------------------------------------------------- //
 // PdmlFrameProtocol                                          //
@@ -1079,6 +1206,43 @@ PdmlFrameProtocol::PdmlFrameProtocol()
 PdmlDefaultProtocol* PdmlFrameProtocol::createInstance()
 {
     return new PdmlFrameProtocol();
+}
+
+void PdmlFrameProtocol::unknownFieldHandler(QString name, int pos, 
+        int size, const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
+{
+    if (name == "frame.len")
+    {
+        int len = -1;
+
+        if (!attributes.value("show").isEmpty())
+            len = attributes.value("show").toString().toInt();
+        stream->mutable_core()->set_frame_len(len+4); // TODO:check FCS
+    }
+    else if (name == "frame.time_delta")
+    {
+        if (!attributes.value("show").isEmpty())
+        {
+            QString delta = attributes.value("show").toString();
+            int decimal = delta.indexOf('.');
+            
+            if (decimal >= 0)
+            {
+                const uint kNsecsInSec = 1000000000;
+                uint sec = delta.left(decimal).toUInt();
+                uint nsec = delta.mid(decimal+1).toUInt();
+                uint ipg = sec*kNsecsInSec + nsec;
+                
+                if (ipg)
+                {
+                    stream->mutable_control()->set_packets_per_sec(
+                            kNsecsInSec/ipg);
+                }
+
+                qDebug("sec.nsec = %u.%u, ipg = %u", sec, nsec, ipg);
+            }
+        }
+    }
 }
 
 #if 1
@@ -1100,7 +1264,8 @@ PdmlDefaultProtocol* PdmlFakeFieldWrapperProtocol::createInstance()
 }
 
 void PdmlFakeFieldWrapperProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
+        const QXmlStreamAttributes &attributes, 
+        int expectedPos, OstProto::Stream *stream)
 {
     expPos_ = 0;
     OstProto::HexDump *hexDump = stream->mutable_protocol(
@@ -1372,12 +1537,22 @@ void PdmlTcpProtocol::unknownFieldHandler(QString name, int pos, int size,
 {
     if (name == "tcp.options")
         options_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
-    else if (name == "" 
-            && attributes.value("show").toString().startsWith("TCP segment data"))
+    else if (name == "")
     {
-        segmentData_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
-        stream->mutable_core()->mutable_name()->insert(0, 
-                segmentData_.constData(), segmentData_.size());
+        if (attributes.value("show").toString().startsWith("TCP segment data"))
+        {
+            segmentData_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
+            stream->mutable_core()->mutable_name()->insert(0, 
+                    segmentData_.constData(), segmentData_.size());
+        }
+        else if (attributes.value("show").toString().startsWith("Acknowledgement number"))
+        {
+            bool isOk;
+            OstProto::Tcp *tcp = stream->mutable_protocol(
+                    stream->protocol_size()-1)->MutableExtension(OstProto::tcp);
+
+            tcp->set_ack_num(attributes.value("value").toString().toUInt(&isOk, kBaseHex)); 
+        }
     }
 }
 

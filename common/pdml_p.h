@@ -47,7 +47,8 @@ public:
     int fieldId(QString name) const;
 
     virtual void preProtocolHandler(QString name, 
-            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, 
+            int expectedPos, OstProto::Stream *stream);
     virtual void prematureEndHandler(int pos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -149,6 +150,9 @@ private:
 
     int pass_;
     int packetCount_;
+    int expPos_;
+    bool skipUntilEnd_;
+    OstProto::Stream *prevStream_;
     OstProto::Stream *currentStream_;
     QList<Fragment> pktFragments_; 
 
@@ -166,7 +170,8 @@ public:
     static PdmlDefaultProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
-            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, 
+            int expectedPos, OstProto::Stream *stream);
     virtual void prematureEndHandler(int pos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -183,8 +188,6 @@ public:
 
     static PdmlDefaultProtocol* createInstance();
 
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 };
 
 class PdmlFrameProtocol : public PdmlDefaultProtocol
@@ -193,6 +196,9 @@ public:
     PdmlFrameProtocol();
 
     static PdmlDefaultProtocol* createInstance();
+
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 };
 
 #if 1
@@ -204,7 +210,8 @@ public:
     static PdmlDefaultProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
-            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
+            const QXmlStreamAttributes &attributes, 
+            int expectedPos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
