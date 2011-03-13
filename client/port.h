@@ -119,7 +119,7 @@ public:
     void updateStats(OstProto::PortStats *portStats);
 
     bool openStreams(QString fileName, bool append, QString &error);
-    bool saveStreams(QString fileName, QString &error);
+    bool saveStreams(QString fileName, QString fileType, QString &error);
 
 signals:
     void portDataChanged(int portGroupId, int portId);

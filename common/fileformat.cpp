@@ -394,6 +394,38 @@ _fail:
     return false;
 }
 
+bool FileFormat::isMyFileFormat(const QString fileName)
+{
+    bool ret = false;
+    QFile file(fileName);
+    QByteArray buf;
+    OstProto::FileMagic magic;
+
+    if (!file.open(QIODevice::ReadOnly))
+        goto _exit;
+
+    buf = file.peek(kFileMagicOffset + kFileMagicSize);
+    if (!magic.ParseFromArray((void*)(buf.constData() + kFileMagicOffset), 
+                kFileMagicSize))
+        goto _close_exit;
+
+    if (magic.value() == kFileMagicValue)
+        ret = true;
+
+_close_exit:
+    file.close();
+_exit:
+    return ret;
+}
+
+bool FileFormat::isMyFileType(const QString fileType)
+{
+    if (fileType.startsWith("Ostinato"))
+        return true;
+    else
+        return false;
+}
+
 void FileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
 {
     // Fill in the "native" file format version

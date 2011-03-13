@@ -57,6 +57,7 @@ PROTOS += \
 HEADERS += \
     abstractprotocol.h    \
     comboprotocol.h    \
+    abstractfileformat.h \
     fileformat.h \
     pcapfileformat.h \
     pdmlfileformat.h \
@@ -98,6 +99,7 @@ HEADERS += \
 SOURCES += \
     abstractprotocol.cpp \
     crc32c.cpp \
+    abstractfileformat.cpp \
     fileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \

@@ -92,6 +92,43 @@ _exit:
 bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
 {
+    error = "Save to PDML format is not supported";
     return false;
 }
 
+bool PdmlFileFormat::isMyFileFormat(const QString fileName)
+{
+    bool ret = false;
+    QFile file(fileName);
+    QByteArray buf;
+    QXmlStreamReader xml;
+
+    if (!file.open(QIODevice::ReadOnly))
+        goto _exit;
+
+    xml.setDevice(&file);
+
+    xml.readNext();
+    if (xml.hasError() || !xml.isStartDocument())
+        goto _close_exit;
+
+    xml.readNext();
+    if (!xml.hasError() && xml.isStartElement() && (xml.name() == "pdml"))
+        ret = true;
+    else
+        ret = false;
+
+_close_exit:
+    xml.clear();
+    file.close();
+_exit:
+    return ret;
+}
+
+bool PdmlFileFormat::isMyFileType(const QString fileType)
+{
+    if (fileType.startsWith("PDML"))
+        return true;
+    else
+        return false;
+}

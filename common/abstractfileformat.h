@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2011 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -16,27 +16,37 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _PDML_FILE_FORMAT_H
-#define _PDML_FILE_FORMAT_H
 
-#include "abstractfileformat.h"
+#ifndef _ABSTRACT_FILE_FORMAT_H
+#define _ABSTRACT_FILE_FORMAT_H
 
-class PdmlFileFormat : public AbstractFileFormat
+#include "protocol.pb.h"
+
+#include <QObject>
+#include <QString>
+
+class AbstractFileFormat : public QObject
 {
+    Q_OBJECT 
 public:
-    PdmlFileFormat();
-    ~PdmlFileFormat();
+    AbstractFileFormat();
+    virtual ~AbstractFileFormat();
 
     virtual bool openStreams(const QString fileName, 
-            OstProto::StreamConfigList &streams, QString &error);
+            OstProto::StreamConfigList &streams, QString &error) = 0;
     virtual bool saveStreams(const OstProto::StreamConfigList streams, 
-            const QString fileName, QString &error);
+            const QString fileName, QString &error) = 0;
 
-    bool isMyFileFormat(const QString fileName);
-    bool isMyFileType(const QString fileType);
+    static AbstractFileFormat* fileFormatFromFile(const QString fileName);
+    static AbstractFileFormat* fileFormatFromType(const QString fileType);
 
+    static QStringList supportedFileTypes();
+
+#if 0
+    bool isMyFileFormat(const QString fileName) = 0;
+    bool isMyFileType(const QString fileType) = 0;
+#endif
 };
 
-extern PdmlFileFormat pdmlFileFormat;
-
 #endif
+

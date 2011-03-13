@@ -19,16 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PCAP_FILE_FORMAT_H
 #define _PCAP_FILE_FORMAT_H
 
-#include "protocol.pb.h"
+#include "abstractfileformat.h"
 
 #include <QDataStream>
-#include <QObject>
 
 class PdmlReader;
-class PcapFileFormat : public QObject
+class PcapFileFormat : public AbstractFileFormat
 {
-    Q_OBJECT
-
     friend class PdmlReader;
 
 public:
@@ -39,6 +36,9 @@ public:
             OstProto::StreamConfigList &streams, QString &error);
     bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error);
+
+    bool isMyFileFormat(const QString fileName);
+    bool isMyFileType(const QString fileType);
 
 private:
     typedef struct {
