@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "port.h"
 
-#include "fileformat.h"
-#include "pcapfileformat.h"
-#include "pdmlfileformat.h"
+#include "abstractfileformat.h"
 
 #include <QApplication>
 #include <QVariant>
@@ -228,10 +226,12 @@ void Port::updateStats(OstProto::PortStats *portStats)
 bool Port::openStreams(QString fileName, bool append, QString &error)
 {
     OstProto::StreamConfigList streams;
+    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
 
-    //if (!fileFormat.openStreams(fileName, streams, error))
-    //if (!pdmlFileFormat.openStreams(fileName, streams, error))
-    if (!pcapFileFormat.openStreams(fileName, streams, error))
+    if (fmt == NULL)
+        goto _fail;
+
+    if (!fmt->openStreams(fileName, streams, error))
         goto _fail;
 
     if (!append)
@@ -253,9 +253,13 @@ _fail:
     return false;
 }
 
-bool Port::saveStreams(QString fileName, QString &error)
+bool Port::saveStreams(QString fileName, QString fileType, QString &error)
 {
+    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType(fileType);
     OstProto::StreamConfigList streams;
+
+    if (fmt == NULL)
+        goto _fail;
 
     streams.mutable_port_id()->set_id(0);
     for (int i = 0; i < mStreams.size(); i++)
@@ -264,6 +268,9 @@ bool Port::saveStreams(QString fileName, QString &error)
         mStreams[i]->protoDataCopyInto(*s);
     }
 
-    //return fileFormat.saveStreams(streams, fileName, error);
-    return pcapFileFormat.saveStreams(streams, fileName, error);
+    return fmt->saveStreams(streams, fileName, error);
+
+_fail:
+    error = QString("Unsupported File Type - %1").arg(fileType);
+    return false;
 }

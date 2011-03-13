@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QDataStream>
 #include <QFile>
+#include <QFileInfo>
 #include <QProcess>
 #include <QTemporaryFile>
 #include <QtGlobal>
@@ -243,7 +244,7 @@ _non_pdml:
 _err_unsupported_encap:
     error = QString(tr("%1 has non-ethernet encapsulation (%2) which is "
                 "not supported - Sorry!"))
-            .arg(fileName).arg(fileHdr.network);
+            .arg(QFileInfo(fileName).fileName()).arg(fileHdr.network);
     goto _exit;
 #endif
 
@@ -391,3 +392,16 @@ _exit:
     return isOk;
 }
 
+bool PcapFileFormat::isMyFileFormat(const QString fileName)
+{
+    // TODO
+    return true;
+}
+
+bool PcapFileFormat::isMyFileType(const QString fileType)
+{
+    if (fileType.startsWith("PCAP"))
+        return true;
+    else
+        return false;
+}

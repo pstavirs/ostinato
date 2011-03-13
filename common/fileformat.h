@@ -19,24 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _FILE_FORMAT_H
 #define _FILE_FORMAT_H
 
+#include "abstractfileformat.h"
+
 #include "fileformat.pb.h"
 
-#include <QString>
-#include <QObject>
-
-class FileFormat : public QObject
+class FileFormat : public AbstractFileFormat
 {
-    Q_OBJECT 
 public:
     FileFormat();
     ~FileFormat();
 
-    bool openStreams(const QString fileName, 
+    virtual bool openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error);
-    bool saveStreams(const OstProto::StreamConfigList streams, 
+    virtual bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error);
 
+    bool isMyFileFormat(const QString fileName);
+    bool isMyFileType(const QString fileType);
+
 private:
+    void initFileMetaData(OstProto::FileMetaData &metaData);
+
     static const int kFileMagicSize = 12;
     static const int kFileChecksumSize = 5;
     static const int kFileMinSize = kFileMagicSize + kFileChecksumSize;
@@ -50,8 +53,6 @@ private:
     static const uint kFileFormatVersionMajor = 0;
     static const uint kFileFormatVersionMinor = 1;
     static const uint kFileFormatVersionRevision = 3;
-
-    void initFileMetaData(OstProto::FileMetaData &metaData);
 };
 
 extern FileFormat fileFormat;

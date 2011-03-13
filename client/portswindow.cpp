@@ -19,12 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portswindow.h"
 
+#include "abstractfileformat.h"
+#include "streamconfigdialog.h"
+#include "streamlistdelegate.h"
+
 #include <QInputDialog>
 #include <QItemSelectionModel>
 #include <QMessageBox>
-
-#include "streamconfigdialog.h"
-#include "streamlistdelegate.h"
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent)
@@ -497,17 +498,44 @@ void PortsWindow::on_actionSave_Streams_triggered()
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     QString fileName;
+    QStringList fileTypes = AbstractFileFormat::supportedFileTypes();
+    QString fileType;
     QString errorStr;
+    QFileDialog::Options options;
+
+    // On Mac OS with Native Dialog, getSaveFileName() ignores fileType 
+    // which we need.
+#ifdef Q_OS_MAC
+    options |= QFileDialog::DontUseNativeDialog;
+#endif
+
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
 
     Q_ASSERT(plm->isPort(current));
 
-    fileName = QFileDialog::getSaveFileName(this, tr("Save Streams"));
+_retry:
+    fileName = QFileDialog::getSaveFileName(this, tr("Save Streams"),
+            fileName, fileTypes.join(";;"), &fileType, options);
     if (fileName.isEmpty())
         goto _exit;
 
+    fileType = fileType.remove(QRegExp("\\(.*\\)")).trimmed();
+    if (!fileType.startsWith("Ostinato"))
+    {
+        if (QMessageBox::warning(this, tr("Ostinato"), 
+            QString("You have chosen to save in %1 format. All stream "
+                "attributes may not be saved in this format.\n\n"
+                "It is recommended to save in native Ostinato format.\n\n"
+                "Continue to save in %2 format?").arg(fileType).arg(fileType),
+            QMessageBox::Yes|QMessageBox::No,
+            QMessageBox::No) != QMessageBox::Yes)
+            goto _retry;
+    }
+
     // TODO: all or selected?
 
-    if (!plm->port(current).saveStreams(fileName, errorStr))
+    if (!plm->port(current).saveStreams(fileName, fileType, errorStr))
         QMessageBox::critical(this, qApp->applicationName(), errorStr);
     else if (!errorStr.isEmpty())
         QMessageBox::warning(this, qApp->applicationName(), errorStr);
