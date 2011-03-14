@@ -91,13 +91,6 @@ private:
 
     typedef PdmlDefaultProtocol* (*FactoryMethod)();
 
-    typedef struct
-    {
-        int pos;
-        int size;
-        QByteArray value;
-    } Fragment;
-
     QMap<QString, FactoryMethod> factory_;
 
     OstProto::StreamConfigList *streams_;
@@ -151,25 +144,6 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 };
-
-#if 1
-class PdmlFakeFieldWrapperProtocol : public PdmlDefaultProtocol
-{
-public:
-    PdmlFakeFieldWrapperProtocol();
-
-    static PdmlDefaultProtocol* createInstance();
-
-    virtual void preProtocolHandler(QString name, 
-            const QXmlStreamAttributes &attributes, 
-            int expectedPos, OstProto::Stream *stream);
-    virtual void postProtocolHandler(OstProto::Stream *stream);
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
-private:
-    int expPos_;
-};
-#endif
 
 class PdmlEthProtocol : public PdmlDefaultProtocol
 {
