@@ -118,10 +118,6 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
-#if 0
-    factory_.insert("fake-field-wrapper", 
-            new PdmlFakeFieldWrapperProtocol());
-#endif
     factory_.insert("eth",PdmlEthProtocol::createInstance);
     factory_.insert("ip",PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6",PdmlIp6Protocol::createInstance);
@@ -834,68 +830,6 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int pos,
     }
 }
 
-#if 1
-// ---------------------------------------------------------- //
-// PdmlFakeFieldWrapperProtocol                                        //
-// ---------------------------------------------------------- //
-
-PdmlFakeFieldWrapperProtocol::PdmlFakeFieldWrapperProtocol()
-{
-    pdmlProtoName_ = "OST:HexDump";
-    ostProtoId_ = OstProto::Protocol::kHexDumpFieldNumber;
-
-    expPos_ = -1;
-}
-
-PdmlDefaultProtocol* PdmlFakeFieldWrapperProtocol::createInstance()
-{
-    return new PdmlFakeFieldWrapperProtocol();
-}
-
-void PdmlFakeFieldWrapperProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, 
-        int expectedPos, OstProto::Stream *stream)
-{
-    expPos_ = 0;
-    OstProto::HexDump *hexDump = stream->mutable_protocol(
-            stream->protocol_size()-1)->MutableExtension(OstProto::hexDump);
-    hexDump->set_pad_until_end(false);
-}
-
-void PdmlFakeFieldWrapperProtocol::postProtocolHandler(OstProto::Stream *stream)
-{
-    OstProto::HexDump *hexDump = stream->mutable_protocol(
-            stream->protocol_size()-1)->MutableExtension(OstProto::hexDump);
-
-    qDebug("%s: expPos_ = %d\n", __FUNCTION__, expPos_); 
-
-    // TODO: if content size is zero, remove protocol?
-
-    hexDump->set_pad_until_end(false);
-    expPos_ = -1;
-}
-
-void PdmlFakeFieldWrapperProtocol::unknownFieldHandler(QString name, int pos, 
-        int size, const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
-{
-    OstProto::HexDump *hexDump = stream->mutable_protocol(
-            stream->protocol_size()-1)->MutableExtension(OstProto::hexDump);
-
-    if ((pos == expPos_) && (size >= 0) && 
-            (!name.startsWith("tcp.segment")) &&
-            (!attributes.value("unmaskedvalue").isEmpty() || 
-             !attributes.value("value").isEmpty()))
-    {
-        QByteArray hexVal = attributes.value("unmaskedvalue").isEmpty() ?
-                QByteArray::fromHex(attributes.value("value").toString().toUtf8()) :
-                QByteArray::fromHex(attributes.value("unmaskedvalue").toString().toUtf8());
-
-        hexDump->mutable_content()->append(hexVal.constData(), hexVal.size());
-        expPos_ += hexVal.size();
-    }
-}
-
-#endif
 // ---------------------------------------------------------- //
 // PdmlEthProtocol                                            //
 // ---------------------------------------------------------- //
