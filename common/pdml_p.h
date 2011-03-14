@@ -101,7 +101,6 @@ private:
     bool skipUntilEnd_;
     OstProto::Stream *prevStream_;
     OstProto::Stream *currentStream_;
-    QList<Fragment> pktFragments_; 
 
     QByteArray pktBuf_;
 };
