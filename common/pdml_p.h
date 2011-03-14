@@ -60,37 +60,6 @@ protected:
     QMap<QString, int> fieldMap_;
 };
 
-#if 0
-class PdmlParser : public QXmlDefaultHandler
-{
-public:
-    PdmlParser(OstProto::StreamConfigList *streams);
-    ~PdmlParser();
-
-    bool startElement(const QString &namespaceURI,
-                      const QString &localName,
-                      const QString &qName,
-                      const QXmlAttributes &attributes);
-    bool endElement(const QString &namespaceURI,
-                    const QString &localName,
-                    const QString &qName);
-    bool characters(const QString &str);
-    bool fatalError(const QXmlParseException &exception);
-
-private:
-    void initProtocolMaps();
-
-    QMap<QString, PdmlDefaultProtocol*> protocolMap_;
-    PdmlDefaultProtocol *currentPdmlProtocol_;
-    int skipCount_;
-    int packetCount_;
-    OstProto::StreamConfigList *streams_;
-
-    OstProto::Stream *currentStream_;
-    google::protobuf::Message *currentProtocolMsg_;
-};
-#endif
-
 class PdmlUnknownProtocol;
 class PcapFileFormat;
 class PdmlReader : public QXmlStreamReader
