@@ -91,20 +91,6 @@ private:
 
     typedef PdmlDefaultProtocol* (*FactoryMethod)();
 
-#if 0
-    class PacketFragment // TODO: find a better name!
-    {
-    public:
-    private:
-        typedef struct
-        {
-            int pos;
-            int size;
-            QByteArray value;
-        } Fragment;
-        QList<Fragment> 
-    };
-#endif
     typedef struct
     {
         int pos;
@@ -117,7 +103,6 @@ private:
     OstProto::StreamConfigList *streams_;
     PcapFileFormat *pcap_;
 
-    int pass_;
     int packetCount_;
     int expPos_;
     bool skipUntilEnd_;
@@ -126,9 +111,6 @@ private:
     QList<Fragment> pktFragments_; 
 
     QByteArray pktBuf_;
-
-    //PdmlDefaultProtocol *currentPdmlProtocol_;
-    //google::protobuf::Message *currentProtocolMsg_;
 };
 
 class PdmlUnknownProtocol : public PdmlDefaultProtocol
