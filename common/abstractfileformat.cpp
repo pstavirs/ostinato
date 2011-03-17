@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 AbstractFileFormat::AbstractFileFormat()
 {
+    stop_ = false;
 }
 
 AbstractFileFormat::~AbstractFileFormat()
@@ -40,10 +41,40 @@ QStringList AbstractFileFormat::supportedFileTypes()
         << "PCAP (*)"
         << "PDML (*.pdml)";
 }
+
+void AbstractFileFormat::openStreamsOffline(const QString fileName, 
+        OstProto::StreamConfigList &streams, QString &error)
+{
+    fileName_ = fileName;
+    openStreams_ = &streams;
+    error_ = &error;
+    op_ = kOpen;
+    stop_ = false;
+
+    start();
+}
+
+void AbstractFileFormat::saveStreamsOffline(
+        const OstProto::StreamConfigList streams, 
+        const QString fileName, QString &error)
+{
+    saveStreams_ = streams;
+    fileName_ = fileName;
+    error_ = &error;
+    op_ = kSave;
+    stop_ = false;
+
+    start();
+}
+
+bool AbstractFileFormat::result()
+{
+    return result_;
+}
+
 AbstractFileFormat* AbstractFileFormat::fileFormatFromFile(
         const QString fileName)
 {
-
     if (fileFormat.isMyFileFormat(fileName))
         return &fileFormat;
 
@@ -70,4 +101,17 @@ AbstractFileFormat* AbstractFileFormat::fileFormatFromType(
         return &pcapFileFormat;
 
     return NULL;
+}
+
+void AbstractFileFormat::cancel()
+{
+    stop_ = true;
+}
+
+void AbstractFileFormat::run()
+{
+    if (op_ == kOpen)
+        result_ = openStreams(fileName_, *openStreams_, *error_);
+    else if (op_ == kSave)
+        result_ = saveStreams(saveStreams_, fileName_, *error_);
 }

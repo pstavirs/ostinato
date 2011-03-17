@@ -322,6 +322,8 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
         goto _zero_cksum_serialize_fail;
     }
 
+    emit status("Calculating checksum...");
+
     // Calculate and write checksum
     calcCksum = checksumCrc32C((quint8*)buf.constData(), buf.size());
     cksum.set_value(calcCksum);
@@ -335,6 +337,7 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
     qDebug("Writing %d bytes", buf.size());
     //qDebug("%s", QString(buf.toHex()).toAscii().constData());
 
+    emit status("Writing to disk...");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         goto _open_fail;
 

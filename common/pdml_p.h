@@ -62,14 +62,18 @@ protected:
 
 class PdmlUnknownProtocol;
 class PcapFileFormat;
-class PdmlReader : public QXmlStreamReader
+class PdmlReader : public QObject, public QXmlStreamReader
 {
+    Q_OBJECT
     friend class PdmlUnknownProtocol;
 public:
     PdmlReader(OstProto::StreamConfigList *streams);
     ~PdmlReader();
 
-    bool read(QIODevice *device, PcapFileFormat *pcap = NULL);
+    bool read(QIODevice *device, PcapFileFormat *pcap = NULL, 
+            bool *stop = NULL);
+signals:
+    void progress(int value);
 
 private:
     PdmlDefaultProtocol* allocPdmlProtocol(QString protoName);
@@ -103,6 +107,7 @@ private:
     OstProto::Stream *currentStream_;
 
     QByteArray pktBuf_;
+    bool *stop_;
 };
 
 class PdmlUnknownProtocol : public PdmlDefaultProtocol

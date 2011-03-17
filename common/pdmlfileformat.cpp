@@ -30,39 +30,6 @@ PdmlFileFormat::~PdmlFileFormat()
 {
 }
 
-#if 0
-bool PdmlFileFormat::openStreams(const QString fileName, 
-            OstProto::StreamConfigList &streams, QString &error)
-{
-    bool isOk;
-    QFile file(fileName);
-    PdmlParser *pdml;
-    QXmlSimpleReader *xmlReader;
-    QXmlInputSource *xmlSource;
-
-    if (!file.open(QIODevice::ReadOnly))
-        goto _open_fail;
-
-    pdml = new PdmlParser(&streams);
-    xmlSource = new QXmlInputSource(&file);
-    xmlReader = new QXmlSimpleReader;
-    xmlReader->setContentHandler(pdml);
-    xmlReader->setErrorHandler(pdml);
-    isOk = xmlReader->parse(xmlSource, false); // non-incremental parse
-
-    goto _exit;
-
-_open_fail:
-    isOk = false;
-
-_exit:
-    delete xmlReader;
-    delete xmlSource;
-    delete pdml;
-
-    return isOk;
-}
-#else
 bool PdmlFileFormat::openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error)
 {
@@ -72,6 +39,10 @@ bool PdmlFileFormat::openStreams(const QString fileName,
 
     if (!file.open(QIODevice::ReadOnly))
         goto _open_fail;
+
+    connect(reader, SIGNAL(progress(int)), this, SIGNAL(progress(int)));
+    emit status("Reading PDML packets...");
+    emit target(100); // in percentage
 
     // TODO: fill in error string
 
@@ -87,7 +58,6 @@ _exit:
 
     return isOk;
 }
-#endif
 
 bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
