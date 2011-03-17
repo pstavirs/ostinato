@@ -64,7 +64,7 @@ PcapFileFormat::~PcapFileFormat()
 bool PcapFileFormat::openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error)
 {
-    bool viaPdml = true; // TODO: shd be a param to function
+    bool viaPdml = false; // TODO: shd be a param to function
 
     bool isOk = false;
     QFile file(fileName);
@@ -77,6 +77,8 @@ bool PcapFileFormat::openStreams(const QString fileName,
     OstProto::Stream *prevStream = NULL;
     uint lastUsec = 0;
     int pktCount;
+    qint64 byteCount = 0;
+    qint64 byteTotal;
     QByteArray pktBuf;
 
     if (!file.open(QIODevice::ReadOnly))
@@ -89,6 +91,9 @@ bool PcapFileFormat::openStreams(const QString fileName,
     if ((gzipMagic[0] == 0x1f) && (gzipMagic[1] == 0x8b))
     {
         QProcess gzip;
+
+        emit status("Decompressing...");
+        emit target(0);
 
         if (!file2.open())
         {
@@ -125,6 +130,11 @@ bool PcapFileFormat::openStreams(const QString fileName,
     {
         fd_.setDevice(&file);
     }
+
+    byteTotal = fd_.device()->size() - sizeof(fileHdr);
+
+    emit status("Reading File Header...");
+    emit target(0);
 
     fd_ >> magic;
 
@@ -173,6 +183,8 @@ bool PcapFileFormat::openStreams(const QString fileName,
         }
 
         qDebug("generating PDML %s", pdmlFile.fileName().toAscii().constData());
+        emit status("Generating PDML...");
+        emit target(0);
 
         tshark.setStandardOutputFile(pdmlFile.fileName());
         // FIXME: hardcoded prog name
@@ -193,12 +205,18 @@ bool PcapFileFormat::openStreams(const QString fileName,
             goto _non_pdml;
         }
 
-        isOk = reader.read(&pdmlFile, this); // TODO: pass error string?
+        connect(&reader, SIGNAL(progress(int)), this, SIGNAL(progress(int)));
+
+        emit status("Reading PDML packets...");
+        emit target(100); // in percentage
+        isOk = reader.read(&pdmlFile, this, &stop_); // TODO: pass error string?
         goto _exit;
        
     }
 
 _non_pdml:
+    emit status("Reading Packets...");
+    emit target(100);  // in percentage
     pktCount = 1;
     while (!fd_.atEnd())
     {
@@ -235,8 +253,17 @@ _non_pdml:
         lastUsec = usec;
         prevStream = stream;
         pktCount++;
+        qDebug("pktCount = %d", pktCount);
+        byteCount += pktHdr.inclLen + sizeof(pktHdr);
+        emit progress(int(byteCount*100/byteTotal)); // in percentage
+        if (stop_)
+            goto _user_cancel;
     }
 
+    isOk = true;
+    goto _exit;
+
+_user_cancel:
     isOk = true;
     goto _exit;
 
@@ -344,6 +371,9 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
 
     pktBuf.resize(kMaxSnapLen);
 
+    emit status("Writing Packets...");
+    emit target(streams.stream_size());
+
     pktHdr.tsSec = 0;
     pktHdr.tsUsec = 0;
     for (int i = 0; i < streams.stream_size(); i++)
@@ -377,6 +407,8 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
             pktHdr.tsSec++;
             pktHdr.tsUsec -= 1000000;
         }
+
+        emit progress(i);
     }
 
     file.close();

@@ -22,9 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractfileformat.h"
 
 #include <QApplication>
+#include <QMainWindow>
+#include <QProgressDialog>
 #include <QVariant>
 #include <google/protobuf/descriptor.h>
 #include <vector>
+
+extern QMainWindow *mainWindow;
 
 uint Port::mAllocStreamId = 0;
 
@@ -225,52 +229,137 @@ void Port::updateStats(OstProto::PortStats *portStats)
 
 bool Port::openStreams(QString fileName, bool append, QString &error)
 {
+    bool ret = false; 
+    QProgressDialog progress("Opening Streams", "Cancel", 0, 0, mainWindow);
     OstProto::StreamConfigList streams;
     AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
 
     if (fmt == NULL)
         goto _fail;
 
-    if (!fmt->openStreams(fileName, streams, error))
+    progress.setAutoReset(false);
+    progress.setAutoClose(false);
+    progress.setMinimumDuration(0);
+    progress.show();
+
+    mainWindow->setDisabled(true);
+    progress.setEnabled(true); // to override the mainWindow disable
+
+    connect(fmt, SIGNAL(status(QString)),&progress,SLOT(setLabelText(QString)));
+    connect(fmt, SIGNAL(target(int)), &progress, SLOT(setMaximum(int)));
+    connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
+    connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
+
+    fmt->openStreamsOffline(fileName, streams, error);
+    qDebug("after open offline");
+
+    while (!fmt->isFinished())
+        qApp->processEvents();
+    qDebug("wait over for offline operation");
+
+    if (!fmt->result())
         goto _fail;
+    
+    // process any remaining events posted from the thread
+    for (int i = 0; i < 10; i++)
+        qApp->processEvents();
 
     if (!append)
     {
-        while (numStreams())
+        int n = numStreams();
+
+        progress.setLabelText("Deleting existing streams...");
+        progress.setRange(0, n);
+        for (int i = 0; i < n; i++)
+        {
+            if (progress.wasCanceled())
+                goto _user_cancel;
             deleteStreamAt(0);
+            progress.setValue(i);
+            if (i % 32 == 0)
+                qApp->processEvents();
+        }
     }
 
+    progress.setLabelText("Constructing new streams...");
+    progress.setRange(0, streams.stream_size());
     for (int i = 0; i < streams.stream_size(); i++)
     {
+        if (progress.wasCanceled())
+            goto _user_cancel;
         newStreamAt(mStreams.size(), &streams.stream(i));
+        progress.setValue(i);
+        if (i % 32 == 0)
+            qApp->processEvents();
     }
 
+_user_cancel:
     emit streamListChanged(mPortGroupId, mPortId);
-
-    return true;
+    ret = true;
 
 _fail:
-    return false;
+    progress.close();
+    mainWindow->setEnabled(true);
+    return ret;
 }
 
 bool Port::saveStreams(QString fileName, QString fileType, QString &error)
 {
+    bool ret = false;
+    QProgressDialog progress("Saving Streams", "Cancel", 0, 0, mainWindow);
     AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType(fileType);
     OstProto::StreamConfigList streams;
 
     if (fmt == NULL)
         goto _fail;
 
+    progress.setAutoReset(false);
+    progress.setAutoClose(false);
+    progress.setMinimumDuration(0);
+    progress.show();
+
+    mainWindow->setDisabled(true);
+    progress.setEnabled(true); // to override the mainWindow disable
+
+    connect(fmt, SIGNAL(status(QString)),&progress,SLOT(setLabelText(QString)));
+    connect(fmt, SIGNAL(target(int)), &progress, SLOT(setMaximum(int)));
+    connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
+    connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
+
+    progress.setLabelText("Preparing Streams...");
+    progress.setRange(0, mStreams.size());
     streams.mutable_port_id()->set_id(0);
     for (int i = 0; i < mStreams.size(); i++)
     {
         OstProto::Stream *s = streams.add_stream();
         mStreams[i]->protoDataCopyInto(*s);
+
+        if (progress.wasCanceled())
+            goto _user_cancel;
+        progress.setValue(i);
+        if (i % 32 == 0)
+            qApp->processEvents();
     }
 
-    return fmt->saveStreams(streams, fileName, error);
+    fmt->saveStreamsOffline(streams, fileName, error);
+    qDebug("after save offline");
+
+    while (!fmt->isFinished())
+        qApp->processEvents();
+    qDebug("wait over for offline operation");
+
+    ret = fmt->result();
+    goto _exit;
+
+_user_cancel:
+   goto _exit; 
 
 _fail:
     error = QString("Unsupported File Type - %1").arg(fileType);
-    return false;
+    goto _exit;
+
+_exit:
+    progress.close();
+    mainWindow->setEnabled(true);
+    return ret;
 }

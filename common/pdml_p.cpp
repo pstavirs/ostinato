@@ -115,6 +115,8 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     currentStream_ = NULL;
     prevStream_ = NULL;
 
+    stop_ = NULL;
+
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
@@ -128,12 +130,13 @@ PdmlReader::~PdmlReader()
 {
 }
 
-bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap)
+bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap, bool *stop)
 {
     setDevice(device);
     pcap_ = pcap;
     packetCount_ = 0;
 
+    stop_ = stop;
     while (!atEnd())
     {
         readNext();
@@ -146,7 +149,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap)
         }
     }
 
-    if (error())
+    if (error() && (errorString() != "USER-CANCEL"))
     {
         qDebug("Line %lld", lineNumber());
         qDebug("Col %lld", columnNumber());
@@ -325,8 +328,11 @@ void PdmlReader::readPacket()
     } 
 
     packetCount_++;
+    emit progress(int(characterOffset()*100/device()->size()));
     if (prevStream_)
         prevStream_->mutable_control()->CopyFrom(currentStream_->control());
+    if (stop_ && *stop_)
+        raiseError("USER-CANCEL");
 }
 
 void PdmlReader::readProto()

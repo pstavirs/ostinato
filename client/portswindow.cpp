@@ -458,14 +458,15 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 
     Q_ASSERT(plm->isPort(current));
 
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"));
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"), "D:/srivatsp/projects/ostinato/testfiles/pcaps");
     if (fileName.isEmpty())
         goto _exit;
 
     if (tvStreamList->model()->rowCount())
     {
         QMessageBox msgBox(QMessageBox::Question, qApp->applicationName(),
-                tr("Append to existing streams? Or overwrite?"));
+                tr("Append to existing streams? Or overwrite?"),
+                QMessageBox::NoButton, this);
         QPushButton *appendBtn = msgBox.addButton(tr("Append"), 
                 QMessageBox::ActionRole);
         QPushButton *overwriteBtn = msgBox.addButton(tr("Overwrite"), 

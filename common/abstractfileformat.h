@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
-#include <QObject>
+#include <QThread>
 #include <QString>
 
-class AbstractFileFormat : public QObject
+class AbstractFileFormat : public QThread
 {
-    Q_OBJECT 
+    Q_OBJECT
 public:
     AbstractFileFormat();
     virtual ~AbstractFileFormat();
@@ -36,6 +36,13 @@ public:
             OstProto::StreamConfigList &streams, QString &error) = 0;
     virtual bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error) = 0;
+
+    void openStreamsOffline(const QString fileName, 
+            OstProto::StreamConfigList &streams, QString &error);
+    void saveStreamsOffline(const OstProto::StreamConfigList streams, 
+            const QString fileName, QString &error);
+
+    bool result();
 
     static AbstractFileFormat* fileFormatFromFile(const QString fileName);
     static AbstractFileFormat* fileFormatFromType(const QString fileType);
@@ -46,6 +53,33 @@ public:
     bool isMyFileFormat(const QString fileName) = 0;
     bool isMyFileType(const QString fileType) = 0;
 #endif
+
+signals:
+    void status(QString text);
+    void target(int value);
+    void progress(int value);
+
+public slots:
+    void cancel();
+
+protected:
+    void run();
+
+    bool stop_;
+
+private:
+    enum kOp
+    {
+        kOpen,
+        kSave 
+    };
+    QString fileName_;
+    OstProto::StreamConfigList *openStreams_;
+    OstProto::StreamConfigList saveStreams_;
+    QString *error_;
+    kOp op_;
+    bool result_;
+
 };
 
 #endif
