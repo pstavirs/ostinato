@@ -58,6 +58,10 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
 {
     setupUi(this);
     options_ = options;
+
+    viaPdml->setChecked(options_->value("ViaPdml").toBool());
+    doDiff->setChecked(options_->value("DoDiff").toBool());
+
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
@@ -75,6 +79,9 @@ void PcapImportOptionsDialog::accept()
 
 PcapFileFormat::PcapFileFormat()
 {
+    importOptions_.insert("ViaPdml", true);
+    importOptions_.insert("DoDiff", true);
+
     importDialog_ = NULL;
 }
 
@@ -192,9 +199,9 @@ bool PcapFileFormat::openStreams(const QString fileName,
 
     if (importOptions_.value("ViaPdml").toBool())
     {
+        QProcess tshark;
         QTemporaryFile pdmlFile;
         PdmlReader reader(&streams);
-        QProcess tshark;
 
         if (!pdmlFile.open())
         {
@@ -229,9 +236,205 @@ bool PcapFileFormat::openStreams(const QString fileName,
 
         emit status("Reading PDML packets...");
         emit target(100); // in percentage
-        isOk = reader.read(&pdmlFile, this, &stop_); // TODO: pass error string?
+        isOk = reader.read(&pdmlFile, this, &stop_);
+        
+        if (stop_)
+            goto _user_cancel;
+
+        if (!isOk)
+        {
+            error.append(QString("Error processing PDML (%1, %2): %3\n")
+                    .arg(reader.lineNumber())
+                    .arg(reader.columnNumber())
+                    .arg(reader.errorString()));
+            goto _exit;
+        }
+
+        if (!importOptions_.value("DoDiff").toBool())
+            goto _exit;
+
+
+        // !-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
+        //             Let's do the diff ...
+        // !-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
+
+        QProcess awk;
+        QProcess diff;
+        QTemporaryFile originalTextFile;
+        QTemporaryFile importedPcapFile;
+        QTemporaryFile importedTextFile;
+        QTemporaryFile diffFile;
+        const QString kAwkFilter =
+            "/^[^0]/ { "
+                        "printf \" %s \", $1;"
+                        "for (i=4; i<NF; i++) printf \"%s \", $i;"
+                        "next;"
+                    "}"
+            "// {print}";
+
+        // Convert original file to text ...
+        if (!originalTextFile.open())
+        {
+            error.append("Unable to open temporary file to create text file "
+                    "(original) for diff\n");
+            goto _diff_fail;
+        }
+        qDebug("generating text file (original) %s", 
+                originalTextFile.fileName().toAscii().constData());
+
+        emit status("Preparing original PCAP for diff...");
+        emit target(0);
+
+        tshark.setStandardOutputProcess(&awk);
+        awk.setStandardOutputFile(originalTextFile.fileName());
+        // FIXME: hardcoded prog name
+        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+                QStringList() 
+                << QString("-r%1").arg(fileName)
+                << "-otcp.desegment_tcp_streams:FALSE"
+                << "-x");
+        if (!tshark.waitForStarted(-1))
+        {
+            error.append(QString("Unable to start tshark - %1\n")
+                    .arg(tshark.exitCode()));
+            goto _diff_fail;
+        }
+
+        // FIXME: hardcoded prog name
+        awk.start("D:/srivatsp/projects/ostinato/pdml/bin/gawk.exe", 
+                QStringList() << kAwkFilter);
+        if (!awk.waitForStarted(-1))
+        {
+            tshark.kill();
+            error.append(QString("Unable to start awk - %1\n")
+                    .arg(awk.exitCode()));
+            goto _diff_fail;
+        }
+
+        if (!tshark.waitForFinished(-1))
+        {
+            error.append(QString("Error running tshark\n"));
+            goto _diff_fail;
+        }
+        if (!awk.waitForFinished(-1))
+        {
+            error.append(QString("Error running awk\n"));
+            goto _diff_fail;
+        }
+
+        // Save imported file as PCAP
+        if (!importedPcapFile.open())
+        {
+            error.append("Unable to open temporary file to create pcap file "
+                    "from imported streams for diff\n");
+            goto _diff_fail;
+        }
+
+        if (!saveStreams(streams, importedPcapFile.fileName(), error))
+        {
+            error.append("Error saving imported streams as PCAP for diff");
+            goto _diff_fail;
+        }
+
+        // Convert imported file to text ...
+        if (!importedTextFile.open())
+        {
+            error.append("Unable to open temporary file to create text file "
+                    "(imported) for diff\n");
+            goto _diff_fail;
+        }
+        qDebug("generating text file (imported) %s", 
+                importedTextFile.fileName().toAscii().constData());
+
+        emit status("Preparing imported PCAP for diff...");
+        emit target(0);
+
+        tshark.setStandardOutputProcess(&awk);
+        awk.setStandardOutputFile(importedTextFile.fileName());
+        // FIXME: hardcoded prog name
+        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+                QStringList() 
+                << QString("-r%1").arg(importedPcapFile.fileName())
+                << "-otcp.desegment_tcp_streams:FALSE"
+                << "-x");
+        if (!tshark.waitForStarted(-1))
+        {
+            error.append(QString("Unable to start tshark - %1\n")
+                    .arg(tshark.exitCode()));
+            goto _diff_fail;
+        }
+
+        // FIXME: hardcoded prog name
+        awk.start("D:/srivatsp/projects/ostinato/pdml/bin/gawk.exe", 
+                QStringList() << kAwkFilter);
+        if (!awk.waitForStarted(-1))
+        {
+            tshark.kill();
+            error.append(QString("Unable to start awk - %1\n")
+                    .arg(awk.exitCode()));
+            goto _diff_fail;
+        }
+
+        if (!tshark.waitForFinished(-1))
+        {
+            error.append(QString("Error running tshark\n"));
+            goto _diff_fail;
+        }
+        if (!awk.waitForFinished(-1))
+        {
+            error.append(QString("Error running awk\n"));
+            goto _diff_fail;
+        }
+
+        // Now do the diff of the two text files ...
+        if (!diffFile.open())
+        {
+            error.append("Unable to open temporary file to store diff\n");
+            goto _diff_fail;
+        }
+        qDebug("diffing %s and %s > %s", 
+                originalTextFile.fileName().toAscii().constData(),
+                importedTextFile.fileName().toAscii().constData(),
+                diffFile.fileName().toAscii().constData());
+
+        emit status("Taking diff...");
+        emit target(0);
+
+        diff.setStandardOutputFile(diffFile.fileName());
+        // FIXME: hardcoded prog name
+        diff.start("D:/srivatsp/projects/ostinato/pdml/bin/diff.exe", 
+                QStringList()
+                << "-u"
+                << "-F^ [1-9]"
+                << QString("--label=%1 (actual)")
+                    .arg(QFileInfo(fileName).fileName())
+                << QString("--label=%1 (imported)")
+                    .arg(QFileInfo(fileName).fileName())
+                << originalTextFile.fileName()
+                << importedTextFile.fileName());
+        if (!diff.waitForStarted(-1))
+        {
+            error.append(QString("Unable to start diff\n")
+                    .arg(diff.exitCode()));
+            goto _diff_fail;
+        }
+
+        if (!diff.waitForFinished(-1))
+        {
+            error.append(QString("Error running diff\n"));
+            goto _diff_fail;
+        }
+
+        diffFile.close();
+        if (diffFile.size())
+        {
+            error.append("There is a diff between the original and imported streams. See details for diff.\n\n\n\n");
+            diffFile.open();
+            diffFile.seek(0);
+            error.append(QString(diffFile.readAll()));
+        }
+
         goto _exit;
-       
     }
 
 _non_pdml:
@@ -287,13 +490,14 @@ _user_cancel:
     isOk = true;
     goto _exit;
 
-#if 1
+_diff_fail:
+    goto _exit;
+
 _err_unsupported_encap:
     error = QString(tr("%1 has non-ethernet encapsulation (%2) which is "
                 "not supported - Sorry!"))
             .arg(QFileInfo(fileName).fileName()).arg(fileHdr.network);
     goto _exit;
-#endif
 
 _err_unsupported_version:
     error = QString(tr("%1 is in PCAP version %2.%3 format which is "

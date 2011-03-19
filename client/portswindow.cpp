@@ -455,6 +455,7 @@ void PortsWindow::on_actionOpen_Streams_triggered()
     QString fileName;
     QString errorStr;
     bool append = true;
+    bool ret;
 
     Q_ASSERT(plm->isPort(current));
 
@@ -485,10 +486,22 @@ void PortsWindow::on_actionOpen_Streams_triggered()
             Q_ASSERT(false);
     }
 
-    if (!plm->port(current).openStreams(fileName, append, errorStr))
-        QMessageBox::critical(this, qApp->applicationName(), errorStr);
-    else if (!errorStr.isEmpty())
-        QMessageBox::warning(this, qApp->applicationName(), errorStr);
+    ret = plm->port(current).openStreams(fileName, append, errorStr);
+    if (!ret || !errorStr.isEmpty())
+    {
+        QMessageBox msgBox(this);
+        QStringList str = errorStr.split("\n\n\n\n");
+
+        msgBox.setIcon(ret ? QMessageBox::Warning : QMessageBox::Critical);
+        msgBox.setWindowTitle(qApp->applicationName());
+        msgBox.setText(str.at(0));
+        if (str.size() > 1)
+            msgBox.setDetailedText(str.at(1));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+
+        msgBox.exec();
+    }
+
 _exit:
     return;
 }
