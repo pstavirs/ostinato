@@ -5,6 +5,7 @@ INCLUDEPATH += "../extra/qhexedit2/src"
 LIBS += \
     -lprotobuf
 FORMS += \
+    pcapfileimport.ui \
     mac.ui \
     payload.ui \
     eth2.ui \
