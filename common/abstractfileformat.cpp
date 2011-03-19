@@ -34,6 +34,16 @@ AbstractFileFormat::~AbstractFileFormat()
 {
 }
 
+QDialog* AbstractFileFormat::openOptionsDialog()
+{
+    return NULL;
+}
+
+QDialog* AbstractFileFormat::saveOptionsDialog()
+{
+    return NULL;
+}
+
 QStringList AbstractFileFormat::supportedFileTypes()
 {
     return QStringList()

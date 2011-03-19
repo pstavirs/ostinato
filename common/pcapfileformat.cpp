@@ -53,19 +53,39 @@ const quint32 kDltEthernet = 1;
 
 PcapFileFormat pcapFileFormat;
 
+PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
+    : QDialog(NULL)
+{
+    setupUi(this);
+    options_ = options;
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+}
+
+PcapImportOptionsDialog::~PcapImportOptionsDialog()
+{
+}
+
+void PcapImportOptionsDialog::accept()
+{
+    options_->insert("ViaPdml", viaPdml->isChecked());
+    options_->insert("DoDiff", doDiff->isChecked());
+
+    QDialog::accept();
+}
+
 PcapFileFormat::PcapFileFormat()
 {
+    importDialog_ = NULL;
 }
 
 PcapFileFormat::~PcapFileFormat()
 {
+    delete importDialog_;
 }
 
 bool PcapFileFormat::openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error)
 {
-    bool viaPdml = false; // TODO: shd be a param to function
-
     bool isOk = false;
     QFile file(fileName);
     QTemporaryFile file2;
@@ -170,7 +190,7 @@ bool PcapFileFormat::openStreams(const QString fileName,
 
     pktBuf.resize(fileHdr.snapLen);
 
-    if (viaPdml)
+    if (importOptions_.value("ViaPdml").toBool())
     {
         QTemporaryFile pdmlFile;
         PdmlReader reader(&streams);
@@ -422,6 +442,14 @@ _err_open:
 
 _exit:
     return isOk;
+}
+
+QDialog* PcapFileFormat::openOptionsDialog()
+{
+    if (!importDialog_)
+        importDialog_ = new PcapImportOptionsDialog(&importOptions_);
+
+    return importDialog_;
 }
 
 bool PcapFileFormat::isMyFileFormat(const QString fileName)

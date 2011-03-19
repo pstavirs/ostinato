@@ -230,12 +230,23 @@ void Port::updateStats(OstProto::PortStats *portStats)
 bool Port::openStreams(QString fileName, bool append, QString &error)
 {
     bool ret = false; 
+    QDialog *optDialog;
     QProgressDialog progress("Opening Streams", "Cancel", 0, 0, mainWindow);
     OstProto::StreamConfigList streams;
     AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
 
     if (fmt == NULL)
         goto _fail;
+
+    if (optDialog = fmt->openOptionsDialog())
+    {
+        int ret;
+        optDialog->setParent(mainWindow, Qt::Dialog);
+        ret = optDialog->exec();
+        optDialog->setParent(0, Qt::Dialog);
+        if (ret == QDialog::Rejected)
+            goto _user_opt_cancel;
+    }
 
     progress.setAutoReset(false);
     progress.setAutoClose(false);
@@ -295,6 +306,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
 
 _user_cancel:
     emit streamListChanged(mPortGroupId, mPortId);
+_user_opt_cancel:
     ret = true;
 
 _fail:

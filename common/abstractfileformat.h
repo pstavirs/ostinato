@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QThread>
 #include <QString>
 
+class QDialog;
+
 class AbstractFileFormat : public QThread
 {
     Q_OBJECT
@@ -37,6 +39,9 @@ public:
     virtual bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error) = 0;
 
+    virtual QDialog* openOptionsDialog();
+    virtual QDialog* saveOptionsDialog();
+
     void openStreamsOffline(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error);
     void saveStreamsOffline(const OstProto::StreamConfigList streams, 
@@ -44,10 +49,10 @@ public:
 
     bool result();
 
+    static QStringList supportedFileTypes();
+
     static AbstractFileFormat* fileFormatFromFile(const QString fileName);
     static AbstractFileFormat* fileFormatFromType(const QString fileType);
-
-    static QStringList supportedFileTypes();
 
 #if 0
     bool isMyFileFormat(const QString fileName) = 0;

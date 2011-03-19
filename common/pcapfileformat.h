@@ -20,8 +20,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PCAP_FILE_FORMAT_H
 
 #include "abstractfileformat.h"
+#include "ui_pcapfileimport.h"
 
 #include <QDataStream>
+#include <QVariantMap>
+
+class PcapImportOptionsDialog: public QDialog, public Ui::PcapFileImport
+{
+public: 
+    PcapImportOptionsDialog(QVariantMap *options);
+    ~PcapImportOptionsDialog();
+
+private slots:
+    void accept();
+
+private:
+    QVariantMap *options_;
+};
 
 class PdmlReader;
 class PcapFileFormat : public AbstractFileFormat
@@ -36,6 +51,8 @@ public:
             OstProto::StreamConfigList &streams, QString &error);
     bool saveStreams(const OstProto::StreamConfigList streams, 
             const QString fileName, QString &error);
+
+    virtual QDialog* openOptionsDialog();
 
     bool isMyFileFormat(const QString fileName);
     bool isMyFileType(const QString fileType);
@@ -61,6 +78,8 @@ private:
     bool readPacket(PcapPacketHeader &pktHdr, QByteArray &pktBuf);
 
     QDataStream fd_;
+    QVariantMap importOptions_;
+    PcapImportOptionsDialog *importDialog_;
 };
 
 extern PcapFileFormat pcapFileFormat;
