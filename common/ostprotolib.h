@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2011 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -16,30 +16,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
+#ifndef _OST_PROTO_LIB_H
+#define _OST_PROTO_LIB_H
 
-#ifndef _PREFERENCES_H
-#define _PREFERENCES_H
+#include <QString>
 
-#include "ui_preferences.h"
-
-#include <QDialog>
-
-class Preferences : public QDialog, private Ui::Preferences
+class OstProtoLib
 {
-    Q_OBJECT
 public:
-    Preferences();
-    ~Preferences();
+    static void setExternalApplicationPaths(QString tsharkPath,
+            QString gzipPath, QString diffPath, QString awkPath);
 
-public slots:
-    void accept();
+    static QString tsharkPath();
+    static QString gzipPath();
+    static QString diffPath();
+    static QString awkPath();
 
-private slots:
-    void on_wiresharkPathButton_clicked();
-    void on_tsharkPathButton_clicked();
-    void on_gzipPathButton_clicked();
-    void on_diffPathButton_clicked();
-    void on_awkPathButton_clicked();
+private:
+    static QString tsharkPath_;
+    static QString gzipPath_;
+    static QString diffPath_;
+    static QString awkPath_;
 };
 
 #endif

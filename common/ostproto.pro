@@ -56,6 +56,7 @@ PROTOS += \
     hexdump.proto \
     sample.proto 
 HEADERS += \
+    ostprotolib.h \
     abstractprotocol.h    \
     comboprotocol.h    \
     abstractfileformat.h \
@@ -98,6 +99,7 @@ HEADERS += \
     hexdump.h \
     sample.h
 SOURCES += \
+    ostprotolib.cpp \
     abstractprotocol.cpp \
     crc32c.cpp \
     abstractfileformat.cpp \

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "preferences.h"
 
+#include "../common/ostprotolib.h"
 #include "settings.h"
 
 #include <QFileDialog>
@@ -31,6 +32,14 @@ Preferences::Preferences()
 
     wiresharkPathEdit->setText(appSettings->value(kWiresharkPathKey, 
             kWiresharkPathDefaultValue).toString());
+    tsharkPathEdit->setText(appSettings->value(kTsharkPathKey, 
+            kTsharkPathDefaultValue).toString());
+    gzipPathEdit->setText(appSettings->value(kGzipPathKey, 
+            kGzipPathDefaultValue).toString());
+    diffPathEdit->setText(appSettings->value(kDiffPathKey, 
+            kDiffPathDefaultValue).toString());
+    awkPathEdit->setText(appSettings->value(kAwkPathKey, 
+            kAwkPathDefaultValue).toString());
 }
 
 Preferences::~Preferences()
@@ -40,6 +49,16 @@ Preferences::~Preferences()
 void Preferences::accept()
 {
     appSettings->setValue(kWiresharkPathKey, wiresharkPathEdit->text());
+    appSettings->setValue(kTsharkPathKey, tsharkPathEdit->text());
+    appSettings->setValue(kGzipPathKey, gzipPathEdit->text());
+    appSettings->setValue(kDiffPathKey, diffPathEdit->text());
+    appSettings->setValue(kAwkPathKey, awkPathEdit->text());
+
+    OstProtoLib::setExternalApplicationPaths(
+        appSettings->value(kTsharkPathKey, kTsharkPathDefaultValue).toString(),
+        appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
+        appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
+        appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
 
     QDialog::accept();
 }
@@ -53,4 +72,48 @@ void Preferences::on_wiresharkPathButton_clicked()
 
     if (!path.isEmpty())
         wiresharkPathEdit->setText(path);
+}
+
+void Preferences::on_tsharkPathButton_clicked()
+{
+    QString path;
+
+    path = QFileDialog::getOpenFileName(0, "Locate tshark",
+            tsharkPathEdit->text()); 
+
+    if (!path.isEmpty())
+        tsharkPathEdit->setText(path);
+}
+
+void Preferences::on_gzipPathButton_clicked()
+{
+    QString path;
+
+    path = QFileDialog::getOpenFileName(0, "Locate gzip",
+            gzipPathEdit->text()); 
+
+    if (!path.isEmpty())
+        gzipPathEdit->setText(path);
+}
+
+void Preferences::on_diffPathButton_clicked()
+{
+    QString path;
+
+    path = QFileDialog::getOpenFileName(0, "Locate diff",
+            diffPathEdit->text()); 
+
+    if (!path.isEmpty())
+        diffPathEdit->setText(path);
+}
+
+void Preferences::on_awkPathButton_clicked()
+{
+    QString path;
+
+    path = QFileDialog::getOpenFileName(0, "Locate awk",
+            awkPathEdit->text()); 
+
+    if (!path.isEmpty())
+        awkPathEdit->setText(path);
 }
