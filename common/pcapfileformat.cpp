@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcapfileformat.h"
 
 #include "pdml_p.h"
+#include "ostprotolib.h"
 #include "streambase.h"
 #include "hexdump.pb.h"
 
@@ -131,15 +132,14 @@ bool PcapFileFormat::openStreams(const QString fileName,
         qDebug("decompressing to %s", file2.fileName().toAscii().constData());
 
         gzip.setStandardOutputFile(file2.fileName());
-        // FIXME: hardcoded prog name
-        gzip.start("C:/Program Files/CmdLineTools/gzip.exe", 
+        gzip.start(OstProtoLib::gzipPath(), 
                 QStringList() 
                 << "-d" 
                 << "-c" 
                 << fileName);
         if (!gzip.waitForStarted(-1))
         {
-            error.append(QString("Unable to start gzip\n"));
+            error.append(QString("Unable to start gzip. Check path in Preferences.\n"));
             goto _err_unzip_fail;
         }
 
@@ -214,15 +214,14 @@ bool PcapFileFormat::openStreams(const QString fileName,
         emit target(0);
 
         tshark.setStandardOutputFile(pdmlFile.fileName());
-        // FIXME: hardcoded prog name
-        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+        tshark.start(OstProtoLib::tsharkPath(), 
                 QStringList() 
                 << QString("-r%1").arg(fileName)
                 << "-otcp.desegment_tcp_streams:FALSE"
                 << "-Tpdml");
         if (!tshark.waitForStarted(-1))
         {
-            error.append(QString("Unable to start tshark\n"));
+            error.append(QString("Unable to start tshark. Check path in preferences.\n"));
             goto _non_pdml;
         }
 
@@ -287,27 +286,23 @@ bool PcapFileFormat::openStreams(const QString fileName,
 
         tshark.setStandardOutputProcess(&awk);
         awk.setStandardOutputFile(originalTextFile.fileName());
-        // FIXME: hardcoded prog name
-        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+        tshark.start(OstProtoLib::tsharkPath(), 
                 QStringList() 
                 << QString("-r%1").arg(fileName)
                 << "-otcp.desegment_tcp_streams:FALSE"
                 << "-x");
         if (!tshark.waitForStarted(-1))
         {
-            error.append(QString("Unable to start tshark - %1\n")
-                    .arg(tshark.exitCode()));
+            error.append(QString("Unable to start tshark. Check path in Preferences.\n"));
             goto _diff_fail;
         }
 
-        // FIXME: hardcoded prog name
-        awk.start("D:/srivatsp/projects/ostinato/pdml/bin/gawk.exe", 
+        awk.start(OstProtoLib::awkPath(), 
                 QStringList() << kAwkFilter);
         if (!awk.waitForStarted(-1))
         {
             tshark.kill();
-            error.append(QString("Unable to start awk - %1\n")
-                    .arg(awk.exitCode()));
+            error.append(QString("Unable to start awk. Check path in Preferences.\n"));
             goto _diff_fail;
         }
 
@@ -351,27 +346,23 @@ bool PcapFileFormat::openStreams(const QString fileName,
 
         tshark.setStandardOutputProcess(&awk);
         awk.setStandardOutputFile(importedTextFile.fileName());
-        // FIXME: hardcoded prog name
-        tshark.start("C:/Program Files/Wireshark/Tshark.exe", 
+        tshark.start(OstProtoLib::tsharkPath(), 
                 QStringList() 
                 << QString("-r%1").arg(importedPcapFile.fileName())
                 << "-otcp.desegment_tcp_streams:FALSE"
                 << "-x");
         if (!tshark.waitForStarted(-1))
         {
-            error.append(QString("Unable to start tshark - %1\n")
-                    .arg(tshark.exitCode()));
+            error.append(QString("Unable to start tshark. Check path in Preferences.\n"));
             goto _diff_fail;
         }
 
-        // FIXME: hardcoded prog name
-        awk.start("D:/srivatsp/projects/ostinato/pdml/bin/gawk.exe", 
+        awk.start(OstProtoLib::awkPath(), 
                 QStringList() << kAwkFilter);
         if (!awk.waitForStarted(-1))
         {
             tshark.kill();
-            error.append(QString("Unable to start awk - %1\n")
-                    .arg(awk.exitCode()));
+            error.append(QString("Unable to start awk. Check path in Preferences.\n"));
             goto _diff_fail;
         }
 
@@ -401,8 +392,7 @@ bool PcapFileFormat::openStreams(const QString fileName,
         emit target(0);
 
         diff.setStandardOutputFile(diffFile.fileName());
-        // FIXME: hardcoded prog name
-        diff.start("D:/srivatsp/projects/ostinato/pdml/bin/diff.exe", 
+        diff.start(OstProtoLib::diffPath(), 
                 QStringList()
                 << "-u"
                 << "-F^ [1-9]"
@@ -414,7 +404,7 @@ bool PcapFileFormat::openStreams(const QString fileName,
                 << importedTextFile.fileName());
         if (!diff.waitForStarted(-1))
         {
-            error.append(QString("Unable to start diff\n")
+            error.append(QString("Unable to start diff. Check path in Preferences.\n")
                     .arg(diff.exitCode()));
             goto _diff_fail;
         }

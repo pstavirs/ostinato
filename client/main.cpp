@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "mainwindow.h"
+#include "../common/ostprotolib.h"
 #include "../common/protocolmanager.h"
+#include "settings.h"
 
 #include <QApplication>
 #include <QFile>
@@ -31,10 +33,22 @@ extern ProtocolManager *OstProtocolManager;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
+#if defined(Q_OS_WIN32)
+QString kGzipPathDefaultValue;
+QString kDiffPathDefaultValue;
+QString kAwkPathDefaultValue;
+#endif
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     int exitCode;
+
+#if defined(Q_OS_WIN32)
+    kGzipPathDefaultValue = app.applicationDirPath() + "/gzip.exe";
+    kDiffPathDefaultValue = app.applicationDirPath() + "/diff.exe";
+    kAwkPathDefaultValue = app.applicationDirPath() + "/gawk.exe";
+#endif
 
     app.setApplicationName("Ostinato");
     app.setOrganizationName("Ostinato");
@@ -52,6 +66,12 @@ int main(int argc, char* argv[])
         appSettings = new QSettings(portableIni, QSettings::IniFormat);
     else
         appSettings = new QSettings();
+
+    OstProtoLib::setExternalApplicationPaths(
+        appSettings->value(kTsharkPathKey, kTsharkPathDefaultValue).toString(),
+        appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
+        appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
+        appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
 
     mainWindow = new MainWindow;
     mainWindow->show();

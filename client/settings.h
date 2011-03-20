@@ -36,6 +36,44 @@ const QString kWiresharkPathDefaultValue(
 const QString kWiresharkPathDefaultValue("/usr/bin/wireshark");
 #endif
 
+const QString kTsharkPathKey("TsharkPath");
+#if defined(Q_OS_WIN32)
+const QString kTsharkPathDefaultValue(
+        "C:/Program Files/Wireshark/tshark.exe");
+#elif defined(Q_OS_MAC)
+const QString kTsharkPathDefaultValue(
+        "/Applications/Wireshark.app/Contents/Resources/bin/tshark");
+#else
+const QString kTsharkPathDefaultValue("/usr/bin/tshark");
+#endif
+
+const QString kGzipPathKey("GzipPath");
+#if defined(Q_OS_WIN32)
+extern QString kGzipPathDefaultValue;
+#elif defined(Q_OS_MAC)
+const QString kGzipPathDefaultValue("/usr/bin/gzip");
+#else
+const QString kGzipPathDefaultValue("/usr/bin/gzip");
+#endif
+
+const QString kDiffPathKey("DiffPath");
+#if defined(Q_OS_WIN32)
+extern QString kDiffPathDefaultValue;
+#elif defined(Q_OS_MAC)
+const QString kDiffPathDefaultValue("/usr/bin/diff");
+#else
+const QString kDiffPathDefaultValue("/usr/bin/diff");
+#endif
+
+const QString kAwkPathKey("AwkPath");
+#if defined(Q_OS_WIN32)
+extern QString kAwkPathDefaultValue;
+#elif defined(Q_OS_MAC)
+const QString kAwkPathDefaultValue("/usr/bin/awk");
+#else
+const QString kAwkPathDefaultValue("/usr/bin/awk");
+#endif
+
 #endif
 
 
