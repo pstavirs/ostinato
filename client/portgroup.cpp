@@ -168,7 +168,7 @@ void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
                "Please ensure that you are running 'drone' - the server "
                "component of Ostinato with admin/root OR setuid privilege.\n\n"
                "For more information see "
-               "http://ostinato.googlecode.com/wiki/FAQ#"
+               "http://code.google.com/p/ostinato/wiki/FAQ#"
                    "Q._Port_group_has_no_interfaces")
                 .arg(serverAddress().toString())
                 .arg(int(serverPort())));
