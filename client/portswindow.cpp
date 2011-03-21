@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamconfigdialog.h"
 #include "streamlistdelegate.h"
 
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QItemSelectionModel>
 #include <QMessageBox>
@@ -452,6 +453,7 @@ void PortsWindow::on_actionOpen_Streams_triggered()
     qDebug("Open Streams Action");
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
+    static QString dirName;
     QString fileName;
     QString errorStr;
     bool append = true;
@@ -459,7 +461,7 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 
     Q_ASSERT(plm->isPort(current));
 
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"), "D:/srivatsp/projects/ostinato/testfiles/pcaps");
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"), dirName);
     if (fileName.isEmpty())
         goto _exit;
 
@@ -501,6 +503,7 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 
         msgBox.exec();
     }
+    dirName = QFileInfo(fileName).absolutePath();
 
 _exit:
     return;
@@ -511,7 +514,7 @@ void PortsWindow::on_actionSave_Streams_triggered()
     qDebug("Save Streams Action");
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
-    QString fileName;
+    static QString fileName;
     QStringList fileTypes = AbstractFileFormat::supportedFileTypes();
     QString fileType;
     QString errorStr;
@@ -553,6 +556,8 @@ _retry:
         QMessageBox::critical(this, qApp->applicationName(), errorStr);
     else if (!errorStr.isEmpty())
         QMessageBox::warning(this, qApp->applicationName(), errorStr);
+
+    fileName = QFileInfo(fileName).absolutePath();
 _exit:
     return;
 }
