@@ -30,7 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 extern ProtocolManager *OstProtocolManager;
 
+QRect StreamConfigDialog::lastGeometry;
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
+int StreamConfigDialog::lastProtocolDataIndex = 0;
 
 StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     QWidget *parent) : QDialog (parent), mPort(port)
@@ -164,7 +166,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     //! \todo Support Continuous Mode
     rbModeContinuous->setDisabled(true);
 
-    // Finally, restore the saved last selected tab for the various tab widgets
+    // Finally, restore the saved last geometry and selected tab for the 
+    // various tab widgets
+    if (!lastGeometry.isNull())
+        setGeometry(lastGeometry);
     twTopLevel->setCurrentIndex(lastTopLevelTabIndex);
 }
 
@@ -532,12 +537,8 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
         // Protocol Data
         case 1:
         {
-            QWidget *selWidget;
-
             // Hide the ToolBox before modifying it - else we have a crash !!!
             tbProtocolData->hide();
-
-            selWidget = tbProtocolData->currentWidget();
 
             // Remove all existing protocol widgets 
             while (tbProtocolData->count() > 0)
@@ -555,7 +556,8 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
                 tbProtocolData->addItem(p->configWidget(), p->name());
             }
 
-            tbProtocolData->setCurrentWidget(selWidget);
+            if (lastProtocolDataIndex < tbProtocolData->count())
+                tbProtocolData->setCurrentIndex(lastProtocolDataIndex);
 
             tbProtocolData->show();
             break;
@@ -572,6 +574,8 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
         default:
             break;
     }
+
+    lastProtocolDataIndex = tbProtocolData->currentIndex();
 }
 
 void StreamConfigDialog::update_NumPacketsAndNumBursts()
@@ -998,7 +1002,9 @@ void StreamConfigDialog::on_pbOk_clicked()
 
     qDebug("stream stored");
 
+    lastGeometry = geometry();
     lastTopLevelTabIndex = twTopLevel->currentIndex();
+    lastProtocolDataIndex = tbProtocolData->currentIndex();
 
     accept();
 }

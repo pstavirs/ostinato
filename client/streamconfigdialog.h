@@ -84,8 +84,10 @@ private:
 
     // The following static variables are used to track the "selected" tab
     // for the various tab widgets so that it can be restored when the dialog
-    // is opened the next time
-    static int        lastTopLevelTabIndex;
+    // is opened the next time. We also track the last Dialog geometry.
+    static QRect lastGeometry;
+    static int lastTopLevelTabIndex;
+    static int lastProtocolDataIndex;
 
     void setupUiExtra();
     void LoadCurrentStream();
