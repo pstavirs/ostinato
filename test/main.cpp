@@ -1,6 +1,6 @@
 
+#include "ostprotolib.h"
 #include "pcapfileformat.h"
-#include "pdmlfileformat.h"
 #include "protocol.pb.h"
 #include "protocolmanager.h"
 
@@ -11,6 +11,7 @@ extern ProtocolManager *OstProtocolManager;
 
 int main(int argc, char* argv[])
 {
+    bool isOk;
     QCoreApplication app(argc, argv);
     QString error;
 
@@ -26,19 +27,33 @@ int main(int argc, char* argv[])
     QString inFile(argv[1]);
     QString outFile(argv[2]);
 
-    if (!pcapFileFormat.openStreams(inFile, streams, error))
+    OstProtocolManager = new ProtocolManager();
+
+    OstProtoLib::setExternalApplicationPaths(
+            "c:/Program Files/Wireshark/Tshark.exe",
+            "d:/srivatsp/projects/ostinato/pdml/bin/gzip.exe",
+            "d:/srivatsp/projects/ostinato/pdml/bin/diff.exe",
+            "d:/srivatsp/projects/ostinato/pdml/bin/gawk.exe");
+
+    isOk = pcapFileFormat.openStreams(inFile, streams, error);
+    if (!error.isEmpty())
     {
         fprintf(stdout, "failed reading streams from %s:%s\n", 
                 inFile.toAscii().constData(), error.toAscii().constData());
-        exit(1);
     }
 
-    if (!pcapFileFormat.saveStreams(streams, outFile, error))
+    if (!isOk)
+        exit(1);
+
+    isOk = pcapFileFormat.saveStreams(streams, outFile, error);
+    if (!error.isEmpty())
     {
         fprintf(stdout, "failed writing streams to %s:%s\n", 
                 outFile.toAscii().constData(), error.toAscii().constData());
-        exit(1);
     }
+
+    if (!isOk)
+        exit(1);
 
     return 0;
 }
