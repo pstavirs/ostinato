@@ -23,15 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QByteArray>
 #include <QMap>
-#include <QObject>
 #include <QString>
 #include <QXmlDefaultHandler>
 #include <QXmlStreamReader>
 
 // TODO: add const where possible
-
-class QXmlSimpleReader;
-class QXmlInputSource;
 
 class PdmlDefaultProtocol
 {
@@ -51,6 +47,11 @@ public:
             int expectedPos, OstProto::Stream *stream);
     virtual void prematureEndHandler(int pos, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Stream *stream);
+
+    void fieldHandler(QString name, const QXmlStreamAttributes &attributes, 
+            google::protobuf::Message *pbProto, OstProto::Stream *stream);
+    void knownFieldHandler(QString name, QString valueHexStr,
+            google::protobuf::Message *pbProto);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, OstProto::Stream *stream);
 
@@ -65,7 +66,7 @@ class PcapFileFormat;
 class PdmlReader : public QObject, public QXmlStreamReader
 {
     Q_OBJECT
-    friend class PdmlUnknownProtocol;
+    //friend class PdmlUnknownProtocol;
 public:
     PdmlReader(OstProto::StreamConfigList *streams);
     ~PdmlReader();
@@ -80,34 +81,32 @@ private:
     void freePdmlProtocol(PdmlDefaultProtocol *proto);
 
     bool isDontCareProto();
-    void readPdml();
     void skipElement();
-    void readUnexpectedElement();
 
-    void readPacketPass1();
-    void readProtoPass1();
-    void readFieldPass1();
-
+    void readPdml();
     void readPacket();
     void readProto();
     void readField(PdmlDefaultProtocol *pdmlProto, 
             google::protobuf::Message *pbProto);
 
+    void appendHexDumpProto(int offset, int size);
+    PdmlDefaultProtocol* appendPdmlProto(const QString &protoName,
+            google::protobuf::Message **pbProto);
+
     typedef PdmlDefaultProtocol* (*FactoryMethod)();
 
     QMap<QString, FactoryMethod> factory_;
 
+    bool *stop_;
     OstProto::StreamConfigList *streams_;
     PcapFileFormat *pcap_;
+    QByteArray pktBuf_;
 
     int packetCount_;
     int expPos_;
     bool skipUntilEnd_;
     OstProto::Stream *prevStream_;
     OstProto::Stream *currentStream_;
-
-    QByteArray pktBuf_;
-    bool *stop_;
 };
 
 class PdmlUnknownProtocol : public PdmlDefaultProtocol
@@ -135,7 +134,6 @@ public:
     PdmlGenInfoProtocol();
 
     static PdmlDefaultProtocol* createInstance();
-
 };
 
 class PdmlFrameProtocol : public PdmlDefaultProtocol

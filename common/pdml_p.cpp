@@ -95,6 +95,72 @@ void PdmlDefaultProtocol::postProtocolHandler(OstProto::Stream *stream)
     return; // do nothing!
 }
 
+void PdmlDefaultProtocol::fieldHandler(QString name, 
+        const QXmlStreamAttributes &attributes, 
+        google::protobuf::Message *pbProto, OstProto::Stream *stream)
+{
+    if (hasField(name))
+    {
+        QString valueHexStr = attributes.value("value").toString();
+
+        qDebug("\t(KNOWN) fieldName:%s, value:%s",
+                name.toAscii().constData(), 
+                valueHexStr.toAscii().constData());
+
+        knownFieldHandler(name, valueHexStr, pbProto);
+    }
+    else
+    {
+        int pos = -1;
+        int size = -1;
+
+        if (!attributes.value("pos").isEmpty())
+            pos = attributes.value("pos").toString().toInt();
+        if (!attributes.value("size").isEmpty())
+            size = attributes.value("size").toString().toInt();
+
+        qDebug("\t(UNKNOWN) fieldName:%s, pos:%d, size:%d",
+                name.toAscii().constData(), pos, size);
+
+        unknownFieldHandler(name, pos, size, attributes, stream);
+    }
+}
+
+void PdmlDefaultProtocol::knownFieldHandler(QString name, QString valueHexStr,
+        google::protobuf::Message *pbProto)
+{
+    int fid = fieldId(name);
+    const google::protobuf::Descriptor *msgDesc = pbProto->GetDescriptor();
+    const google::protobuf::FieldDescriptor *fieldDesc = 
+                                        msgDesc->FindFieldByNumber(fid);
+    const google::protobuf::Reflection *msgRefl = pbProto->GetReflection();
+
+    bool isOk;
+
+    switch(fieldDesc->cpp_type())
+    {
+    case google::protobuf::FieldDescriptor::CPPTYPE_ENUM: // TODO
+    case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+        msgRefl->SetUInt32(pbProto, fieldDesc, 
+                valueHexStr.toUInt(&isOk, kBaseHex));
+        break;
+    case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+        msgRefl->SetUInt64(pbProto, fieldDesc, 
+                valueHexStr.toULongLong(&isOk, kBaseHex));
+        break;
+    case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+    {
+        QByteArray hexVal = QByteArray::fromHex(valueHexStr.toUtf8());
+        std::string str(hexVal.constData(), hexVal.size());
+        msgRefl->SetString(pbProto, fieldDesc, str);
+        break;
+    }
+    default:
+        qDebug("%s: unhandled cpptype = %d", __FUNCTION__, 
+                fieldDesc->cpp_type());
+    }
+}
+
 void PdmlDefaultProtocol::unknownFieldHandler(QString name, 
         int pos, int size, const QXmlStreamAttributes &attributes, 
         OstProto::Stream *stream)
@@ -120,10 +186,10 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
-    factory_.insert("eth",PdmlEthProtocol::createInstance);
-    factory_.insert("ip",PdmlIp4Protocol::createInstance);
-    factory_.insert("ipv6",PdmlIp6Protocol::createInstance);
-    factory_.insert("tcp",PdmlTcpProtocol::createInstance);
+    factory_.insert("eth", PdmlEthProtocol::createInstance);
+    factory_.insert("ip", PdmlIp4Protocol::createInstance);
+    factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
+    factory_.insert("tcp", PdmlTcpProtocol::createInstance);
 }
 
 PdmlReader::~PdmlReader()
@@ -134,9 +200,8 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap, bool *stop)
 {
     setDevice(device);
     pcap_ = pcap;
-    packetCount_ = 0;
-
     stop_ = stop;
+
     while (!atEnd())
     {
         readNext();
@@ -153,7 +218,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap, bool *stop)
     {
         qDebug("Line %lld", lineNumber());
         qDebug("Col %lld", columnNumber());
-        qDebug("%s", errorString().toAscii().constData()); // FIXME
+        qDebug("%s", errorString().toAscii().constData());
         return false;
     }
     return true;
@@ -162,6 +227,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap, bool *stop)
 // TODO: use a temp pool to avoid a lot of new/delete
 PdmlDefaultProtocol* PdmlReader::allocPdmlProtocol(QString protoName)
 {
+    // If protoName is not known, we use a hexdump
     if (!factory_.contains(protoName))
         protoName = "hexdump";
 
@@ -177,42 +243,24 @@ bool PdmlReader::isDontCareProto()
 {
     Q_ASSERT(isStartElement() && name() == "proto");
 
-    QString protoName = attributes().value("name").toString();
+    QStringRef protoName = attributes().value("name");
 
     if (protoName.isEmpty() || (protoName == "expert"))
         return true;
-    else
-        return false;
-}
 
-void PdmlReader::readUnexpectedElement()
-{
-    Q_ASSERT(isStartElement());
-
-    // XXX: add to 'log'
-    qDebug("unexpected element - <%s>; skipping ...", 
-                    name().toString().toAscii().constData());
-    while (!atEnd())
-    {
-        readNext();
-        if (isEndElement())
-            break;
-
-        if (isStartElement())
-            readUnexpectedElement();
-    }
+    return false;
 }
 
 void PdmlReader::skipElement()
 {
     Q_ASSERT(isStartElement());
 
-    // XXX: add to 'log'
     qDebug("skipping element - <%s>", 
                     name().toString().toAscii().constData());
     while (!atEnd())
     {
         readNext();
+
         if (isEndElement())
             break;
 
@@ -230,6 +278,7 @@ void PdmlReader::readPdml()
     while (!atEnd())
     {
         readNext();
+
         if (isEndElement())
             break;
 
@@ -238,7 +287,7 @@ void PdmlReader::readPdml()
             if (name() == "packet")
                 readPacket();
             else
-                readUnexpectedElement();
+                skipElement();
         }
     }
 }
@@ -259,7 +308,7 @@ void PdmlReader::readPacket()
     currentStream_->mutable_stream_id()->set_id(packetCount_);
     currentStream_->mutable_core()->set_is_enabled(true);
 
-    // Set to a high number; will get reset to correct during parse
+    // Set to a high number; will get reset to correct value during parse
     currentStream_->mutable_core()->set_frame_len(16384); // FIXME: Hard coding!
 
     expPos_ = 0;
@@ -283,32 +332,11 @@ void PdmlReader::readPacket()
             else if (name() == "field")
                 readField(NULL, NULL); // TODO: top level field!!!!
             else 
-                readUnexpectedElement();
+                skipElement();
         }
     }
-    // BAD Hack for TCP Segments
-    if (currentStream_->core().name().size())
-#if 0
-    {
-        OstProto::Protocol *proto = currentStream_->add_protocol();
 
-        proto->mutable_protocol_id()->set_id(
-                OstProto::Protocol::kHexDumpFieldNumber);
-
-        OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
-
-        qDebug("Adding TCP Segment Data/FCS etc of size %d",
-                currentStream_->core().name().size());
-
-        hexDump->set_content(currentStream_->core().name());
-        hexDump->set_pad_until_end(false);
-        currentStream_->mutable_core()->set_name("");
-
-        expPos_ += hexDump->content().size();
-    }
-#else
-        currentStream_->mutable_core()->set_name("");
-#endif
+    currentStream_->mutable_core()->set_name(""); // FIXME
 
     // If trailing bytes are missing, add those from the pcap 
     if ((expPos_ < pktBuf_.size()) && pcap_)
@@ -328,7 +356,7 @@ void PdmlReader::readPacket()
     } 
 
     packetCount_++;
-    emit progress(int(characterOffset()*100/device()->size()));
+    emit progress(int(characterOffset()*100/device()->size())); // in % 
     if (prevStream_)
         prevStream_->mutable_control()->CopyFrom(currentStream_->control());
     if (stop_ && *stop_)
@@ -342,10 +370,12 @@ void PdmlReader::readProto()
 
     Q_ASSERT(isStartElement() && name() == "proto");
 
-    QString protoName = attributes().value("name").toString();
+    QString protoName;
     int pos = -1;
     int size = -1;
 
+    if (!attributes().value("name").isEmpty())
+        protoName = attributes().value("name").toString();
     if (!attributes().value("pos").isEmpty())
         pos = attributes().value("pos").toString().toInt();
     if (!attributes().value("size").isEmpty())
@@ -356,44 +386,27 @@ void PdmlReader::readProto()
 
     // This is a heuristic to skip protocols which are not part of
     // this frame, but of a reassembled segment spanning several frames
-    //   1. Proto starting pos is 0, but we already seen some protocols
+    //   1. Proto starting pos is 0, but we've already seen some protocols
     //   2. Protocol Size exceeds frame length
     if (((pos == 0) && (currentStream_->protocol_size() > 0))
         || ((pos + size) > int(currentStream_->core().frame_len())))
     {
-        qDebug("(skipped)");
         skipElement();
         return;
     }
 
-#if 1
-    if (protoName.isEmpty() || (protoName == "expert"))
+    if (isDontCareProto())
     {
         skipElement();
         return;
     }
-#endif
 
-    // detect overlaps or gaps between subsequent protocols and "fill-in"
+    // if we detect a gap between subsequent protocols, we "fill-in"
     // with a "hexdump" from the pcap
-    if (pos >=0 && pcap_)
+    if (pos > expPos_ && pcap_)
     {
-        if (pos > expPos_)
-        {
-            OstProto::Protocol *proto = currentStream_->add_protocol();
-            OstProto::HexDump *hexDump = proto->MutableExtension(
-                    OstProto::hexDump);
-
-            proto->mutable_protocol_id()->set_id(
-                    OstProto::Protocol::kHexDumpFieldNumber);
-
-            qDebug("filling in gap of %d bytes starting from %d",
-                    pos - expPos_, expPos_);
-            hexDump->set_content(pktBuf_.constData() + expPos_, pos - expPos_);
-            hexDump->set_pad_until_end(false);
-
-            expPos_ = pos;
-        } 
+        appendHexDumpProto(expPos_, pos - expPos_);
+        expPos_ = pos;
     }
 
     // for unknown protocol, read a hexdump from the pcap
@@ -403,7 +416,6 @@ void PdmlReader::readProto()
 
         if (!attributes().value("size").isEmpty())
             size = attributes().value("size").toString().toInt();
-
 
         // Check if this proto is a subset of previous proto - if so, do nothing
         if ((pos >= 0) && (size > 0) && ((pos + size) <= expPos_))
@@ -416,47 +428,18 @@ void PdmlReader::readProto()
         if (pos >= 0 && size > 0 
                 && ((pos + size) <= pktBuf_.size()))
         {
-            OstProto::Protocol *proto = currentStream_->add_protocol();
-            OstProto::HexDump *hexDump = proto->MutableExtension(
-                    OstProto::hexDump);
-
-            proto->mutable_protocol_id()->set_id(
-                    OstProto::Protocol::kHexDumpFieldNumber);
-
-            qDebug("missing bytes - filling in %d bytes staring from %d",
-                    size, pos);
-            hexDump->set_content(pktBuf_.constData() + pos, size);
-            hexDump->set_pad_until_end(false);
+            appendHexDumpProto(pos, size);
+            expPos_ += size;
 
             skipElement();
-
-            expPos_ += size;
             return;
         }
     }
 
-    pdmlProto = allocPdmlProtocol(protoName);
-    Q_ASSERT(pdmlProto != NULL);
+    pdmlProto = appendPdmlProto(protoName, &pbProto);
 
-    int protoId = pdmlProto->ostProtoId();
-
-    // Non PdmlDefaultProtocol
-    if (protoId > 0)
-    {
-        OstProto::Protocol *proto = currentStream_->add_protocol();
-
-        proto->mutable_protocol_id()->set_id(protoId);
-
-        const google::protobuf::Reflection *msgRefl = proto->GetReflection();
-        const google::protobuf::FieldDescriptor *fieldDesc = 
-            msgRefl->FindKnownExtensionByNumber(protoId);
-
-        // TODO: if !fDesc
-        // init default values of all fields in protocol
-        pbProto = msgRefl->MutableMessage(proto, fieldDesc);
-
-    }
-
+    qDebug("%s: preProtocolHandler(expPos = %d)", 
+            protoName.toAscii().constData(), expPos_);
     pdmlProto->preProtocolHandler(protoName, attributes(), expPos_, 
             currentStream_);
 
@@ -471,23 +454,28 @@ void PdmlReader::readProto()
         {
             if (name() == "proto")
             {
-                int endPos = -1;
                 // an embedded proto
                 qDebug("embedded proto: %s\n", attributes().value("name")
                         .toString().toAscii().constData());
+
                 if (isDontCareProto())
                 {
                     skipElement();
                     continue;
                 }
 
-                if (!attributes().value("pos").isEmpty())
-                    endPos = attributes().value("pos").toString().toInt();
-
-
-                // pdmlProto may be NULL for a sequence of embedded protos
+                // if we are in the midst of processing a protocol, we
+                // end it prematurely before we start processing the 
+                // embedded protocol
+                //
+                // XXX: pdmlProto may be NULL for a sequence of embedded protos
                 if (pdmlProto)
                 {
+                    int endPos = -1;
+
+                    if (!attributes().value("pos").isEmpty())
+                        endPos = attributes().value("pos").toString().toInt();
+
                     pdmlProto->prematureEndHandler(endPos, currentStream_);
                     pdmlProto->postProtocolHandler(currentStream_);
 
@@ -495,7 +483,9 @@ void PdmlReader::readProto()
                     s.protoDataCopyFrom(*currentStream_);
                     expPos_ = s.frameProtocolLength(0);
                 }
+
                 readProto();
+
                 pdmlProto = NULL;
                 pbProto = NULL;
             }
@@ -511,38 +501,24 @@ void PdmlReader::readProto()
                     continue;
                 }
 
-
                 if (pdmlProto == NULL)
                 {
-                    pdmlProto = allocPdmlProtocol(protoName);
-                    protoId = pdmlProto->ostProtoId();
+                    pdmlProto = appendPdmlProto(protoName, &pbProto);
 
-                    // Non PdmlDefaultProtocol
-                    if (protoId > 0)
-                    {
-                        OstProto::Protocol *proto = currentStream_->add_protocol();
-
-                        proto->mutable_protocol_id()->set_id(protoId);
-
-                        const google::protobuf::Reflection *msgRefl = proto->GetReflection();
-                        const google::protobuf::FieldDescriptor *fieldDesc = 
-                            msgRefl->FindKnownExtensionByNumber(protoId);
-
-                        // TODO: if !fDesc
-                        // init default values of all fields in protocol
-                        pbProto = msgRefl->MutableMessage(proto, fieldDesc);
-
-                    }
+                    qDebug("%s: preProtocolHandler(expPos = %d)", 
+                            protoName.toAscii().constData(), expPos_);
                     pdmlProto->preProtocolHandler(protoName, attributes(), 
                             expPos_, currentStream_);
                 }
+
                 readField(pdmlProto, pbProto);
             }
             else 
-                readUnexpectedElement();
+                skipElement();
         }
     }
 
+    // Close-off current protocol
     if (pdmlProto)
     {
         pdmlProto->postProtocolHandler(currentStream_);
@@ -567,61 +543,10 @@ void PdmlReader::readField(PdmlDefaultProtocol *pdmlProto,
     }
 
     QString fieldName = attributes().value("name").toString();
-    QString valueHexStr = attributes().value("value").toString();
-    int pos = -1;
-    int size = -1;
 
-    if (!attributes().value("pos").isEmpty())
-        pos = attributes().value("pos").toString().toInt();
-    if (!attributes().value("size").isEmpty())
-        size = attributes().value("size").toString().toInt();
+    qDebug("  fieldName:%s", fieldName.toAscii().constData());
 
-    qDebug("\tfieldName:%s, pos:%d, size:%d value:%s",
-            fieldName.toAscii().constData(), 
-            pos, 
-            size, 
-            valueHexStr.toAscii().constData());
-
-    if (pdmlProto->hasField(fieldName))
-    {
-        int fieldId = pdmlProto->fieldId(fieldName);
-        const google::protobuf::Descriptor *msgDesc = 
-            pbProto->GetDescriptor();
-        const google::protobuf::FieldDescriptor *fieldDesc = 
-            msgDesc->FindFieldByNumber(fieldId);
-        const google::protobuf::Reflection *msgRefl = 
-            pbProto->GetReflection();
-
-        bool isOk;
-
-        switch(fieldDesc->cpp_type())
-        {
-        case google::protobuf::FieldDescriptor::CPPTYPE_ENUM: // TODO
-        case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
-            msgRefl->SetUInt32(pbProto, fieldDesc, 
-                    valueHexStr.toUInt(&isOk, kBaseHex));
-            break;
-        case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
-            msgRefl->SetUInt64(pbProto, fieldDesc, 
-                    valueHexStr.toULongLong(&isOk, kBaseHex));
-            break;
-        case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
-        {
-            QByteArray hexVal = QByteArray::fromHex(valueHexStr.toUtf8());
-            std::string str(hexVal.constData(), hexVal.size());
-            msgRefl->SetString(pbProto, fieldDesc, str);
-            break;
-        }
-        default:
-            qDebug("%s: unhandled cpptype = %d", __FUNCTION__, 
-                    fieldDesc->cpp_type());
-        }
-    }
-    else
-    {
-        pdmlProto->unknownFieldHandler(fieldName, pos, size, attributes(), 
-                currentStream_);
-    }
+    pdmlProto->fieldHandler(fieldName, attributes(), pbProto, currentStream_);
 
     while (!atEnd())
     {
@@ -633,20 +558,54 @@ void PdmlReader::readField(PdmlDefaultProtocol *pdmlProto,
         if (isStartElement())
         {
             if (name() == "proto")
-            {
-                if (isDontCareProto())
-                {
-                    skipElement();
-                    continue;
-                }
                 readProto();
-            }
             else if (name() == "field")
                 readField(pdmlProto, pbProto);
             else 
-                readUnexpectedElement();
+                skipElement();
         }
     }
+}
+
+void PdmlReader::appendHexDumpProto(int offset, int size)
+{
+    OstProto::Protocol *proto = currentStream_->add_protocol();
+    OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
+
+    proto->mutable_protocol_id()->set_id(
+            OstProto::Protocol::kHexDumpFieldNumber);
+
+    qDebug("filling in gap of %d bytes starting from %d", size, offset);
+    hexDump->set_content(pktBuf_.constData() + offset, size);
+    hexDump->set_pad_until_end(false);
+}
+
+PdmlDefaultProtocol* PdmlReader::appendPdmlProto(const QString &protoName,
+        google::protobuf::Message **pbProto)
+{
+    PdmlDefaultProtocol* pdmlProto = allocPdmlProtocol(protoName);
+    Q_ASSERT(pdmlProto != NULL);
+
+    int protoId = pdmlProto->ostProtoId();
+
+    if (protoId > 0) // Non-Base Class
+    {
+        OstProto::Protocol *proto = currentStream_->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(protoId);
+
+        const google::protobuf::Reflection *msgRefl = proto->GetReflection();
+        const google::protobuf::FieldDescriptor *fieldDesc = 
+            msgRefl->FindKnownExtensionByNumber(protoId);
+
+        // TODO: if !fDesc
+        // init default values of all fields in protocol
+        *pbProto = msgRefl->MutableMessage(proto, fieldDesc);
+    }
+    else
+        *pbProto = NULL;
+
+    return pdmlProto;
 }
 
 
@@ -720,9 +679,6 @@ void PdmlUnknownProtocol::postProtocolHandler(OstProto::Stream *stream)
     }
 
     qDebug("  hexdump: expPos_ = %d, endPos_ = %d\n", expPos_, endPos_); 
-    //Q_ASSERT(expPos_ == endPos_);
-
-    hexDump->set_pad_until_end(false);
 
     // If empty for some reason, remove the protocol
     if (hexDump->content().size() == 0)
@@ -750,7 +706,7 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, int size,
         expPos_ += hexVal.size();
     }
 
-    if ((pos == expPos_) /*&& (pos < endPos_)*/)
+    if (pos == expPos_)
     {
         QByteArray hexVal = attributes.value("unmaskedvalue").isEmpty() ?
                 QByteArray::fromHex(attributes.value("value").toString().toUtf8()) :
