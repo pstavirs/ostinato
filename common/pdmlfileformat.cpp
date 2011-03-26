@@ -18,7 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "pdmlfileformat.h"
+
+#include "ostprotolib.h"
 #include "pdml_p.h"
+
+#include <QProcess>
+#include <QTemporaryFile>
 
 PdmlFileFormat pdmlFileFormat;
 
@@ -62,8 +67,51 @@ _exit:
 bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
 {
-    error = "Save to PDML format is not supported";
-    return false;
+    bool isOk = false;
+    QTemporaryFile pcapFile;
+    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType("PCAP");
+    QProcess tshark;
+
+    Q_ASSERT(fmt);
+
+    if (!pcapFile.open())
+    {
+        error.append("Unable to open temporary file to create PCAP\n");
+        goto _fail;
+    }
+
+    qDebug("intermediate PCAP %s", pcapFile.fileName().toAscii().constData());
+
+    connect(fmt, SIGNAL(target(int)), this, SIGNAL(target(int)));
+    connect(fmt, SIGNAL(progress(int)), this, SIGNAL(progress(int)));
+
+    emit status("Writing intermediate PCAP file...");
+    isOk = fmt->saveStreams(streams, pcapFile.fileName(), error);
+
+    qDebug("generating PDML %s", fileName.toAscii().constData());
+    emit status("Converting PCAP to PDML...");
+    emit target(0);
+
+    tshark.setStandardOutputFile(fileName);
+    tshark.start(OstProtoLib::tsharkPath(), 
+            QStringList() 
+            << QString("-r%1").arg(pcapFile.fileName())
+            << "-Tpdml");
+    if (!tshark.waitForStarted(-1))
+    {
+        error.append(QString("Unable to start tshark. Check path in preferences.\n"));
+        goto _fail;
+    }
+
+    if (!tshark.waitForFinished(-1))
+    {
+        error.append(QString("Error running tshark\n"));
+        goto _fail;
+    }
+
+    isOk = true;
+_fail:
+    return isOk;
 }
 
 bool PdmlFileFormat::isMyFileFormat(const QString fileName)
