@@ -24,17 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocolmanager.h"
 #include "streambase.h"
 
-#include "mac.pb.h"
 #include "eth2.pb.h"
 #include "dot3.pb.h"
 #include "hexdump.pb.h"
+#include "llc.pb.h"
+#include "mac.pb.h"
 #include "ip4.pb.h"
 #include "ip6.pb.h"
+#include "snap.pb.h"
+#include "svlan.pb.h"
 #include "tcp.pb.h"
+#include "vlan.pb.h"
 
 #include <google/protobuf/descriptor.h>
 
 #include <QMessageBox>
+#include <QRegExp>
 
 #include <string>
 
@@ -195,10 +200,13 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("hexdump", PdmlUnknownProtocol::createInstance);
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
+
     factory_.insert("eth", PdmlEthProtocol::createInstance);
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
+    factory_.insert("llc", PdmlLlcProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
+    //factory_.insert("vlan", PdmlVlanProtocol::createInstance);
 }
 
 PdmlReader::~PdmlReader()
@@ -809,6 +817,63 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int pos, int size,
     }
 }
 
+
+// ---------------------------------------------------------- //
+// PdmlVlanProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlVlanProtocol::PdmlVlanProtocol()
+{
+    pdmlProtoName_ = "vlan";
+    ostProtoId_ = OstProto::Protocol::kVlanFieldNumber;
+}
+
+PdmlDefaultProtocol* PdmlVlanProtocol::createInstance()
+{
+    return new PdmlVlanProtocol();
+}
+
+void PdmlVlanProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    OstProto::Vlan *vlan = pbProto->MutableExtension(OstProto::vlan);
+
+    vlan->set_tpid(0x8100);
+    vlan->set_is_override_tpid(true);
+}
+
+void PdmlVlanProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    if (name == "vlan.id")
+    {
+        bool isOk;
+        OstProto::Vlan *vlan = pbProto->MutableExtension(OstProto::vlan);
+        uint tag = attributes.value("unmaskedvalue").isEmpty() ?
+            attributes.value("value").toString().toUInt(&isOk, kBaseHex) :
+            attributes.value("unmaskedvalue").toString().toUInt(&isOk,kBaseHex);
+
+        vlan->set_vlan_tag(tag);
+    }
+    else if (name == "vlan.etype")
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kEth2FieldNumber);
+
+        bool isOk;
+        OstProto::Eth2 *eth2 = proto->MutableExtension(OstProto::eth2);
+
+        eth2->set_type(attributes.value("value")
+                .toString().toUInt(&isOk, kBaseHex));
+        eth2->set_is_override_type(true);
+    }
+}
+
+
 // ---------------------------------------------------------- //
 // PdmlEthProtocol                                            //
 // ---------------------------------------------------------- //
@@ -833,6 +898,14 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
 {
     if (name == "eth.type")
     {
+        bool isOk;
+
+        uint type = attributes.value("value").toString()
+            .toUInt(&isOk, kBaseHex);
+
+        if ((type == 0x88a8) || (type == 0x8100))
+            return;
+
         OstProto::Protocol *proto = stream->add_protocol();
 
         proto->mutable_protocol_id()->set_id(
@@ -840,8 +913,7 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
 
         OstProto::Eth2 *eth2 = proto->MutableExtension(OstProto::eth2);
 
-        bool isOk;
-        eth2->set_type(attributes.value("value").toString().toUInt(&isOk, kBaseHex));
+        eth2->set_type(type);
         eth2->set_is_override_type(true);
     }
     else if (name == "eth.len")
@@ -874,6 +946,66 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
         stream->mutable_core()->mutable_name()->append(trailer.constData(),
                 trailer.size());
     }
+}
+
+
+// ---------------------------------------------------------- //
+// PdmlLlcProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlLlcProtocol::PdmlLlcProtocol()
+{
+    pdmlProtoName_ = "llc";
+    ostProtoId_ = OstProto::Protocol::kLlcFieldNumber;
+
+    fieldMap_.insert("llc.dsap", OstProto::Llc::kDsapFieldNumber);
+    fieldMap_.insert("llc.ssap", OstProto::Llc::kSsapFieldNumber);
+    fieldMap_.insert("llc.control", OstProto::Llc::kCtlFieldNumber);
+}
+
+PdmlDefaultProtocol* PdmlLlcProtocol::createInstance()
+{
+    return new PdmlLlcProtocol();
+}
+
+void PdmlLlcProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    if (name == "llc.oui")
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kSnapFieldNumber);
+
+        OstProto::Snap *snap = proto->MutableExtension(OstProto::snap);
+
+        bool isOk;
+        snap->set_oui(attributes.value("value").toString()
+                .toUInt(&isOk, kBaseHex));
+        snap->set_is_override_oui(true);
+    }
+    else if ((name == "llc.type") || (name.contains(QRegExp("llc\\..*pid"))))
+    {
+        OstProto::Snap *snap = stream->mutable_protocol(
+                stream->protocol_size()-1)->MutableExtension(OstProto::snap);
+
+        bool isOk;
+        snap->set_type(attributes.value("value").toString()
+                .toUInt(&isOk, kBaseHex));
+        snap->set_is_override_type(true);
+    }
+}
+
+void PdmlLlcProtocol::postProtocolHandler(OstProto::Protocol *pbProto, 
+        OstProto::Stream *stream)
+{
+    OstProto::Llc *llc = pbProto->MutableExtension(OstProto::llc);
+
+    llc->set_is_override_dsap(true);
+    llc->set_is_override_ssap(true);
+    llc->set_is_override_ctl(true);
 }
 
 
