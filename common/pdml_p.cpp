@@ -206,7 +206,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
-    //factory_.insert("vlan", PdmlVlanProtocol::createInstance);
+    factory_.insert("vlan", PdmlVlanProtocol::createInstance);
 }
 
 PdmlReader::~PdmlReader()
@@ -841,6 +841,23 @@ void PdmlVlanProtocol::preProtocolHandler(QString name,
 
     vlan->set_tpid(0x8100);
     vlan->set_is_override_tpid(true);
+
+    // If a eth2 protocol precedes vlan, we remove the eth2 protocol
+    // 'coz the eth2.etherType is actually the vlan.tpid 
+    //
+    // We assume that the current protocol is the last in the stream
+    int index = stream->protocol_size() - 1;
+    if ((index > 1) 
+            && (stream->protocol(index).protocol_id().id() 
+                                    == OstProto::Protocol::kVlanFieldNumber)
+            && (stream->protocol(index - 1).protocol_id().id() 
+                                    == OstProto::Protocol::kEth2FieldNumber))
+    {
+        stream->mutable_protocol()->SwapElements(index, index - 1);
+        Q_ASSERT(stream->protocol(index).protocol_id().id()
+                        == OstProto::Protocol::kEth2FieldNumber);
+        stream->mutable_protocol()->RemoveLast();
+    }
 }
 
 void PdmlVlanProtocol::unknownFieldHandler(QString name, int pos, int size, 
@@ -902,9 +919,6 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
 
         uint type = attributes.value("value").toString()
             .toUInt(&isOk, kBaseHex);
-
-        if ((type == 0x88a8) || (type == 0x8100))
-            return;
 
         OstProto::Protocol *proto = stream->add_protocol();
 
