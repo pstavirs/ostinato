@@ -205,6 +205,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
+    factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("vlan", PdmlVlanProtocol::createInstance);
 }
@@ -814,6 +815,98 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int pos, int size,
                 qDebug("sec.nsec = %u.%u, ipg = %u", sec, nsec, ipg);
             }
         }
+    }
+}
+
+
+// ---------------------------------------------------------- //
+// PdmlSvlanProtocol                                          //
+// ---------------------------------------------------------- //
+
+PdmlSvlanProtocol::PdmlSvlanProtocol()
+{
+    pdmlProtoName_ = "ieee8021ad";
+    ostProtoId_ = OstProto::Protocol::kSvlanFieldNumber;
+}
+
+PdmlDefaultProtocol* PdmlSvlanProtocol::createInstance()
+{
+    return new PdmlSvlanProtocol();
+}
+
+void PdmlSvlanProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    OstProto::Vlan *svlan = pbProto->MutableExtension(OstProto::svlan);
+
+    svlan->set_tpid(0x88a8);
+    svlan->set_is_override_tpid(true);
+
+    // If a eth2 protocol precedes svlan, we remove the eth2 protocol
+    // 'coz the eth2.etherType is actually the svlan.tpid 
+    //
+    // We assume that the current protocol is the last in the stream
+    int index = stream->protocol_size() - 1;
+    if ((index > 1) 
+            && (stream->protocol(index).protocol_id().id() 
+                                    == OstProto::Protocol::kSvlanFieldNumber)
+            && (stream->protocol(index - 1).protocol_id().id() 
+                                    == OstProto::Protocol::kEth2FieldNumber))
+    {
+        stream->mutable_protocol()->SwapElements(index, index - 1);
+        Q_ASSERT(stream->protocol(index).protocol_id().id()
+                        == OstProto::Protocol::kEth2FieldNumber);
+        stream->mutable_protocol()->RemoveLast();
+    }
+}
+
+void PdmlSvlanProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    if ((name == "ieee8021ad.id") || (name == "ieee8021ad.svid"))
+    {
+        bool isOk;
+        OstProto::Vlan *svlan = pbProto->MutableExtension(OstProto::svlan);
+        uint tag = attributes.value("unmaskedvalue").isEmpty() ?
+            attributes.value("value").toString().toUInt(&isOk, kBaseHex) :
+            attributes.value("unmaskedvalue").toString().toUInt(&isOk,kBaseHex);
+
+        svlan->set_vlan_tag(tag);
+    }
+    else if (name == "ieee8021ad.cvid")
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kSvlanFieldNumber);
+
+        OstProto::Vlan *svlan = proto->MutableExtension(OstProto::svlan);
+
+        svlan->set_tpid(0x88a8);
+        svlan->set_is_override_tpid(true);
+
+        bool isOk;
+        uint tag = attributes.value("unmaskedvalue").isEmpty() ?
+            attributes.value("value").toString().toUInt(&isOk, kBaseHex) :
+            attributes.value("unmaskedvalue").toString().toUInt(&isOk,kBaseHex);
+
+        svlan->set_vlan_tag(tag);
+    }
+    else if (name == "ieee8021ah.etype") // yes 'ah' not 'ad' - not a typo!
+    {
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kEth2FieldNumber);
+
+        bool isOk;
+        OstProto::Eth2 *eth2 = proto->MutableExtension(OstProto::eth2);
+
+        eth2->set_type(attributes.value("value")
+                .toString().toUInt(&isOk, kBaseHex));
+        eth2->set_is_override_type(true);
     }
 }
 

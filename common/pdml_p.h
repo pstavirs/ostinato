@@ -166,6 +166,21 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
 };
 
+class PdmlSvlanProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlSvlanProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+};
+
 class PdmlVlanProtocol : public PdmlDefaultProtocol
 {
 public:
