@@ -210,6 +210,14 @@ public:
             OstProto::Stream *stream);
 };
 
+class PdmlArpProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlArpProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+};
+
 class PdmlIp4Protocol : public PdmlDefaultProtocol
 {
 public:

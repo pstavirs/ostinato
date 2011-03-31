@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocolmanager.h"
 #include "streambase.h"
 
+#include "arp.pb.h"
 #include "eth2.pb.h"
 #include "dot3.pb.h"
 #include "hexdump.pb.h"
@@ -203,6 +204,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 
     factory_.insert("eth", PdmlEthProtocol::createInstance);
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
+    factory_.insert("arp", PdmlArpProtocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
@@ -1117,6 +1119,30 @@ void PdmlLlcProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 
 // ---------------------------------------------------------- //
+// PdmlArpProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlArpProtocol::PdmlArpProtocol()
+{
+    pdmlProtoName_ = "arp";
+    ostProtoId_ = OstProto::Protocol::kArpFieldNumber;
+
+    fieldMap_.insert("arp.opcode", OstProto::Arp::kOpCodeFieldNumber);
+    fieldMap_.insert("arp.src.hw_mac", OstProto::Arp::kSenderHwAddrFieldNumber);
+    fieldMap_.insert("arp.src.proto_ipv4", 
+            OstProto::Arp::kSenderProtoAddrFieldNumber);
+    fieldMap_.insert("arp.dst.hw_mac", OstProto::Arp::kTargetHwAddrFieldNumber);
+    fieldMap_.insert("arp.dst.proto_ipv4", 
+            OstProto::Arp::kTargetProtoAddrFieldNumber);
+}
+
+PdmlDefaultProtocol* PdmlArpProtocol::createInstance()
+{
+    return new PdmlArpProtocol();
+}
+
+
+// ---------------------------------------------------------- //
 // PdmlIp4Protocol                                            //
 // ---------------------------------------------------------- //
 
@@ -1125,17 +1151,17 @@ PdmlIp4Protocol::PdmlIp4Protocol()
     pdmlProtoName_ = "ip";
     ostProtoId_ = OstProto::Protocol::kIp4FieldNumber;
 
-    fieldMap_.insert("ip.version", 5);
-    fieldMap_.insert("ip.dsfield", 6);
-    fieldMap_.insert("ip.len", 7);
-    fieldMap_.insert("ip.id", 8);
-    //fieldMap_.insert("ip.flags", 9);
-    fieldMap_.insert("ip.frag_offset", 10);
-    fieldMap_.insert("ip.ttl", 11);
-    fieldMap_.insert("ip.proto", 12);
-    fieldMap_.insert("ip.checksum", 13);
-    fieldMap_.insert("ip.src", 14);
-    fieldMap_.insert("ip.dst", 18);
+    fieldMap_.insert("ip.version", OstProto::Ip4::kVerHdrlenFieldNumber);
+    fieldMap_.insert("ip.dsfield", OstProto::Ip4::kTosFieldNumber);
+    fieldMap_.insert("ip.len", OstProto::Ip4::kTotlenFieldNumber);
+    fieldMap_.insert("ip.id", OstProto::Ip4::kIdFieldNumber);
+    //fieldMap_.insert("ip.flags", OstProto::Ip4::kFlagsFieldNumber);
+    fieldMap_.insert("ip.frag_offset", OstProto::Ip4::kFragOfsFieldNumber);
+    fieldMap_.insert("ip.ttl", OstProto::Ip4::kTtlFieldNumber);
+    fieldMap_.insert("ip.proto", OstProto::Ip4::kProtoFieldNumber);
+    fieldMap_.insert("ip.checksum", OstProto::Ip4::kCksumFieldNumber);
+    fieldMap_.insert("ip.src", OstProto::Ip4::kSrcIpFieldNumber);
+    fieldMap_.insert("ip.dst", OstProto::Ip4::kDstIpFieldNumber);
 }
 
 PdmlDefaultProtocol* PdmlIp4Protocol::createInstance()
