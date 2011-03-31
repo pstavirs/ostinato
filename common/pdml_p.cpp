@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "snap.pb.h"
 #include "svlan.pb.h"
 #include "tcp.pb.h"
+#include "udp.pb.h"
 #include "vlan.pb.h"
 
 #include <google/protobuf/descriptor.h>
@@ -209,6 +210,8 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
+    factory_.insert("udp", PdmlUdpProtocol::createInstance);
+    factory_.insert("udplite", PdmlUdpProtocol::createInstance);
     factory_.insert("vlan", PdmlVlanProtocol::createInstance);
 }
 
@@ -1366,5 +1369,40 @@ void PdmlTcpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
         segmentData_.resize(0);
     }
 #endif
+}
+
+// ---------------------------------------------------------- //
+// PdmlUdpProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlUdpProtocol::PdmlUdpProtocol()
+{
+    pdmlProtoName_ = "udp"; // OR udplite
+    ostProtoId_ = OstProto::Protocol::kUdpFieldNumber;
+
+    fieldMap_.insert("udp.srcport", OstProto::Udp::kSrcPortFieldNumber);
+    fieldMap_.insert("udp.dstport", OstProto::Udp::kDstPortFieldNumber);
+    fieldMap_.insert("udp.length", OstProto::Udp::kTotlenFieldNumber);
+    fieldMap_.insert("udp.checksum_coverage", 
+                     OstProto::Udp::kTotlenFieldNumber);
+    fieldMap_.insert("udp.checksum", OstProto::Udp::kCksumFieldNumber);
+}
+
+PdmlDefaultProtocol* PdmlUdpProtocol::createInstance()
+{
+    return new PdmlUdpProtocol();
+}
+
+void PdmlUdpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    OstProto::Udp *udp = pbProto->MutableExtension(OstProto::udp);
+
+    qDebug("Udp: post\n");
+
+    udp->set_is_override_src_port(true);
+    udp->set_is_override_dst_port(true);
+    udp->set_is_override_totlen(true);
+    udp->set_is_override_cksum(true);
 }
 
