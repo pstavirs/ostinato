@@ -265,4 +265,14 @@ private:
     QByteArray segmentData_;
 };
 
+class PdmlUdpProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlUdpProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
+            OstProto::Stream *stream);
+};
+
 #endif
