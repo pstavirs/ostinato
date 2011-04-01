@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "snap.pb.h"
 #include "svlan.pb.h"
 #include "tcp.pb.h"
+#include "textproto.pb.h"
 #include "udp.pb.h"
 #include "vlan.pb.h"
 
@@ -203,12 +204,16 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("geninfo", PdmlGenInfoProtocol::createInstance);
     factory_.insert("frame", PdmlFrameProtocol::createInstance);
 
-    factory_.insert("eth", PdmlEthProtocol::createInstance);
-    factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("arp", PdmlArpProtocol::createInstance);
+    factory_.insert("eth", PdmlEthProtocol::createInstance);
+    factory_.insert("http", PdmlTextProtocol::createInstance);
+    factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
+    factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
-    factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
+    //factory_.insert("nntp", PdmlTextProtocol::createInstance);
+    //factory_.insert("rtsp", PdmlTextProtocol::createInstance);
+    //factory_.insert("sip", PdmlTextProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("udp", PdmlUdpProtocol::createInstance);
     factory_.insert("udplite", PdmlUdpProtocol::createInstance);
@@ -1404,5 +1409,118 @@ void PdmlUdpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
     udp->set_is_override_dst_port(true);
     udp->set_is_override_totlen(true);
     udp->set_is_override_cksum(true);
+}
+
+
+// ---------------------------------------------------------- //
+// PdmlTextProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlTextProtocol::PdmlTextProtocol()
+{
+    pdmlProtoName_ = "text";
+    ostProtoId_ = OstProto::Protocol::kTextProtocolFieldNumber;
+}
+
+PdmlDefaultProtocol* PdmlTextProtocol::createInstance()
+{
+    return new PdmlTextProtocol();
+}
+
+void PdmlTextProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    bool isOk;
+    int size;
+    int pos = attributes.value("pos").toString().toUInt(&isOk);
+
+    if (!isOk)
+    {
+        if (expectedPos >= 0)
+            expPos_ = pos = expectedPos;
+        else
+            goto _skip_pos_size_proc;
+    }
+
+    size = attributes.value("size").toString().toUInt(&isOk);
+    if (!isOk)
+        goto _skip_pos_size_proc;
+
+    // If pos+size goes beyond the frame length, this is a "reassembled"
+    // protocol and should be skipped
+    if ((pos + size) > int(stream->core().frame_len()))
+        goto _skip_pos_size_proc;
+
+    expPos_ = pos;
+    endPos_ = expPos_ + size;
+
+_skip_pos_size_proc:
+    OstProto::TextProtocol *text = pbProto->MutableExtension(
+            OstProto::textProtocol);
+
+    text->set_port_num(0);
+    text->set_eol(OstProto::TextProtocol::kCrLf);
+
+    contentType_ = kUnknownContent;
+}
+
+void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
+            OstProto::Stream *stream)
+{
+    if (contentType_ == kUnknownContent)
+    {
+        if (name == "data")
+            contentType_ = kOtherContent;
+        else
+            contentType_ = kTextContent;
+    }
+    else if (contentType_ == kOtherContent)
+        return;
+    else // kTextContent
+    {
+        if (name == "data")
+            contentType_ = kOtherContent;
+        return;
+    }
+
+    // We process only kTextContent
+
+    if (pos != expPos_)
+        return;
+
+    if ((pos + size) > endPos_)
+        return;
+
+    if (attributes.value("show") == "HTTP chunked response")
+        return;
+
+    OstProto::TextProtocol *text = pbProto->MutableExtension(
+            OstProto::textProtocol);
+
+    QByteArray line = QByteArray::fromHex(
+            attributes.value("value").toString().toUtf8());
+
+    // Convert line endings to LF only - Qt requirement that TextProto honours
+    line.replace("\r\n", "\n");
+    line.replace("\r", "\n");
+
+    text->mutable_text()->append(line.constData(), line.size());
+    expPos_ += size;
+}
+
+void PdmlTextProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    OstProto::TextProtocol *text = pbProto->MutableExtension(
+            OstProto::textProtocol);
+
+    // Empty Text Content - remove ourselves
+    if (text->text().length() == 0)
+        stream->mutable_protocol()->RemoveLast();
+
+    expPos_ = endPos_ = -1;
+    contentType_ = kUnknownContent;
 }
 

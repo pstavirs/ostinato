@@ -724,7 +724,7 @@ void Ip4Protocol::storeConfigWidget()
     data.set_proto(configForm->leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16));
     
     data.set_is_override_cksum(configForm->cbIpCksumOverride->isChecked());
-    data.set_cksum(configForm->leIpCksum->text().remove(QChar(' ')).toULong(&isOk));
+    data.set_cksum(configForm->leIpCksum->text().remove(QChar(' ')).toULong(&isOk, 16));
 
     data.set_src_ip(QHostAddress(configForm->leIpSrcAddr->text()).toIPv4Address());
     data.set_src_ip_mode((OstProto::Ip4_IpAddrMode)configForm->cmbIpSrcAddrMode->currentIndex());

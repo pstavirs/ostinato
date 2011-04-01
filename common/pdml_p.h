@@ -275,4 +275,31 @@ public:
             OstProto::Stream *stream);
 };
 
+class PdmlTextProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlTextProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
+            OstProto::Stream *stream);
+private:
+    enum ContentType {
+        kUnknownContent,
+        kTextContent,
+        kOtherContent
+    };
+
+    ContentType contentType_;
+    int expPos_;
+    int endPos_;
+};
+
 #endif
