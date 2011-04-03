@@ -297,6 +297,7 @@ private:
         kOtherContent
     };
 
+    bool detectEol_;
     ContentType contentType_;
     int expPos_;
     int endPos_;
