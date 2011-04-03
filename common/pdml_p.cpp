@@ -208,12 +208,16 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("eth", PdmlEthProtocol::createInstance);
     factory_.insert("http", PdmlTextProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
+    factory_.insert("imap", PdmlTextProtocol::createInstance);
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
     factory_.insert("nntp", PdmlTextProtocol::createInstance);
+    factory_.insert("pop", PdmlTextProtocol::createInstance);
     factory_.insert("rtsp", PdmlTextProtocol::createInstance);
+    factory_.insert("sdp", PdmlTextProtocol::createInstance);
     factory_.insert("sip", PdmlTextProtocol::createInstance);
+    factory_.insert("smtp", PdmlTextProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("udp", PdmlUdpProtocol::createInstance);
     factory_.insert("udplite", PdmlUdpProtocol::createInstance);
@@ -587,7 +591,26 @@ void PdmlReader::readField(PdmlDefaultProtocol *pdmlProto,
         if (isStartElement())
         {
             if (name() == "proto")
+            {
+                // Since we are in the midst of processing a protocol, we
+                // end it prematurely before we start processing the 
+                // embedded protocol
+                //
+                int endPos = -1;
+
+                if (!attributes().value("pos").isEmpty())
+                    endPos = attributes().value("pos").toString().toInt();
+
+                pdmlProto->prematureEndHandler(endPos, pbProto,
+                        currentStream_);
+                pdmlProto->postProtocolHandler(pbProto, currentStream_);
+
+                StreamBase s;
+                s.protoDataCopyFrom(*currentStream_);
+                expPos_ = s.frameProtocolLength(0);
+
                 readProto();
+            }
             else if (name() == "field")
                 readField(pdmlProto, pbProto);
             else 
@@ -1461,8 +1484,9 @@ _skip_pos_size_proc:
             OstProto::textProtocol);
 
     text->set_port_num(0);
-    text->set_eol(OstProto::TextProtocol::kCrLf);
+    text->set_eol(OstProto::TextProtocol::kCrLf); // by default we assume CRLF
 
+    detectEol_ = true;
     contentType_ = kUnknownContent;
 }
 
@@ -1470,64 +1494,84 @@ void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size,
             const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
             OstProto::Stream *stream)
 {
-    if (name == "data")
-        contentType_ = kOtherContent;
+_retry:
+    switch(contentType_)
+    {
+    case kUnknownContent:
+        if (name == "data")
+            contentType_ = kOtherContent;
+        else
+            contentType_ = kTextContent;
+        goto _retry;
+        break;
 
-    if (contentType_ == kOtherContent)
-        return;
-
-    if (contentType_ == kUnknownContent)
-        contentType_ = kTextContent;
-
-    // We process only kTextContent
-
-    if (pos < expPos_)
-        return;
-
-    if ((pos + size) > endPos_)
-        return;
-
-    if (pos > expPos_)
-    {   
-        int gap = pos - expPos_;
-        QString eol;
-        QByteArray filler;
+    case kTextContent:
+    {
         OstProto::TextProtocol *text = pbProto->MutableExtension(
                 OstProto::textProtocol);
 
-        switch(text->eol())
+        if ((name == "data") 
+            || (attributes.value("show") == "HTTP chunked response"))
         {
-            case OstProto::TextProtocol::kCr: eol = "\r"; break;
-            case OstProto::TextProtocol::kLf: eol = "\n"; break;
-            case OstProto::TextProtocol::kCrLf: eol = "\r\n"; break;
-            default: Q_ASSERT(false);
+            contentType_ = kOtherContent;
+            goto _retry;
         }
-        eol = "\n";
 
-        for (int i = 0; i < gap; i++)
-            filler += eol;
+        if (pos < expPos_)
+            break;
 
-        filler.resize(gap);
+        if ((pos + size) > endPos_)
+            break;
 
-        text->mutable_text()->append(filler.constData(), filler.size());
-        expPos_ += gap;
+        if (pos > expPos_)
+        {   
+            int gap = pos - expPos_;
+            QByteArray filler(gap, '\n');
+
+            if (text->eol() == OstProto::TextProtocol::kCrLf)
+            {
+                if (gap & 0x01) // Odd
+                {
+                    filler.resize(gap/2 + 1);
+                    filler[0]=int(' ');
+                }
+                else // Even
+                    filler.resize(gap/2);
+            }
+
+            text->mutable_text()->append(filler.constData(), filler.size());
+            expPos_ += gap;
+        }
+
+        QByteArray line = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+
+        if (detectEol_)
+        {
+            if (line.right(2) == "\r\n")
+                text->set_eol(OstProto::TextProtocol::kCrLf);
+            else if (line.right(1) == "\r")
+                text->set_eol(OstProto::TextProtocol::kCr);
+            else if (line.right(1) == "\n")
+                text->set_eol(OstProto::TextProtocol::kLf);
+
+            detectEol_ = false;
+        }
+
+        // Convert line endings to LF only - Qt reqmt that TextProto honours
+        line.replace("\r\n", "\n");
+        line.replace('\r', '\n');
+
+        text->mutable_text()->append(line.constData(), line.size());
+        expPos_ += size;
+        break;
     }
-
-    if (attributes.value("show") == "HTTP chunked response")
-        return;
-
-    OstProto::TextProtocol *text = pbProto->MutableExtension(
-            OstProto::textProtocol);
-
-    QByteArray line = QByteArray::fromHex(
-            attributes.value("value").toString().toUtf8());
-
-    // Convert line endings to LF only - Qt requirement that TextProto honours
-    line.replace("\r\n", "\n");
-    line.replace("\r", "\n");
-
-    text->mutable_text()->append(line.constData(), line.size());
-    expPos_ += size;
+    case kOtherContent:
+        // Do nothing!
+        break;
+    default:
+       Q_ASSERT(false);
+    }
 }
 
 void PdmlTextProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
@@ -1541,6 +1585,7 @@ void PdmlTextProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
         stream->mutable_protocol()->RemoveLast();
 
     expPos_ = endPos_ = -1;
+    detectEol_ = true;
     contentType_ = kUnknownContent;
 }
 
