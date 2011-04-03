@@ -211,9 +211,9 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
     factory_.insert("ipv6", PdmlIp6Protocol::createInstance);
     factory_.insert("llc", PdmlLlcProtocol::createInstance);
-    //factory_.insert("nntp", PdmlTextProtocol::createInstance);
-    //factory_.insert("rtsp", PdmlTextProtocol::createInstance);
-    //factory_.insert("sip", PdmlTextProtocol::createInstance);
+    factory_.insert("nntp", PdmlTextProtocol::createInstance);
+    factory_.insert("rtsp", PdmlTextProtocol::createInstance);
+    factory_.insert("sip", PdmlTextProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("udp", PdmlUdpProtocol::createInstance);
     factory_.insert("udplite", PdmlUdpProtocol::createInstance);
@@ -409,8 +409,8 @@ void PdmlReader::readProto()
     if (!attributes().value("size").isEmpty())
         size = attributes().value("size").toString().toInt();
 
-    qDebug("proto: %s, pos = %d, expPos_ = %d", 
-            protoName.toAscii().constData(), pos, expPos_);
+    qDebug("proto: %s, pos = %d, expPos_ = %d, size = %d", 
+            protoName.toAscii().constData(), pos, expPos_, size);
 
     // This is a heuristic to skip protocols which are not part of
     // this frame, but of a reassembled segment spanning several frames
@@ -1456,6 +1456,7 @@ void PdmlTextProtocol::preProtocolHandler(QString name,
     endPos_ = expPos_ + size;
 
 _skip_pos_size_proc:
+    qDebug("expPos_ = %d, endPos_ = %d", expPos_, endPos_);
     OstProto::TextProtocol *text = pbProto->MutableExtension(
             OstProto::textProtocol);
 
@@ -1469,29 +1470,48 @@ void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size,
             const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
             OstProto::Stream *stream)
 {
+    if (name == "data")
+        contentType_ = kOtherContent;
+
+    if (contentType_ == kOtherContent)
+        return;
+
     if (contentType_ == kUnknownContent)
-    {
-        if (name == "data")
-            contentType_ = kOtherContent;
-        else
-            contentType_ = kTextContent;
-    }
-    else if (contentType_ == kOtherContent)
-        return;
-    else // kTextContent
-    {
-        if (name == "data")
-            contentType_ = kOtherContent;
-        return;
-    }
+        contentType_ = kTextContent;
 
     // We process only kTextContent
 
-    if (pos != expPos_)
+    if (pos < expPos_)
         return;
 
     if ((pos + size) > endPos_)
         return;
+
+    if (pos > expPos_)
+    {   
+        int gap = pos - expPos_;
+        QString eol;
+        QByteArray filler;
+        OstProto::TextProtocol *text = pbProto->MutableExtension(
+                OstProto::textProtocol);
+
+        switch(text->eol())
+        {
+            case OstProto::TextProtocol::kCr: eol = "\r"; break;
+            case OstProto::TextProtocol::kLf: eol = "\n"; break;
+            case OstProto::TextProtocol::kCrLf: eol = "\r\n"; break;
+            default: Q_ASSERT(false);
+        }
+        eol = "\n";
+
+        for (int i = 0; i < gap; i++)
+            filler += eol;
+
+        filler.resize(gap);
+
+        text->mutable_text()->append(filler.constData(), filler.size());
+        expPos_ += gap;
+    }
 
     if (attributes.value("show") == "HTTP chunked response")
         return;
