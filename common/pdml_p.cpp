@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "hexdump.pb.h"
 #include "llc.pb.h"
 #include "mac.pb.h"
+#include "icmp.pb.h"
 #include "ip4.pb.h"
 #include "ip6.pb.h"
 #include "snap.pb.h"
@@ -207,6 +208,8 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("arp", PdmlArpProtocol::createInstance);
     factory_.insert("eth", PdmlEthProtocol::createInstance);
     factory_.insert("http", PdmlTextProtocol::createInstance);
+    factory_.insert("icmp", PdmlIcmpProtocol::createInstance);
+    factory_.insert("icmpv6", PdmlIcmpProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
     factory_.insert("imap", PdmlTextProtocol::createInstance);
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
@@ -1304,6 +1307,80 @@ void PdmlIp6Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
     ip6->set_is_override_payload_length(true); // FIXME
     ip6->set_is_override_next_header(true); // FIXME
 }
+
+
+// ---------------------------------------------------------- //
+// PdmlIcmpProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlIcmpProtocol::PdmlIcmpProtocol()
+{
+    pdmlProtoName_ = "icmp";
+    ostProtoId_ = OstProto::Protocol::kIcmpFieldNumber;
+
+    fieldMap_.insert("icmp.type", OstProto::Icmp::kTypeFieldNumber);
+    fieldMap_.insert("icmp.code", OstProto::Icmp::kCodeFieldNumber);
+    fieldMap_.insert("icmp.checksum", OstProto::Icmp::kChecksumFieldNumber);
+    fieldMap_.insert("icmp.ident", OstProto::Icmp::kIdentifierFieldNumber);
+    fieldMap_.insert("icmp.seq", OstProto::Icmp::kSequenceFieldNumber);
+
+    fieldMap_.insert("icmpv6.type", OstProto::Icmp::kTypeFieldNumber);
+    fieldMap_.insert("icmpv6.code", OstProto::Icmp::kCodeFieldNumber);
+    fieldMap_.insert("icmpv6.checksum", OstProto::Icmp::kChecksumFieldNumber);
+    // ICMPv6 ident and seq need to be handled as 'unknown' since Wireshark
+    // doesn't define display filters for the same
+}
+
+PdmlDefaultProtocol* PdmlIcmpProtocol::createInstance()
+{
+    return new PdmlIcmpProtocol();
+}
+
+void PdmlIcmpProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
+
+    if (name == "icmp")
+        icmp->set_icmp_version(OstProto::Icmp::kIcmp4);
+    else if (name == "icmpv6")
+        icmp->set_icmp_version(OstProto::Icmp::kIcmp6);
+
+    icmp->set_is_override_checksum(true);
+
+    icmp->set_type(kIcmpInvalidType);
+}
+
+void PdmlIcmpProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
+            OstProto::Stream *stream)
+{
+    bool isOk;
+    OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
+
+    if ((icmp->icmp_version() == OstProto::Icmp::kIcmp6)
+            && (icmp->type() >= kIcmp6EchoRequest) 
+            && (icmp->type() <= kIcmp6EchoReply))
+    {
+        QString addrHexStr = attributes.value("value").toString();
+
+        if (attributes.value("show").toString().startsWith("ID"))
+            icmp->set_identifier(addrHexStr.toUInt(&isOk, kBaseHex));
+        else if (attributes.value("show").toString().startsWith("Sequence"))
+            icmp->set_sequence(addrHexStr.toUInt(&isOk, kBaseHex));
+    }
+}
+
+void PdmlIcmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
+
+    if (icmp->type() == kIcmpInvalidType)
+        stream->mutable_protocol()->RemoveLast();
+}
+
 
 // ---------------------------------------------------------- //
 // PdmlTcpProtocol                                            //

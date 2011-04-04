@@ -248,6 +248,28 @@ public:
             OstProto::Stream *stream);
 };
 
+class PdmlIcmpProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlIcmpProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
+            OstProto::Stream *stream);
+private:
+    static const uint kIcmpInvalidType   = 0xFFFFFFFF;
+
+    static const uint kIcmp6EchoRequest = 128;
+    static const uint kIcmp6EchoReply   = 129;
+};
+
 class PdmlTcpProtocol : public PdmlDefaultProtocol
 {
 public:
