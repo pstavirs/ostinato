@@ -270,6 +270,31 @@ private:
     static const uint kIcmp6EchoReply   = 129;
 };
 
+class PdmlIgmpProtocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlIgmpProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
+            OstProto::Stream *stream);
+private:
+    static const uint kIgmpQuery = 0x11;
+    static const uint kIgmpV1Query = 0x11;
+    static const uint kIgmpV2Query = 0xFF11;
+    static const uint kIgmpV3Query = 0xFE11;
+
+    uint version_;
+
+};
+
 class PdmlTcpProtocol : public PdmlDefaultProtocol
 {
 public:

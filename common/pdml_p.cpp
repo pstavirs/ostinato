@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "llc.pb.h"
 #include "mac.pb.h"
 #include "icmp.pb.h"
+#include "igmp.pb.h"
 #include "ip4.pb.h"
 #include "ip6.pb.h"
 #include "snap.pb.h"
@@ -157,6 +158,9 @@ void PdmlDefaultProtocol::knownFieldHandler(QString name, QString valueHexStr,
     Q_ASSERT(fieldDesc != NULL);
     switch(fieldDesc->cpp_type())
     {
+    case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+        msgRefl->SetBool(msg, fieldDesc, bool(valueHexStr.toUInt(&isOk)));
+        break;
     case google::protobuf::FieldDescriptor::CPPTYPE_ENUM: // TODO
     case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
         msgRefl->SetUInt32(msg, fieldDesc, 
@@ -210,6 +214,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("http", PdmlTextProtocol::createInstance);
     factory_.insert("icmp", PdmlIcmpProtocol::createInstance);
     factory_.insert("icmpv6", PdmlIcmpProtocol::createInstance);
+    factory_.insert("igmp", PdmlIgmpProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
     factory_.insert("imap", PdmlTextProtocol::createInstance);
     factory_.insert("ip", PdmlIp4Protocol::createInstance);
@@ -1378,6 +1383,128 @@ void PdmlIcmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
     OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
 
     if (icmp->type() == kIcmpInvalidType)
+        stream->mutable_protocol()->RemoveLast();
+}
+
+
+// ---------------------------------------------------------- //
+// PdmlIgmpProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlIgmpProtocol::PdmlIgmpProtocol()
+{
+    pdmlProtoName_ = "igmp";
+    ostProtoId_ = OstProto::Protocol::kIgmpFieldNumber;
+
+    fieldMap_.insert("igmp.max_resp", 
+            OstProto::Gmp::kMaxResponseTimeFieldNumber); // FIXME
+    fieldMap_.insert("igmp.checksum", OstProto::Gmp::kChecksumFieldNumber);
+
+    fieldMap_.insert("igmp.s", OstProto::Gmp::kSFlagFieldNumber);
+    fieldMap_.insert("igmp.qrv", OstProto::Gmp::kQrvFieldNumber);
+    fieldMap_.insert("igmp.qqic", OstProto::Gmp::kQqiFieldNumber); // FIXME
+
+    fieldMap_.insert("igmp.num_grp_recs", 
+            OstProto::Gmp::kGroupRecordCountFieldNumber);
+}
+
+PdmlDefaultProtocol* PdmlIgmpProtocol::createInstance()
+{
+    return new PdmlIgmpProtocol();
+}
+
+void PdmlIgmpProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    OstProto::Gmp *igmp = pbProto->MutableExtension(OstProto::igmp);
+
+    igmp->set_is_override_rsvd_code(true);
+    igmp->set_is_override_checksum(true);
+    igmp->set_is_override_source_count(true);
+    igmp->set_is_override_group_record_count(true);
+
+    version_ = 0;
+}
+
+void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
+            OstProto::Stream *stream)
+{
+    bool isOk;
+    OstProto::Gmp *igmp = pbProto->MutableExtension(OstProto::igmp);
+    QString valueHexStr = attributes.value("value").toString();
+
+    if (name == "igmp.version")
+    {
+        version_ = attributes.value("show").toString().toUInt(&isOk);
+    }
+    if (name == "igmp.type")
+    {
+        uint type =  valueHexStr.toUInt(&isOk, kBaseHex);
+        if (type == kIgmpQuery)
+        {
+            switch(version_)
+            {
+            case 1: type = kIgmpV1Query; break;
+            case 2: type = kIgmpV2Query; break;
+            case 3: type = kIgmpV3Query; break;
+            }
+        }
+        igmp->set_type(type);
+    }
+    if (name == "igmp.record_type")
+    {
+        OstProto::Gmp::GroupRecord *rec = igmp->add_group_records();
+        rec->set_type(OstProto::Gmp::GroupRecord::RecordType(
+                    valueHexStr.toUInt(&isOk, kBaseHex)));
+        rec->set_is_override_source_count(true);
+        rec->set_is_override_aux_data_length(true);
+    }
+    else if (name == "igmp.aux_data_len")
+    {
+        igmp->mutable_group_records(igmp->group_records_size() - 1)->
+            set_aux_data_length(valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "igmp.num_src")
+    {
+        if (igmp->group_record_count())
+            igmp->mutable_group_records(igmp->group_records_size() - 1)->
+                set_source_count(valueHexStr.toUInt(&isOk, kBaseHex));
+        else
+            igmp->set_source_count(valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "igmp.maddr")
+    {
+        if (igmp->group_record_count())
+            igmp->mutable_group_records(igmp->group_records_size() - 1)->
+                mutable_group_address()->set_v4(
+                        valueHexStr.toUInt(&isOk, kBaseHex));
+        else
+            igmp->mutable_group_address()->set_v4(
+                    valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "igmp.saddr")
+    {
+        if (igmp->group_record_count())
+            igmp->mutable_group_records(igmp->group_records_size() - 1)->
+                add_sources()->set_v4(valueHexStr.toUInt(&isOk, kBaseHex));
+        else
+            igmp->add_sources()->set_v4(valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "igmp.aux_data")
+    {
+        QByteArray ba = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+        igmp->mutable_group_records(igmp->group_records_size() - 1)->
+            set_aux_data(ba.constData(), ba.size());
+    }
+}
+
+void PdmlIgmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    if (version_ == 0)
         stream->mutable_protocol()->RemoveLast();
 }
 
