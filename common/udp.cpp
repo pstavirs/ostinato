@@ -484,8 +484,8 @@ void UdpProtocol::storeConfigWidget()
     setFieldData(udp_isOverrideTotLen, 
         configForm->cbUdpLengthOverride->isChecked());
 
-    setFieldData(udp_cksum, configForm->leUdpCksum->text().toUInt(
-        &isOk, BASE_HEX));
+    setFieldData(udp_cksum, configForm->leUdpCksum->text().remove(QChar(' '))
+            .toUInt(&isOk, BASE_HEX));
     setFieldData(udp_isOverrideCksum, 
         configForm->cbUdpCksumOverride->isChecked());
 }
