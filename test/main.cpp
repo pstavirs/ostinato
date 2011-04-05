@@ -15,9 +15,9 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     QString error;
 
-    if (argc != 3)
+    if (argc != 2)
     {
-        printf("%s <infile> <outfile>\n", argv[0]);
+        printf("%s <infile>\n", argv[0]);
         exit(255);
     }
 
@@ -25,7 +25,6 @@ int main(int argc, char* argv[])
 
     OstProto::StreamConfigList streams;
     QString inFile(argv[1]);
-    QString outFile(argv[2]);
 
     OstProtocolManager = new ProtocolManager();
 
@@ -38,18 +37,8 @@ int main(int argc, char* argv[])
     isOk = pcapFileFormat.openStreams(inFile, streams, error);
     if (!error.isEmpty())
     {
-        fprintf(stdout, "failed reading streams from %s:%s\n", 
+        printf("%s: %s\n", 
                 inFile.toAscii().constData(), error.toAscii().constData());
-    }
-
-    if (!isOk)
-        exit(1);
-
-    isOk = pcapFileFormat.saveStreams(streams, outFile, error);
-    if (!error.isEmpty())
-    {
-        fprintf(stdout, "failed writing streams to %s:%s\n", 
-                outFile.toAscii().constData(), error.toAscii().constData());
     }
 
     if (!isOk)
