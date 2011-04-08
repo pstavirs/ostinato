@@ -385,7 +385,7 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                         qToBigEndian(rec.sources(j).v6_hi(),
                                 (uchar*)(rv.data()+20+16*j));
                         qToBigEndian(rec.sources(j).v6_lo(),
-                                (uchar*)(rv.data()+20+16*j));
+                                (uchar*)(rv.data()+20+16*j+8));
                     }
 
                     fv.append(rv);

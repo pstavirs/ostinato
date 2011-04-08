@@ -250,6 +250,7 @@ public:
 
 class PdmlIcmpProtocol : public PdmlDefaultProtocol
 {
+    friend class PdmlIcmp6Protocol;
 public:
     PdmlIcmpProtocol();
 
@@ -268,6 +269,50 @@ private:
 
     static const uint kIcmp6EchoRequest = 128;
     static const uint kIcmp6EchoReply   = 129;
+};
+
+class PdmlMldProtocol : public PdmlDefaultProtocol
+{
+    friend class PdmlIcmp6Protocol;
+public:
+    PdmlMldProtocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+private:
+    static const uint kMldQuery = 0x82;
+    static const uint kMldV1Query = 0x82;
+    static const uint kMldV2Query = 0xFF82;
+
+    uint protoSize_;
+};
+
+class PdmlIcmp6Protocol : public PdmlDefaultProtocol
+{
+public:
+    PdmlIcmp6Protocol();
+
+    static PdmlDefaultProtocol* createInstance();
+
+    virtual void preProtocolHandler(QString name, 
+            const QXmlStreamAttributes &attributes, int expectedPos, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto, 
+            OstProto::Stream *stream);
+
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
+private:
+    PdmlIcmpProtocol icmp_;
+    PdmlMldProtocol mld_;
+    PdmlDefaultProtocol *proto_;
 };
 
 class PdmlIgmpProtocol : public PdmlDefaultProtocol
@@ -292,7 +337,6 @@ private:
     static const uint kIgmpV3Query = 0xFE11;
 
     uint version_;
-
 };
 
 class PdmlTcpProtocol : public PdmlDefaultProtocol

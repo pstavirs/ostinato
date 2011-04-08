@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "igmp.pb.h"
 #include "ip4.pb.h"
 #include "ip6.pb.h"
+#include "mld.pb.h"
+#include "sample.pb.h"
 #include "snap.pb.h"
 #include "svlan.pb.h"
 #include "tcp.pb.h"
@@ -213,7 +215,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("eth", PdmlEthProtocol::createInstance);
     factory_.insert("http", PdmlTextProtocol::createInstance);
     factory_.insert("icmp", PdmlIcmpProtocol::createInstance);
-    factory_.insert("icmpv6", PdmlIcmpProtocol::createInstance);
+    factory_.insert("icmpv6", PdmlIcmp6Protocol::createInstance);
     factory_.insert("igmp", PdmlIgmpProtocol::createInstance);
     factory_.insert("ieee8021ad", PdmlSvlanProtocol::createInstance);
     factory_.insert("imap", PdmlTextProtocol::createInstance);
@@ -1047,7 +1049,37 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size,
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
-    if (name == "eth.type")
+    if (name == "eth.vlan.tpid")
+    {
+        bool isOk;
+
+        uint tpid = attributes.value("value").toString()
+            .toUInt(&isOk, kBaseHex);
+
+        OstProto::Protocol *proto = stream->add_protocol();
+
+        proto->mutable_protocol_id()->set_id(
+                OstProto::Protocol::kVlanFieldNumber);
+
+        OstProto::Vlan *vlan = proto->MutableExtension(OstProto::vlan);
+
+        vlan->set_tpid(tpid);
+        vlan->set_is_override_tpid(true);
+    }
+    else if (name == "eth.vlan.id")
+    {
+        bool isOk;
+
+        uint tag = attributes.value("unmaskedvalue").isEmpty() ?
+            attributes.value("value").toString().toUInt(&isOk, kBaseHex) :
+            attributes.value("unmaskedvalue").toString().toUInt(&isOk,kBaseHex);
+
+        OstProto::Vlan *vlan = stream->mutable_protocol(
+                stream->protocol_size()-1)->MutableExtension(OstProto::vlan);
+
+        vlan->set_vlan_tag(tag);
+    }
+    else if (name == "eth.type")
     {
         bool isOk;
 
@@ -1332,8 +1364,10 @@ PdmlIcmpProtocol::PdmlIcmpProtocol()
     fieldMap_.insert("icmpv6.type", OstProto::Icmp::kTypeFieldNumber);
     fieldMap_.insert("icmpv6.code", OstProto::Icmp::kCodeFieldNumber);
     fieldMap_.insert("icmpv6.checksum", OstProto::Icmp::kChecksumFieldNumber);
-    // ICMPv6 ident and seq need to be handled as 'unknown' since Wireshark
-    // doesn't define display filters for the same
+    fieldMap_.insert("icmpv6.echo.identifier", 
+            OstProto::Icmp::kIdentifierFieldNumber);
+    fieldMap_.insert("icmpv6.echo.sequence_number", 
+            OstProto::Icmp::kSequenceFieldNumber);
 }
 
 PdmlDefaultProtocol* PdmlIcmpProtocol::createInstance()
@@ -1370,6 +1404,7 @@ void PdmlIcmpProtocol::unknownFieldHandler(QString name, int pos, int size,
     {
         QString addrHexStr = attributes.value("value").toString();
 
+        // Wireshark 1.4.x does not have these as filterable fields
         if (attributes.value("show").toString().startsWith("ID"))
             icmp->set_identifier(addrHexStr.toUInt(&isOk, kBaseHex));
         else if (attributes.value("show").toString().startsWith("Sequence"))
@@ -1384,6 +1419,87 @@ void PdmlIcmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
     if (icmp->type() == kIcmpInvalidType)
         stream->mutable_protocol()->RemoveLast();
+}
+
+// ---------------------------------------------------------- //
+// PdmlIcmp6Protocol                                          //
+// ---------------------------------------------------------- //
+
+PdmlIcmp6Protocol::PdmlIcmp6Protocol()
+{
+    pdmlProtoName_ = "icmpv6";
+    ostProtoId_ = OstProto::Protocol::kSampleFieldNumber;
+
+    proto_ = NULL;
+}
+
+PdmlDefaultProtocol* PdmlIcmp6Protocol::createInstance()
+{
+    return new PdmlIcmp6Protocol();
+}
+
+void PdmlIcmp6Protocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, 
+        int expectedPos, OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    proto_ = NULL;
+    ostProtoId_ = OstProto::Protocol::kSampleFieldNumber;
+    icmp_.preProtocolHandler(name, attributes, expectedPos, pbProto, stream);
+    mld_.preProtocolHandler(name, attributes, expectedPos, pbProto, stream);
+}
+
+void PdmlIcmp6Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream *stream)
+{
+    if (proto_)
+        proto_->postProtocolHandler(pbProto, stream);
+    else
+        stream->mutable_protocol()->RemoveLast();
+
+    proto_ = NULL;
+    ostProtoId_ = OstProto::Protocol::kSampleFieldNumber;
+}
+
+void PdmlIcmp6Protocol::unknownFieldHandler(QString name, 
+        int pos, int size, const QXmlStreamAttributes &attributes, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    if (proto_)
+    {
+        proto_->unknownFieldHandler(name, pos, size, attributes, pbProto, 
+            stream);
+    }
+    else if (name == "icmpv6.type")
+    {
+        bool isOk;
+        uint type =  attributes.value("value").toString().toUInt(
+                &isOk, kBaseHex);
+
+        if (((type >= 130) && (type <= 132)) || (type == 143))
+        {
+            // MLD
+            proto_ = &mld_;
+            fieldMap_ = mld_.fieldMap_;
+            ostProtoId_ = OstProto::Protocol::kMldFieldNumber;
+        }
+        else
+        {
+            // ICMP
+            proto_ = &icmp_;
+            fieldMap_ = icmp_.fieldMap_;
+            ostProtoId_ = OstProto::Protocol::kIcmpFieldNumber;
+        }
+
+        pbProto->mutable_protocol_id()->set_id(ostProtoId_);
+        pbProto->MutableExtension(OstProto::sample)->Clear();
+
+        fieldHandler(name, attributes, pbProto, stream);
+    }
+    else
+    {
+        qDebug("unexpected field %s", name.toAscii().constData());
+    }
 }
 
 
@@ -1439,7 +1555,7 @@ void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size,
     {
         version_ = attributes.value("show").toString().toUInt(&isOk);
     }
-    if (name == "igmp.type")
+    else if (name == "igmp.type")
     {
         uint type =  valueHexStr.toUInt(&isOk, kBaseHex);
         if (type == kIgmpQuery)
@@ -1453,7 +1569,7 @@ void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size,
         }
         igmp->set_type(type);
     }
-    if (name == "igmp.record_type")
+    else if (name == "igmp.record_type")
     {
         OstProto::Gmp::GroupRecord *rec = igmp->add_group_records();
         rec->set_type(OstProto::Gmp::GroupRecord::RecordType(
@@ -1504,8 +1620,126 @@ void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size,
 void PdmlIgmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
         OstProto::Stream *stream)
 {
+    // version is 0 for IGMP like protocols such as RGMP which we don't
+    // support currently
     if (version_ == 0)
         stream->mutable_protocol()->RemoveLast();
+}
+
+
+// ---------------------------------------------------------- //
+// PdmlMldProtocol                                            //
+// ---------------------------------------------------------- //
+
+PdmlMldProtocol::PdmlMldProtocol()
+{
+    pdmlProtoName_ = "mld";
+    ostProtoId_ = OstProto::Protocol::kMldFieldNumber;
+
+    fieldMap_.insert("icmpv6.code", OstProto::Gmp::kRsvdCodeFieldNumber);
+    fieldMap_.insert("icmpv6.checksum", OstProto::Gmp::kChecksumFieldNumber);
+    fieldMap_.insert("icmpv6.mld.maximum_response_delay", 
+            OstProto::Gmp::kMaxResponseTimeFieldNumber); // FIXME
+
+    fieldMap_.insert("icmpv6.mld.flag.s", OstProto::Gmp::kSFlagFieldNumber);
+    fieldMap_.insert("icmpv6.mld.flag.qrv", OstProto::Gmp::kQrvFieldNumber);
+    fieldMap_.insert("icmpv6.mld.qqi", OstProto::Gmp::kQqiFieldNumber); // FIXME
+    fieldMap_.insert("icmpv6.mld.nb_sources", 
+            OstProto::Gmp::kSourceCountFieldNumber);
+
+    fieldMap_.insert("icmpv6.mldr.nb_mcast_records", 
+            OstProto::Gmp::kGroupRecordCountFieldNumber);
+}
+
+PdmlDefaultProtocol* PdmlMldProtocol::createInstance()
+{
+    return new PdmlMldProtocol();
+}
+
+void PdmlMldProtocol::preProtocolHandler(QString name, 
+        const QXmlStreamAttributes &attributes, int expectedPos, 
+        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+{
+    bool isOk;
+    OstProto::Gmp *mld = pbProto->MutableExtension(OstProto::mld);
+
+    mld->set_is_override_rsvd_code(true);
+    mld->set_is_override_checksum(true);
+    mld->set_is_override_source_count(true);
+    mld->set_is_override_group_record_count(true);
+
+    protoSize_ = attributes.value("size").toString().toUInt(&isOk);
+}
+
+void PdmlMldProtocol::unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
+            OstProto::Stream *stream)
+{
+    bool isOk;
+    OstProto::Gmp *mld = pbProto->MutableExtension(OstProto::mld);
+    QString valueHexStr = attributes.value("value").toString();
+
+    if (name == "icmpv6.type")
+    {
+        uint type =  valueHexStr.toUInt(&isOk, kBaseHex);
+
+        if ((type == kMldQuery) && (protoSize_ >= 28))
+            type = kMldV2Query;
+
+        mld->set_type(type);
+    }
+    else if (name == "icmpv6.mld.multicast_address")
+    {
+        mld->mutable_group_address()->set_v6_hi(
+                valueHexStr.left(16).toULongLong(&isOk, kBaseHex));
+        mld->mutable_group_address()->set_v6_lo(
+                valueHexStr.right(16).toULongLong(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mld.source_address")
+    {
+        OstProto::Gmp::IpAddress *ip = mld->add_sources();
+        ip->set_v6_hi(valueHexStr.left(16).toULongLong(&isOk, kBaseHex));
+        ip->set_v6_lo(valueHexStr.right(16).toULongLong(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mldr.mar.record_type")
+    {
+        OstProto::Gmp::GroupRecord *rec = mld->add_group_records();
+        rec->set_type(OstProto::Gmp::GroupRecord::RecordType(
+                    valueHexStr.toUInt(&isOk, kBaseHex)));
+        rec->set_is_override_source_count(true);
+        rec->set_is_override_aux_data_length(true);
+    }
+    else if (name == "icmpv6.mldr.mar.aux_data_len")
+    {
+        mld->mutable_group_records(mld->group_records_size() - 1)->
+            set_aux_data_length(valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mldr.mar.nb_sources")
+    {
+        mld->mutable_group_records(mld->group_records_size() - 1)->
+            set_source_count(valueHexStr.toUInt(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mldr.mar.multicast_address")
+    {
+        OstProto::Gmp::IpAddress *ip = mld->mutable_group_records(
+                mld->group_records_size() - 1)->mutable_group_address();
+        ip->set_v6_hi(valueHexStr.left(16).toULongLong(&isOk, kBaseHex));
+        ip->set_v6_lo(valueHexStr.right(16).toULongLong(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mldr.mar.source_address")
+    {
+        OstProto::Gmp::IpAddress *ip = mld->mutable_group_records(
+                mld->group_records_size() - 1)->add_sources();
+        ip->set_v6_hi(valueHexStr.left(16).toULongLong(&isOk, kBaseHex));
+        ip->set_v6_lo(valueHexStr.right(16).toULongLong(&isOk, kBaseHex));
+    }
+    else if (name == "icmpv6.mldr.mar.auxiliary_data")
+    {
+        QByteArray ba = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+        mld->mutable_group_records(mld->group_records_size() - 1)->
+            set_aux_data(ba.constData(), ba.size());
+    }
 }
 
 
