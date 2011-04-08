@@ -129,21 +129,21 @@ void AbstractPort::updatePacketList()
         if (streamList_[i]->isEnabled())
         {
             long numPackets, numBursts;
-            long ibg, ipg;
+            long ibg = 0, ipg = 0;
 
             switch (streamList_[i]->sendUnit())
             {
             case OstProto::StreamControl::e_su_bursts:
                 numBursts = streamList_[i]->numBursts();
                 numPackets = streamList_[i]->burstSize();
-                ibg = 1000000/streamList_[i]->burstRate();
-                ipg = 0;
+                if (streamList_[i]->burstRate() > 0)
+                    ibg = 1000000/streamList_[i]->burstRate();
                 break;
             case OstProto::StreamControl::e_su_packets:
                 numBursts = 1;
                 numPackets = streamList_[i]->numPackets();
-                ibg = 0;
-                ipg = 1000000/streamList_[i]->packetRate();
+                if (streamList_[i]->packetRate() > 0)
+                    ipg = 1000000/streamList_[i]->packetRate();
                 break;
             default:
                 qWarning("Unhandled stream control unit %d",
