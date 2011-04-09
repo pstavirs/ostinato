@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pdmlfileformat.h"
 
 #include "ostprotolib.h"
-#include "pdml_p.h"
+#include "pdmlreader.h"
 
 #include <QProcess>
 #include <QTemporaryFile>
