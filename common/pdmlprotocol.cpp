@@ -150,9 +150,9 @@ void PdmlProtocol::knownFieldHandler(QString name, QString valueHexStr,
     }
 }
 
-void PdmlProtocol::unknownFieldHandler(QString name, 
-        int pos, int size, const QXmlStreamAttributes &attributes, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlProtocol::unknownFieldHandler(QString /*name*/, 
+        int /*pos*/, int /*size*/, const QXmlStreamAttributes& /*attributes*/, 
+        OstProto::Protocol* /*pbProto*/, OstProto::Stream* /*stream*/)
 {
     return; // do nothing!
 }

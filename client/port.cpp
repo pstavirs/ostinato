@@ -238,7 +238,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     if (fmt == NULL)
         goto _fail;
 
-    if (optDialog = fmt->openOptionsDialog())
+    if ((optDialog = fmt->openOptionsDialog()))
     {
         int ret;
         optDialog->setParent(mainWindow, Qt::Dialog);

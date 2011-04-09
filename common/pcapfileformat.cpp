@@ -646,7 +646,7 @@ QDialog* PcapFileFormat::openOptionsDialog()
     return importDialog_;
 }
 
-bool PcapFileFormat::isMyFileFormat(const QString fileName)
+bool PcapFileFormat::isMyFileFormat(const QString /*fileName*/)
 {
     // TODO
     return true;
