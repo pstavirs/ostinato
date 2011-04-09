@@ -63,6 +63,8 @@ HEADERS += \
     fileformat.h \
     pcapfileformat.h \
     pdmlfileformat.h \
+    pdmlprotocol.h \
+    pdmlreader.h \
     pdml_p.h \
     protocolmanager.h \
     protocollist.h \
@@ -106,6 +108,8 @@ SOURCES += \
     fileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \
+    pdmlprotocol.cpp \
+    pdmlreader.cpp \
     pdml_p.cpp \
     protocolmanager.cpp \
     protocollist.cpp \
