@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "arp.pb.h"
 #include "eth2.pb.h"
 #include "dot3.pb.h"
+#include "gmp.pb.h"
 #include "hexdump.pb.h"
 #include "llc.pb.h"
 #include "mac.pb.h"
@@ -68,9 +69,9 @@ PdmlProtocol* PdmlUnknownProtocol::createInstance()
     return new PdmlUnknownProtocol();
 }
 
-void PdmlUnknownProtocol::preProtocolHandler(QString name, 
+void PdmlUnknownProtocol::preProtocolHandler(QString /*name*/, 
         const QXmlStreamAttributes &attributes, int expectedPos, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+        OstProto::Protocol* /*pbProto*/, OstProto::Stream *stream)
 {
     bool isOk;
     int size;
@@ -130,9 +131,9 @@ void PdmlUnknownProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
     endPos_ = expPos_ = -1;
 }
 
-void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     OstProto::HexDump *hexDump = pbProto->MutableExtension(OstProto::hexDump);
 
@@ -198,9 +199,9 @@ PdmlProtocol* PdmlFrameProtocol::createInstance()
     return new PdmlFrameProtocol();
 }
 
-void PdmlFrameProtocol::unknownFieldHandler(QString name, int pos, int size, 
-        const QXmlStreamAttributes &attributes, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlFrameProtocol::unknownFieldHandler(QString name, int /*pos*/,
+        int /*size*/, const QXmlStreamAttributes &attributes, 
+        OstProto::Protocol* /*pbProto*/, OstProto::Stream *stream)
 {
     if (name == "frame.len")
     {
@@ -252,8 +253,8 @@ PdmlProtocol* PdmlSvlanProtocol::createInstance()
     return new PdmlSvlanProtocol();
 }
 
-void PdmlSvlanProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, int expectedPos, 
+void PdmlSvlanProtocol::preProtocolHandler(QString /*name*/, 
+        const QXmlStreamAttributes& /*attributes*/, int /*expectedPos*/, 
         OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
     OstProto::Vlan *svlan = pbProto->MutableExtension(OstProto::svlan);
@@ -279,8 +280,8 @@ void PdmlSvlanProtocol::preProtocolHandler(QString name,
     }
 }
 
-void PdmlSvlanProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
+void PdmlSvlanProtocol::unknownFieldHandler(QString name, int /*pos*/,
+            int /*size*/, const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
     if ((name == "ieee8021ad.id") || (name == "ieee8021ad.svid"))
@@ -344,8 +345,8 @@ PdmlProtocol* PdmlVlanProtocol::createInstance()
     return new PdmlVlanProtocol();
 }
 
-void PdmlVlanProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, int expectedPos, 
+void PdmlVlanProtocol::preProtocolHandler(QString /*name*/, 
+        const QXmlStreamAttributes& /*attributes*/, int /*expectedPos*/, 
         OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
     OstProto::Vlan *vlan = pbProto->MutableExtension(OstProto::vlan);
@@ -371,8 +372,8 @@ void PdmlVlanProtocol::preProtocolHandler(QString name,
     }
 }
 
-void PdmlVlanProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
+void PdmlVlanProtocol::unknownFieldHandler(QString name, int /*pos*/,
+            int /*size*/, const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
     if (name == "vlan.id")
@@ -420,9 +421,9 @@ PdmlProtocol* PdmlEthProtocol::createInstance()
     return new PdmlEthProtocol();
 }
 
-void PdmlEthProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlEthProtocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol* /*pbProto*/, OstProto::Stream *stream)
 {
     if (name == "eth.vlan.tpid")
     {
@@ -523,9 +524,9 @@ PdmlProtocol* PdmlLlcProtocol::createInstance()
     return new PdmlLlcProtocol();
 }
 
-void PdmlLlcProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlLlcProtocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol* /*pbProto*/, OstProto::Stream *stream)
 {
     if (name == "llc.oui")
     {
@@ -554,7 +555,7 @@ void PdmlLlcProtocol::unknownFieldHandler(QString name, int pos, int size,
 }
 
 void PdmlLlcProtocol::postProtocolHandler(OstProto::Protocol *pbProto, 
-        OstProto::Stream *stream)
+        OstProto::Stream* /*stream*/)
 {
     OstProto::Llc *llc = pbProto->MutableExtension(OstProto::llc);
 
@@ -615,9 +616,9 @@ PdmlProtocol* PdmlIp4Protocol::createInstance()
     return new PdmlIp4Protocol();
 }
 
-void PdmlIp4Protocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlIp4Protocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
 
@@ -686,9 +687,9 @@ PdmlProtocol* PdmlIp6Protocol::createInstance()
     return new PdmlIp6Protocol();
 }
 
-void PdmlIp6Protocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+void PdmlIp6Protocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
 
@@ -711,7 +712,7 @@ void PdmlIp6Protocol::unknownFieldHandler(QString name, int pos, int size,
 }
 
 void PdmlIp6Protocol::postProtocolHandler(OstProto::Protocol *pbProto, 
-        OstProto::Stream *stream)
+        OstProto::Stream* /*stream*/)
 {
     OstProto::Ip6 *ip6 = pbProto->MutableExtension(OstProto::ip6);
 
@@ -751,8 +752,8 @@ PdmlProtocol* PdmlIcmpProtocol::createInstance()
 }
 
 void PdmlIcmpProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, int expectedPos, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+        const QXmlStreamAttributes& /*attributes*/, int /*expectedPos*/, 
+        OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
 
@@ -766,9 +767,9 @@ void PdmlIcmpProtocol::preProtocolHandler(QString name,
     icmp->set_type(kIcmpInvalidType);
 }
 
-void PdmlIcmpProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+void PdmlIcmpProtocol::unknownFieldHandler(QString /*name*/, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
     OstProto::Icmp *icmp = pbProto->MutableExtension(OstProto::icmp);
@@ -904,9 +905,9 @@ PdmlProtocol* PdmlIgmpProtocol::createInstance()
     return new PdmlIgmpProtocol();
 }
 
-void PdmlIgmpProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, int expectedPos, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlIgmpProtocol::preProtocolHandler(QString /*name*/, 
+        const QXmlStreamAttributes& /*attributes*/, int /*expectedPos*/, 
+        OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     OstProto::Gmp *igmp = pbProto->MutableExtension(OstProto::igmp);
 
@@ -918,9 +919,9 @@ void PdmlIgmpProtocol::preProtocolHandler(QString name,
     version_ = 0;
 }
 
-void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+void PdmlIgmpProtocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
     OstProto::Gmp *igmp = pbProto->MutableExtension(OstProto::igmp);
@@ -992,7 +993,7 @@ void PdmlIgmpProtocol::unknownFieldHandler(QString name, int pos, int size,
     }
 }
 
-void PdmlIgmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+void PdmlIgmpProtocol::postProtocolHandler(OstProto::Protocol* /*pbProto*/,
         OstProto::Stream *stream)
 {
     // version is 0 for IGMP like protocols such as RGMP which we don't
@@ -1031,9 +1032,9 @@ PdmlProtocol* PdmlMldProtocol::createInstance()
     return new PdmlMldProtocol();
 }
 
-void PdmlMldProtocol::preProtocolHandler(QString name, 
-        const QXmlStreamAttributes &attributes, int expectedPos, 
-        OstProto::Protocol *pbProto, OstProto::Stream *stream)
+void PdmlMldProtocol::preProtocolHandler(QString /*name*/, 
+        const QXmlStreamAttributes &attributes, int /*expectedPos*/, 
+        OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
     OstProto::Gmp *mld = pbProto->MutableExtension(OstProto::mld);
@@ -1046,9 +1047,9 @@ void PdmlMldProtocol::preProtocolHandler(QString name,
     protoSize_ = attributes.value("size").toString().toUInt(&isOk);
 }
 
-void PdmlMldProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+void PdmlMldProtocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     bool isOk;
     OstProto::Gmp *mld = pbProto->MutableExtension(OstProto::mld);
@@ -1143,9 +1144,9 @@ PdmlProtocol* PdmlTcpProtocol::createInstance()
     return new PdmlTcpProtocol();
 }
 
-void PdmlTcpProtocol::unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+void PdmlTcpProtocol::unknownFieldHandler(QString name, int /*pos*/, 
+            int /*size*/, const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
     if (name == "tcp.options")
         options_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
@@ -1235,7 +1236,7 @@ PdmlProtocol* PdmlUdpProtocol::createInstance()
 }
 
 void PdmlUdpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
-        OstProto::Stream *stream)
+        OstProto::Stream* /*stream*/)
 {
     OstProto::Udp *udp = pbProto->MutableExtension(OstProto::udp);
 
@@ -1263,7 +1264,7 @@ PdmlProtocol* PdmlTextProtocol::createInstance()
     return new PdmlTextProtocol();
 }
 
-void PdmlTextProtocol::preProtocolHandler(QString name, 
+void PdmlTextProtocol::preProtocolHandler(QString /*name*/, 
         const QXmlStreamAttributes &attributes, int expectedPos, 
         OstProto::Protocol *pbProto, OstProto::Stream *stream)
 {
@@ -1305,7 +1306,7 @@ _skip_pos_size_proc:
 
 void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream)
+            OstProto::Stream* /*stream*/)
 {
 _retry:
     switch(contentType_)

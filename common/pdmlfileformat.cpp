@@ -49,15 +49,26 @@ bool PdmlFileFormat::openStreams(const QString fileName,
     emit status("Reading PDML packets...");
     emit target(100); // in percentage
 
-    // TODO: fill in error string
+    isOk = reader->read(&file, NULL, &stop_); 
+    
+    if (stop_)
+        goto _user_cancel;
 
-    isOk = reader->read(&file); 
+    if (!isOk)
+    {
+        error.append(QString("Error processing PDML (%1, %2): %3\n")
+                .arg(reader->lineNumber())
+                .arg(reader->columnNumber())
+                .arg(reader->errorString()));
+        goto _exit;
+    }
 
     goto _exit;
 
 _open_fail:
     isOk = false;
 
+_user_cancel:
 _exit:
     delete reader;
 
