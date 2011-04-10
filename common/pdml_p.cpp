@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdml_p.h"
 
-#include "protocolmanager.h"
-
 #include "arp.pb.h"
 #include "eth2.pb.h"
 #include "dot3.pb.h"
@@ -41,16 +39,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "udp.pb.h"
 #include "vlan.pb.h"
 
-//#include <QMessageBox>
 #include <QRegExp>
-
 #include <string>
 
-extern ProtocolManager *OstProtocolManager;
-
 const int kBaseHex = 16;
-
-//static PdmlReader *gPdmlReader = NULL;
 
 // ---------------------------------------------------------- //
 // PdmlUnknownProtocol                                        //
@@ -58,7 +50,6 @@ const int kBaseHex = 16;
 
 PdmlUnknownProtocol::PdmlUnknownProtocol()
 {
-    pdmlProtoName_ = "";
     ostProtoId_ = OstProto::Protocol::kHexDumpFieldNumber;
 
     endPos_ = expPos_ = -1;
@@ -168,7 +159,6 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos,
 
 PdmlGenInfoProtocol::PdmlGenInfoProtocol()
 {
-    pdmlProtoName_ = "geninfo";
 }
 
 PdmlProtocol* PdmlGenInfoProtocol::createInstance()
@@ -176,22 +166,12 @@ PdmlProtocol* PdmlGenInfoProtocol::createInstance()
     return new PdmlGenInfoProtocol();
 }
 
-#if 0 // done in frame proto
-void PdmlGenInfoProtocol::unknownFieldHandler(QString name, int pos, 
-        int size, const QXmlStreamAttributes &attributes, OstProto::Stream *stream)
-{
-    if (name == "len")
-        stream->mutable_core()->set_frame_len(size+4); // TODO:check FCS
-}
-#endif
-
 // ---------------------------------------------------------- //
 // PdmlFrameProtocol                                          //
 // ---------------------------------------------------------- //
 
 PdmlFrameProtocol::PdmlFrameProtocol()
 {
-    pdmlProtoName_ = "frame";
 }
 
 PdmlProtocol* PdmlFrameProtocol::createInstance()
@@ -244,7 +224,6 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int /*pos*/,
 
 PdmlSvlanProtocol::PdmlSvlanProtocol()
 {
-    pdmlProtoName_ = "ieee8021ad";
     ostProtoId_ = OstProto::Protocol::kSvlanFieldNumber;
 }
 
@@ -336,7 +315,6 @@ void PdmlSvlanProtocol::unknownFieldHandler(QString name, int /*pos*/,
 
 PdmlVlanProtocol::PdmlVlanProtocol()
 {
-    pdmlProtoName_ = "vlan";
     ostProtoId_ = OstProto::Protocol::kVlanFieldNumber;
 }
 
@@ -409,7 +387,6 @@ void PdmlVlanProtocol::unknownFieldHandler(QString name, int /*pos*/,
 
 PdmlEthProtocol::PdmlEthProtocol()
 {
-    pdmlProtoName_ = "eth";
     ostProtoId_ = OstProto::Protocol::kMacFieldNumber;
 
     fieldMap_.insert("eth.dst", OstProto::Mac::kDstMacFieldNumber);
@@ -511,7 +488,6 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int /*pos*/,
 
 PdmlLlcProtocol::PdmlLlcProtocol()
 {
-    pdmlProtoName_ = "llc";
     ostProtoId_ = OstProto::Protocol::kLlcFieldNumber;
 
     fieldMap_.insert("llc.dsap", OstProto::Llc::kDsapFieldNumber);
@@ -571,7 +547,6 @@ void PdmlLlcProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlArpProtocol::PdmlArpProtocol()
 {
-    pdmlProtoName_ = "arp";
     ostProtoId_ = OstProto::Protocol::kArpFieldNumber;
 
     fieldMap_.insert("arp.opcode", OstProto::Arp::kOpCodeFieldNumber);
@@ -595,7 +570,6 @@ PdmlProtocol* PdmlArpProtocol::createInstance()
 
 PdmlIp4Protocol::PdmlIp4Protocol()
 {
-    pdmlProtoName_ = "ip";
     ostProtoId_ = OstProto::Protocol::kIp4FieldNumber;
 
     fieldMap_.insert("ip.version", OstProto::Ip4::kVerHdrlenFieldNumber);
@@ -669,7 +643,6 @@ void PdmlIp4Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlIp6Protocol::PdmlIp6Protocol()
 {
-    pdmlProtoName_ = "ipv6";
     ostProtoId_ = OstProto::Protocol::kIp6FieldNumber;
 
     fieldMap_.insert("ipv6.version", OstProto::Ip6::kVersionFieldNumber);
@@ -728,7 +701,6 @@ void PdmlIp6Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlIcmpProtocol::PdmlIcmpProtocol()
 {
-    pdmlProtoName_ = "icmp";
     ostProtoId_ = OstProto::Protocol::kIcmpFieldNumber;
 
     fieldMap_.insert("icmp.type", OstProto::Icmp::kTypeFieldNumber);
@@ -803,7 +775,6 @@ void PdmlIcmpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlIcmp6Protocol::PdmlIcmp6Protocol()
 {
-    pdmlProtoName_ = "icmpv6";
     ostProtoId_ = OstProto::Protocol::kSampleFieldNumber;
 
     proto_ = NULL;
@@ -885,7 +856,6 @@ void PdmlIcmp6Protocol::unknownFieldHandler(QString name,
 
 PdmlIgmpProtocol::PdmlIgmpProtocol()
 {
-    pdmlProtoName_ = "igmp";
     ostProtoId_ = OstProto::Protocol::kIgmpFieldNumber;
 
     fieldMap_.insert("igmp.max_resp", 
@@ -1009,7 +979,6 @@ void PdmlIgmpProtocol::postProtocolHandler(OstProto::Protocol* /*pbProto*/,
 
 PdmlMldProtocol::PdmlMldProtocol()
 {
-    pdmlProtoName_ = "mld";
     ostProtoId_ = OstProto::Protocol::kMldFieldNumber;
 
     fieldMap_.insert("icmpv6.code", OstProto::Gmp::kRsvdCodeFieldNumber);
@@ -1125,7 +1094,6 @@ void PdmlMldProtocol::unknownFieldHandler(QString name, int /*pos*/,
 
 PdmlTcpProtocol::PdmlTcpProtocol()
 {
-    pdmlProtoName_ = "tcp";
     ostProtoId_ = OstProto::Protocol::kTcpFieldNumber;
 
     fieldMap_.insert("tcp.srcport", OstProto::Tcp::kSrcPortFieldNumber);
@@ -1219,7 +1187,6 @@ void PdmlTcpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlUdpProtocol::PdmlUdpProtocol()
 {
-    pdmlProtoName_ = "udp"; // OR udplite
     ostProtoId_ = OstProto::Protocol::kUdpFieldNumber;
 
     fieldMap_.insert("udp.srcport", OstProto::Udp::kSrcPortFieldNumber);
@@ -1255,7 +1222,6 @@ void PdmlUdpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
 PdmlTextProtocol::PdmlTextProtocol()
 {
-    pdmlProtoName_ = "text";
     ostProtoId_ = OstProto::Protocol::kTextProtocolFieldNumber;
 }
 
