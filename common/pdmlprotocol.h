@@ -27,17 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QString>
 #include <QXmlStreamAttributes>
 
-// TODO: add const where possible
-
 class PdmlProtocol
 {
 public:
-    PdmlProtocol(); // TODO: make private
     virtual ~PdmlProtocol();
 
     static PdmlProtocol* createInstance();
 
-    QString pdmlProtoName() const;
     int ostProtoId() const;
     bool hasField(QString name) const;
     int fieldId(QString name) const;
@@ -59,7 +55,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
 
 protected:
-    QString pdmlProtoName_; // TODO: needed? duplicated in protocolMap_
+    PdmlProtocol();
+
     int ostProtoId_;
     QMap<QString, int> fieldMap_;
 };

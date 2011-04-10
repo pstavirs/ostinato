@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class PdmlUnknownProtocol : public PdmlProtocol
 {
 public:
-    PdmlUnknownProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -39,6 +37,9 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+protected:
+    PdmlUnknownProtocol();
+
 private:
     int endPos_;
     int expPos_;
@@ -47,40 +48,42 @@ private:
 class PdmlGenInfoProtocol : public PdmlProtocol
 {
 public:
+    static PdmlProtocol* createInstance();
+
+protected:
     PdmlGenInfoProtocol();
 
-    static PdmlProtocol* createInstance();
 };
 
 class PdmlFrameProtocol : public PdmlProtocol
 {
 public:
-    PdmlFrameProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+
+protected:
+    PdmlFrameProtocol();
 };
 
 class PdmlEthProtocol : public PdmlProtocol
 {
 public:
-    PdmlEthProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+
+protected:
+    PdmlEthProtocol();
 };
 
 class PdmlSvlanProtocol : public PdmlProtocol
 {
 public:
-    PdmlSvlanProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -89,13 +92,13 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+protected:
+    PdmlSvlanProtocol();
 };
 
 class PdmlVlanProtocol : public PdmlProtocol
 {
 public:
-    PdmlVlanProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -104,13 +107,13 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+protected:
+    PdmlVlanProtocol();
 };
 
 class PdmlLlcProtocol : public PdmlProtocol
 {
 public:
-    PdmlLlcProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -118,21 +121,22 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlLlcProtocol();
 };
 
 class PdmlArpProtocol : public PdmlProtocol
 {
 public:
-    PdmlArpProtocol();
-
     static PdmlProtocol* createInstance();
+
+protected:
+    PdmlArpProtocol();
 };
 
 class PdmlIp4Protocol : public PdmlProtocol
 {
 public:
-    PdmlIp4Protocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -140,6 +144,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlIp4Protocol();
 private:
     QByteArray options_;
 };
@@ -147,8 +153,6 @@ private:
 class PdmlIp6Protocol : public PdmlProtocol
 {
 public:
-    PdmlIp6Protocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -156,14 +160,14 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlIp6Protocol();
 };
 
 class PdmlIcmpProtocol : public PdmlProtocol
 {
     friend class PdmlIcmp6Protocol;
 public:
-    PdmlIcmpProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -174,6 +178,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlIcmpProtocol();
 private:
     static const uint kIcmpInvalidType   = 0xFFFFFFFF;
 
@@ -185,8 +191,6 @@ class PdmlMldProtocol : public PdmlProtocol
 {
     friend class PdmlIcmp6Protocol;
 public:
-    PdmlMldProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -195,6 +199,8 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+protected:
+    PdmlMldProtocol();
 private:
     static const uint kMldQuery = 0x82;
     static const uint kMldV1Query = 0x82;
@@ -206,8 +212,6 @@ private:
 class PdmlIcmp6Protocol : public PdmlProtocol
 {
 public:
-    PdmlIcmp6Protocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -219,6 +223,8 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+protected:
+    PdmlIcmp6Protocol();
 private:
     PdmlIcmpProtocol icmp_;
     PdmlMldProtocol mld_;
@@ -228,8 +234,6 @@ private:
 class PdmlIgmpProtocol : public PdmlProtocol
 {
 public:
-    PdmlIgmpProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -240,6 +244,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlIgmpProtocol();
 private:
     static const uint kIgmpQuery = 0x11;
     static const uint kIgmpV1Query = 0x11;
@@ -252,8 +258,6 @@ private:
 class PdmlTcpProtocol : public PdmlProtocol
 {
 public:
-    PdmlTcpProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void unknownFieldHandler(QString name, int pos, int size, 
@@ -261,6 +265,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlTcpProtocol();
 private:
     QByteArray options_;
     QByteArray segmentData_;
@@ -269,18 +275,16 @@ private:
 class PdmlUdpProtocol : public PdmlProtocol
 {
 public:
-    PdmlUdpProtocol();
-
     static PdmlProtocol* createInstance();
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlUdpProtocol();
 };
 
 class PdmlTextProtocol : public PdmlProtocol
 {
 public:
-    PdmlTextProtocol();
-
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
@@ -291,6 +295,8 @@ public:
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
+protected:
+    PdmlTextProtocol();
 private:
     enum ContentType {
         kUnknownContent,

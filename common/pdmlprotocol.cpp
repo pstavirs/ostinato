@@ -35,11 +35,6 @@ PdmlProtocol* PdmlProtocol::createInstance()
     return new PdmlProtocol();
 }
 
-QString PdmlProtocol::pdmlProtoName() const
-{
-    return pdmlProtoName_;
-}
-
 int PdmlProtocol::ostProtoId() const
 {
     return ostProtoId_;
