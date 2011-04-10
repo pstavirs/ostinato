@@ -65,6 +65,7 @@ private:
     PcapFileFormat *pcap_;
     QByteArray pktBuf_;
 
+    bool isMldSupport_;
     int packetCount_;
     int expPos_;
     bool skipUntilEnd_;
