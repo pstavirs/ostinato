@@ -103,6 +103,13 @@ PdmlProtocol* PdmlReader::allocPdmlProtocol(QString protoName)
     if (!factory_.contains(protoName))
         protoName = "hexdump";
 
+    // If MLD is not supported by the creator of the PDML, we interpret
+    // ICMPv6 as ICMP since our implementation of the ICMPv6 PDML protocol
+    // exists just to distinguish between MLD and ICMP. Non MLD ICMPv6 is 
+    // also handled by ICMP only
+    if (!isMldSupport_ && (protoName == "icmpv6"))
+        protoName = "icmp";
+
     return (*(factory_.value(protoName)))();
 }
 
@@ -143,7 +150,27 @@ void PdmlReader::skipElement()
 
 void PdmlReader::readPdml()
 {
+    QStringList creator;
+
     Q_ASSERT(isStartElement() && name() == "pdml");
+
+    isMldSupport_ = true;
+    creator = attributes().value("creator").toString().split('/');
+    if ((creator.size() >= 2) && (creator.at(0) == "wireshark"))
+    {
+        QList<uint> minMldVer;  
+        minMldVer << 1 << 5 << 0;
+        QStringList version = creator.at(1).split('.');
+        
+        for (int i = 0; i < qMin(version.size(), minMldVer.size()); i++)
+        {
+            if (version.at(i).toUInt() < minMldVer.at(i))
+            {
+                isMldSupport_ = false;
+                break;
+            }
+        }
+    }
 
     packetCount_ = 1;
 
