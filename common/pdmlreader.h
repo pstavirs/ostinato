@@ -29,7 +29,6 @@ class PcapFileFormat;
 class PdmlReader : public QObject, public QXmlStreamReader
 {
     Q_OBJECT
-    //friend class PdmlUnknownProtocol;
 public:
     PdmlReader(OstProto::StreamConfigList *streams);
     ~PdmlReader();

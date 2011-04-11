@@ -324,7 +324,7 @@ void PcapPort::PortTransmitter::run()
     // 'stats callback' function so that both Rx and Tx stats are updated
     // together
 
-    const int kSyncTransmit = 0; // temp mask, shd be 1;
+    const int kSyncTransmit = 1;
     int i;
 
     qDebug("sendQueueList_.size = %d", sendQueueList_.size());
