@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PDML_P_H
-#define _PDML_P_H
+#ifndef _PDML_PROTOCOLS_H
+#define _PDML_PROTOCOLS_H
 
 #include "pdmlprotocol.h"
 
