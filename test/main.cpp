@@ -20,7 +20,7 @@ QString kDiffPathDefaultValue;
 QString kAwkPathDefaultValue;
 #endif
 
-int usage(int argc, char* argv[])
+int usage(int /*argc*/, char* argv[])
 {
     printf("usage:\n");
     printf("%s <command>\n", argv[0]);
