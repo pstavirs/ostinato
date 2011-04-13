@@ -1116,7 +1116,7 @@ PdmlProtocol* PdmlTcpProtocol::createInstance()
 
 void PdmlTcpProtocol::unknownFieldHandler(QString name, int /*pos*/, 
             int /*size*/, const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream)
+            OstProto::Protocol *pbProto, OstProto::Stream* /*stream*/)
 {
     if (name == "tcp.options")
         options_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
