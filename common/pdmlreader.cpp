@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcapfileformat.h"
 #include "streambase.h"
 
-#include "pdml_p.h" // TODO: Remove
+#include "pdmlprotocols.h"
 
 PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 {

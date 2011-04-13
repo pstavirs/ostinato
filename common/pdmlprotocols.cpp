@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "pdml_p.h"
+#include "pdmlprotocols.h"
 
 #include "arp.pb.h"
 #include "eth2.pb.h"
@@ -462,6 +462,7 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int /*pos*/,
         dot3->set_length(attributes.value("value").toString().toUInt(&isOk, kBaseHex));
         dot3->set_is_override_length(true);
     }
+#if 0
     else if (name == "eth.trailer")
     {
         QByteArray trailer = QByteArray::fromHex(
@@ -479,6 +480,7 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int /*pos*/,
         stream->mutable_core()->mutable_name()->append(trailer.constData(),
                 trailer.size());
     }
+#endif
 }
 
 
@@ -615,11 +617,11 @@ void PdmlIp4Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
 {
     OstProto::Ip4 *ip4 = pbProto->MutableExtension(OstProto::ip4);
 
-    ip4->set_is_override_ver(true); // FIXME
-    ip4->set_is_override_hdrlen(true); // FIXME
-    ip4->set_is_override_totlen(true); // FIXME
-    ip4->set_is_override_proto(true); // FIXME
-    ip4->set_is_override_cksum(true); // FIXME
+    ip4->set_is_override_ver(true);
+    ip4->set_is_override_hdrlen(true);
+    ip4->set_is_override_totlen(true);
+    ip4->set_is_override_proto(true);
+    ip4->set_is_override_cksum(true);
 
     if (options_.size())
     {
@@ -689,9 +691,9 @@ void PdmlIp6Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
 {
     OstProto::Ip6 *ip6 = pbProto->MutableExtension(OstProto::ip6);
 
-    ip6->set_is_override_version(true); // FIXME
-    ip6->set_is_override_payload_length(true); // FIXME
-    ip6->set_is_override_next_header(true); // FIXME
+    ip6->set_is_override_version(true);
+    ip6->set_is_override_payload_length(true);
+    ip6->set_is_override_next_header(true);
 }
 
 
@@ -1120,19 +1122,21 @@ void PdmlTcpProtocol::unknownFieldHandler(QString name, int /*pos*/,
         options_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
     else if (name == "")
     {
-        if (attributes.value("show").toString().startsWith("TCP segment data"))
-        {
-            segmentData_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
-            stream->mutable_core()->mutable_name()->insert(0, 
-                    segmentData_.constData(), segmentData_.size());
-        }
-        else if (attributes.value("show").toString().startsWith("Acknowledgement number"))
+        if (attributes.value("show").toString().startsWith("Acknowledgement number"))
         {
             bool isOk;
             OstProto::Tcp *tcp = pbProto->MutableExtension(OstProto::tcp);
 
             tcp->set_ack_num(attributes.value("value").toString().toUInt(&isOk, kBaseHex)); 
         }
+#if 0
+        else if (attributes.value("show").toString().startsWith("TCP segment data"))
+        {
+            segmentData_ = QByteArray::fromHex(attributes.value("value").toString().toUtf8());
+            stream->mutable_core()->mutable_name()->insert(0, 
+                    segmentData_.constData(), segmentData_.size());
+        }
+#endif
     }
 }
 
@@ -1143,10 +1147,10 @@ void PdmlTcpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
 
     qDebug("Tcp: post\n");
 
-    tcp->set_is_override_src_port(true); // FIXME
-    tcp->set_is_override_dst_port(true); // FIXME
-    tcp->set_is_override_hdrlen(true); // FIXME
-    tcp->set_is_override_cksum(true); // FIXME
+    tcp->set_is_override_src_port(true);
+    tcp->set_is_override_dst_port(true);
+    tcp->set_is_override_hdrlen(true);
+    tcp->set_is_override_cksum(true);
 
     if (options_.size())
     {
@@ -1162,23 +1166,6 @@ void PdmlTcpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
         hexDump->set_pad_until_end(false);
         options_.resize(0);
     }
-
-#if 0
-    if (segmentData_.size())
-    {
-        OstProto::Protocol *proto = stream->add_protocol();
-
-        proto->mutable_protocol_id()->set_id(
-                OstProto::Protocol::kHexDumpFieldNumber);
-
-        OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
-
-        hexDump->mutable_content()->append(segmentData_.constData(), 
-                segmentData_.size());
-        hexDump->set_pad_until_end(false);
-        segmentData_.resize(0);
-    }
-#endif
 }
 
 // ---------------------------------------------------------- //
