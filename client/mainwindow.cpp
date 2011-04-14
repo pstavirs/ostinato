@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatswindow.h"
 #include "portswindow.h"
 #include "preferences.h"
+#include "settings.h"
 #include "ui_about.h"
 
 #include <QDockWidget>
@@ -62,7 +63,13 @@ MainWindow::MainWindow(QWidget *parent)
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
     portsDock = new QDockWidget(tr("Ports and Streams"), this);
+    portsDock->setObjectName("portsDock");
+    portsDock->setFeatures(
+                portsDock->features() & ~QDockWidget::DockWidgetClosable);
     statsDock = new QDockWidget(tr("Statistics"), this);
+    statsDock->setObjectName("statsDock");
+    statsDock->setFeatures(
+                statsDock->features() & ~QDockWidget::DockWidgetClosable);
 
     setupUi(this);
 
@@ -72,6 +79,14 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
+
+    QRect geom = appSettings->value(kApplicationWindowGeometryKey).toRect();
+    if (!geom.isNull())
+        setGeometry(geom);
+    QByteArray layout = appSettings->value(kApplicationWindowLayout)
+                            .toByteArray();
+    if (layout.size())
+        restoreState(layout, 0);
 
     connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -89,6 +104,10 @@ MainWindow::~MainWindow()
     localServer_->terminate();
     localServer_->waitForFinished();
     delete localServer_;
+
+    QByteArray layout = saveState(0);
+    appSettings->setValue(kApplicationWindowLayout, layout);
+    appSettings->setValue(kApplicationWindowGeometryKey, geometry());
 }
 
 void MainWindow::on_actionPreferences_triggered()
