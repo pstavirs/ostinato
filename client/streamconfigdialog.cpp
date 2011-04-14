@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2011 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -161,7 +161,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     pbPrev->setDisabled(true);
     pbNext->setDisabled(true);
     //! \todo Support Goto Stream Id
-    leStreamId->setDisabled(true);
+    leStreamId->setHidden(true);
     disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
     //! \todo Support Continuous Mode
     rbModeContinuous->setDisabled(true);
