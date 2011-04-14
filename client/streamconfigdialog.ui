@@ -896,7 +896,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
           <item>
            <widget class="QRadioButton" name="rbActionGotoStream" >
             <property name="text" >
-             <string>Goto Stream</string>
+             <string>Goto First</string>
             </property>
            </widget>
           </item>
