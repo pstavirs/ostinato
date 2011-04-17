@@ -1,0 +1,188 @@
+<ui version="4.0" >
+ <class>mac</class>
+ <widget class="QWidget" name="mac" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>391</width>
+    <height>116</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="1" >
+    <widget class="QLabel" name="label_6" >
+     <property name="text" >
+      <string>Address</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" >
+    <widget class="QLabel" name="label_2" >
+     <property name="text" >
+      <string>Mode</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" >
+    <widget class="QLabel" name="label_4" >
+     <property name="text" >
+      <string>Count</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4" >
+    <widget class="QLabel" name="label_5" >
+     <property name="text" >
+      <string>Step</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>Destination</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QLineEdit" name="leDstMac" >
+     <property name="minimumSize" >
+      <size>
+       <width>120</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="inputMask" >
+      <string>>HH HH HH HH HH HH; </string>
+     </property>
+     <property name="text" >
+      <string>     </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" >
+    <widget class="QComboBox" name="cmbDstMacMode" >
+     <item>
+      <property name="text" >
+       <string>Fixed</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>Increment</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>Decrement</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="3" >
+    <widget class="QLineEdit" name="leDstMacCount" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+     <property name="cursorPosition" >
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4" >
+    <widget class="QLineEdit" name="leDstMacStep" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+     <property name="cursorPosition" >
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" >
+    <widget class="QLabel" name="label_3" >
+     <property name="text" >
+      <string>Source</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QLineEdit" name="leSrcMac" >
+     <property name="inputMask" >
+      <string>>HH HH HH HH HH HH; </string>
+     </property>
+     <property name="text" >
+      <string>     </string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" >
+    <widget class="QComboBox" name="cmbSrcMacMode" >
+     <item>
+      <property name="text" >
+       <string>Fixed</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>Increment</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>Decrement</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="3" >
+    <widget class="QLineEdit" name="leSrcMacCount" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4" >
+    <widget class="QLineEdit" name="leSrcMacStep" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+     <property name="cursorPosition" >
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>icons/portgroup.png</file>
+    </qresource>
+</RCC>
