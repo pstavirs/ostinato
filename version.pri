@@ -1,4 +1,4 @@
-APP_VERSION = 0.4
+APP_VERSION = 0.4.1
 APP_REVISION = $(shell hg identify -i)
 #uncomment the below line in a source package and fill-in the correct revision
 #APP_REVISION = <rev-hash>@
