@@ -521,8 +521,9 @@ void PortsWindow::on_actionSave_Streams_triggered()
     QFileDialog::Options options;
 
     // On Mac OS with Native Dialog, getSaveFileName() ignores fileType 
-    // which we need.
-#ifdef Q_OS_MAC
+    // which we need.On some Linux distros the native dialog can't 
+    // distinguish between Ostinato(*) and PCAP(*)
+#if defined(Q_OS_MAC) || defined(Q_OS_UNIX)
     options |= QFileDialog::DontUseNativeDialog;
 #endif
 
