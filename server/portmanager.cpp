@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QtGlobal>
 #include <pcap.h>
 
+#include "linuxport.h"
 #include "pcapport.h"
 #include "winpcapport.h"
 
@@ -47,8 +48,10 @@ PortManager::PortManager()
         if (device->description)
             qDebug(" (%s)\n", device->description);
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
         port = new WinPcapPort(i, device->name);
+#elif defined(Q_OS_LINUX)
+        port = new LinuxPort(i, device->name);
 #else
         port = new PcapPort(i, device->name);
 #endif
@@ -62,11 +65,13 @@ PortManager::PortManager()
             continue;
         }
 
-        port->init();
         portList_.append(port);
     }
 
     pcap_freealldevs(deviceList);
+
+    foreach(AbstractPort *port, portList_)
+        port->init();
     
     return;
 }

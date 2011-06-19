@@ -52,6 +52,7 @@ public:
     virtual void init();
 
     int id() { return data_.port_id().id(); }
+    const char* name() { return data_.name().c_str(); }
     void protoDataCopyInto(OstProto::Port *port) { port->CopyFrom(data_); }
 
     bool modify(const OstProto::Port &port);

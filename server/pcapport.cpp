@@ -27,6 +27,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 pcap_if_t *PcapPort::deviceList_ = NULL;
 
+
+#if defined(Q_OS_LINUX)
+typedef struct timeval TimeStamp;
+static void inline getTimeStamp(TimeStamp *stamp)
+{
+    gettimeofday(stamp, NULL);
+}
+
+// Returns time diff in usecs between end and start
+static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end)
+{
+    struct timeval diff;
+    long usecs;
+
+    timersub(end, start, &diff);
+
+    usecs = diff.tv_usec;
+    if (diff.tv_sec)
+        usecs += diff.tv_sec*1e6;
+
+    return usecs;
+}
+#else
+typedef int TimeStamp;
+static void inline getTimeStamp(TimeStamp*) {}
+static long inline udiffTimeStamp(const TimeStamp*, const TimeStamp*) { return 0; }
+#endif
+
 PcapPort::PcapPort(int id, const char *device)
     : AbstractPort(id, device)
 {
@@ -169,6 +197,11 @@ _open_error:
     qDebug("%s: Error opening port %s: %s\n", __FUNCTION__, device, errbuf);
 } 
 
+PcapPort::PortMonitor::~PortMonitor()
+{
+    pcap_close(handle_);
+}
+
 void PcapPort::PortMonitor::run()
 {
     while (1)
@@ -279,8 +312,15 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec,
     sendQ = sendQueueList_.isEmpty() ? NULL : sendQueueList_.last();
  
     if ((sendQ == NULL) || 
-            (sendQ->len + sizeof(pcap_pkthdr) + length) > sendQ->maxlen)
+            (sendQ->len + 2*sizeof(pcap_pkthdr) + length) > sendQ->maxlen)
     {
+    // Add a zero len packet at end of sendQ for inter-sendQ timing
+    if (sendQ)
+    {
+        pcap_pkthdr hdr = pktHdr;
+        hdr.caplen = 0;
+        pcap_sendqueue_queue(sendQ, &hdr, (u_char*)packet);
+    }
         //! \todo (LOW): calculate sendqueue size
         sendQ = pcap_sendqueue_alloc(1*1024*1024);
         sendQueueList_.append(sendQ);
@@ -352,7 +392,8 @@ _restart:
     {
         i = returnToQIdx_;
 
-        udelay(loopDelay_);
+        if (loopDelay_)
+            udelay(loopDelay_);
         goto _restart;
     }
 }
@@ -366,20 +407,32 @@ void PcapPort::PortTransmitter::stop()
 int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
         pcap_send_queue *queue, int sync)
 {
+    TimeStamp ovrStart, ovrEnd;
     struct timeval ts;
     struct pcap_pkthdr *hdr = (struct pcap_pkthdr*) queue->buffer;
     char *end = queue->buffer + queue->len;
 
     ts = hdr->ts;
 
-    while (1)
+    getTimeStamp(&ovrStart);
+    while((char*) hdr < end)
     {
         uchar *pkt = (uchar*)hdr + sizeof(*hdr);
         int pktLen = hdr->caplen;
 
-        if (stop_)
+        if (sync)
         {
-            return -2;
+            long usec = (hdr->ts.tv_sec - ts.tv_sec) * 1000000 +
+                (hdr->ts.tv_usec - ts.tv_usec);
+
+            getTimeStamp(&ovrEnd);
+
+            usec -= udiffTimeStamp(&ovrStart, &ovrEnd);
+            if (usec > 0)
+                udelay(usec);
+
+            ts = hdr->ts;
+            getTimeStamp(&ovrStart);
         }
 
         // A pktLen of size 0 is used at the end of a sendQueue and before
@@ -392,30 +445,21 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
         }
 
         // Step to the next packet in the buffer
-        hdr = (struct pcap_pkthdr*) ((uchar*)hdr + sizeof(*hdr) + pktLen);
+        hdr = (struct pcap_pkthdr*) (pkt + pktLen);
         pkt = (uchar*) ((uchar*)hdr + sizeof(*hdr));
 
-        // Check if the end of the user buffer has been reached
-        if((char*) hdr >= end)
-            return 0;
-
-        if (sync)
+        if (stop_)
         {
-            long usec = (hdr->ts.tv_sec - ts.tv_sec) * 1000000 +
-                (hdr->ts.tv_usec - ts.tv_usec);
-
-            if (usec)
-            {
-                udelay(usec);
-                ts = hdr->ts;
-            }
+            return -2;
         }
     }
+
+    return 0;
 }
 
 void PcapPort::PortTransmitter::udelay(long usec)
 {
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
     LARGE_INTEGER tgtTicks;
     LARGE_INTEGER curTicks;
 
@@ -424,6 +468,18 @@ void PcapPort::PortTransmitter::udelay(long usec)
 
     while (curTicks.QuadPart < tgtTicks.QuadPart)
         QueryPerformanceCounter(&curTicks);
+#elif defined(Q_OS_LINUX)
+    struct timeval delay, target, now;
+
+    delay.tv_sec = 0;
+    delay.tv_usec = usec;
+
+    gettimeofday(&now, NULL);
+    timeradd(&now, &delay, &target);
+
+    do {
+        gettimeofday(&now, NULL);
+    } while (timercmp(&now, &target, <));
 #else
     QThread::usleep(usec);
 #endif 
