@@ -74,6 +74,7 @@ protected:
     public:
         PortMonitor(const char *device, Direction direction,
                 AbstractPort::PortStats *stats);
+    ~PortMonitor();
         void run();
         pcap_t* handle() { return handle_; }
         Direction direction() { return direction_; }
