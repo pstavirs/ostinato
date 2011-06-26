@@ -314,13 +314,13 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec,
     if ((sendQ == NULL) || 
             (sendQ->len + 2*sizeof(pcap_pkthdr) + length) > sendQ->maxlen)
     {
-    // Add a zero len packet at end of sendQ for inter-sendQ timing
-    if (sendQ)
-    {
-        pcap_pkthdr hdr = pktHdr;
-        hdr.caplen = 0;
-        pcap_sendqueue_queue(sendQ, &hdr, (u_char*)packet);
-    }
+        // Add a zero len packet at end of sendQ for inter-sendQ timing
+        if (sendQ)
+        {
+            pcap_pkthdr hdr = pktHdr;
+            hdr.caplen = 0;
+            pcap_sendqueue_queue(sendQ, &hdr, (u_char*)packet);
+        }
         //! \todo (LOW): calculate sendqueue size
         sendQ = pcap_sendqueue_alloc(1*1024*1024);
         sendQueueList_.append(sendQ);
@@ -369,6 +369,7 @@ void PcapPort::PortTransmitter::run()
 
     const int kSyncTransmit = 1;
     int i;
+    long overHead = 0;
 
     qDebug("sendQueueList_.size = %d", sendQueueList_.size());
     if (sendQueueList_.size() <= 0)
@@ -378,11 +379,13 @@ void PcapPort::PortTransmitter::run()
     {
         int ret;
 _restart:
-        ret = sendQueueTransmit(handle_, sendQueueList_.at(i), kSyncTransmit);
+        ret = sendQueueTransmit(handle_, sendQueueList_.at(i), overHead, 
+                    kSyncTransmit);
 
         if (ret < 0)
         {
             qDebug("error %d in sendQueueTransmit()", ret);
+            qDebug("overHead = %ld", overHead);
             stop_ = false;
             return;
         }
@@ -390,10 +393,17 @@ _restart:
 
     if (returnToQIdx_ >= 0)
     {
-        i = returnToQIdx_;
+        long usecs = loopDelay_ + overHead;
 
-        if (loopDelay_)
-            udelay(loopDelay_);
+        if (usecs > 0)
+        {
+            udelay(usecs);
+            overHead = 0;
+        }
+        else
+            overHead = usecs;
+
+        i = returnToQIdx_;
         goto _restart;
     }
 }
@@ -405,7 +415,7 @@ void PcapPort::PortTransmitter::stop()
 }
 
 int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
-        pcap_send_queue *queue, int sync)
+        pcap_send_queue *queue, long &overHead, int sync)
 {
     TimeStamp ovrStart, ovrEnd;
     struct timeval ts;
@@ -427,9 +437,15 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
 
             getTimeStamp(&ovrEnd);
 
-            usec -= udiffTimeStamp(&ovrStart, &ovrEnd);
+            overHead -= udiffTimeStamp(&ovrStart, &ovrEnd);
+            usec += overHead;
             if (usec > 0)
+            {
                 udelay(usec);
+                overHead = 0;
+            }
+            else
+                overHead = usec;
 
             ts = hdr->ts;
             getTimeStamp(&ovrStart);
@@ -470,6 +486,8 @@ void PcapPort::PortTransmitter::udelay(long usec)
         QueryPerformanceCounter(&curTicks);
 #elif defined(Q_OS_LINUX)
     struct timeval delay, target, now;
+
+    //qDebug("usec delay = %ld", usec);
 
     delay.tv_sec = 0;
     delay.tv_usec = usec;

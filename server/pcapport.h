@@ -107,7 +107,8 @@ protected:
         void stop();
     private:
         void udelay(long usec);
-        int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, int sync);
+        int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
+                    int sync);
 
         quint64 ticksFreq_;
         QList<pcap_send_queue*> sendQueueList_;
