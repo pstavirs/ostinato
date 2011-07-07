@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QIODevice>
 
 #include "../common/streambase.h"
+#include <math.h>
 
 AbstractPort::AbstractPort(int id, const char *device)
 {
@@ -129,7 +130,12 @@ void AbstractPort::updatePacketList()
         if (streamList_[i]->isEnabled())
         {
             long numPackets, numBursts;
-            long ibg = 0, ipg = 0;
+            double ibg = 0;
+            long ibg1 = 0, ibg2 = 0;
+            long nb1 = 0, nb2 = 0;
+            double ipg = 0;
+            long ipg1 = 0, ipg2 = 0;
+            long np1 = 0, np2 = 0;
 
             switch (streamList_[i]->sendUnit())
             {
@@ -137,13 +143,25 @@ void AbstractPort::updatePacketList()
                 numBursts = streamList_[i]->numBursts();
                 numPackets = streamList_[i]->burstSize();
                 if (streamList_[i]->burstRate() > 0)
-                    ibg = 1000000/streamList_[i]->burstRate();
+                {
+                    ibg = 1e6/double(streamList_[i]->burstRate());
+                    ibg1 = ceil(ibg);
+                    ibg2 = floor(ibg);
+                    nb1 = long((ibg - double(ibg2)) * double(numBursts));
+                    nb2= numBursts - nb1;
+                }
                 break;
             case OstProto::StreamControl::e_su_packets:
                 numBursts = 1;
                 numPackets = streamList_[i]->numPackets();
                 if (streamList_[i]->packetRate() > 0)
-                    ipg = 1000000/streamList_[i]->packetRate();
+                {
+                    ipg = 1e6/double(streamList_[i]->packetRate());
+                    ipg1 = ceil(ipg);
+                    ipg2 = floor(ipg);
+                    np1 = long((ipg - double(ipg2)) * double(numPackets));
+                    np2= numPackets - np1;
+                }
                 break;
             default:
                 qWarning("Unhandled stream control unit %d",
@@ -152,7 +170,10 @@ void AbstractPort::updatePacketList()
             }
             qDebug("numBursts = %ld, numPackets = %ld\n",
                     numBursts, numPackets);
-            qDebug("ibg = %ld, ipg = %ld\n", ibg, ipg);
+            qDebug("ibg = %g, ibg1/nb1 = %ld/%ld ibg2/nb2 = %ld/%ld\n", 
+                    ibg, ibg1, nb1, ibg2, nb2);
+            qDebug("ipg = %g, ipg1/np1 = %ld/%ld ipg2/np2 = %ld/%ld\n", 
+                    ipg, ipg1, np1, ipg2, np2);
 
             if (streamList_[i]->isFrameVariable())
             {
@@ -182,7 +203,7 @@ void AbstractPort::updatePacketList()
 
                     appendToPacketList(sec, usec, pktBuf_, len); 
 
-                    usec += ipg;
+                    usec += (k < np1) ? ipg1 : ipg2;
                     if (usec > 1000000)
                     {
                         sec++;
@@ -190,7 +211,7 @@ void AbstractPort::updatePacketList()
                     }
                 } // for (numPackets)
 
-                usec += ibg;
+                usec += (j < nb1) ? ibg1 : ibg2;
                 if (usec > 1000000)
                 {
                     sec++;
@@ -217,7 +238,7 @@ void AbstractPort::updatePacketList()
                      */
 
                     setPacketListLoopMode(true, streamList_[i]->sendUnit() == 
-                          StreamBase::e_su_bursts ? ibg : ipg);
+                          StreamBase::e_su_bursts ? ibg1 : ipg1);
                     goto _stop_no_more_pkts;
 
                 case ::OstProto::StreamControl::e_nw_goto_next:
