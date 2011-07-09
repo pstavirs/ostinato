@@ -67,8 +67,10 @@ message StreamControl {
     optional uint32 num_bursts = 4 [default = 1];
     optional uint32 packets_per_burst = 5 [default = 10];
     optional NextWhat next = 6 [default = e_nw_goto_next];
-    optional uint32 packets_per_sec = 7 [default = 1];
-    optional uint32 bursts_per_sec = 8 [default = 1];
+    optional uint32 OBSOLETE_packets_per_sec = 7 [default = 1, deprecated=true];
+    optional uint32 OBSOLETE_bursts_per_sec = 8 [default = 1, deprecated=true];
+    optional double packets_per_sec = 9 [default = 1];
+    optional double bursts_per_sec = 10 [default = 1];
 }
 
 message ProtocolId {

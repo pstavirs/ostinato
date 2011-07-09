@@ -492,6 +492,12 @@ void PcapPort::PortTransmitter::udelay(long usec)
     delay.tv_sec = 0;
     delay.tv_usec = usec;
 
+    while (delay.tv_usec >= 1000000)
+    {
+        delay.tv_sec++;
+        delay.tv_usec -= 1000000;
+    }
+
     gettimeofday(&now, NULL);
     timeradd(&now, &delay, &target);
 

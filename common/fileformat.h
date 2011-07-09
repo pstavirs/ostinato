@@ -39,6 +39,8 @@ public:
 
 private:
     void initFileMetaData(OstProto::FileMetaData &metaData);
+    void postParseFixup(OstProto::FileMetaData metaData, 
+            OstProto::FileContent &content);
 
     static const int kFileMagicSize = 12;
     static const int kFileChecksumSize = 5;
@@ -51,7 +53,7 @@ private:
     
     // Native file format version
     static const uint kFileFormatVersionMajor = 0;
-    static const uint kFileFormatVersionMinor = 1;
+    static const uint kFileFormatVersionMinor = 2;
     static const uint kFileFormatVersionRevision = 3;
 };
 

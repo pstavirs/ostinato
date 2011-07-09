@@ -161,7 +161,6 @@ bool FileFormat::openStreams(const QString fileName,
     }
 
     Q_ASSERT(meta.data().format_version_major() == kFileFormatVersionMajor);
-    Q_ASSERT(meta.data().format_version_minor() == kFileFormatVersionMinor);
 
     // ByteSize() does not include the Tag/Key, so we add 2 for that
     contentOffset = kFileMetaDataOffset + meta.data().ByteSize() + 2;
@@ -177,6 +176,8 @@ bool FileFormat::openStreams(const QString fileName,
 
     if (!content.matter().has_streams())
         goto _missing_streams;
+
+    postParseFixup(meta.data(), content);
 
     streams.CopyFrom(content.matter().streams());
 
@@ -443,4 +444,40 @@ void FileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
     metaData.set_generator_revision(
         qApp->property("revision").toString().toUtf8().constData());
 }
+
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+/*! Fixup content to what is expected in the native version */
+void FileFormat::postParseFixup(OstProto::FileMetaData metaData, 
+        OstProto::FileContent &content)
+{
+    Q_ASSERT(metaData.format_version_major() == kFileFormatVersionMajor);
+
+    // Do fixups from oldest to newest versions
+    switch (metaData.format_version_minor())
+    {
+    case 1:
+    {
+        int n = content.matter().streams().stream_size();
+        for (int i = 0; i < n; i++)
+        {
+            OstProto::StreamControl *sctl = 
+                content.mutable_matter()->mutable_streams()->mutable_stream(i)->mutable_control();
+            sctl->set_packets_per_sec(sctl->obsolete_packets_per_sec());
+            sctl->set_bursts_per_sec(sctl->obsolete_bursts_per_sec());
+        }
+
+        // fall-through to next higher version until native version
+    }
+    case kFileFormatVersionMinor: // native version
+        break;
+
+    case 0:
+    default:
+        qWarning("%s: minor version %u unhandled", __FUNCTION__, 
+                metaData.format_version_minor());
+        Q_ASSERT_X(false, "postParseFixup", "unhandled minor version");
+    }
+
+}
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
 

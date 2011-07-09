@@ -204,7 +204,7 @@ void AbstractPort::updatePacketList()
                     appendToPacketList(sec, usec, pktBuf_, len); 
 
                     usec += (k < np1) ? ipg1 : ipg2;
-                    if (usec > 1000000)
+                    while (usec >= 1000000)
                     {
                         sec++;
                         usec -= 1000000;
@@ -212,7 +212,7 @@ void AbstractPort::updatePacketList()
                 } // for (numPackets)
 
                 usec += (j < nb1) ? ibg1 : ibg2;
-                if (usec > 1000000)
+                while (usec >= 1000000)
                 {
                     sec++;
                     usec -= 1000000;
