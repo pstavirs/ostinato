@@ -964,8 +964,8 @@ void StreamConfigDialog::StoreCurrentStream()
         pStream->setNumPackets(leNumPackets->text().toULong(&isOk));
         pStream->setNumBursts(leNumBursts->text().toULong(&isOk));
         pStream->setBurstSize(lePacketsPerBurst->text().toULong(&isOk));
-        pStream->setPacketRate(lePacketsPerSec->text().toULong(&isOk));
-        pStream->setBurstRate(leBurstsPerSec->text().toULong(&isOk));
+        pStream->setPacketRate(lePacketsPerSec->text().toDouble(&isOk));
+        pStream->setBurstRate(leBurstsPerSec->text().toDouble(&isOk));
     }
 }
 

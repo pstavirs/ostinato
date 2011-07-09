@@ -325,23 +325,23 @@ bool StreamBase::setBurstSize(quint32 packetsPerBurst)
     return true;
 }
 
-quint32 StreamBase::packetRate() const
+double StreamBase::packetRate() const
 {
-    return (quint32) mControl->packets_per_sec();
+    return (double) mControl->packets_per_sec();
 }
 
-bool StreamBase::setPacketRate(quint32 packetsPerSec)
+bool StreamBase::setPacketRate(double packetsPerSec)
 {
     mControl->set_packets_per_sec(packetsPerSec); 
     return true;
 }
 
-quint32 StreamBase::burstRate() const
+double StreamBase::burstRate() const
 {
-    return (quint32) mControl->bursts_per_sec();
+    return (double) mControl->bursts_per_sec();
 }
 
-bool StreamBase::setBurstRate(quint32 burstsPerSec)
+bool StreamBase::setBurstRate(double burstsPerSec)
 {
     mControl->set_bursts_per_sec(burstsPerSec); 
     return true;

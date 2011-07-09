@@ -125,11 +125,11 @@ public:
     quint32 burstSize() const;
     bool setBurstSize(quint32 packetsPerBurst);
 
-    quint32 packetRate() const;
-    bool setPacketRate(quint32 packetsPerSec);
+    double packetRate() const;
+    bool setPacketRate(double packetsPerSec);
 
-    quint32 burstRate() const;
-    bool setBurstRate(quint32 burstsPerSec);
+    double burstRate() const;
+    bool setBurstRate(double burstsPerSec);
 
     bool isFrameVariable() const;
     bool isFrameSizeVariable() const;
