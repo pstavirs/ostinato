@@ -42,12 +42,12 @@ public:
         transmitter_->clearPacketList();
         setPacketListLoopMode(false, 0);
     }
-    virtual bool appendToPacketList(long sec, long usec, const uchar *packet, 
+    virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) {
-        return transmitter_->appendToPacketList(sec, usec, packet, length); 
+        return transmitter_->appendToPacketList(sec, nsec, packet, length); 
     }
-    virtual void setPacketListLoopMode(bool loop, long usecDelay) {
-        transmitter_->setPacketListLoopMode(loop, usecDelay);
+    virtual void setPacketListLoopMode(bool loop, long nsecDelay) {
+        transmitter_->setPacketListLoopMode(loop, nsecDelay);
     }
 
     virtual void startTransmit() { 
@@ -97,9 +97,9 @@ protected:
         void clearPacketList();
         bool appendToPacketList(long sec, long usec, const uchar *packet, 
             int length);
-        void setPacketListLoopMode(bool loop, long usecDelay) {
+        void setPacketListLoopMode(bool loop, long nsecDelay) {
             returnToQIdx_ = loop ? 0 : -1;
-            loopDelay_ = usecDelay;
+            loopDelay_ = nsecDelay/1000;
         }
         void setHandle(pcap_t *handle);
         void useExternalStats(AbstractPort::PortStats *stats);
