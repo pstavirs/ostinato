@@ -71,9 +71,9 @@ public:
     void setDirty() { isSendQueueDirty_ = true; }
 
     virtual void clearPacketList() = 0;
-    virtual bool appendToPacketList(long sec, long usec, const uchar *packet, 
+    virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) = 0;
-    virtual void setPacketListLoopMode(bool loop, long usecDelay) = 0;
+    virtual void setPacketListLoopMode(bool loop, long nsecDelay) = 0;
     void updatePacketList();
 
     virtual void startTransmit() = 0;

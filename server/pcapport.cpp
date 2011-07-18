@@ -298,7 +298,7 @@ void PcapPort::PortTransmitter::clearPacketList()
     setPacketListLoopMode(false, 0); 
 }
 
-bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec, 
+bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec, 
         const uchar *packet, int length)
 {
     bool op = true;
@@ -307,7 +307,7 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long usec,
 
     pktHdr.caplen = pktHdr.len = length;
     pktHdr.ts.tv_sec = sec;
-    pktHdr.ts.tv_usec = usec;
+    pktHdr.ts.tv_usec = nsec/1000;
 
     sendQ = sendQueueList_.isEmpty() ? NULL : sendQueueList_.last();
  

@@ -116,7 +116,7 @@ void AbstractPort::updatePacketList()
     int     len;
     bool    isVariable;
     long    sec = 0; 
-    long    usec = 0;
+    long    nsec = 0;
 
     qDebug("In %s", __FUNCTION__);
 
@@ -144,7 +144,7 @@ void AbstractPort::updatePacketList()
                 numPackets = streamList_[i]->burstSize();
                 if (streamList_[i]->burstRate() > 0)
                 {
-                    ibg = 1e6/double(streamList_[i]->burstRate());
+                    ibg = 1e9/double(streamList_[i]->burstRate());
                     ibg1 = ceil(ibg);
                     ibg2 = floor(ibg);
                     nb1 = long((ibg - double(ibg2)) * double(numBursts));
@@ -156,7 +156,7 @@ void AbstractPort::updatePacketList()
                 numPackets = streamList_[i]->numPackets();
                 if (streamList_[i]->packetRate() > 0)
                 {
-                    ipg = 1e6/double(streamList_[i]->packetRate());
+                    ipg = 1e9/double(streamList_[i]->packetRate());
                     ipg1 = ceil(ipg);
                     ipg2 = floor(ipg);
                     np1 = long((ipg - double(ipg2)) * double(numPackets));
@@ -198,24 +198,24 @@ void AbstractPort::updatePacketList()
                     if (len <= 0)
                         continue;
 
-                    qDebug("q(%d, %d, %d) sec = %lu usec = %lu",
-                            i, j, k, sec, usec);
+                    qDebug("q(%d, %d, %d) sec = %lu nsec = %lu",
+                            i, j, k, sec, nsec);
 
-                    appendToPacketList(sec, usec, pktBuf_, len); 
+                    appendToPacketList(sec, nsec, pktBuf_, len); 
 
-                    usec += (k < np1) ? ipg1 : ipg2;
-                    while (usec >= 1000000)
+                    nsec += (k < np1) ? ipg1 : ipg2;
+                    while (nsec >= 1e9)
                     {
                         sec++;
-                        usec -= 1000000;
+                        nsec -= 1e9;
                     }
                 } // for (numPackets)
 
-                usec += (j < nb1) ? ibg1 : ibg2;
-                while (usec >= 1000000)
+                nsec += (j < nb1) ? ibg1 : ibg2;
+                while (nsec >= 1e9)
                 {
                     sec++;
-                    usec -= 1000000;
+                    nsec -= 1e9;
                 }
             } // for (numBursts)
 
