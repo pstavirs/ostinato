@@ -109,8 +109,18 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     when_portView_currentChanged(QModelIndex(), QModelIndex());
     updateStreamViewActions();
 
-    //! \todo Hide the Aggregate Box till we add support
-    frAggregate->setHidden(true);
+    connect(plm->getStreamModel(), 
+        SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)), 
+        this, SLOT(streamModelDataChanged()));
+    connect(plm->getStreamModel(), 
+        SIGNAL(modelReset()), 
+        this, SLOT(streamModelDataChanged()));
+}
+
+void PortsWindow::streamModelDataChanged()
+{
+    if (plm->isPort(tvPortList->currentIndex()))
+        plm->port(tvPortList->currentIndex()).recalculateAverageRates();
 }
 
 PortsWindow::~PortsWindow()
@@ -121,6 +131,7 @@ PortsWindow::~PortsWindow()
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 {
     StreamConfigDialog    *scd;
+    int ret;
 
     if (!index.isValid())
     {
@@ -130,16 +141,26 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
     scd = new StreamConfigDialog(plm->port(tvPortList->currentIndex()),
         index.row(), this);
     qDebug("stream list activated\n");
-    scd->exec(); // TODO: chk retval
+    ret = scd->exec();
+
+    if (ret == QDialog::Accepted)
+        plm->port(tvPortList->currentIndex()).recalculateAverageRates();
+
     delete scd;
 }
 
 void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
-    const QModelIndex& /*previous*/)
+    const QModelIndex& previous)
 {
     plm->getStreamModel()->setCurrentPortIndex(current);
     updatePortViewActions(current);
     updateStreamViewActions();
+
+    if (previous.isValid() && plm->isPort(previous))
+    {
+        disconnect(&(plm->port(previous)), SIGNAL(portRateChanged(int, int)),
+                this, SLOT(updatePortRates()));
+    }
 
     if (!current.isValid())
     {    
@@ -154,7 +175,10 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
         }
         else if (plm->isPort(current))
         {
-            swDetail->setCurrentIndex(0);    // port detail page    
+            swDetail->setCurrentIndex(0);    // port detail page
+            updatePortRates();
+            connect(&(plm->port(current)), SIGNAL(portRateChanged(int, int)),
+                    SLOT(updatePortRates()));
         }
     }
 }
@@ -178,6 +202,46 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
 void PortsWindow::when_portModel_reset()
 {
     when_portView_currentChanged(QModelIndex(), tvPortList->currentIndex());
+}
+
+void PortsWindow::on_averagePacketsPerSec_editingFinished()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    Q_ASSERT(plm->isPort(current));
+
+    bool isOk;
+    double pps = QLocale().toDouble(averagePacketsPerSec->text(), &isOk);
+
+    plm->port(current).setAveragePacketRate(pps);
+}
+
+void PortsWindow::on_averageBitsPerSec_editingFinished()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    Q_ASSERT(plm->isPort(current));
+
+    bool isOk;
+    double bps = QLocale().toDouble(averageBitsPerSec->text(), &isOk)/8;
+
+    plm->port(current).setAverageBitRate(bps);
+}
+
+void PortsWindow::updatePortRates()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    if (!current.isValid())
+        return;
+
+    if (!plm->isPort(current))
+        return;
+
+    averagePacketsPerSec->setText(QString("%L1")
+            .arg(plm->port(current).averagePacketRate(), 0, 'f', 4));
+    averageBitsPerSec->setText(QString("%L1")
+            .arg(plm->port(current).averageBitRate(), 0, 'f', 0));
 }
 
 void PortsWindow::updateStreamViewActions()

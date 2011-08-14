@@ -34,6 +34,8 @@ QRect StreamConfigDialog::lastGeometry;
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
 int StreamConfigDialog::lastProtocolDataIndex = 0;
 
+static const uint kEthFrameOverHead = 20;
+
 StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     QWidget *parent) : QDialog (parent), mPort(port)
 {
@@ -158,8 +160,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // TODO(MED):
     //! \todo Enable navigation of streams
-    pbPrev->setDisabled(true);
-    pbNext->setDisabled(true);
+    pbPrev->setHidden(true);
+    pbNext->setHidden(true);
     //! \todo Support Goto Stream Id
     leStreamId->setHidden(true);
     disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
@@ -265,6 +267,8 @@ void StreamConfigDialog::setupUiExtra()
     lePktLen->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN, this));
     lePktLenMin->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN,this));
     lePktLenMax->setValidator(new QIntValidator(MIN_PKT_LEN, MAX_PKT_LEN,this));
+
+    lePacketsPerBurst->setValidator(new QIntValidator(1, 0x7FFFFFFF,this));
 
     /*
     ** Setup Connections
@@ -560,6 +564,13 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
                 tbProtocolData->setCurrentIndex(lastProtocolDataIndex);
 
             tbProtocolData->show();
+            break;
+        }
+
+        // Stream Control
+        case 2:
+        {
+            StoreCurrentStream();
             break;
         }
 
@@ -915,10 +926,14 @@ void StreamConfigDialog::LoadCurrentStream()
         leNumPackets->setText(QString().setNum(mpStream->numPackets()));
         leNumBursts->setText(QString().setNum(mpStream->numBursts()));
         lePacketsPerBurst->setText(QString().setNum(mpStream->burstSize()));
-        lePacketsPerSec->setText(QString().setNum(mpStream->packetRate()));
-        leBurstsPerSec->setText(QString().setNum(mpStream->burstRate()));
+        lePacketsPerSec->setText(
+                QString("%L1").arg(mpStream->packetRate(), 0, 'f', 4));
+        leBurstsPerSec->setText(
+                QString("%L1").arg(mpStream->burstRate(), 0, 'f', 4));
         // TODO(MED): Change this when we support goto to specific stream
         leStreamId->setText(QString("0"));
+
+        leGapIsg->setText("0.0");
     }
     qDebug("loading stream done");
 }
@@ -964,8 +979,10 @@ void StreamConfigDialog::StoreCurrentStream()
         pStream->setNumPackets(leNumPackets->text().toULong(&isOk));
         pStream->setNumBursts(leNumBursts->text().toULong(&isOk));
         pStream->setBurstSize(lePacketsPerBurst->text().toULong(&isOk));
-        pStream->setPacketRate(lePacketsPerSec->text().toDouble(&isOk));
-        pStream->setBurstRate(leBurstsPerSec->text().toDouble(&isOk));
+        pStream->setPacketRate(
+                QLocale().toDouble(lePacketsPerSec->text(), &isOk));
+        pStream->setBurstRate(
+                QLocale().toDouble(leBurstsPerSec->text(), &isOk));
     }
 }
 
@@ -978,6 +995,99 @@ void StreamConfigDialog::on_tbProtocolData_currentChanged(int /*index*/)
     mpStream->storeProtocolWidgets();
     mpStream->loadProtocolWidgets();
 #endif
+}
+
+void StreamConfigDialog::on_rbPacketsPerSec_toggled(bool checked)
+{
+    if (checked)
+        on_lePacketsPerSec_textChanged(lePacketsPerSec->text());
+}
+
+void StreamConfigDialog::on_rbBurstsPerSec_toggled(bool checked)
+{
+    if (checked)
+        on_leBurstsPerSec_textChanged(leBurstsPerSec->text());
+}
+
+void StreamConfigDialog::on_lePacketsPerBurst_textChanged(const QString &text)
+{
+    if (rbSendBursts->isChecked())
+        on_leBurstsPerSec_textChanged(leBurstsPerSec->text());
+}
+
+void StreamConfigDialog::on_lePacketsPerSec_textChanged(const QString &text)
+{
+    bool isOk;
+    Stream *pStream = mpStream;
+    uint frameLen;
+
+    if (pStream->lenMode() == Stream::e_fl_fixed)
+        frameLen = pStream->frameLen();
+    else
+        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
+
+    if (rbSendPackets->isChecked())
+    {
+        double pktsPerSec = QLocale().toDouble(text, &isOk);
+        double bitsPerSec = pktsPerSec * double((frameLen+kEthFrameOverHead)*8);
+
+        if (rbPacketsPerSec->isChecked())
+            leBitsPerSec->setText(QString("%L1").arg(bitsPerSec, 0, 'f', 0));
+        leGapIbg->setText(QString("0.0"));
+        leGapIpg->setText(QString("%L1").arg(1/double(pktsPerSec), 0, 'f', 9));
+    }
+}
+
+void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
+{
+    bool isOk;
+    Stream *pStream = mpStream;
+    uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
+    uint frameLen;
+
+    qDebug("start of %s(%s)", __FUNCTION__, text.toAscii().constData());
+    if (pStream->lenMode() == Stream::e_fl_fixed)
+        frameLen = pStream->frameLen();
+    else
+        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
+
+    if (rbSendBursts->isChecked())
+    {
+        double burstsPerSec = QLocale().toDouble(text, &isOk);
+        double bitsPerSec = burstsPerSec *
+                double(burstSize * (frameLen + kEthFrameOverHead) * 8);
+        if (rbBurstsPerSec->isChecked())
+            leBitsPerSec->setText(QString("%L1").arg(bitsPerSec, 0, 'f', 0));
+        leGapIbg->setText(QString("%L1").arg(1/double(burstsPerSec), 0, 'f',9));
+        leGapIpg->setText(QString("0.0"));
+    }
+    qDebug("end of %s", __FUNCTION__);
+}
+
+void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
+{
+    bool isOk;
+    Stream *pStream = mpStream;
+    uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
+    uint frameLen;
+
+    if (pStream->lenMode() == Stream::e_fl_fixed)
+        frameLen = pStream->frameLen();
+    else
+        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
+
+    if (rbSendPackets->isChecked())
+    {
+        double pktsPerSec = QLocale().toDouble(text, &isOk)/
+                double((frameLen+kEthFrameOverHead)*8);
+        lePacketsPerSec->setText(QString("%L1").arg(pktsPerSec, 0, 'f', 4));
+    }
+    else if (rbSendBursts->isChecked())
+    {
+        double burstsPerSec = QLocale().toDouble(text, &isOk)/
+                double(burstSize * (frameLen + kEthFrameOverHead) * 8);
+        leBurstsPerSec->setText(QString("%L1").arg(burstsPerSec, 0, 'f', 4));
+    }
 }
 
 void StreamConfigDialog::on_pbOk_clicked()

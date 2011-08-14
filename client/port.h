@@ -43,12 +43,16 @@ class Port : public QObject {
     quint32        mPortGroupId;
     QString        mUserAlias;            // user defined
 
+    double avgPacketsPerSec_; 
+    double avgBitsPerSec_; 
+
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
 
     uint newStreamId();
     void updateStreamOrdinalsFromIndex();
     void reorderStreamsByOrdinals();
+
 
 public:
     enum AdminStatus    { AdminDisable, AdminEnable };
@@ -72,6 +76,10 @@ public:
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
     bool hasExclusiveControl() 
         { return d.is_exclusive_control(); }
+    double averagePacketRate()
+        { return avgPacketsPerSec_; }
+    double averageBitRate()
+        { return avgBitsPerSec_; }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
     void setAlias(QString &alias) { mUserAlias = alias; }
@@ -116,12 +124,18 @@ public:
 
     void when_syncComplete();
 
+    void setAveragePacketRate(double packetsPerSec);
+    void setAverageBitRate(double bitsPerSec);
+    // FIXME(MED): Bad Hack! port should not need an external trigger to
+    // recalculate - refactor client side domain objects and model objects
+    void recalculateAverageRates();
     void updateStats(OstProto::PortStats *portStats);
 
     bool openStreams(QString fileName, bool append, QString &error);
     bool saveStreams(QString fileName, QString fileType, QString &error);
 
 signals:
+    void portRateChanged(int portGroupId, int portId);
     void portDataChanged(int portGroupId, int portId);
     void streamListChanged(int portGroupId, int portId);
 

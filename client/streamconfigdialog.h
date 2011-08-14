@@ -127,6 +127,15 @@ private slots:
     // "Protocol Data" related
     void on_tbProtocolData_currentChanged(int index);
 
+    // "Stream Control" related
+    void on_rbPacketsPerSec_toggled(bool checked);
+    void on_rbBurstsPerSec_toggled(bool checked);
+
+    void on_lePacketsPerBurst_textChanged(const QString &text);
+    void on_lePacketsPerSec_textChanged(const QString &text);
+    void on_leBurstsPerSec_textChanged(const QString &text);
+    void on_leBitsPerSec_textEdited(const QString &text);
+
     void on_pbPrev_clicked();
     void on_pbNext_clicked();
 

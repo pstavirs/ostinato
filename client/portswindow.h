@@ -52,6 +52,9 @@ private slots:
     void updatePortViewActions(const QModelIndex& current);
     void updateStreamViewActions();
 
+    void on_averagePacketsPerSec_editingFinished();
+    void on_averageBitsPerSec_editingFinished();
+    void updatePortRates();
     void on_tvStreamList_activated(const QModelIndex & index);
     void when_portView_currentChanged(const QModelIndex& current,
         const QModelIndex& previous);
@@ -74,6 +77,8 @@ private slots:
 
     void on_actionOpen_Streams_triggered();
     void on_actionSave_Streams_triggered();
+
+    void streamModelDataChanged();
 };
 
 #endif

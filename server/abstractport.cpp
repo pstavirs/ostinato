@@ -145,8 +145,8 @@ void AbstractPort::updatePacketList()
                 if (streamList_[i]->burstRate() > 0)
                 {
                     ibg = 1e9/double(streamList_[i]->burstRate());
-                    ibg1 = ceil(ibg);
-                    ibg2 = floor(ibg);
+                    ibg1 = long(ceil(ibg));
+                    ibg2 = long(floor(ibg));
                     nb1 = long((ibg - double(ibg2)) * double(numBursts));
                     nb2= numBursts - nb1;
                 }
@@ -157,8 +157,8 @@ void AbstractPort::updatePacketList()
                 if (streamList_[i]->packetRate() > 0)
                 {
                     ipg = 1e9/double(streamList_[i]->packetRate());
-                    ipg1 = ceil(ipg);
-                    ipg2 = floor(ipg);
+                    ipg1 = long(ceil(ipg));
+                    ipg2 = long(floor(ipg));
                     np1 = long((ipg - double(ipg2)) * double(numPackets));
                     np2= numPackets - np1;
                 }
@@ -207,7 +207,7 @@ void AbstractPort::updatePacketList()
                     while (nsec >= 1e9)
                     {
                         sec++;
-                        nsec -= 1e9;
+                        nsec -= long(1e9);
                     }
                 } // for (numPackets)
 
@@ -215,7 +215,7 @@ void AbstractPort::updatePacketList()
                 while (nsec >= 1e9)
                 {
                     sec++;
-                    nsec -= 1e9;
+                    nsec -= long(1e9);
                 }
             } // for (numBursts)
 

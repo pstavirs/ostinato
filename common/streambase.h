@@ -107,6 +107,8 @@ public:
     quint16    frameLenMax() const;
     bool setFrameLenMax(quint16 frameLenMax);
 
+    quint16 frameLenAvg() const;
+
     SendUnit sendUnit() const;
     bool setSendUnit(SendUnit sendUnit);
 
@@ -130,6 +132,9 @@ public:
 
     double burstRate() const;
     bool setBurstRate(double burstsPerSec);
+
+    double averagePacketRate() const;
+    bool setAveragePacketRate(double packetsPerSec);
 
     bool isFrameVariable() const;
     bool isFrameSizeVariable() const;
