@@ -69,6 +69,115 @@ void Port::reorderStreamsByOrdinals()
     qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
 }
 
+void Port::recalculateAverageRates()
+{
+    double pps = 0;
+    double bps = 0;
+    int n = 0;
+
+    foreach (Stream* s, mStreams)
+    {
+        if (!s->isEnabled())
+            continue;
+
+        double r = s->averagePacketRate();
+        pps += r;
+        bps += r * s->frameLenAvg() * 8;
+        n++;
+
+        if (s->nextWhat() == Stream::e_nw_stop)
+            break;
+    }
+
+    if (n)
+    {
+        avgPacketsPerSec_ = pps/n;
+        avgBitsPerSec_ = bps/n;
+    }
+    else
+        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+
+    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_);
+
+    emit portRateChanged(mPortGroupId, mPortId);
+
+}
+
+void Port::setAveragePacketRate(double packetsPerSec)
+{
+    double pps = 0;
+    double bps = 0;
+    int n = 0;
+
+    foreach (Stream* s, mStreams)
+    {
+        if (!s->isEnabled())
+            continue;
+
+        s->setAveragePacketRate(packetsPerSec);
+
+        double r = s->averagePacketRate();
+        pps += r;
+        bps += r * s->frameLenAvg() * 8;
+        n++;
+
+        if (s->nextWhat() == Stream::e_nw_stop)
+            break;
+    }
+
+    if (n)
+    {
+        avgPacketsPerSec_ = pps/n;
+        avgBitsPerSec_ = bps/n;
+    }
+    else
+        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+
+    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_);
+
+    emit portRateChanged(mPortGroupId, mPortId);
+
+}
+
+void Port::setAverageBitRate(double bitsPerSec)
+{
+    double pps = 0;
+    double bps = 0;
+    int n = 0;
+
+    foreach (Stream* s, mStreams)
+    {
+        if (!s->isEnabled())
+            continue;
+
+        s->setAveragePacketRate(bitsPerSec/s->frameLenAvg());
+
+        double r = s->averagePacketRate();
+        pps += r;
+        bps += r * s->frameLenAvg() * 8;
+        n++;
+
+        if (s->nextWhat() == Stream::e_nw_stop)
+            break;
+    }
+
+    if (n)
+    {
+        avgPacketsPerSec_ = pps/n;
+        avgBitsPerSec_ = bps/n;
+    }
+    else
+        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+
+    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_);
+
+    emit portRateChanged(mPortGroupId, mPortId);
+
+}
+
 bool Port::newStreamAt(int index, OstProto::Stream const *stream)
 {
     Stream    *s = new Stream;
@@ -82,6 +191,7 @@ bool Port::newStreamAt(int index, OstProto::Stream const *stream)
     s->setId(newStreamId());
     mStreams.insert(index, s);
     updateStreamOrdinalsFromIndex();
+    recalculateAverageRates();
 
     return true;
 }
@@ -93,6 +203,7 @@ bool Port::deleteStreamAt(int index)
 
     delete mStreams.takeAt(index);
     updateStreamOrdinalsFromIndex();
+    recalculateAverageRates();
 
     return true;
 }
@@ -312,6 +423,7 @@ _user_opt_cancel:
 _fail:
     progress.close();
     mainWindow->setEnabled(true);
+    recalculateAverageRates();
     return ret;
 }
 

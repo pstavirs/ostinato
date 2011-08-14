@@ -258,6 +258,19 @@ bool StreamBase::setFrameLenMax(quint16 frameLenMax)
     return true;
 }
 
+/*! Convenience Function */
+quint16 StreamBase::frameLenAvg() const
+{
+    quint16 avgFrameLen;
+
+    if (lenMode() == e_fl_fixed)
+        avgFrameLen = frameLen();
+    else
+        avgFrameLen = (frameLenMin() + frameLenMax())/2;
+
+    return avgFrameLen;
+}
+
 StreamBase::SendUnit StreamBase::sendUnit() const
 {
     return (StreamBase::SendUnit) mControl->unit();
@@ -344,6 +357,44 @@ double StreamBase::burstRate() const
 bool StreamBase::setBurstRate(double burstsPerSec)
 {
     mControl->set_bursts_per_sec(burstsPerSec); 
+    return true;
+}
+
+/*! Convenience Function */
+double StreamBase::averagePacketRate() const
+{
+    double avgPacketRate;
+
+    switch (sendUnit())
+    {
+    case e_su_bursts:
+        avgPacketRate = burstRate() * burstSize();
+        break;
+    case e_su_packets:
+        avgPacketRate = packetRate();
+        break;
+    default:
+        Q_ASSERT(false); // Unreachable!!
+    }
+
+    return avgPacketRate;
+}
+
+/*! Convenience Function */
+bool StreamBase::setAveragePacketRate(double packetsPerSec)
+{
+    switch (sendUnit())
+    {
+    case e_su_bursts:
+        setBurstRate(packetsPerSec/double(burstSize()));
+        break;
+    case e_su_packets:
+        setPacketRate(packetsPerSec);
+        break;
+    default:
+        Q_ASSERT(false); // Unreachable!!
+    }
+
     return true;
 }
 
