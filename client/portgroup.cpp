@@ -340,7 +340,7 @@ void PortGroup::processModifyStreamAck(int portIndex,
     delete controller;
 }
 
-void PortGroup::modifyPort(int portIndex, bool isExclusive)
+void PortGroup::modifyPort(int portIndex, OstProto::Port portConfig)
 {
     OstProto::PortConfigList *portConfigList = new OstProto::PortConfigList;
     OstProto::Ack *ack = new OstProto::Ack;
@@ -353,8 +353,8 @@ void PortGroup::modifyPort(int portIndex, bool isExclusive)
     mainWindow->setDisabled(true);
 
     OstProto::Port *port = portConfigList->add_port();
+    port->CopyFrom(portConfig);
     port->mutable_port_id()->set_id(mPorts[portIndex]->id());
-    port->set_is_exclusive_control(isExclusive);
 
     PbRpcController *controller = new PbRpcController(portConfigList, ack);
     serviceStub->modifyPort(controller, portConfigList, ack, 
@@ -412,9 +412,10 @@ void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
         id = portConfigList->port(i).port_id().id();
         // FIXME: don't mix port id & index into mPorts[]
         mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
+
+        emit portGroupDataChanged(mPortGroupId, id);
     }
 
-    emit portGroupDataChanged(mPortGroupId);
 
 _exit:
     mainWindow->setEnabled(true);

@@ -24,6 +24,7 @@ win32 {
     LIBS += -L"../rpc" -lpbrpc
     POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 }
+LIBS += -lm
 LIBS += -lprotobuf
 LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += drone.qrc 

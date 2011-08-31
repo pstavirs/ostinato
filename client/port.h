@@ -44,7 +44,8 @@ class Port : public QObject {
     QString        mUserAlias;            // user defined
 
     double avgPacketsPerSec_; 
-    double avgBitsPerSec_; 
+    double avgBitsPerSec_;
+    int numActiveStreams_;
 
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
@@ -76,6 +77,8 @@ public:
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
     bool hasExclusiveControl() 
         { return d.is_exclusive_control(); }
+    OstProto::TransmitMode transmitMode() 
+        { return d.transmit_mode(); }
     double averagePacketRate()
         { return avgPacketsPerSec_; }
     double averageBitRate()

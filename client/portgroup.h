@@ -94,7 +94,7 @@ public:
     void processDeleteStreamAck(PbRpcController *controller);
     void processModifyStreamAck(int portIndex, PbRpcController *controller);
 
-    void modifyPort(int portId, bool isExclusive);
+    void modifyPort(int portId, OstProto::Port portConfig);
     void processModifyPortAck(PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);
 

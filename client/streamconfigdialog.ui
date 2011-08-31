@@ -42,7 +42,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
       <string/>
      </property>
      <property name="currentIndex" >
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="packetConfigTab" >
       <attribute name="title" >
@@ -146,8 +146,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>586</width>
-            <height>248</height>
+            <width>592</width>
+            <height>269</height>
            </rect>
           </property>
           <attribute name="label" >
@@ -940,7 +940,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
         </widget>
        </item>
        <item rowspan="2" row="0" column="3" >
-        <widget class="QGroupBox" name="groupBox_11" >
+        <widget class="QGroupBox" name="nextWhat" >
          <property name="title" >
           <string>After this stream</string>
          </property>
@@ -982,6 +982,19 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          </layout>
         </widget>
        </item>
+       <item rowspan="2" row="0" column="4" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>41</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="1" column="0" >
         <widget class="QGroupBox" name="groupBox_5" >
          <property name="title" >
@@ -1008,14 +1021,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
          </layout>
         </widget>
        </item>
-       <item row="2" column="0" colspan="4" >
-        <widget class="Line" name="line_4" >
-         <property name="orientation" >
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="4" >
+       <item row="3" column="0" colspan="5" >
         <widget class="QGroupBox" name="groupBox_12" >
          <property name="enabled" >
           <bool>true</bool>
@@ -1283,12 +1289,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>293</x>
-     <y>137</y>
+     <x>463</x>
+     <y>143</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>293</x>
-     <y>169</y>
+     <x>463</x>
+     <y>177</y>
     </hint>
    </hints>
   </connection>
@@ -1300,11 +1306,11 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <hints>
     <hint type="sourcelabel" >
      <x>30</x>
-     <y>66</y>
+     <y>68</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>71</x>
-     <y>250</y>
+     <x>299</x>
+     <y>82</y>
     </hint>
    </hints>
   </connection>
@@ -1316,11 +1322,11 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <hints>
     <hint type="sourcelabel" >
      <x>30</x>
-     <y>91</y>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>71</x>
-     <y>310</y>
+     <x>299</x>
+     <y>132</y>
     </hint>
    </hints>
   </connection>
@@ -1332,11 +1338,11 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <hints>
     <hint type="sourcelabel" >
      <x>30</x>
-     <y>91</y>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel" >
      <x>134</x>
-     <y>177</y>
+     <y>189</y>
     </hint>
    </hints>
   </connection>
@@ -1347,12 +1353,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>48</x>
-     <y>252</y>
+     <x>299</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>39</x>
-     <y>278</y>
+     <x>299</x>
+     <y>108</y>
     </hint>
    </hints>
   </connection>
@@ -1363,12 +1369,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>51</x>
-     <y>303</y>
+     <x>299</x>
+     <y>132</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>54</x>
-     <y>339</y>
+     <x>299</x>
+     <y>158</y>
     </hint>
    </hints>
   </connection>
@@ -1379,12 +1385,12 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>82</x>
-     <y>356</y>
+     <x>299</x>
+     <y>182</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>103</x>
-     <y>372</y>
+     <x>299</x>
+     <y>208</y>
     </hint>
    </hints>
   </connection>
@@ -1399,8 +1405,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
      <y>70</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>154</x>
-     <y>255</y>
+     <x>299</x>
+     <y>82</y>
     </hint>
    </hints>
   </connection>
@@ -1415,8 +1421,40 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
      <y>98</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>173</x>
-     <y>299</y>
+     <x>299</x>
+     <y>132</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbModeContinuous</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leNumPackets</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>73</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>164</x>
+     <y>108</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbModeContinuous</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leNumBursts</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>96</x>
+     <y>199</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>226</x>
+     <y>155</y>
     </hint>
    </hints>
   </connection>

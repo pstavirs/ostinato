@@ -58,8 +58,8 @@ class StreamModel : public QAbstractTableModel
     public:
     enum StreamFields {
         StreamIcon = 0,
-        StreamName,
         StreamStatus,
+        StreamName,
         StreamNextWhat,
 
         StreamMaxFields

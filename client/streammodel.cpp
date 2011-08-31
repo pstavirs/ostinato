@@ -42,7 +42,12 @@ int StreamModel::rowCount(const QModelIndex &parent) const
 
 int StreamModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    return (int) StreamMaxFields;
+    int count = StreamMaxFields;
+    if (mCurrentPort && 
+            (mCurrentPort->transmitMode() == OstProto::kInterleavedTransmit))
+        count--;
+
+    return count;
 }
 
 Qt::ItemFlags StreamModel::flags(const QModelIndex &index) const

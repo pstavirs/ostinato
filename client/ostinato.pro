@@ -33,6 +33,7 @@ HEADERS += \
     mainwindow.h \
     packetmodel.h \
     port.h \
+    portconfigdialog.h \
     portgroup.h \
     portgrouplist.h \
     portmodel.h \
@@ -49,6 +50,7 @@ HEADERS += \
 FORMS += \
     about.ui \
     mainwindow.ui \
+    portconfigdialog.ui \
     portstatsfilter.ui \
     portstatswindow.ui \
     portswindow.ui \
@@ -63,6 +65,7 @@ SOURCES += \
     mainwindow.cpp \
     packetmodel.cpp \
     port.cpp \
+    portconfigdialog.cpp \
     portgroup.cpp \
     portgrouplist.cpp \
     portmodel.cpp \

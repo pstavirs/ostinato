@@ -296,6 +296,7 @@ void PortModel::when_portGroupDataChanged(int portGroupId, int portId)
     QModelIndex index;
     int row;
 
+    qDebug("portGroupId = %d, portId = %d", portGroupId, portId);
     if (portId == 0xFFFF)
         row = pgl->indexOfPortGroup(portGroupId);
     else

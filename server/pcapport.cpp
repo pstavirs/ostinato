@@ -295,7 +295,7 @@ void PcapPort::PortTransmitter::clearPacketList()
         pcap_send_queue *sq = sendQueueList_.takeFirst();
         pcap_sendqueue_destroy(sq);
     }
-    setPacketListLoopMode(false, 0); 
+    setPacketListLoopMode(false, 0, 0); 
 }
 
 bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec, 

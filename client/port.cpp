@@ -32,6 +32,8 @@ extern QMainWindow *mainWindow;
 
 uint Port::mAllocStreamId = 0;
 
+static const int kEthOverhead = 20;
+
 uint Port::newStreamId()
 {
     return mAllocStreamId++;
@@ -82,23 +84,36 @@ void Port::recalculateAverageRates()
 
         double r = s->averagePacketRate();
         pps += r;
-        bps += r * s->frameLenAvg() * 8;
+        bps += r * (s->frameLenAvg() + kEthOverhead) * 8;
         n++;
 
-        if (s->nextWhat() == Stream::e_nw_stop)
+        if ((transmitMode() == OstProto::kSequentialTransmit) 
+                && (s->nextWhat() == Stream::e_nw_stop))
             break;
     }
 
     if (n)
     {
-        avgPacketsPerSec_ = pps/n;
-        avgBitsPerSec_ = bps/n;
+        switch (transmitMode())
+        {
+        case OstProto::kSequentialTransmit:
+            avgPacketsPerSec_ = pps/n;
+            avgBitsPerSec_ = bps/n;
+            break;
+        case OstProto::kInterleavedTransmit:
+            avgPacketsPerSec_ = pps;
+            avgBitsPerSec_ = bps;
+            break;
+        default:
+            Q_ASSERT(false); // Unreachable!!
+        }
+        numActiveStreams_ = n;
     }
     else
-        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+        avgPacketsPerSec_ = avgBitsPerSec_ = numActiveStreams_ = 0;
 
-    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
-            avgPacketsPerSec_, avgBitsPerSec_);
+    qDebug("%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
 
     emit portRateChanged(mPortGroupId, mPortId);
 
@@ -106,76 +121,145 @@ void Port::recalculateAverageRates()
 
 void Port::setAveragePacketRate(double packetsPerSec)
 {
+    double rate;
     double pps = 0;
     double bps = 0;
     int n = 0;
 
+    qDebug("@%s: packetsPerSec = %g", __FUNCTION__, packetsPerSec);
+    qDebug("@%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
     foreach (Stream* s, mStreams)
     {
         if (!s->isEnabled())
             continue;
 
-        s->setAveragePacketRate(packetsPerSec);
+        switch (transmitMode())
+        {
+        case OstProto::kSequentialTransmit:
+            rate = s->averagePacketRate() * (packetsPerSec/avgPacketsPerSec_);
+            break;
+        case OstProto::kInterleavedTransmit:
+            rate = s->averagePacketRate() + 
+                ((s->averagePacketRate()/avgPacketsPerSec_) * 
+                 (packetsPerSec - avgPacketsPerSec_));
+            break;
+        default:
+            Q_ASSERT(false); // Unreachable!!
+        }
+
+        qDebug("cur stream pps = %g", s->averagePacketRate());
+
+        s->setAveragePacketRate(rate);
+
+        qDebug("new stream pps = %g", s->averagePacketRate());
 
         double r = s->averagePacketRate();
         pps += r;
-        bps += r * s->frameLenAvg() * 8;
+        bps += r * (s->frameLenAvg() + kEthOverhead) * 8;
         n++;
 
-        if (s->nextWhat() == Stream::e_nw_stop)
+        if ((transmitMode() == OstProto::kSequentialTransmit) 
+                && (s->nextWhat() == Stream::e_nw_stop))
             break;
     }
 
     if (n)
     {
-        avgPacketsPerSec_ = pps/n;
-        avgBitsPerSec_ = bps/n;
+        switch (transmitMode())
+        {
+        case OstProto::kSequentialTransmit:
+            avgPacketsPerSec_ = pps/n;
+            avgBitsPerSec_ = bps/n;
+            break;
+        case OstProto::kInterleavedTransmit:
+            avgPacketsPerSec_ = pps;
+            avgBitsPerSec_ = bps;
+            break;
+        default:
+            Q_ASSERT(false); // Unreachable!!
+        }
+        numActiveStreams_ = n;
     }
     else
-        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+        avgPacketsPerSec_ = avgBitsPerSec_ = numActiveStreams_ = 0;
 
-    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
-            avgPacketsPerSec_, avgBitsPerSec_);
+    qDebug("%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
 
     emit portRateChanged(mPortGroupId, mPortId);
-
 }
 
 void Port::setAverageBitRate(double bitsPerSec)
 {
+    double rate;
     double pps = 0;
     double bps = 0;
     int n = 0;
 
+    qDebug("@%s: bitsPerSec = %g", __FUNCTION__, bitsPerSec);
+    qDebug("@%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
     foreach (Stream* s, mStreams)
     {
         if (!s->isEnabled())
             continue;
 
-        s->setAveragePacketRate(bitsPerSec/s->frameLenAvg());
+        switch (transmitMode())
+        {
+        case OstProto::kSequentialTransmit:
+            rate = s->averagePacketRate() * (bitsPerSec/avgBitsPerSec_);
+            qDebug("rate = %g", rate);
+            break;
+        case OstProto::kInterleavedTransmit:
+            rate = s->averagePacketRate() 
+                + ((s->averagePacketRate()/avgPacketsPerSec_) 
+                        * ((bitsPerSec - avgBitsPerSec_)
+                            / ((s->frameLenAvg()+kEthOverhead)*8)));
+            break;
+        default:
+            Q_ASSERT(false); // Unreachable!!
+        }
+
+        qDebug("cur stream pps = %g", s->averagePacketRate());
+
+        s->setAveragePacketRate(rate);
+
+        qDebug("new stream pps = %g", s->averagePacketRate());
 
         double r = s->averagePacketRate();
         pps += r;
-        bps += r * s->frameLenAvg() * 8;
+        bps += r * (s->frameLenAvg() + kEthOverhead) * 8;
         n++;
 
-        if (s->nextWhat() == Stream::e_nw_stop)
+        if ((transmitMode() == OstProto::kSequentialTransmit) 
+                && (s->nextWhat() == Stream::e_nw_stop))
             break;
     }
 
     if (n)
     {
-        avgPacketsPerSec_ = pps/n;
-        avgBitsPerSec_ = bps/n;
+        switch (transmitMode())
+        {
+        case OstProto::kSequentialTransmit:
+            avgPacketsPerSec_ = pps/n;
+            avgBitsPerSec_ = bps/n;
+            break;
+        case OstProto::kInterleavedTransmit:
+            avgPacketsPerSec_ = pps;
+            avgBitsPerSec_ = bps;
+            break;
+        default:
+            Q_ASSERT(false); // Unreachable!!
+        }
+        numActiveStreams_ = n;
     }
     else
-        avgPacketsPerSec_ = avgBitsPerSec_ = 0;
+        avgPacketsPerSec_ = avgBitsPerSec_ = numActiveStreams_ = 0;
 
-    qDebug("%s: avgPps = %g avgBps = %g", __FUNCTION__,
-            avgPacketsPerSec_, avgBitsPerSec_);
-
+    qDebug("%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
+            avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
     emit portRateChanged(mPortGroupId, mPortId);
-
 }
 
 bool Port::newStreamAt(int index, OstProto::Stream const *stream)

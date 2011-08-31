@@ -253,6 +253,11 @@
     <string>Save Streams ...</string>
    </property>
   </action>
+  <action name="actionPort_Configuration" >
+   <property name="text" >
+    <string>Port Configuration ...</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="ostinato.qrc" />
