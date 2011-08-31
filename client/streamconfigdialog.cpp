@@ -165,8 +165,22 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     //! \todo Support Goto Stream Id
     leStreamId->setHidden(true);
     disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
-    //! \todo Support Continuous Mode
-    rbModeContinuous->setDisabled(true);
+
+    switch(mPort.transmitMode())
+    {
+    case OstProto::kSequentialTransmit:
+        rbModeFixed->setChecked(true);
+        rbModeContinuous->setDisabled(true);
+        break;
+    case OstProto::kInterleavedTransmit:
+        rbModeContinuous->setChecked(true);
+        rbModeFixed->setDisabled(true);
+
+        nextWhat->setHidden(true);
+        break;
+    default:
+        Q_ASSERT(false); // Unreachable
+    }
 
     // Finally, restore the saved last geometry and selected tab for the 
     // various tab widgets
@@ -1098,7 +1112,16 @@ void StreamConfigDialog::on_pbOk_clicked()
     // Store dialog contents into stream
     StoreCurrentStream();
 
-    if (!mpStream->preflightCheck(log))
+    if ((mPort.transmitMode() == OstProto::kInterleavedTransmit)
+            && (mpStream->isFrameVariable()))
+    {
+        log += "In 'Interleaved Streams' transmit mode, the count for "
+            "varying fields at transmit time may not be same as configured\n";
+    }
+
+    mpStream->preflightCheck(log);
+
+    if (log.length())
     {
         if (QMessageBox::warning(this, "Preflight Check", log + "\nContinue?",
                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) 

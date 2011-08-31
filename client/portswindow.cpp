@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portswindow.h"
 
 #include "abstractfileformat.h"
+#include "portconfigdialog.h"
 #include "streamconfigdialog.h"
 #include "streamlistdelegate.h"
 
@@ -54,6 +55,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvPortList->addAction(actionDisconnect_Port_Group);
 
     tvPortList->addAction(actionExclusive_Control);
+    tvPortList->addAction(actionPort_Configuration);
 
     // Populate StramList Context Menu Actions
     tvStreamList->addAction(actionNew_Stream);
@@ -156,6 +158,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
     updatePortViewActions(current);
     updateStreamViewActions();
 
+    qDebug("In %s", __FUNCTION__);
+
     if (previous.isValid() && plm->isPort(previous))
     {
         disconnect(&(plm->port(previous)), SIGNAL(portRateChanged(int, int)),
@@ -186,6 +190,7 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
 void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
     const QModelIndex& bottomRight)
 {
+    qDebug("In %s", __FUNCTION__);
 #if 0 // not sure why the >= <= operators are not overloaded in QModelIndex
     if ((tvPortList->currentIndex() >= topLeft) &&
         (tvPortList->currentIndex() <= bottomRight))
@@ -195,7 +200,10 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
         (((tvPortList->currentIndex() < bottomRight)) || 
             (tvPortList->currentIndex() == bottomRight)))
     {
-        updatePortViewActions(tvPortList->currentIndex());
+        // Update UI to reflect potential change in exclusive mode,
+        // transmit mode et al
+        when_portView_currentChanged(tvPortList->currentIndex(),
+                tvPortList->currentIndex());
     }
 }
 
@@ -223,7 +231,7 @@ void PortsWindow::on_averageBitsPerSec_editingFinished()
     Q_ASSERT(plm->isPort(current));
 
     bool isOk;
-    double bps = QLocale().toDouble(averageBitsPerSec->text(), &isOk)/8;
+    double bps = QLocale().toDouble(averageBitsPerSec->text(), &isOk);
 
     plm->port(current).setAverageBitRate(bps);
 }
@@ -300,6 +308,7 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
         actionDisconnect_Port_Group->setDisabled(true);
 
         actionExclusive_Control->setDisabled(true);
+        actionPort_Configuration->setDisabled(true);
     
         goto _EXIT;
     }
@@ -311,6 +320,7 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
         actionDelete_Port_Group->setEnabled(true);
 
         actionExclusive_Control->setDisabled(true);
+        actionPort_Configuration->setDisabled(true);
 
         switch(plm->portGroup(current).state())
         {
@@ -349,6 +359,7 @@ void PortsWindow::updatePortViewActions(const QModelIndex& current)
             actionExclusive_Control->setChecked(true);
         else
             actionExclusive_Control->setChecked(false);
+        actionPort_Configuration->setEnabled(true);
     }
 
 _EXIT:
@@ -458,7 +469,29 @@ void PortsWindow::on_actionExclusive_Control_triggered(bool checked)
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
 
     if (plm->isPort(current))
-        plm->portGroup(current.parent()).modifyPort(current.row(), checked);
+    {
+        OstProto::Port config;
+        
+        config.set_is_exclusive_control(checked);
+        plm->portGroup(current.parent()).modifyPort(current.row(), config);
+    }
+}
+
+void PortsWindow::on_actionPort_Configuration_triggered()
+{
+    QModelIndex    current = tvPortList->selectionModel()->currentIndex();
+
+    if (!plm->isPort(current))
+        return;
+
+    OstProto::Port config;
+    config.set_transmit_mode(plm->port(current).transmitMode());
+    config.set_is_exclusive_control(plm->port(current).hasExclusiveControl());
+
+    PortConfigDialog dialog(config, this);
+
+    if (dialog.exec() == QDialog::Accepted)
+        plm->portGroup(current.parent()).modifyPort(current.row(), config);
 }
 
 void PortsWindow::on_actionNew_Stream_triggered()

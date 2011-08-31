@@ -151,6 +151,11 @@ message StreamIdList {
     repeated StreamId stream_id = 2;
 }
 
+enum TransmitMode {
+    kSequentialTransmit = 0;
+    kInterleavedTransmit = 1;
+}
+
 message Port {
     required PortId port_id = 1;
     optional string name = 2;
@@ -158,6 +163,7 @@ message Port {
     optional string notes = 4;
     optional bool is_enabled = 5;
     optional bool is_exclusive_control = 6;
+    optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
 }
 
 message PortConfigList {

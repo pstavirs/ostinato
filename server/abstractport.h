@@ -73,7 +73,8 @@ public:
     virtual void clearPacketList() = 0;
     virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) = 0;
-    virtual void setPacketListLoopMode(bool loop, long nsecDelay) = 0;
+    virtual void setPacketListLoopMode(bool loop, 
+            long secDelay, long nsecDelay) = 0;
     void updatePacketList();
 
     virtual void startTransmit() = 0;
@@ -89,6 +90,9 @@ public:
     void resetStats() { epochStats_ = stats_; }
 
 protected:
+    void updatePacketListSequential();
+    void updatePacketListInterleaved();
+
     bool isUsable_;
     OstProto::Port          data_;
     OstProto::LinkState     linkState_;
