@@ -42,6 +42,9 @@ public:
         transmitter_->clearPacketList();
         setPacketListLoopMode(false, 0, 0);
     }
+    virtual void loopNextPacketSet(qint64 size, qint64 repeats) {
+        transmitter_->loopNextPacketSet(size, repeats);
+    }
     virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) {
         return transmitter_->appendToPacketList(sec, nsec, packet, length); 
@@ -96,6 +99,7 @@ protected:
         PortTransmitter(const char *device);
         ~PortTransmitter();
         void clearPacketList();
+        void loopNextPacketSet(qint64 size, qint64 repeats);
         bool appendToPacketList(long sec, long usec, const uchar *packet, 
             int length);
         void setPacketListLoopMode(bool loop, long secDelay, long nsecDelay) {
@@ -112,7 +116,14 @@ protected:
                     int sync);
 
         quint64 ticksFreq_;
+        int currentPacketSetQIdx_;
+        int currentPacketSetSize_;
+        int currentPacketSetRepeat_;
+        int currentPacketSetCount_;
+        pcap_send_queue* currentSendQueue_;
         QList<pcap_send_queue*> sendQueueList_;
+        QList<int> sendQueueRepeat_;
+        QList<int> sendQueueGoto_;
         int returnToQIdx_;
         long loopDelay_;
         bool usingInternalStats_;

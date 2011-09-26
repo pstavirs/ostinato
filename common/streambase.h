@@ -138,6 +138,7 @@ public:
 
     bool isFrameVariable() const;
     bool isFrameSizeVariable() const;
+    int frameVariableCount() const;
     int frameProtocolLength(int frameIndex) const;
     int frameCount() const;
     int frameValue(uchar *buf, int bufMaxSize, int frameIndex) const;

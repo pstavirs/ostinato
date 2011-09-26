@@ -611,6 +611,19 @@ bool Ip4Protocol::isProtocolFrameValueVariable() const
         return false;
 }
 
+int Ip4Protocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    if (data.src_ip_mode() != OstProto::Ip4::e_im_fixed)
+        count = AbstractProtocol::lcm(count, data.src_ip_count());
+
+    if (data.dst_ip_mode() != OstProto::Ip4::e_im_fixed)
+        count = AbstractProtocol::lcm(count, data.dst_ip_count());
+
+    return count;
+}
+
 quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
     CksumType cksumType) const
 {

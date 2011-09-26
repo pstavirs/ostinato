@@ -570,6 +570,23 @@ bool AbstractProtocol::isProtocolFrameSizeVariable() const
 }
 
 /*!
+  Returns the number of frames required for the protocol to vary its fields
+
+  This is the lowest common multiple (LCM) of the counts of all the varying 
+  fields in the protocol. Use the AbstractProtocol::lcm() static utility
+  function to calculate the LCM.
+
+  The default implementation returns 1 implying that the protocol has no
+  varying fields. A subclass should reimplement if it has varying fields 
+  e.g. an IP protocol that increments/decrements the IP address with 
+  every packet  
+*/
+int AbstractProtocol::protocolFrameVariableCount() const
+{
+    return 1;
+}
+
+/*!
   Returns true if the payload content for a protocol varies at run-time,
   false otherwise
 
@@ -822,4 +839,52 @@ out:
   In the base class this is a pure virtual function. Subclasses MUST implement 
   this function. See the SampleProtocol for an example
 */
+
+// Stein's binary GCD algo - from wikipedia
+quint64 AbstractProtocol::gcd(quint64 u, quint64 v)
+{
+    int shift;
+
+    /* GCD(0,x) := x */
+    if (u == 0 || v == 0)
+        return u | v;
+
+    /* Let shift := lg K, where K is the greatest power of 2
+       dividing both u and v. */
+    for (shift = 0; ((u | v) & 1) == 0; ++shift) {
+        u >>= 1;
+        v >>= 1;
+    }
+
+    while ((u & 1) == 0)
+        u >>= 1;
+
+    /* From here on, u is always odd. */
+    do {
+        while ((v & 1) == 0)  /* Loop X */
+            v >>= 1;
+
+        /* Now u and v are both odd, so diff(u, v) is even.
+           Let u = min(u, v), v = diff(u, v)/2. */
+        if (u < v) {
+            v -= u;
+        } else {
+            quint64 diff = u - v;
+            u = v;
+            v = diff;
+        }
+        v >>= 1;
+    } while (v != 0);
+
+    return u << shift;
+}
+
+quint64 AbstractProtocol::lcm(quint64 u, quint64 v)
+{
+    /* FIXME: LCM(0,x) := x */
+    if (u == 0 || v == 0)
+        return u | v;
+
+    return (u * v)/gcd(u, v);
+}
 

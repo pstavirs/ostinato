@@ -71,6 +71,7 @@ public:
     void setDirty() { isSendQueueDirty_ = true; }
 
     virtual void clearPacketList() = 0;
+    virtual void loopNextPacketSet(qint64 size, qint64 repeats) = 0;
     virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) = 0;
     virtual void setPacketListLoopMode(bool loop, 
