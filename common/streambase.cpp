@@ -440,6 +440,27 @@ _exit:
     return true;
 }
 
+int StreamBase::frameVariableCount() const
+{
+    ProtocolListIterator    *iter;
+    quint64 frameCount = 1;
+
+    iter = createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        AbstractProtocol    *proto;
+        int count;
+
+        proto = iter->next();
+        count = proto->protocolFrameVariableCount();
+
+        frameCount = AbstractProtocol::lcm(frameCount, count);
+    }
+    delete iter;
+
+    return frameCount;
+}
+
 // frameProtocolLength() returns the sum of all the individual protocol sizes
 // which may be different from frameLen()
 int StreamBase::frameProtocolLength(int frameIndex) const

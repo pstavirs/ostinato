@@ -139,6 +139,7 @@ public:
 
     virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
+    virtual int protocolFrameVariableCount() const;
     bool isProtocolFramePayloadValueVariable() const;
     bool isProtocolFramePayloadSizeVariable() const;
 
@@ -156,6 +157,9 @@ public:
     virtual QWidget* configWidget() = 0;
     virtual void loadConfigWidget() = 0;
     virtual void storeConfigWidget() = 0;
+
+    static quint64 lcm(quint64 u, quint64 v);
+    static quint64 gcd(quint64 u, quint64 v);
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
 

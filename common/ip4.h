@@ -102,6 +102,7 @@ public:
             FieldAttrib attrib = FieldValue);
 
     virtual bool isProtocolFrameValueVariable() const;
+    virtual int protocolFrameVariableCount() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;

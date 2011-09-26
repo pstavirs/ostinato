@@ -21,10 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 
+#include "../common/streambase.h"
+#include "../common/abstractprotocol.h"
+
 #include <QString>
 #include <QIODevice>
 
-#include "../common/streambase.h"
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
@@ -136,8 +138,6 @@ void AbstractPort::updatePacketList()
 
 void AbstractPort::updatePacketListSequential()
 {
-    int     len;
-    bool    isVariable;
     long    sec = 0; 
     long    nsec = 0;
 
@@ -152,7 +152,8 @@ void AbstractPort::updatePacketListSequential()
     {
         if (streamList_[i]->isEnabled())
         {
-            long numPackets, numBursts;
+            long n, x, y;
+            long burstSize;
             double ibg = 0;
             long ibg1 = 0, ibg2 = 0;
             long nb1 = 0, nb2 = 0;
@@ -163,27 +164,32 @@ void AbstractPort::updatePacketListSequential()
             switch (streamList_[i]->sendUnit())
             {
             case OstProto::StreamControl::e_su_bursts:
-                numBursts = streamList_[i]->numBursts();
-                numPackets = streamList_[i]->burstSize();
+                burstSize = streamList_[i]->burstSize();
+                x = AbstractProtocol::lcm(streamList_[i]->frameVariableCount(),
+                        burstSize);
+                n = ulong(burstSize * streamList_[i]->burstRate()) / x;
+                y = ulong(burstSize * streamList_[i]->burstRate()) % x;
                 if (streamList_[i]->burstRate() > 0)
                 {
                     ibg = 1e9/double(streamList_[i]->burstRate());
                     ibg1 = long(ceil(ibg));
                     ibg2 = long(floor(ibg));
-                    nb1 = long((ibg - double(ibg2)) * double(numBursts));
-                    nb2= numBursts - nb1;
+                    nb1  = long((ibg - double(ibg2)) * double(x));
+                    nb2  = x - nb1;
                 }
                 break;
             case OstProto::StreamControl::e_su_packets:
-                numBursts = 1;
-                numPackets = streamList_[i]->numPackets();
+                x = streamList_[i]->frameVariableCount();
+                n = streamList_[i]->numPackets() / x;
+                y = streamList_[i]->numPackets() % x;
+                burstSize = x + y;
                 if (streamList_[i]->packetRate() > 0)
                 {
                     ipg = 1e9/double(streamList_[i]->packetRate());
                     ipg1 = long(ceil(ipg));
                     ipg2 = long(floor(ipg));
-                    np1 = long((ipg - double(ipg2)) * double(numPackets));
-                    np2= numPackets - np1;
+                    np1  = long((ipg - double(ipg2)) * double(x));
+                    np2  = x - np1;
                 }
                 break;
             default:
@@ -191,56 +197,51 @@ void AbstractPort::updatePacketListSequential()
                     streamList_[i]->sendUnit());
                 continue;
             }
-            qDebug("numBursts = %ld, numPackets = %ld\n",
-                    numBursts, numPackets);
-            qDebug("ibg = %g, ibg1/nb1 = %ld/%ld ibg2/nb2 = %ld/%ld\n", 
+
+            qDebug("\nframeVariableCount = %d", 
+                    streamList_[i]->frameVariableCount());
+            qDebug("n = %ld, x = %ld, y = %ld, burstSize = %ld",
+                    n, x, y, burstSize);
+            qDebug("ibg = %g, ibg1/nb1 = %ld/%ld ibg2/nb2 = %ld/%ld", 
                     ibg, ibg1, nb1, ibg2, nb2);
             qDebug("ipg = %g, ipg1/np1 = %ld/%ld ipg2/np2 = %ld/%ld\n", 
                     ipg, ipg1, np1, ipg2, np2);
 
-            if (streamList_[i]->isFrameVariable())
-            {
-                isVariable = true;
-                len = 0; // avoid compiler warning; get len value for each pkt
-            }
-            else
-            {
-                isVariable = false;
-                len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 0);
-            }
+            if (n > 1)
+                loopNextPacketSet(x, n);
 
-            for (int j = 0; j < numBursts; j++)
+            for (int j = 0; j < (x+y); j++)
             {
-                for (int k = 0; k < numPackets; k++)
+                int len;
+                
+                len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), j);
+                if (len <= 0)
+                    continue;
+
+                qDebug("q(%d, %d) sec = %lu nsec = %lu",
+                        i, j, sec, nsec);
+
+                appendToPacketList(sec, nsec, pktBuf_, len); 
+
+                if ((j % burstSize) == 0)
                 {
-                    if (isVariable)
-                    {
-                        len = streamList_[i]->frameValue(pktBuf_, 
-                                sizeof(pktBuf_), j * numPackets + k);
-                    }
-                    if (len <= 0)
-                        continue;
-
-                    qDebug("q(%d, %d, %d) sec = %lu nsec = %lu",
-                            i, j, k, sec, nsec);
-
-                    appendToPacketList(sec, nsec, pktBuf_, len); 
-
-                    nsec += (k < np1) ? ipg1 : ipg2;
+                    nsec += (j < nb1) ? ibg1 : ibg2;
                     while (nsec >= 1e9)
                     {
                         sec++;
                         nsec -= long(1e9);
                     }
-                } // for (numPackets)
-
-                nsec += (j < nb1) ? ibg1 : ibg2;
-                while (nsec >= 1e9)
-                {
-                    sec++;
-                    nsec -= long(1e9);
                 }
-            } // for (numBursts)
+                else
+                {
+                    nsec += (j < np1) ? ipg1 : ipg2;
+                    while (nsec >= 1e9)
+                    {
+                        sec++;
+                        nsec -= long(1e9);
+                    }
+                }
+            }
 
             switch(streamList_[i]->nextWhat())
             {
