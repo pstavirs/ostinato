@@ -111,21 +111,43 @@ protected:
         void run();
         void stop();
     private:
+
+        class PacketSequence
+        {
+        public:
+            PacketSequence() {
+                sendQueue_ = pcap_sendqueue_alloc(1*1024*1024);
+                repeatCount_ = 1;
+                repeatSize_ = 1;
+            }
+            ~PacketSequence() {
+                pcap_sendqueue_destroy(sendQueue_);
+            }
+            bool hasFreeSpace(int size) {
+                if ((sendQueue_->len + size) <= sendQueue_->maxlen)
+                    return true;
+                else
+                    return false;
+            }
+            pcap_send_queue *sendQueue_;
+            int repeatCount_;
+            int repeatSize_;
+        };
+
         void udelay(long usec);
         int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
                     int sync);
 
         quint64 ticksFreq_;
-        int currentPacketSetQIdx_;
-        int currentPacketSetSize_;
-        int currentPacketSetRepeat_;
-        int currentPacketSetCount_;
-        pcap_send_queue* currentSendQueue_;
-        QList<pcap_send_queue*> sendQueueList_;
-        QList<int> sendQueueRepeat_;
-        QList<int> sendQueueGoto_;
+        QList<PacketSequence*> packetSequenceList_;
+        PacketSequence *currentPacketSequence_;
+        int repeatSequenceStart_;
+        quint64 repeatSize_;
+        quint64 packetCount_;
+
         int returnToQIdx_;
         long loopDelay_;
+
         bool usingInternalStats_;
         AbstractPort::PortStats *stats_;
         bool usingInternalHandle_;

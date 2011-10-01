@@ -161,6 +161,9 @@ void AbstractPort::updatePacketListSequential()
             long ipg1 = 0, ipg2 = 0;
             long np1 = 0, np2 = 0;
 
+            // We derive n, x, y such that
+            // n * x + y = total number of packets to be sent
+
             switch (streamList_[i]->sendUnit())
             {
             case OstProto::StreamControl::e_su_bursts:
@@ -209,6 +212,8 @@ void AbstractPort::updatePacketListSequential()
 
             if (n > 1)
                 loopNextPacketSet(x, n);
+            else if (n == 0)
+                x = 0;
 
             for (int j = 0; j < (x+y); j++)
             {

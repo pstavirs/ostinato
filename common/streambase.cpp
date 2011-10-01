@@ -454,6 +454,10 @@ int StreamBase::frameVariableCount() const
         proto = iter->next();
         count = proto->protocolFrameVariableCount();
 
+        // correct count for mis-behaving protocols
+        if (count <= 0)
+            count = 1;
+
         frameCount = AbstractProtocol::lcm(frameCount, count);
     }
     delete iter;
