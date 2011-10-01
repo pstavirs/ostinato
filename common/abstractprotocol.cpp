@@ -570,7 +570,8 @@ bool AbstractProtocol::isProtocolFrameSizeVariable() const
 }
 
 /*!
-  Returns the number of frames required for the protocol to vary its fields
+  Returns the minimum number of frames required for the protocol to 
+  vary its fields
 
   This is the lowest common multiple (LCM) of the counts of all the varying 
   fields in the protocol. Use the AbstractProtocol::lcm() static utility
