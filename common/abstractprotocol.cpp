@@ -882,9 +882,19 @@ quint64 AbstractProtocol::gcd(quint64 u, quint64 v)
 
 quint64 AbstractProtocol::lcm(quint64 u, quint64 v)
 {
-    /* FIXME: LCM(0,x) := x */
+#if 0
+    /* LCM(0,x) := x */
     if (u == 0 || v == 0)
         return u | v;
+#else
+    /* For our use case, neither u nor v can ever be 0, the minimum
+       value is 1; we do this correction silently here */
+    if (u == 0) u = 1;
+    if (v == 0) v = 1;
+
+    if (u == 1 || v == 1)
+        return (u * v);
+#endif
 
     return (u * v)/gcd(u, v);
 }

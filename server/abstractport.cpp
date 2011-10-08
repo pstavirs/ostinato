@@ -152,14 +152,18 @@ void AbstractPort::updatePacketListSequential()
     {
         if (streamList_[i]->isEnabled())
         {
-            long n, x, y;
-            long burstSize;
+            int len;
+            ulong n, x, y;
+            ulong burstSize;
             double ibg = 0;
-            long ibg1 = 0, ibg2 = 0;
-            long nb1 = 0, nb2 = 0;
+            quint64 ibg1 = 0, ibg2 = 0;
+            quint64 nb1 = 0, nb2 = 0;
             double ipg = 0;
-            long ipg1 = 0, ipg2 = 0;
-            long np1 = 0, np2 = 0;
+            quint64 ipg1 = 0, ipg2 = 0;
+            quint64 npx1 = 0, npx2 = 0;
+            quint64 npy1 = 0, npy2 = 0;
+            quint64 loopDelay;
+            ulong frameVariableCount = streamList_[i]->frameVariableCount();
 
             // We derive n, x, y such that
             // n * x + y = total number of packets to be sent
@@ -168,32 +172,37 @@ void AbstractPort::updatePacketListSequential()
             {
             case OstProto::StreamControl::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
-                x = AbstractProtocol::lcm(streamList_[i]->frameVariableCount(),
-                        burstSize);
-                n = ulong(burstSize * streamList_[i]->burstRate()) / x;
-                y = ulong(burstSize * streamList_[i]->burstRate()) % x;
+                x = AbstractProtocol::lcm(frameVariableCount, burstSize);
+                n = ulong(burstSize * streamList_[i]->burstRate() 
+                            * streamList_[i]->numBursts()) / x;
+                y = ulong(burstSize * streamList_[i]->burstRate() 
+                            * streamList_[i]->numBursts()) % x;
                 if (streamList_[i]->burstRate() > 0)
                 {
                     ibg = 1e9/double(streamList_[i]->burstRate());
-                    ibg1 = long(ceil(ibg));
-                    ibg2 = long(floor(ibg));
-                    nb1  = long((ibg - double(ibg2)) * double(x));
+                    ibg1 = quint64(ceil(ibg));
+                    ibg2 = quint64(floor(ibg));
+                    nb1  = quint64((ibg - double(ibg2)) * double(x));
                     nb2  = x - nb1;
                 }
+                loopDelay = ibg2;
                 break;
             case OstProto::StreamControl::e_su_packets:
-                x = streamList_[i]->frameVariableCount();
+                x = frameVariableCount;
                 n = streamList_[i]->numPackets() / x;
                 y = streamList_[i]->numPackets() % x;
                 burstSize = x + y;
                 if (streamList_[i]->packetRate() > 0)
                 {
                     ipg = 1e9/double(streamList_[i]->packetRate());
-                    ipg1 = long(ceil(ipg));
-                    ipg2 = long(floor(ipg));
-                    np1  = long((ipg - double(ipg2)) * double(x));
-                    np2  = x - np1;
+                    ipg1 = quint64(ceil(ipg));
+                    ipg2 = quint64(floor(ipg));
+                    npx1  = quint64((ipg - double(ipg2)) * double(x));
+                    npx2  = x - npx1;
+                    npy1  = quint64((ipg - double(ipg2)) * double(y));
+                    npy2  = y - npy1;
                 }
+                loopDelay = ipg2;
                 break;
             default:
                 qWarning("Unhandled stream control unit %d",
@@ -201,25 +210,37 @@ void AbstractPort::updatePacketListSequential()
                 continue;
             }
 
-            qDebug("\nframeVariableCount = %d", 
-                    streamList_[i]->frameVariableCount());
-            qDebug("n = %ld, x = %ld, y = %ld, burstSize = %ld",
+            qDebug("\nframeVariableCount = %lu", frameVariableCount);
+            qDebug("n = %lu, x = %lu, y = %lu, burstSize = %lu",
                     n, x, y, burstSize);
-            qDebug("ibg = %g, ibg1/nb1 = %ld/%ld ibg2/nb2 = %ld/%ld", 
-                    ibg, ibg1, nb1, ibg2, nb2);
-            qDebug("ipg = %g, ipg1/np1 = %ld/%ld ipg2/np2 = %ld/%ld\n", 
-                    ipg, ipg1, np1, ipg2, np2);
+
+            qDebug("ibg  = %g", ibg);
+            qDebug("ibg1 = %" PRIu64, ibg1);
+            qDebug("nb1  = %" PRIu64, nb1);
+            qDebug("ibg2 = %" PRIu64, ibg2);
+            qDebug("nb2  = %" PRIu64 "\n", nb2);
+
+            qDebug("ipg  = %g", ipg);
+            qDebug("ipg1 = %" PRIu64, ipg1);
+            qDebug("npx1 = %" PRIu64, npx1);
+            qDebug("npy1 = %" PRIu64, npy1);
+            qDebug("ipg2 = %" PRIu64, ipg2);
+            qDebug("npx2 = %" PRIu64, npx2);
+            qDebug("npy2 = %" PRIu64 "\n", npy2);
 
             if (n > 1)
-                loopNextPacketSet(x, n);
+                loopNextPacketSet(x, n, 0, loopDelay);
             else if (n == 0)
                 x = 0;
 
-            for (int j = 0; j < (x+y); j++)
+            for (uint j = 0; j < (x+y); j++)
             {
-                int len;
                 
-                len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), j);
+                if (j == 0 || frameVariableCount > 1)
+                {
+                    len = streamList_[i]->frameValue(
+                            pktBuf_, sizeof(pktBuf_), j);
+                }
                 if (len <= 0)
                     continue;
 
@@ -228,10 +249,10 @@ void AbstractPort::updatePacketListSequential()
 
                 appendToPacketList(sec, nsec, pktBuf_, len); 
 
-                if ((j % burstSize) == 0)
+                if ((j > 0) && (((j+1) % burstSize) == 0))
                 {
                     nsec += (j < nb1) ? ibg1 : ibg2;
-                    while (nsec >= 1e9)
+                    while (nsec >= long(1e9))
                     {
                         sec++;
                         nsec -= long(1e9);
@@ -239,8 +260,12 @@ void AbstractPort::updatePacketListSequential()
                 }
                 else
                 {
-                    nsec += (j < np1) ? ipg1 : ipg2;
-                    while (nsec >= 1e9)
+                    if (j < x)
+                        nsec += (j < npx1) ? ipg1 : ipg2;
+                    else
+                        nsec += ((j-x) < npy1) ? ipg1 : ipg2;
+
+                    while (nsec >= long(1e9))
                     {
                         sec++;
                         nsec -= long(1e9);
