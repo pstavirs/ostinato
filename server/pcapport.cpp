@@ -301,10 +301,13 @@ void PcapPort::PortTransmitter::clearPacketList()
     setPacketListLoopMode(false, 0, 0); 
 }
 
-void PcapPort::PortTransmitter::loopNextPacketSet(qint64 size, qint64 repeats)
+void PcapPort::PortTransmitter::loopNextPacketSet(qint64 size, qint64 repeats,
+        long repeatDelaySec, long repeatDelayNsec)
 {
     currentPacketSequence_ = new PacketSequence;
     currentPacketSequence_->repeatCount_ = repeats;
+    currentPacketSequence_->usecDelay_ = repeatDelaySec * long(1e6) 
+                                            + repeatDelayNsec/1000;
 
     repeatSequenceStart_ = packetSequenceList_.size();
     repeatSize_ = size;
@@ -328,7 +331,7 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec,
     {
         // Add a zero len packet at end of currentSendQueue_ for 
         // inter-sendQ timing
-        if (packetSequenceList_.size())
+        if (currentPacketSequence_ != NULL)
         {
             pcap_pkthdr hdr = pktHdr;
             hdr.caplen = 0;
@@ -360,8 +363,16 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec,
         // Set the packetSequence repeatSize 
         Q_ASSERT(repeatSequenceStart_ >= 0);
         Q_ASSERT(repeatSequenceStart_ < packetSequenceList_.size());
-        packetSequenceList_[repeatSequenceStart_]->repeatSize_ = 
-                packetSequenceList_.size() - repeatSequenceStart_;
+
+        if (currentPacketSequence_ != packetSequenceList_[repeatSequenceStart_])
+        {
+            PacketSequence *start = packetSequenceList_[repeatSequenceStart_];
+
+            currentPacketSequence_->usecDelay_ = start->usecDelay_;
+            start->usecDelay_ = 0;
+            start->repeatSize_ = 
+                    packetSequenceList_.size() - repeatSequenceStart_;
+        }
 
         repeatSize_ = 0;
 
@@ -413,9 +424,10 @@ void PcapPort::PortTransmitter::run()
         return;
 
     for(i = 0; i < packetSequenceList_.size(); i++) {
-        qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d", i, 
+        qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d usecDelay = %ld", i, 
                 packetSequenceList_.at(i)->repeatCount_, 
-                packetSequenceList_.at(i)->repeatSize_);
+                packetSequenceList_.at(i)->repeatSize_,
+                packetSequenceList_.at(i)->usecDelay_);
     }
 
     for(i = 0; i < packetSequenceList_.size(); i++)
@@ -433,7 +445,19 @@ _restart:
                             packetSequenceList_.at(i+k)->sendQueue_, 
                             overHead, kSyncTransmit);
 
-                if (ret < 0)
+                if (ret >= 0)
+                {
+                    long usecs = packetSequenceList_.at(i+k)->usecDelay_
+                                    + overHead; 
+                    if (usecs) 
+                    {
+                        udelay(usecs);
+                        overHead = 0;
+                    }
+                    else
+                        overHead = usecs;
+                }
+                else
                 {
                     qDebug("error %d in sendQueueTransmit()", ret);
                     qDebug("overHead = %ld", overHead);
