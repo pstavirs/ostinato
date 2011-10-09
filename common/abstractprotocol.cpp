@@ -57,6 +57,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   - protocolFrameSize()
   - isProtocolFrameValueVariable()
   - isProtocolFrameSizeVariable()
+  - protocolFrameVariableCount()
 
   See the description of the methods for more information.
 
@@ -554,7 +555,7 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
 */
 bool AbstractProtocol::isProtocolFrameValueVariable() const
 {
-    return false;
+    return (protocolFrameVariableCount() > 1);
 }
 
 /*!
@@ -629,6 +630,32 @@ bool AbstractProtocol::isProtocolFramePayloadSizeVariable() const
     }
     if (parent && parent->isProtocolFramePayloadSizeVariable())
         return true;
+
+    return false;
+}
+
+/*!
+  Returns true if the payload size for a protocol varies at run-time,
+  false otherwise
+
+  This is useful for subclasses which have fields dependent on payload size 
+  (e.g. UDP has a checksum field that varies if the payload varies)
+*/
+int AbstractProtocol::protocolFramePayloadVariableCount() const
+{
+    int count = 1;
+    AbstractProtocol *p = next;
+
+    while (p)
+    {
+        if (p->isProtocolFrameValueVariable() 
+                || p->isProtocolFrameSizeVariable())
+            count = lcm(count, p->protocolFrameVariableCount());
+        p = p->next;
+    }
+    if (parent && (parent->isProtocolFramePayloadValueVariable()
+                    || parent->isProtocolFramePayloadSizeVariable()))
+        count = lcm(count, parent->protocolFramePayloadVariableCount());
 
     return false;
 }

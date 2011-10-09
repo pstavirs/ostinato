@@ -925,6 +925,25 @@ bool GmpProtocol::isProtocolFrameValueVariable() const
     return false;
 }
 
+int GmpProtocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    // No fields vary for Ssm Query and Report
+    if (isSsmReport() || isSsmQuery())
+        return count;
+
+    // For all other msg types, check the group mode
+    if (fieldData(kGroupMode, FieldValue).toUInt() 
+            != uint(OstProto::Gmp::kFixed))
+    {
+        count = AbstractProtocol::lcm(count,
+                fieldData(kGroupCount, FieldValue).toUInt());
+    }
+
+    return count;
+}
+
 void GmpProtocol::loadConfigWidget()
 {
     configWidget();

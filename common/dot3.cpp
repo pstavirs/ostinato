@@ -203,6 +203,11 @@ bool Dot3Protocol::isProtocolFrameValueVariable() const
     return isProtocolFramePayloadSizeVariable();
 }
 
+int Dot3Protocol::protocolFrameVariableCount() const
+{
+    return protocolFramePayloadVariableCount();
+}
+
 QWidget* Dot3Protocol::configWidget()
 {
     if (configForm == NULL)

@@ -169,6 +169,12 @@ public:
         return (protoA->isProtocolFrameSizeVariable()
             || protoB->isProtocolFrameSizeVariable());
     }
+    virtual int protocolFrameVariableCount() const
+    {
+        return AbstractProtocol::lcm(
+                protoA->protocolFrameVariableCount(),
+                protoB->protocolFrameVariableCount());
+    }
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const

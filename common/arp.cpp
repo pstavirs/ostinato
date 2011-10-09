@@ -835,15 +835,54 @@ _exit:
     return isOk;
 }
 
-/*!
-  If your protocol has any variable fields, return true \n
-
-  Otherwise you don't need to reimplement this method - the base class always
-  returns false
-*/
 bool ArpProtocol::isProtocolFrameValueVariable() const
 {
-    return true;
+    if (fieldData(arp_senderHwAddrMode, FieldValue).toUInt() 
+                != uint(OstProto::Arp::kFixed)
+            || fieldData(arp_senderProtoAddrMode, FieldValue).toUInt() 
+                != uint(OstProto::Arp::kFixed)
+            || fieldData(arp_targetHwAddrMode, FieldValue).toUInt() 
+                != uint(OstProto::Arp::kFixed)
+            || fieldData(arp_targetProtoAddrMode, FieldValue).toUInt() 
+                != uint(OstProto::Arp::kFixed))
+        return true;
+
+    return false;
+}
+
+int ArpProtocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    if (fieldData(arp_senderHwAddrMode, FieldValue).toUInt() 
+            != uint(OstProto::Arp::kFixed))
+    {
+        count = AbstractProtocol::lcm(count,
+                fieldData(arp_senderHwAddrCount, FieldValue).toUInt());
+    }
+
+    if (fieldData(arp_senderProtoAddrMode, FieldValue).toUInt() 
+            != uint(OstProto::Arp::kFixed))
+    {
+        count = AbstractProtocol::lcm(count,
+                fieldData(arp_senderProtoAddrCount, FieldValue).toUInt());
+    }
+
+    if (fieldData(arp_targetHwAddrMode, FieldValue).toUInt() 
+            != uint(OstProto::Arp::kFixed))
+    {
+        count = AbstractProtocol::lcm(count,
+                fieldData(arp_targetHwAddrCount, FieldValue).toUInt());
+    }
+
+    if (fieldData(arp_targetProtoAddrMode, FieldValue).toUInt() 
+            != uint(OstProto::Arp::kFixed))
+    {
+        count = AbstractProtocol::lcm(count,
+                fieldData(arp_targetProtoAddrCount, FieldValue).toUInt());
+    }
+
+    return count;
 }
 
 QWidget* ArpProtocol::configWidget()
