@@ -226,6 +226,32 @@ bool PayloadProtocol::isProtocolFrameSizeVariable() const
         return true;
 }
 
+int PayloadProtocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    if (data.pattern_mode() == OstProto::Payload::e_dp_random)
+    {
+        switch(mpStream->sendUnit())
+        {
+        case OstProto::StreamControl::e_su_packets:
+            return mpStream->numPackets();
+
+        case OstProto::StreamControl::e_su_bursts:
+            return int(mpStream->numBursts() 
+                    * mpStream->burstSize() 
+                    * mpStream->burstRate());
+        }
+    }
+
+    if (mpStream->lenMode() != StreamBase::e_fl_fixed)
+    {
+        count = AbstractProtocol::lcm(count, 
+                mpStream->frameLenMax() - mpStream->frameLenMin() + 1);
+    }
+
+    return count;
+}
 
 QWidget* PayloadProtocol::configWidget()
 {

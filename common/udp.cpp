@@ -433,6 +433,14 @@ bool UdpProtocol::isProtocolFrameValueVariable() const
         return isProtocolFramePayloadValueVariable();
 }
 
+int UdpProtocol::protocolFrameVariableCount() const
+{
+    if (data.is_override_totlen() && data.is_override_cksum())
+        return 1;
+
+    return protocolFramePayloadVariableCount();
+}
+
 QWidget* UdpProtocol::configWidget()
 {
     if (configForm == NULL)

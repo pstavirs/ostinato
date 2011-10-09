@@ -473,6 +473,18 @@ bool SampleProtocol::isProtocolFrameSizeVariable() const
     return false;
 }
 
+/*!
+  TODO: If your protocol frame has any variable fields or has a variable
+  size, return the minimum number of frames required to vary the fields \n
+
+  Otherwise you don't need to reimplement this method - the base class always
+  returns 1
+*/
+int SampleProtocol::protocolFrameVariableCount() const
+{
+    return 1;
+}
+
 QWidget* SampleProtocol::configWidget()
 {
     /* Lazy creation of the configWidget */

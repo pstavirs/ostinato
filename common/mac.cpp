@@ -268,6 +268,18 @@ bool MacProtocol::isProtocolFrameValueVariable() const
         return false;
 }
 
+int MacProtocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    if (data.dst_mac_mode() != OstProto::Mac::e_mm_fixed)
+        count = AbstractProtocol::lcm(count, data.dst_mac_count());
+
+    if (data.src_mac_mode() != OstProto::Mac::e_mm_fixed)
+        count = AbstractProtocol::lcm(count, data.src_mac_count());
+
+    return count;
+}
 
 QWidget* MacProtocol::configWidget()
 {

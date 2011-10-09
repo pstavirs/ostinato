@@ -142,6 +142,7 @@ public:
     virtual int protocolFrameVariableCount() const;
     bool isProtocolFramePayloadValueVariable() const;
     bool isProtocolFramePayloadSizeVariable() const;
+    int protocolFramePayloadVariableCount() const;
 
     bool protocolHasPayload() const;
 

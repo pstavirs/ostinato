@@ -42,13 +42,17 @@ class UserProtocol : public QObject
     Q_PROPERTY(bool protocolFrameSizeVariable
             READ isProtocolFrameSizeVariable
             WRITE setProtocolFrameSizeVariable);
+    Q_PROPERTY(int protocolFrameVariableCount
+            READ protocolFrameVariableCount
+            WRITE setProtocolFrameVariableCount);
     
 public:
     enum ProtocolIdType
     {
         ProtocolIdLlc = AbstractProtocol::ProtocolIdLlc,
         ProtocolIdEth = AbstractProtocol::ProtocolIdEth,
-        ProtocolIdIp = AbstractProtocol::ProtocolIdIp
+        ProtocolIdIp = AbstractProtocol::ProtocolIdIp,
+        ProtocolIdTcpUdp = AbstractProtocol::ProtocolIdTcpUdp
     };
 
     enum CksumType
@@ -70,6 +74,8 @@ public slots:
     void setProtocolFrameValueVariable(bool variable);
     bool isProtocolFrameSizeVariable() const;
     void setProtocolFrameSizeVariable(bool variable);
+    int protocolFrameVariableCount() const;
+    void setProtocolFrameVariableCount(int count);
 
     quint32 payloadProtocolId(UserProtocol::ProtocolIdType type) const;
     int protocolFrameOffset(int streamIndex = 0) const;
@@ -77,6 +83,7 @@ public slots:
 
     bool isProtocolFramePayloadValueVariable() const;
     bool isProtocolFramePayloadSizeVariable() const;
+    int protocolFramePayloadVariableCount() const;
 
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,
         AbstractProtocol::CksumType cksumType = AbstractProtocol::CksumIp) const;
@@ -87,8 +94,9 @@ private:
     AbstractProtocol *parent_;
 
     QString name_;
-    bool    protocolFrameValueVariable_;
-    bool    protocolFrameSizeVariable_;
+    bool protocolFrameValueVariable_;
+    bool protocolFrameSizeVariable_;
+    int protocolFrameVariableCount_;
 };
 
 
@@ -141,6 +149,7 @@ public:
 
     virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
+    virtual int protocolFrameVariableCount() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
             CksumType cksumType = CksumIp) const;

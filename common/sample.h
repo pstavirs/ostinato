@@ -93,6 +93,7 @@ public:
 
     virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
+    virtual int protocolFrameVariableCount() const;
 
     virtual QWidget* configWidget();
     virtual void loadConfigWidget();

@@ -606,6 +606,14 @@ bool TcpProtocol::isProtocolFrameValueVariable() const
         return isProtocolFramePayloadValueVariable();
 }
 
+int TcpProtocol::protocolFrameVariableCount() const
+{
+    if (data.is_override_cksum())
+        return 1;
+
+    return protocolFramePayloadVariableCount();
+}
+
 QWidget* TcpProtocol::configWidget()
 {
     if (configForm == NULL)

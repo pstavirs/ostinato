@@ -808,6 +808,19 @@ bool Ip6Protocol::isProtocolFrameValueVariable() const
         return false;
 }
 
+int Ip6Protocol::protocolFrameVariableCount() const
+{
+    int count = 1;
+
+    if (data.src_addr_mode() != OstProto::Ip6::kFixed)
+        count = AbstractProtocol::lcm(count, data.src_addr_count());
+
+    if (data.dst_addr_mode() != OstProto::Ip6::kFixed)
+        count = AbstractProtocol::lcm(count, data.dst_addr_count());
+
+    return count;
+}
+
 quint32 Ip6Protocol::protocolFrameCksum(int streamIndex, 
         CksumType cksumType) const
 {

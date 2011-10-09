@@ -81,6 +81,7 @@ public:
             FieldAttrib attrib = FieldValue);
 
     virtual bool isProtocolFrameValueVariable() const;
+    virtual int protocolFrameVariableCount() const;
 
     virtual QWidget* configWidget();
     virtual void loadConfigWidget();

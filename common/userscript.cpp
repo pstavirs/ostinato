@@ -271,6 +271,11 @@ bool UserScriptProtocol::isProtocolFrameSizeVariable() const
     return userProtocol_.isProtocolFrameSizeVariable();
 }
 
+int UserScriptProtocol::protocolFrameVariableCount() const
+{
+    return userProtocol_.protocolFrameVariableCount();
+}
+
 quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
         CksumType cksumType) const
 {
@@ -532,6 +537,7 @@ void UserProtocol::reset()
     name_ = QString();
     protocolFrameValueVariable_ = false;
     protocolFrameSizeVariable_ = false;
+    protocolFrameVariableCount_ = 1;
 }
 
 QString UserProtocol::name() const
@@ -564,6 +570,16 @@ void UserProtocol::setProtocolFrameSizeVariable(bool variable)
     protocolFrameSizeVariable_ = variable;
 }
 
+int UserProtocol::protocolFrameVariableCount() const
+{
+    return protocolFrameVariableCount_;
+}
+
+void UserProtocol::setProtocolFrameVariableCount(int count)
+{
+    protocolFrameVariableCount_ = count;
+}
+
 quint32 UserProtocol::payloadProtocolId(UserProtocol::ProtocolIdType type) const
 {
     return parent_->payloadProtocolId(
@@ -588,6 +604,11 @@ bool UserProtocol::isProtocolFramePayloadValueVariable() const
 bool UserProtocol::isProtocolFramePayloadSizeVariable() const
 {
     return parent_->isProtocolFramePayloadSizeVariable();
+}
+
+int UserProtocol::protocolFramePayloadVariableCount() const
+{
+    return parent_->protocolFramePayloadVariableCount();
 }
 
 quint32 UserProtocol::protocolFrameHeaderCksum(int streamIndex,

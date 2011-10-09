@@ -298,6 +298,8 @@ void PcapPort::PortTransmitter::clearPacketList()
     repeatSize_ = 0;
     packetCount_ = 0;
 
+    returnToQIdx_ = -1;
+
     setPacketListLoopMode(false, 0, 0); 
 }
 
