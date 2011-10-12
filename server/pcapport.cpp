@@ -451,7 +451,7 @@ _restart:
                 {
                     long usecs = packetSequenceList_.at(i+k)->usecDelay_
                                     + overHead; 
-                    if (usecs) 
+                    if (usecs > 0) 
                     {
                         udelay(usecs);
                         overHead = 0;
