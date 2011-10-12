@@ -138,6 +138,7 @@ void AbstractPort::updatePacketList()
 
 void AbstractPort::updatePacketListSequential()
 {
+    const int kMinLoopSize = 16;
     long    sec = 0; 
     long    nsec = 0;
 
@@ -189,6 +190,9 @@ void AbstractPort::updatePacketListSequential()
                 break;
             case OstProto::StreamControl::e_su_packets:
                 x = frameVariableCount;
+                n = 2;
+                while (x < kMinLoopSize) 
+                    x = frameVariableCount*n++;
                 n = streamList_[i]->numPackets() / x;
                 y = streamList_[i]->numPackets() % x;
                 burstSize = x + y;
