@@ -44,6 +44,7 @@ WinPcapPort::WinPcapPort(int id, const char *device)
         qFatal("failed to alloc oidData");
 
     data_.set_is_exclusive_control(hasExclusiveControl());
+    minPacketSetSize_ = 256;
 }
 
 WinPcapPort::~WinPcapPort()
