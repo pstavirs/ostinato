@@ -98,6 +98,7 @@ protected:
     bool isUsable_;
     OstProto::Port          data_;
     OstProto::LinkState     linkState_;
+    ulong minPacketSetSize_;
 
     struct PortStats    stats_;
     //! \todo Need lock for stats access/update

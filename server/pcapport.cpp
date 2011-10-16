@@ -49,6 +49,25 @@ static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end)
 
     return usecs;
 }
+#elif defined(Q_OS_WIN32)
+static quint64 gTicksFreq;
+typedef LARGE_INTEGER TimeStamp;
+static void inline getTimeStamp(TimeStamp* stamp) 
+{
+    QueryPerformanceCounter(stamp);
+}
+
+static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end) 
+{
+    if (end->QuadPart > start->QuadPart)
+        return (end->QuadPart - start->QuadPart)*long(1e6)/gTicksFreq;
+    else
+    {
+        // FIXME: incorrect! what's the max value for this counter before
+        // it rolls over?
+        return (start->QuadPart)*long(1e6)/gTicksFreq;
+    }
+}
 #else
 typedef int TimeStamp;
 static void inline getTimeStamp(TimeStamp*) {}
@@ -256,7 +275,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
 #ifdef Q_OS_WIN32
     LARGE_INTEGER   freq;
     if (QueryPerformanceFrequency(&freq))
-        ticksFreq_ = freq.QuadPart;
+        gTicksFreq = ticksFreq_ = freq.QuadPart;
     else
         Q_ASSERT_X(false, "PortTransmitter::PortTransmitter",
                 "This Win32 platform does not support performance counter");
@@ -331,15 +350,18 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec,
     if (currentPacketSequence_ == NULL || 
             !currentPacketSequence_->hasFreeSpace(2*sizeof(pcap_pkthdr)+length))
     {
-        // Add a zero len packet at end of currentSendQueue_ for 
-        // inter-sendQ timing
         if (currentPacketSequence_ != NULL)
         {
-            pcap_pkthdr hdr = pktHdr;
-            hdr.caplen = 0;
-            pcap_sendqueue_queue(packetSequenceList_.last()->sendQueue_, 
-                    &hdr, (u_char*)packet);
+            long usecs;
+
+            usecs = (pktHdr.ts.tv_sec 
+                        - currentPacketSequence_->lastPacket_->ts.tv_sec) 
+                            * long(1e6);
+            usecs += (pktHdr.ts.tv_usec 
+                        - currentPacketSequence_->lastPacket_->ts.tv_usec);
+            currentPacketSequence_->usecDelay_ = usecs;
         }
+
         //! \todo (LOW): calculate sendqueue size
         currentPacketSequence_ = new PacketSequence;
 
@@ -350,8 +372,7 @@ bool PcapPort::PortTransmitter::appendToPacketList(long sec, long nsec,
                     sizeof(pcap_pkthdr) + length));
     }
 
-    if (pcap_sendqueue_queue(currentPacketSequence_->sendQueue_, &pktHdr, 
-                (u_char*) packet) < 0)
+    if (currentPacketSequence_->appendPacket(&pktHdr, (u_char*) packet) < 0)
     {
         op = false;
     }
@@ -419,17 +440,20 @@ void PcapPort::PortTransmitter::run()
 
     const int kSyncTransmit = 1;
     int i;
-    long overHead = 0;
+    long overHead = 0; // overHead should be negative or zero
 
     qDebug("packetSequenceList_.size = %d", packetSequenceList_.size());
     if (packetSequenceList_.size() <= 0)
         return;
 
     for(i = 0; i < packetSequenceList_.size(); i++) {
-        qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d usecDelay = %ld", i, 
+        qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d, usecDelay = %ld", i, 
                 packetSequenceList_.at(i)->repeatCount_, 
                 packetSequenceList_.at(i)->repeatSize_,
                 packetSequenceList_.at(i)->usecDelay_);
+        qDebug("sendQ[%d]: pkts = %ld, usecDuration = %ld", i, 
+                packetSequenceList_.at(i)->packets_, 
+                packetSequenceList_.at(i)->usecDuration_);
     }
 
     for(i = 0; i < packetSequenceList_.size(); i++)
@@ -443,14 +467,41 @@ _restart:
         {
             for (int k = 0; k < rptSz; k++)
             {
-                int ret = sendQueueTransmit(handle_, 
-                            packetSequenceList_.at(i+k)->sendQueue_, 
+                int ret;
+                PacketSequence *seq = packetSequenceList_.at(i+k);
+#ifdef Q_OS_WIN32
+                TimeStamp ovrStart, ovrEnd;
+
+                if (seq->usecDuration_ <= long(1e6)) // 1s
+                {
+                    getTimeStamp(&ovrStart);
+                    ret = pcap_sendqueue_transmit(handle_, 
+                            seq->sendQueue_, kSyncTransmit);
+                    if (ret >= 0)
+                    {
+                        stats_->txPkts += seq->packets_;
+                        stats_->txBytes += seq->bytes_;
+
+                        getTimeStamp(&ovrEnd);
+                        overHead += seq->usecDuration_ 
+                            - udiffTimeStamp(&ovrStart, &ovrEnd);
+                    }
+                    if (stop_)
+                        ret = -2;
+                }
+                else
+                {
+                    ret = sendQueueTransmit(handle_, seq->sendQueue_, 
                             overHead, kSyncTransmit);
+                }
+#else
+                ret = sendQueueTransmit(handle_, seq->sendQueue_, 
+                            overHead, kSyncTransmit);
+#endif
 
                 if (ret >= 0)
                 {
-                    long usecs = packetSequenceList_.at(i+k)->usecDelay_
-                                    + overHead; 
+                    long usecs = seq->usecDelay_ + overHead; 
                     if (usecs > 0) 
                     {
                         udelay(usecs);
@@ -530,14 +581,11 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
             getTimeStamp(&ovrStart);
         }
 
-        // A pktLen of size 0 is used at the end of a sendQueue and before
-        // the next sendQueue - i.e. for inter sendQueue timing
-        if(pktLen > 0)
-        {
-            pcap_sendpacket(p, pkt, pktLen);
-            stats_->txPkts++;
-            stats_->txBytes += pktLen;
-        }
+        Q_ASSERT(pktLen > 0);
+
+        pcap_sendpacket(p, pkt, pktLen);
+        stats_->txPkts++;
+        stats_->txBytes += pktLen;
 
         // Step to the next packet in the buffer
         hdr = (struct pcap_pkthdr*) (pkt + pktLen);

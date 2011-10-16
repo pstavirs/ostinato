@@ -42,6 +42,7 @@ LinuxPort::LinuxPort(int id, const char *device)
     monitor_ = new StatsMonitor();
 
     data_.set_is_exclusive_control(hasExclusiveControl());
+    minPacketSetSize_ = 16;
 
     qDebug("adding dev to all ports list <%s>", device);
     allPorts_.append(this);

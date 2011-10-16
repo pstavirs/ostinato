@@ -44,6 +44,7 @@ AbstractPort::AbstractPort(int id, const char *device)
 
     isSendQueueDirty_ = false;
     linkState_ = OstProto::LinkStateUnknown;
+    minPacketSetSize_ = 1;
 
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
@@ -138,7 +139,6 @@ void AbstractPort::updatePacketList()
 
 void AbstractPort::updatePacketListSequential()
 {
-    const int kMinLoopSize = 16;
     long    sec = 0; 
     long    nsec = 0;
 
@@ -191,7 +191,7 @@ void AbstractPort::updatePacketListSequential()
             case OstProto::StreamControl::e_su_packets:
                 x = frameVariableCount;
                 n = 2;
-                while (x < kMinLoopSize) 
+                while (x < minPacketSetSize_) 
                     x = frameVariableCount*n++;
                 n = streamList_[i]->numPackets() / x;
                 y = streamList_[i]->numPackets() % x;
