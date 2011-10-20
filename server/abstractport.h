@@ -76,7 +76,7 @@ public:
     virtual bool appendToPacketList(long sec, long nsec, const uchar *packet, 
             int length) = 0;
     virtual void setPacketListLoopMode(bool loop, 
-            long secDelay, long nsecDelay) = 0;
+            quint64 secDelay, quint64 nsecDelay) = 0;
     void updatePacketList();
 
     virtual void startTransmit() = 0;

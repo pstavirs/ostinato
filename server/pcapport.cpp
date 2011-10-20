@@ -160,21 +160,42 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
 {
     int ret;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
+    bool noLocalCapture;
 
     direction_ = direction;
     isDirectional_ = true;
     isPromisc_ = true;
+    noLocalCapture = true;
     stats_ = stats;
+
 _retry:
+#ifdef Q_OS_WIN32
+    int flags = 0;
+
+    if (isPromisc_)
+        flags |= PCAP_OPENFLAG_PROMISCUOUS;
+    if (noLocalCapture)
+        flags |= PCAP_OPENFLAG_NOCAPTURE_LOCAL;
+
+    handle_ = pcap_open(device, 64 /* FIXME */, flags,
+                1000 /* ms */, NULL, errbuf);
+#else
     handle_ = pcap_open_live(device, 64 /* FIXME */, int(isPromisc_),
-            1000 /* ms */, errbuf);
+                1000 /* ms */, errbuf);
+#endif
 
     if (handle_ == NULL)
     {
         if (isPromisc_ && QString(errbuf).contains("promiscuous"))
         {
-            qDebug("%s:can't set promiscuous mode, trying non-promisc", device);
+            qDebug("Can't set promiscuous mode, trying non-promisc %s", device);
             isPromisc_ = false;
+            goto _retry;
+        }
+        else if (noLocalCapture && QString(errbuf).contains("loopback"))
+        {
+            qDebug("Can't set no local capture mode %s", device);
+            noLocalCapture = false;
             goto _retry;
         }
         else
