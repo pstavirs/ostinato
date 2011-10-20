@@ -51,7 +51,7 @@ public:
             int length) {
         return transmitter_->appendToPacketList(sec, nsec, packet, length); 
     }
-    virtual void setPacketListLoopMode(bool loop, long secDelay, long nsecDelay)
+    virtual void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay)
     {
         transmitter_->setPacketListLoopMode(loop, secDelay, nsecDelay);
     }
@@ -105,7 +105,7 @@ protected:
             long repeatDelaySec, long repeatDelayNsec);
         bool appendToPacketList(long sec, long usec, const uchar *packet, 
             int length);
-        void setPacketListLoopMode(bool loop, long secDelay, long nsecDelay) {
+        void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay) {
             returnToQIdx_ = loop ? 0 : -1;
             loopDelay_ = secDelay*long(1e6) + nsecDelay/1000;
         }
@@ -174,7 +174,7 @@ protected:
         quint64 packetCount_;
 
         int returnToQIdx_;
-        long loopDelay_;
+        quint64 loopDelay_;
 
         bool usingInternalStats_;
         AbstractPort::PortStats *stats_;
