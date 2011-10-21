@@ -319,7 +319,7 @@ _stop_no_more_pkts:
 void AbstractPort::updatePacketListInterleaved()
 {
     int numStreams = 0;
-    quint64 minGap = ULONG_LONG_MAX;
+    quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e9);
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
