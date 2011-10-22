@@ -21,9 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocolmanager.h"
 
+#ifdef Q_OS_UNIX
+#include "signal.h"
+#endif
+
 extern ProtocolManager *OstProtocolManager;
 
 int myport;
+
+void cleanup(int /*signum*/)
+{
+    qApp->exit(-1);
+}
 
 int main(int argc, char *argv[])
 {
@@ -39,11 +48,24 @@ int main(int argc, char *argv[])
     if (!drone.init())
         exit(-1);
 
+#ifdef Q_OS_UNIX
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = cleanup;
+    if (sigaction(SIGTERM, &sa, NULL))
+        qDebug("Failed to install SIGTERM handler. Cleanup may not happen!!!");
+    if (sigaction(SIGINT, &sa, NULL))
+        qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
+#endif
+
     drone.setWindowFlags(drone.windowFlags()
         | Qt::WindowMaximizeButtonHint 
         | Qt::WindowMinimizeButtonHint);
     drone.showMinimized();
     app.exec();
+
+    delete OstProtocolManager;
+
     return 0;
 } 
 
