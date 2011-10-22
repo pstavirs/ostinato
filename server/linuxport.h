@@ -48,6 +48,7 @@ protected:
         static const int kRefreshFreq_ = 1; // in seconds
     };
 
+    bool clearPromisc_;
     static QList<LinuxPort*> allPorts_;
     static StatsMonitor *monitor_; // rx/tx stats for ALL ports
 };
