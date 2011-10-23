@@ -407,7 +407,6 @@ void StreamConfigDialog::on_tbAdd_clicked()
 {
     int n = 0;
     QModelIndex idx2;
-    AbstractProtocol *p;
     QModelIndexList    selection;
 
     selection = lvAllProtocols->selectionModel()->selectedIndexes();
@@ -426,7 +425,7 @@ void StreamConfigDialog::on_tbAdd_clicked()
         if (!_iter->hasNext())
             return;
 
-        p = _iter->next();
+        _iter->next();
     }
 
     foreach(QModelIndex idx, selection)
@@ -1023,7 +1022,7 @@ void StreamConfigDialog::on_rbBurstsPerSec_toggled(bool checked)
         on_leBurstsPerSec_textChanged(leBurstsPerSec->text());
 }
 
-void StreamConfigDialog::on_lePacketsPerBurst_textChanged(const QString &text)
+void StreamConfigDialog::on_lePacketsPerBurst_textChanged(const QString &/*text*/)
 {
     if (rbSendBursts->isChecked())
         on_leBurstsPerSec_textChanged(leBurstsPerSec->text());
