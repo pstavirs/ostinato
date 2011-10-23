@@ -82,12 +82,14 @@ protected:
                 AbstractPort::PortStats *stats);
     ~PortMonitor();
         void run();
+        void stop();
         pcap_t* handle() { return handle_; }
         Direction direction() { return direction_; }
         bool isDirectional() { return isDirectional_; }
         bool isPromiscuous() { return isPromisc_; }
     protected:
         AbstractPort::PortStats *stats_;
+        bool stop_;
     private:
         pcap_t *handle_;
         Direction direction_;
