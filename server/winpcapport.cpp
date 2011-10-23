@@ -29,6 +29,11 @@ const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 WinPcapPort::WinPcapPort(int id, const char *device)
     : PcapPort(id, device) 
 {
+    monitorRx_->stop();
+    monitorTx_->stop();
+    monitorRx_->wait();
+    monitorTx_->wait();
+
     delete monitorRx_;
     delete monitorTx_;
 
@@ -140,7 +145,7 @@ void WinPcapPort::PortMonitor::run()
     lastTs.tv_sec = 0;
     lastTs.tv_usec = 0;
 
-    while (1)
+    while (!stop_)
     {
         int ret;
         struct pcap_pkthdr *hdr;
@@ -205,12 +210,16 @@ void WinPcapPort::PortMonitor::run()
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle()));
                 break;
             case -2:
+                qWarning("%s: error reading packet (%d): %s", 
+                        __PRETTY_FUNCTION__, ret, pcap_geterr(handle()));
+                break;
             default:
                 qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
         }
         lastTs.tv_sec  = hdr->ts.tv_sec;
         lastTs.tv_usec = hdr->ts.tv_usec;
-        QThread::msleep(1000);
+        if (!stop_)
+            QThread::msleep(1000);
     }
 }
 

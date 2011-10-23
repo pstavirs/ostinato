@@ -127,10 +127,22 @@ void PcapPort::init()
 PcapPort::~PcapPort()
 {
     qDebug("In %s", __FUNCTION__);
+
+    if (monitorRx_)
+        monitorRx_->stop();
+    if (monitorTx_)
+        monitorTx_->stop();
+
     delete capturer_;
     delete transmitter_;
-    delete monitorTx_;
+
+    if (monitorRx_)
+        monitorRx_->wait();
     delete monitorRx_;
+
+    if (monitorTx_)
+        monitorTx_->wait();
+    delete monitorTx_;
 }
 
 void PcapPort::updateNotes()
@@ -167,6 +179,7 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     isPromisc_ = true;
     noLocalCapture = true;
     stats_ = stats;
+    stop_ = false;
 
 _retry:
 #ifdef Q_OS_WIN32
@@ -244,7 +257,7 @@ PcapPort::PortMonitor::~PortMonitor()
 
 void PcapPort::PortMonitor::run()
 {
-    while (1)
+    while (!stop_)
     {
         int ret;
         struct pcap_pkthdr *hdr;
@@ -283,10 +296,19 @@ void PcapPort::PortMonitor::run()
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qWarning("%s: error reading packet (%d): %s", 
+                        __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
+                break;
             default:
                 qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
         }
     }
+}
+
+void PcapPort::PortMonitor::stop()
+{
+    stop_ = true;
+    pcap_breakloop(handle());
 }
 
 PcapPort::PortTransmitter::PortTransmitter(const char *device)
@@ -434,7 +456,7 @@ void PcapPort::PortTransmitter::setHandle(pcap_t *handle)
     if (usingInternalHandle_)
         pcap_close(handle_);
     handle_ = handle;
-    usingInternalStats_ = false;
+    usingInternalHandle_ = false;
 }
 
 void PcapPort::PortTransmitter::useExternalStats(AbstractPort::PortStats *stats)
