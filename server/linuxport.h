@@ -44,8 +44,10 @@ protected:
     public:
         StatsMonitor();
         void run();
+        void stop();
     private:
         static const int kRefreshFreq_ = 1; // in seconds
+        bool stop_;
     };
 
     bool clearPromisc_;

@@ -324,6 +324,8 @@ PcapPort::PortTransmitter::~PortTransmitter()
 {
     if (usingInternalStats_)
         delete stats_;
+    if (usingInternalHandle_)
+        pcap_close(handle_);
 }
 
 void PcapPort::PortTransmitter::clearPacketList()

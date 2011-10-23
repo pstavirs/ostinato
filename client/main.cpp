@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QFile>
 #include <QSettings>
 
+#include <google/protobuf/stubs/common.h>
+
 extern const char* version;
 extern const char* revision;
 extern ProtocolManager *OstProtocolManager;
@@ -76,8 +78,11 @@ int main(int argc, char* argv[])
     mainWindow = new MainWindow;
     mainWindow->show();
     exitCode =  app.exec();
+
     delete mainWindow;
     delete appSettings;
+    delete OstProtocolManager;
+    google::protobuf::ShutdownProtobufLibrary();
 
     return exitCode;
 }

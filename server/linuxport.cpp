@@ -59,6 +59,12 @@ LinuxPort::~LinuxPort()
 {
     qDebug("In %s", __FUNCTION__);
 
+    if (monitor_->isRunning())
+    {
+        monitor_->stop();
+        monitor_->wait();
+    }
+
     if (clearPromisc_)
     {
         int sd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -114,6 +120,7 @@ bool LinuxPort::setExclusiveControl(bool /*exclusive*/)
 LinuxPort::StatsMonitor::StatsMonitor()
     : QThread()
 {
+    stop_ = false;
 }
 
 void LinuxPort::StatsMonitor::run()
@@ -260,7 +267,7 @@ void LinuxPort::StatsMonitor::run()
     //
     // We are all set - Let's start polling for stats!
     //
-    while (1)
+    while (!stop_)
     {
         lseek(fd, 0, SEEK_SET);
         len = read(fd, (void*) buf.data(), buf.size());
@@ -334,6 +341,12 @@ void LinuxPort::StatsMonitor::run()
         }
         QThread::sleep(kRefreshFreq_);
     }
+
+    free(portStats);
 }
 
+void LinuxPort::StatsMonitor::stop()
+{
+    stop_ = true;
+}
 #endif

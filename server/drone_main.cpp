@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocolmanager.h"
 
+#include <google/protobuf/stubs/common.h>
+
 #ifdef Q_OS_UNIX
-#include "signal.h"
+#include <signal.h>
 #endif
 
 extern ProtocolManager *OstProtocolManager;
@@ -36,17 +38,21 @@ void cleanup(int /*signum*/)
 
 int main(int argc, char *argv[])
 {
+    int exitCode = 0;
     QApplication app(argc, argv);
-    Drone drone;
+    Drone *drone = new Drone();
     OstProtocolManager = new ProtocolManager();
 
-    app.setApplicationName(drone.objectName());
+    app.setApplicationName(drone->objectName());
 
     if (argc > 1)
         myport = atoi(argv[1]);
 
-    if (!drone.init())
-        exit(-1);
+    if (!drone->init())
+    {
+        exitCode = -1;
+        goto _exit;
+    }
 
 #ifdef Q_OS_UNIX
     struct sigaction sa;
@@ -58,14 +64,18 @@ int main(int argc, char *argv[])
         qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
 #endif
 
-    drone.setWindowFlags(drone.windowFlags()
+    drone->setWindowFlags(drone->windowFlags()
         | Qt::WindowMaximizeButtonHint 
         | Qt::WindowMinimizeButtonHint);
-    drone.showMinimized();
-    app.exec();
+    drone->showMinimized();
+    exitCode = app.exec();
 
+_exit:
+    delete drone;
     delete OstProtocolManager;
 
-    return 0;
+    google::protobuf::ShutdownProtobufLibrary();
+
+    return exitCode;
 } 
 
