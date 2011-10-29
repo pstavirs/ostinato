@@ -528,10 +528,15 @@ void AbstractPort::updatePacketListInterleaved()
         }
     } while ((sec < durSec) || (nsec < durNsec));
 
-    quint64 delaySec = durSec - lastPktTxSec;
-    quint64 delayNsec = durNsec - lastPktTxNsec;
-    qDebug("loop Delay = %" PRIu64 "/%" PRIu64, delaySec, delayNsec);
-    setPacketListLoopMode(true, durSec - lastPktTxSec, durNsec - lastPktTxNsec); 
+    qint64 delaySec = durSec - lastPktTxSec;
+    qint64 delayNsec = durNsec - lastPktTxNsec;
+    while (delayNsec < 0)
+    {
+        delayNsec += long(1e9);
+        delaySec--;
+    }
+    qDebug("loop Delay = %" PRId64 "/%" PRId64, delaySec, delayNsec);
+    setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
 }
 
