@@ -670,6 +670,7 @@ void TcpProtocol::loadConfigWidget()
 
 void TcpProtocol::storeConfigWidget()
 {
+    bool isOk;
     int ff = 0;
 
     configWidget();
@@ -690,7 +691,8 @@ void TcpProtocol::storeConfigWidget()
 
     setFieldData(tcp_window, configForm->leTcpWindow->text());
 
-    setFieldData(tcp_cksum, configForm->leTcpCksum->text());
+    setFieldData(tcp_cksum, configForm->leTcpCksum->text().remove(QChar(' '))
+        .toUInt(&isOk, BASE_HEX));
     setFieldData(tcp_is_override_cksum, 
         configForm->cbTcpCksumOverride->isChecked());
 
