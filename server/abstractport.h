@@ -38,6 +38,11 @@ public:
         quint64    rxPps;
         quint64    rxBps;
 
+        quint64    rxDrops;
+        quint64    rxErrors;
+        quint64    rxFifoErrors;
+        quint64    rxFrameErrors;
+
         quint64    txPkts;
         quint64    txBytes;
         quint64    txPps;

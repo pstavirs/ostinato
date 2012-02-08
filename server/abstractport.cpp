@@ -551,4 +551,9 @@ void AbstractPort::stats(PortStats *stats)
     stats->txBytes = stats_.txBytes - epochStats_.txBytes; 
     stats->txPps = stats_.txPps; 
     stats->txBps = stats_.txBps; 
+
+    stats->rxDrops = stats_.rxDrops - epochStats_.rxDrops; 
+    stats->rxErrors = stats_.rxErrors - epochStats_.rxErrors; 
+    stats->rxFifoErrors = stats_.rxFifoErrors - epochStats_.rxFifoErrors; 
+    stats->rxFrameErrors = stats_.rxFrameErrors - epochStats_.rxFrameErrors; 
 }

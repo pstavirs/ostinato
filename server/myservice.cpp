@@ -441,6 +441,11 @@ void MyService::getStats(::google::protobuf::RpcController* /*controller*/,
         s->set_tx_bytes(stats.txBytes);
         s->set_tx_pps(stats.txPps);
         s->set_tx_bps(stats.txBps);
+
+        s->set_rx_drops(stats.rxDrops);
+        s->set_rx_errors(stats.rxErrors);
+        s->set_rx_fifo_errors(stats.rxFifoErrors);
+        s->set_rx_frame_errors(stats.rxFrameErrors);
     }
 
     done->Run();
