@@ -132,8 +132,8 @@ void LinuxPort::StatsMonitor::run()
     char *p, *end;
     int count, index;
     const char* fmtopt[] = {
-        "%llu%llu%u%u%u%u%u%u%llu%llu%u%u%u%u%u%u\n",
-        "%llu%llu%u%u%u%u%n%n%llu%llu%u%u%u%u%u%n\n",
+        "%llu%llu%llu%llu%llu%llu%u%u%llu%llu%u%u%u%u%u%u\n",
+        "%llu%llu%llu%llu%llu%llu%n%n%llu%llu%u%u%u%u%u%n\n",
     };
     const char *fmt;
     struct ifreq ifr;
@@ -299,6 +299,7 @@ void LinuxPort::StatsMonitor::run()
         {
             uint dummy;
             quint64 rxBytes, rxPkts;
+            quint64 rxErrors, rxDrops, rxFifo, rxFrame;
             quint64 txBytes, txPkts;
 
             // Skip interface name - we assume the number and order of ports
@@ -315,8 +316,10 @@ void LinuxPort::StatsMonitor::run()
             p++;
 
             sscanf(p, fmt,
-                    &rxBytes, &rxPkts, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,
-                    &txBytes, &txPkts, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy);
+                    &rxBytes, &rxPkts, &rxErrors, &rxDrops, &rxFifo, &rxFrame, 
+                        &dummy, &dummy,
+                    &txBytes, &txPkts, &dummy, &dummy, &dummy, &dummy, &dummy, 
+                        &dummy);
 
             if (index < count)
             {
@@ -331,6 +334,11 @@ void LinuxPort::StatsMonitor::run()
                     stats->txBps  = (txBytes - stats->txBytes)/kRefreshFreq_;
                     stats->txPkts  = txPkts;
                     stats->txBytes = txBytes;
+
+                    stats->rxDrops = rxDrops;
+                    stats->rxErrors = rxErrors;
+                    stats->rxFifoErrors = rxFifo;
+                    stats->rxFrameErrors = rxFrame;
                 }
             }
 

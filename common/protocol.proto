@@ -214,6 +214,11 @@ message PortStats {
     optional uint64 tx_bytes_nic = 24;
     optional uint64 tx_pps = 25;
     optional uint64 tx_bps = 26;
+
+    optional uint64 rx_drops = 100;
+    optional uint64 rx_errors = 101;
+    optional uint64 rx_fifo_errors = 102;
+    optional uint64 rx_frame_errors = 103;
 }
 
 message PortStatsList {
