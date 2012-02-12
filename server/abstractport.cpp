@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2012 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -119,6 +119,24 @@ bool AbstractPort::deleteStream(int streamId)
     }
 
     return false;
+}
+
+void AbstractPort::addNote(QString note)
+{
+    QString notes = QString::fromStdString(data_.notes());
+
+    note.prepend("<li>");
+    note.append("</li>");
+
+    if (notes.isEmpty())
+        notes="<b>Limitation(s)</b><ul>";
+    else
+        notes.remove("</ul>");
+
+    notes.append(note);
+    notes.append("</ul>");
+
+    data_.set_notes(notes.toStdString());
 }
 
 void AbstractPort::updatePacketList()
