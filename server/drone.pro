@@ -36,6 +36,7 @@ SOURCES += \
     portmanager.cpp \
     abstractport.cpp \
     pcapport.cpp \
+    bsdport.cpp \
     linuxport.cpp \
     winpcapport.cpp 
 SOURCES += myservice.cpp 

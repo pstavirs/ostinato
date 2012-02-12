@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2012 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QtGlobal>
 #include <pcap.h>
 
+#include "bsdport.h"
 #include "linuxport.h"
 #include "pcapport.h"
 #include "winpcapport.h"
@@ -52,6 +53,8 @@ PortManager::PortManager()
         port = new WinPcapPort(i, device->name);
 #elif defined(Q_OS_LINUX)
         port = new LinuxPort(i, device->name);
+#elif defined(Q_OS_BSD4)
+        port = new BsdPort(i, device->name);
 #else
         port = new PcapPort(i, device->name);
 #endif

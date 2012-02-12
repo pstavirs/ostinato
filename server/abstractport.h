@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2012 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -97,6 +97,8 @@ public:
     void resetStats() { epochStats_ = stats_; }
 
 protected:
+    void addNote(QString note);
+
     void updatePacketListSequential();
     void updatePacketListInterleaved();
 
