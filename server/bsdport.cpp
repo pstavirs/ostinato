@@ -35,6 +35,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <net/if_dl.h>
 #include <net/route.h>
 
+#ifdef Q_OS_MAC
+#define ifr_flagshigh ifr_flags
+#define IFF_PPROMISC (IFF_PROMISC << 16)
+#endif
+
 QList<BsdPort*> BsdPort::allPorts_;
 BsdPort::StatsMonitor *BsdPort::monitor_;
 
@@ -154,7 +159,7 @@ void BsdPort::StatsMonitor::run()
         return;
     } 
 
-    qDebug("sysctl mib returns reqd len = %d\n", len);
+    qDebug("sysctl mib returns reqd len = %d\n", (int) len);
     len *= 2; // for extra room, just in case!
     buf.fill('\0', len);
     if (sysctl(mib, mibLen, buf.data(), &len, NULL, 0) < 0) 
@@ -275,7 +280,12 @@ void BsdPort::StatsMonitor::run()
                 OstProto::LinkState *state = linkState[ifm->ifm_index];
 
                 Q_ASSERT(state);
+#ifdef Q_OS_MAC
+                *state = ifm->ifm_flags & IFF_RUNNING ? 
+                    OstProto::LinkStateUp : OstProto::LinkStateDown;
+#else
                 *state = (OstProto::LinkState) ifd->ifi_link_state;
+#endif
 
                 stats->rxPps  = (ifd->ifi_ipackets + ifd->ifi_noproto 
                                     - stats->rxPkts) /kRefreshFreq_;
