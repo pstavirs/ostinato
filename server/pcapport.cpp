@@ -252,7 +252,8 @@ _open_error:
 
 PcapPort::PortMonitor::~PortMonitor()
 {
-    pcap_close(handle_);
+    if (handle_)
+        pcap_close(handle_);
 }
 
 void PcapPort::PortMonitor::run()
