@@ -59,7 +59,7 @@ static void inline getTimeStamp(TimeStamp* stamp)
 
 static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end) 
 {
-    if (end->QuadPart > start->QuadPart)
+    if (end->QuadPart >= start->QuadPart)
         return (end->QuadPart - start->QuadPart)*long(1e6)/gTicksFreq;
     else
     {
@@ -531,6 +531,7 @@ _restart:
                         getTimeStamp(&ovrEnd);
                         overHead += seq->usecDuration_ 
                             - udiffTimeStamp(&ovrStart, &ovrEnd);
+                        Q_ASSERT(overHead <= 0);
                     }
                     if (stop_)
                         ret = -2;
@@ -614,6 +615,7 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
             getTimeStamp(&ovrEnd);
 
             overHead -= udiffTimeStamp(&ovrStart, &ovrEnd);
+            Q_ASSERT(overHead <= 0);
             usec += overHead;
             if (usec > 0)
             {
