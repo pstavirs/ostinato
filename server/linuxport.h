@@ -43,13 +43,22 @@ protected:
     {
     public:
         StatsMonitor();
+        ~StatsMonitor();
         void run();
         void stop();
+        bool waitForSetupFinished(int msecs = 10000);
     private:
+        int netlinkStats();
+        void procStats();
+        int setPromisc(const char* portName);
+
         static const int kRefreshFreq_ = 1; // in seconds
         bool stop_;
+        bool setupDone_;
+        int ioctlSocket_;
     };
 
+    bool isPromisc_;
     bool clearPromisc_;
     static QList<LinuxPort*> allPorts_;
     static StatsMonitor *monitor_; // rx/tx stats for ALL ports
