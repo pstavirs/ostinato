@@ -58,6 +58,8 @@ LinuxPort::LinuxPort(int id, const char *device)
 
     qDebug("adding dev to all ports list <%s>", device);
     allPorts_.append(this);
+
+    maxStatsValue_ = 0xffffffff;
 }
 
 LinuxPort::~LinuxPort()
@@ -327,12 +329,28 @@ void LinuxPort::StatsMonitor::procStats()
                 AbstractPort::PortStats *stats = portStats[index];
                 if (stats)
                 {
-                    stats->rxPps  = (rxPkts - stats->rxPkts)/kRefreshFreq_;
-                    stats->rxBps  = (rxBytes - stats->rxBytes)/kRefreshFreq_;
+                    stats->rxPps = 
+                        ((rxPkts >= stats->rxPkts) ? 
+                                rxPkts - stats->rxPkts : 
+                                rxPkts + (maxStatsValue_ - stats->rxPkts))
+                        / kRefreshFreq_;
+                    stats->rxBps = 
+                        ((rxBytes >= stats->rxBytes) ? 
+                                rxBytes - stats->rxBytes : 
+                                rxBytes + (maxStatsValue_ - stats->rxBytes))
+                        / kRefreshFreq_;
                     stats->rxPkts  = rxPkts;
                     stats->rxBytes = rxBytes;
-                    stats->txPps  = (txPkts - stats->txPkts)/kRefreshFreq_;
-                    stats->txBps  = (txBytes - stats->txBytes)/kRefreshFreq_;
+                    stats->txPps = 
+                        ((txPkts >= stats->txPkts) ? 
+                                txPkts - stats->txPkts : 
+                                txPkts + (maxStatsValue_ - stats->txPkts))
+                        / kRefreshFreq_;
+                    stats->txBps = 
+                        ((txBytes >= stats->txBytes) ? 
+                                txBytes - stats->txBytes : 
+                                txBytes + (maxStatsValue_ - stats->txBytes))
+                        / kRefreshFreq_;
                     stats->txPkts  = txPkts;
                     stats->txBytes = txBytes;
 
@@ -629,16 +647,32 @@ _retry_recv:
                     if (!stats)
                         break;
 
-                    stats->rxPps  = (rtnlStats->rx_packets - stats->rxPkts)
-                                        / kRefreshFreq_;
-                    stats->rxBps  = (rtnlStats->rx_bytes - stats->rxBytes)
-                                        / kRefreshFreq_;
+                    stats->rxPps = 
+                        ((rtnlStats->rx_packets >= stats->rxPkts) ?
+                            rtnlStats->rx_packets - stats->rxPkts :
+                            rtnlStats->rx_packets + (maxStatsValue_ 
+                                                        - stats->rxPkts))
+                        / kRefreshFreq_;
+                    stats->rxBps = 
+                        ((rtnlStats->rx_bytes >= stats->rxBytes) ?
+                            rtnlStats->rx_bytes - stats->rxBytes :
+                            rtnlStats->rx_bytes + (maxStatsValue_ 
+                                                        - stats->rxBytes))
+                        / kRefreshFreq_;
                     stats->rxPkts  = rtnlStats->rx_packets;
                     stats->rxBytes = rtnlStats->rx_bytes;
-                    stats->txPps  = (rtnlStats->tx_packets - stats->txPkts)
-                                        / kRefreshFreq_;
-                    stats->txBps  = (rtnlStats->tx_bytes - stats->txBytes)
-                                        / kRefreshFreq_;
+                    stats->txPps = 
+                        ((rtnlStats->tx_packets >= stats->txPkts) ?
+                            rtnlStats->tx_packets - stats->txPkts :
+                            rtnlStats->tx_packets + (maxStatsValue_ 
+                                                        - stats->txPkts))
+                        / kRefreshFreq_;
+                    stats->txBps = 
+                        ((rtnlStats->tx_bytes >= stats->txBytes) ?
+                            rtnlStats->tx_bytes - stats->txBytes :
+                            rtnlStats->tx_bytes + (maxStatsValue_ 
+                                                        - stats->txBytes))
+                        / kRefreshFreq_;
                     stats->txPkts  = rtnlStats->tx_packets;
                     stats->txBytes = rtnlStats->tx_bytes;
 
