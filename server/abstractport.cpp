@@ -46,6 +46,7 @@ AbstractPort::AbstractPort(int id, const char *device)
     linkState_ = OstProto::LinkStateUnknown;
     minPacketSetSize_ = 1;
 
+    maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
 }
@@ -560,18 +561,34 @@ void AbstractPort::updatePacketListInterleaved()
 
 void AbstractPort::stats(PortStats *stats)
 {
-    stats->rxPkts = stats_.rxPkts - epochStats_.rxPkts; 
-    stats->rxBytes = stats_.rxBytes - epochStats_.rxBytes; 
+    stats->rxPkts = (stats_.rxPkts >= epochStats_.rxPkts) ?
+                        stats_.rxPkts - epochStats_.rxPkts :
+                        stats_.rxPkts + (maxStatsValue_ - epochStats_.rxPkts);
+    stats->rxBytes = (stats_.rxBytes >= epochStats_.rxBytes) ?
+                        stats_.rxBytes - epochStats_.rxBytes :
+                        stats_.rxBytes + (maxStatsValue_ - epochStats_.rxBytes);
     stats->rxPps = stats_.rxPps; 
     stats->rxBps = stats_.rxBps; 
 
-    stats->txPkts = stats_.txPkts - epochStats_.txPkts; 
-    stats->txBytes = stats_.txBytes - epochStats_.txBytes; 
+    stats->txPkts = (stats_.txPkts >= epochStats_.txPkts) ?
+                        stats_.txPkts - epochStats_.txPkts :
+                        stats_.txPkts + (maxStatsValue_ - epochStats_.txPkts);
+    stats->txBytes = (stats_.txBytes >= epochStats_.txBytes) ?
+                        stats_.txBytes - epochStats_.txBytes :
+                        stats_.txBytes + (maxStatsValue_ - epochStats_.txBytes);
     stats->txPps = stats_.txPps; 
     stats->txBps = stats_.txBps; 
 
-    stats->rxDrops = stats_.rxDrops - epochStats_.rxDrops; 
-    stats->rxErrors = stats_.rxErrors - epochStats_.rxErrors; 
-    stats->rxFifoErrors = stats_.rxFifoErrors - epochStats_.rxFifoErrors; 
-    stats->rxFrameErrors = stats_.rxFrameErrors - epochStats_.rxFrameErrors; 
+    stats->rxDrops = (stats_.rxDrops >= epochStats_.rxDrops) ?
+                        stats_.rxDrops - epochStats_.rxDrops :
+                        stats_.rxDrops + (maxStatsValue_ - epochStats_.rxDrops);
+    stats->rxErrors = (stats_.rxErrors >= epochStats_.rxErrors) ?
+                        stats_.rxErrors - epochStats_.rxErrors :
+                        stats_.rxErrors + (maxStatsValue_ - epochStats_.rxErrors);
+    stats->rxFifoErrors = (stats_.rxFifoErrors >= epochStats_.rxFifoErrors) ?
+                        stats_.rxFifoErrors - epochStats_.rxFifoErrors :
+                        stats_.rxFifoErrors + (maxStatsValue_ - epochStats_.rxFifoErrors);
+    stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
+                        stats_.rxFrameErrors - epochStats_.rxFrameErrors :
+                        stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
 }

@@ -63,6 +63,8 @@ BsdPort::BsdPort(int id, const char *device)
 
     qDebug("adding dev to all ports list <%s>", device);
     allPorts_.append(this);
+
+    maxStatsValue_ = ULONG_MAX;
 }
 
 BsdPort::~BsdPort()
@@ -278,6 +280,7 @@ void BsdPort::StatsMonitor::run()
             {
                 struct if_data *ifd = &(ifm->ifm_data);
                 OstProto::LinkState *state = linkState[ifm->ifm_index];
+                u_long in_packets;
 
                 Q_ASSERT(state);
 #ifdef Q_OS_MAC
@@ -287,16 +290,29 @@ void BsdPort::StatsMonitor::run()
                 *state = (OstProto::LinkState) ifd->ifi_link_state;
 #endif
 
-                stats->rxPps  = (ifd->ifi_ipackets + ifd->ifi_noproto 
-                                    - stats->rxPkts) /kRefreshFreq_;
-                stats->rxBps  = (ifd->ifi_ibytes - stats->rxBytes)
-                                    /kRefreshFreq_;
-                stats->rxPkts  = ifd->ifi_ipackets + ifd->ifi_noproto;
+                in_packets = ifd->ifi_ipackets + ifd->ifi_noproto;
+                stats->rxPps = 
+                    ((in_packets >= stats->rxPkts) ?
+                         in_packets - stats_->rxPkts :
+                         in_packets + (maxStatsValue_ - stats_->rxPkts))
+                     / kRefreshFreq_;
+                stats->rxBps  = 
+                    ((ifd->ifi_ibytes >= stats->rxBytes) >
+                         ifd->ifi_ibytes - stats->rxBytes :
+                         ifd->ifi_ibytes + (maxStatsValue_ - stats->rxBytes))
+                     / kRefreshFreq_;
+                stats->rxPkts  = in_packets;
                 stats->rxBytes = ifd->ifi_ibytes;
-                stats->txPps  = (ifd->ifi_opackets - stats->txPkts)
-                                    /kRefreshFreq_;
-                stats->txBps  = (ifd->ifi_obytes - stats->txBytes)
-                                    /kRefreshFreq_;
+                stats->txPps  = 
+                    ((ifd->ifi_opackets >= stats->rxPkts) >
+                         ifd->ifi_opackets - stats->rxPkts :
+                         ifd->ifi_opackets + (maxStatsValue_ - stats->rxPkts))
+                     / kRefreshFreq_;
+                stats->txBps  = 
+                    ((ifd->ifi_obytes >= stats->rxBytes) >
+                         ifd->ifi_obytes - stats->rxBytes :
+                         ifd->ifi_obytes + (maxStatsValue_ - stats->rxBytes))
+                     / kRefreshFreq_;
                 stats->txPkts  = ifd->ifi_opackets;
                 stats->txBytes = ifd->ifi_obytes;
 

@@ -107,6 +107,7 @@ protected:
     OstProto::LinkState     linkState_;
     ulong minPacketSetSize_;
 
+    quint64 maxStatsValue_;
     struct PortStats    stats_;
     //! \todo Need lock for stats access/update
 
