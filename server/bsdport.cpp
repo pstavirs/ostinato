@@ -43,6 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 QList<BsdPort*> BsdPort::allPorts_;
 BsdPort::StatsMonitor *BsdPort::monitor_;
 
+const quint32 kMaxValue32 = 0xffffffff;
+
 BsdPort::BsdPort(int id, const char *device)
     : PcapPort(id, device) 
 {
@@ -293,25 +295,25 @@ void BsdPort::StatsMonitor::run()
                 in_packets = ifd->ifi_ipackets + ifd->ifi_noproto;
                 stats->rxPps = 
                     ((in_packets >= stats->rxPkts) ?
-                         in_packets - stats_->rxPkts :
-                         in_packets + (maxStatsValue_ - stats_->rxPkts))
+                         in_packets - stats->rxPkts :
+                         in_packets + (kMaxValue32 - stats->rxPkts))
                      / kRefreshFreq_;
                 stats->rxBps  = 
-                    ((ifd->ifi_ibytes >= stats->rxBytes) >
+                    ((ifd->ifi_ibytes >= stats->rxBytes) ?
                          ifd->ifi_ibytes - stats->rxBytes :
-                         ifd->ifi_ibytes + (maxStatsValue_ - stats->rxBytes))
+                         ifd->ifi_ibytes + (kMaxValue32 - stats->rxBytes))
                      / kRefreshFreq_;
                 stats->rxPkts  = in_packets;
                 stats->rxBytes = ifd->ifi_ibytes;
                 stats->txPps  = 
-                    ((ifd->ifi_opackets >= stats->rxPkts) >
+                    ((ifd->ifi_opackets >= stats->rxPkts) ?
                          ifd->ifi_opackets - stats->rxPkts :
-                         ifd->ifi_opackets + (maxStatsValue_ - stats->rxPkts))
+                         ifd->ifi_opackets + (kMaxValue32 - stats->rxPkts))
                      / kRefreshFreq_;
                 stats->txBps  = 
-                    ((ifd->ifi_obytes >= stats->rxBytes) >
+                    ((ifd->ifi_obytes >= stats->rxBytes) ?
                          ifd->ifi_obytes - stats->rxBytes :
-                         ifd->ifi_obytes + (maxStatsValue_ - stats->rxBytes))
+                         ifd->ifi_obytes + (kMaxValue32 - stats->rxBytes))
                      / kRefreshFreq_;
                 stats->txPkts  = ifd->ifi_opackets;
                 stats->txBytes = ifd->ifi_obytes;
