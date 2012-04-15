@@ -38,6 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 QList<LinuxPort*> LinuxPort::allPorts_;
 LinuxPort::StatsMonitor *LinuxPort::monitor_;
 
+const quint32 kMaxValue32 = 0xffffffff;
+
 LinuxPort::LinuxPort(int id, const char *device)
     : PcapPort(id, device) 
 {
@@ -332,24 +334,24 @@ void LinuxPort::StatsMonitor::procStats()
                     stats->rxPps = 
                         ((rxPkts >= stats->rxPkts) ? 
                                 rxPkts - stats->rxPkts : 
-                                rxPkts + (maxStatsValue_ - stats->rxPkts))
+                                rxPkts + (kMaxValue32 - stats->rxPkts))
                         / kRefreshFreq_;
                     stats->rxBps = 
                         ((rxBytes >= stats->rxBytes) ? 
                                 rxBytes - stats->rxBytes : 
-                                rxBytes + (maxStatsValue_ - stats->rxBytes))
+                                rxBytes + (kMaxValue32 - stats->rxBytes))
                         / kRefreshFreq_;
                     stats->rxPkts  = rxPkts;
                     stats->rxBytes = rxBytes;
                     stats->txPps = 
                         ((txPkts >= stats->txPkts) ? 
                                 txPkts - stats->txPkts : 
-                                txPkts + (maxStatsValue_ - stats->txPkts))
+                                txPkts + (kMaxValue32 - stats->txPkts))
                         / kRefreshFreq_;
                     stats->txBps = 
                         ((txBytes >= stats->txBytes) ? 
                                 txBytes - stats->txBytes : 
-                                txBytes + (maxStatsValue_ - stats->txBytes))
+                                txBytes + (kMaxValue32 - stats->txBytes))
                         / kRefreshFreq_;
                     stats->txPkts  = txPkts;
                     stats->txBytes = txBytes;
@@ -650,13 +652,13 @@ _retry_recv:
                     stats->rxPps = 
                         ((rtnlStats->rx_packets >= stats->rxPkts) ?
                             rtnlStats->rx_packets - stats->rxPkts :
-                            rtnlStats->rx_packets + (maxStatsValue_ 
+                            rtnlStats->rx_packets + (kMaxValue32 
                                                         - stats->rxPkts))
                         / kRefreshFreq_;
                     stats->rxBps = 
                         ((rtnlStats->rx_bytes >= stats->rxBytes) ?
                             rtnlStats->rx_bytes - stats->rxBytes :
-                            rtnlStats->rx_bytes + (maxStatsValue_ 
+                            rtnlStats->rx_bytes + (kMaxValue32 
                                                         - stats->rxBytes))
                         / kRefreshFreq_;
                     stats->rxPkts  = rtnlStats->rx_packets;
@@ -664,13 +666,13 @@ _retry_recv:
                     stats->txPps = 
                         ((rtnlStats->tx_packets >= stats->txPkts) ?
                             rtnlStats->tx_packets - stats->txPkts :
-                            rtnlStats->tx_packets + (maxStatsValue_ 
+                            rtnlStats->tx_packets + (kMaxValue32 
                                                         - stats->txPkts))
                         / kRefreshFreq_;
                     stats->txBps = 
                         ((rtnlStats->tx_bytes >= stats->txBytes) ?
                             rtnlStats->tx_bytes - stats->txBytes :
-                            rtnlStats->tx_bytes + (maxStatsValue_ 
+                            rtnlStats->tx_bytes + (kMaxValue32 
                                                         - stats->txBytes))
                         / kRefreshFreq_;
                     stats->txPkts  = rtnlStats->tx_packets;
