@@ -306,14 +306,14 @@ void BsdPort::StatsMonitor::run()
                 stats->rxPkts  = in_packets;
                 stats->rxBytes = ifd->ifi_ibytes;
                 stats->txPps  = 
-                    ((ifd->ifi_opackets >= stats->rxPkts) ?
-                         ifd->ifi_opackets - stats->rxPkts :
-                         ifd->ifi_opackets + (kMaxValue32 - stats->rxPkts))
+                    ((ifd->ifi_opackets >= stats->txPkts) ?
+                         ifd->ifi_opackets - stats->txPkts :
+                         ifd->ifi_opackets + (kMaxValue32 - stats->txPkts))
                      / kRefreshFreq_;
                 stats->txBps  = 
-                    ((ifd->ifi_obytes >= stats->rxBytes) ?
-                         ifd->ifi_obytes - stats->rxBytes :
-                         ifd->ifi_obytes + (kMaxValue32 - stats->rxBytes))
+                    ((ifd->ifi_obytes >= stats->txBytes) ?
+                         ifd->ifi_obytes - stats->txBytes :
+                         ifd->ifi_obytes + (kMaxValue32 - stats->txBytes))
                      / kRefreshFreq_;
                 stats->txPkts  = ifd->ifi_opackets;
                 stats->txBytes = ifd->ifi_obytes;
