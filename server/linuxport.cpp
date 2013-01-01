@@ -437,6 +437,10 @@ int LinuxPort::StatsMonitor::netlinkStats()
         return -1;
     }
 
+    count = 0;
+
+_retry:
+
     // Find required size of buffer and resize accordingly
     while (1)
     {
@@ -486,9 +490,6 @@ int LinuxPort::StatsMonitor::netlinkStats()
         }
     }
 
-    count = 0;
-
-_retry:
     msg.msg_flags = 0;
 
     // Actually receive the reply now
