@@ -1,0 +1,61 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// Ip6 Protocol
+message Ip6 {
+
+    enum AddrMode {
+        kFixed = 0;
+        kIncHost = 1;
+        kDecHost = 2;
+        kRandomHost = 3;
+    }
+
+    optional bool is_override_version = 1;
+    optional bool is_override_payload_length = 2;
+    optional bool is_override_next_header = 3;
+
+    optional uint32 version = 4 [default = 0x6]; 
+    optional uint32 traffic_class = 5; 
+    optional uint32 flow_label = 6; 
+
+    optional uint32 payload_length = 7;
+    optional uint32 next_header = 8;
+    optional uint32 hop_limit = 9 [default = 127];
+
+    optional uint64 src_addr_hi = 10;
+    optional uint64 src_addr_lo = 11;
+    optional AddrMode src_addr_mode = 12 [default = kFixed];
+    optional uint32 src_addr_count = 13 [default = 16];
+    optional uint32 src_addr_prefix = 14 [default = 64];
+
+    optional uint64 dst_addr_hi = 15;
+    optional uint64 dst_addr_lo = 16;
+    optional AddrMode dst_addr_mode = 17 [default = kFixed];
+    optional uint32 dst_addr_count = 18 [default = 16];
+    optional uint32 dst_addr_prefix = 19 [default = 64];
+}
+
+extend Protocol {
+    optional Ip6 ip6 = 302;
+}
