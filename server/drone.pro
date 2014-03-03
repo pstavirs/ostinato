@@ -1,9 +1,11 @@
 TEMPLATE = app
 CONFIG += qt 
 QT += network script
+QT -= gui
 DEFINES += HAVE_REMOTE WPCAP
 INCLUDEPATH += "../rpc"
 win32 {
+    CONFIG += console
     LIBS += -lwpcap -lpacket
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostproto
@@ -26,10 +28,7 @@ win32 {
 }
 LIBS += -lm
 LIBS += -lprotobuf
-LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
-RESOURCES += drone.qrc 
 HEADERS += drone.h 
-FORMS += drone.ui
 SOURCES += \
     drone_main.cpp \
     drone.cpp \

@@ -20,37 +20,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _DRONE_H
 #define _DRONE_H
 
-#include "ui_drone.h"
-
-#include <QMenu>
-#include <QSystemTrayIcon>
+#include <QObject>
 
 class RpcServer;
 namespace OstProto { class OstService; }
 
-class Drone : public QWidget, Ui::Drone 
+class Drone : public QObject
 {
      Q_OBJECT
-
 public:
-    Drone(QWidget *parent = 0);
+    Drone(QObject *parent = 0);
     ~Drone();
     bool init();
 
-signals:
-    void hideMe(bool hidden);
-
-protected:
-    void changeEvent(QEvent *event);
-
 private:
-    QSystemTrayIcon            *trayIcon_;
-    QMenu                    *trayIconMenu_;
     RpcServer               *rpcServer;
     OstProto::OstService    *service;
-
-private slots:
-    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-
 }; 
 #endif

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <google/protobuf/stubs/common.h>
 
+#include <QCoreApplication>
+
 #ifdef Q_OS_UNIX
 #include <signal.h>
 #endif
@@ -33,18 +35,22 @@ int myport;
 
 void cleanup(int /*signum*/)
 {
-    qApp->exit(-1);
+    QCoreApplication::instance()->exit(-1);
 }
 
 int main(int argc, char *argv[])
 {
     int exitCode = 0;
-    QApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
     Drone *drone = new Drone();
     OstProtocolManager = new ProtocolManager();
 
     app.setApplicationName(drone->objectName());
 
+    // TODO: command line options
+    // -v (--version)
+    // -h (--help)
+    // -p (--portnum)
     if (argc > 1)
         myport = atoi(argv[1]);
 
@@ -64,10 +70,6 @@ int main(int argc, char *argv[])
         qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
 #endif
 
-    drone->setWindowFlags(drone->windowFlags()
-        | Qt::WindowMaximizeButtonHint 
-        | Qt::WindowMinimizeButtonHint);
-    drone->showMinimized();
     exitCode = app.exec();
 
 _exit:
