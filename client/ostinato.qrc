@@ -1,0 +1,38 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>icons/about.png</file>
+        <file>icons/arrow_down.png</file>
+        <file>icons/arrow_left.png</file>
+        <file>icons/arrow_right.png</file>
+        <file>icons/arrow_up.png</file>
+        <file>icons/bullet_error.png</file>
+        <file>icons/bullet_green.png</file>
+        <file>icons/bullet_orange.png</file>
+        <file>icons/bullet_red.png</file>
+        <file>icons/bullet_white.png</file>
+        <file>icons/bullet_yellow.png</file>
+        <file>icons/control_play.png</file>
+        <file>icons/control_stop.png</file>
+        <file>icons/deco_exclusive.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/exit.png</file>
+        <file>icons/gaps.png</file>
+        <file>icons/logo.png</file>
+        <file>icons/magnifier.png</file>
+        <file>icons/name.png</file>
+        <file>icons/portgroup_add.png</file>
+        <file>icons/portgroup_connect.png</file>
+        <file>icons/portgroup_delete.png</file>
+        <file>icons/portgroup_disconnect.png</file>
+        <file>icons/portstats_clear.png</file>
+        <file>icons/portstats_clear_all.png</file>
+        <file>icons/portstats_filter.png</file>
+        <file>icons/preferences.png</file>
+        <file>icons/qt.png</file>
+        <file>icons/sound_mute.png</file>
+        <file>icons/sound_none.png</file>
+        <file>icons/stream_add.png</file>
+        <file>icons/stream_delete.png</file>
+        <file>icons/stream_edit.png</file>
+    </qresource>
+</RCC>

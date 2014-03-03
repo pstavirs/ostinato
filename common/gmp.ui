@@ -1,0 +1,835 @@
+<ui version="4.0" >
+ <class>Gmp</class>
+ <widget class="QWidget" name="Gmp" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>509</width>
+    <height>355</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <layout class="QGridLayout" >
+     <item row="0" column="0" >
+      <widget class="QLabel" name="label" >
+       <property name="text" >
+        <string>Message Type</string>
+       </property>
+       <property name="buddy" >
+        <cstring>msgTypeCombo</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="IntComboBox" name="msgTypeCombo" />
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="label_2" >
+       <property name="text" >
+        <string>Max Response Time (1/10s)</string>
+       </property>
+       <property name="buddy" >
+        <cstring>maxResponseTime</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLineEdit" name="maxResponseTime" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2" >
+      <widget class="QCheckBox" name="overrideChecksum" >
+       <property name="text" >
+        <string>Checksum</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" >
+      <widget class="QLineEdit" name="checksum" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="inputMask" >
+        <string>>HHHH; </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="asmGroup" >
+     <property name="title" >
+      <string/>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_4" >
+        <property name="text" >
+         <string>Group Address</string>
+        </property>
+        <property name="buddy" >
+         <cstring>groupAddress</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="label_9" >
+        <property name="text" >
+         <string>Mode</string>
+        </property>
+        <property name="buddy" >
+         <cstring>msgTypeCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_10" >
+        <property name="text" >
+         <string>Count</string>
+        </property>
+        <property name="buddy" >
+         <cstring>msgTypeCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="label_11" >
+        <property name="text" >
+         <string>Prefix</string>
+        </property>
+        <property name="buddy" >
+         <cstring>msgTypeCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLineEdit" name="groupAddress" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QComboBox" name="groupMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QLineEdit" name="groupCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="groupPrefix" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="inputMask" >
+         <string>/900; </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="ssmWidget" >
+     <property name="currentIndex" >
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="page" >
+      <layout class="QHBoxLayout" >
+       <property name="leftMargin" >
+        <number>0</number>
+       </property>
+       <property name="topMargin" >
+        <number>0</number>
+       </property>
+       <property name="rightMargin" >
+        <number>0</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3" >
+         <property name="title" >
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" >
+          <item>
+           <layout class="QGridLayout" >
+            <item row="0" column="0" colspan="3" >
+             <widget class="QCheckBox" name="sFlag" >
+              <property name="text" >
+               <string>S Flag (Suppress Router Processing)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" >
+             <widget class="QLabel" name="label_5" >
+              <property name="text" >
+               <string>QRV</string>
+              </property>
+              <property name="buddy" >
+               <cstring>qrv</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" >
+             <widget class="QLineEdit" name="qrv" />
+            </item>
+            <item row="1" column="2" >
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0" >
+             <widget class="QLabel" name="label_6" >
+              <property name="text" >
+               <string>QQI</string>
+              </property>
+              <property name="buddy" >
+               <cstring>qqi</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1" >
+             <widget class="QLineEdit" name="qqi" />
+            </item>
+            <item row="3" column="1" >
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>61</width>
+                <height>41</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" >
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QLabel" name="label_13" >
+                <property name="text" >
+                 <string>Source List</string>
+                </property>
+                <property name="buddy" >
+                 <cstring>groupRecordAddress</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>16</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="addSource" >
+                <property name="text" >
+                 <string>+</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="deleteSource" >
+                <property name="text" >
+                 <string>–</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QListWidget" name="sourceList" >
+              <property name="dragEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropMode" >
+               <enum>QAbstractItemView::InternalMove</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="overrideSourceCount" >
+                <property name="text" >
+                 <string>Count</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sourceCount" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_2" >
+      <layout class="QVBoxLayout" >
+       <property name="leftMargin" >
+        <number>0</number>
+       </property>
+       <property name="topMargin" >
+        <number>0</number>
+       </property>
+       <property name="rightMargin" >
+        <number>0</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="groupBox_2" >
+         <property name="title" >
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" >
+          <item>
+           <layout class="QVBoxLayout" >
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QLabel" name="label_14" >
+                <property name="text" >
+                 <string>Group Records</string>
+                </property>
+                <property name="buddy" >
+                 <cstring>groupRecordAddress</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>16</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="addGroupRecord" >
+                <property name="text" >
+                 <string>+</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="deleteGroupRecord" >
+                <property name="text" >
+                 <string>–</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QListWidget" name="groupList" >
+              <property name="dragEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropMode" >
+               <enum>QAbstractItemView::InternalMove</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QCheckBox" name="overrideGroupRecordCount" >
+                <property name="text" >
+                 <string>Number of Groups</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="groupRecordCount" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QWidget" native="1" name="groupRecord" >
+            <property name="enabled" >
+             <bool>false</bool>
+            </property>
+            <layout class="QVBoxLayout" >
+             <property name="leftMargin" >
+              <number>0</number>
+             </property>
+             <property name="topMargin" >
+              <number>0</number>
+             </property>
+             <property name="rightMargin" >
+              <number>0</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QGridLayout" >
+               <item row="0" column="0" >
+                <widget class="QLabel" name="label_3" >
+                 <property name="text" >
+                  <string>Record Type</string>
+                 </property>
+                 <property name="buddy" >
+                  <cstring>groupRecordType</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1" >
+                <widget class="QComboBox" name="groupRecordType" >
+                 <item>
+                  <property name="text" >
+                   <string>Reserved</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>Is Include</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>Is Exclude</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>To Include</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>To Exclude</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>Allow New</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>Block Old</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="1" column="0" >
+                <widget class="QLabel" name="label_7" >
+                 <property name="text" >
+                  <string>Group Address</string>
+                 </property>
+                 <property name="buddy" >
+                  <cstring>groupRecordAddress</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1" >
+                <widget class="QLineEdit" name="groupRecordAddress" />
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" >
+               <item>
+                <layout class="QHBoxLayout" >
+                 <item>
+                  <widget class="QLabel" name="label_12" >
+                   <property name="text" >
+                    <string>Source List</string>
+                   </property>
+                   <property name="buddy" >
+                    <cstring>groupRecordAddress</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer>
+                   <property name="orientation" >
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" >
+                    <size>
+                     <width>191</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="addGroupRecordSource" >
+                   <property name="text" >
+                    <string>+</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="deleteGroupRecordSource" >
+                   <property name="text" >
+                    <string>–</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QListWidget" name="groupRecordSourceList" >
+                 <property name="dragEnabled" >
+                  <bool>true</bool>
+                 </property>
+                 <property name="dragDropMode" >
+                  <enum>QAbstractItemView::InternalMove</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" >
+                 <item>
+                  <widget class="QCheckBox" name="overrideGroupRecordSourceCount" >
+                   <property name="text" >
+                    <string>Number of Sources</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="groupRecordSourceCount" >
+                   <property name="enabled" >
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy" >
+                    <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer>
+                   <property name="orientation" >
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" >
+                    <size>
+                     <width>81</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QGridLayout" >
+               <item row="0" column="0" >
+                <widget class="QLabel" name="label_8" >
+                 <property name="text" >
+                  <string>Aux Data</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1" >
+                <spacer>
+                 <property name="orientation" >
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" >
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="0" column="2" >
+                <widget class="QCheckBox" name="overrideAuxDataLength" >
+                 <property name="text" >
+                  <string>Length (x4)</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3" >
+                <widget class="QLineEdit" name="auxDataLength" >
+                 <property name="enabled" >
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy" >
+                  <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0" colspan="4" >
+                <widget class="QLineEdit" name="auxData" />
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>101</width>
+       <height>21</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IntComboBox</class>
+   <extends>QComboBox</extends>
+   <header>intcombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>msgTypeCombo</tabstop>
+  <tabstop>maxResponseTime</tabstop>
+  <tabstop>overrideChecksum</tabstop>
+  <tabstop>checksum</tabstop>
+  <tabstop>groupAddress</tabstop>
+  <tabstop>groupMode</tabstop>
+  <tabstop>groupCount</tabstop>
+  <tabstop>groupPrefix</tabstop>
+  <tabstop>overrideGroupRecordCount</tabstop>
+  <tabstop>groupRecordCount</tabstop>
+  <tabstop>groupRecordType</tabstop>
+  <tabstop>groupRecordAddress</tabstop>
+  <tabstop>overrideGroupRecordSourceCount</tabstop>
+  <tabstop>groupRecordSourceCount</tabstop>
+  <tabstop>overrideAuxDataLength</tabstop>
+  <tabstop>auxDataLength</tabstop>
+  <tabstop>auxData</tabstop>
+  <tabstop>sFlag</tabstop>
+  <tabstop>qrv</tabstop>
+  <tabstop>qqi</tabstop>
+  <tabstop>overrideSourceCount</tabstop>
+  <tabstop>sourceCount</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>overrideChecksum</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>checksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>391</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>448</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>overrideGroupRecordSourceCount</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupRecordSourceCount</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>402</x>
+     <y>202</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>436</x>
+     <y>204</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>overrideAuxDataLength</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>auxDataLength</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>416</x>
+     <y>286</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>433</x>
+     <y>286</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>overrideGroupRecordCount</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupRecordCount</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>112</x>
+     <y>309</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>138</x>
+     <y>312</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>overrideSourceCount</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>sourceCount</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>413</x>
+     <y>154</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>434</x>
+     <y>151</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
