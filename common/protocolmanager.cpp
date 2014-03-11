@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "protocol.pb.h"
-#include "mac.h"
-#include "payload.h"
-#include "eth2.h"    
+#if 0
 #include "dot3.h"    
 #include "llc.h"    
 #include "snap.h"    
@@ -33,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "vlanstack.h"    
 #include "arp.h"    
 #include "ip4.h"    
-#include "ip6.h"    
 #include "ip6over4.h"    
 #include "ip4over6.h"    
 #include "ip4over4.h"    
@@ -47,6 +44,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "userscript.h"
 #include "hexdump.h"
 #include "sample.h"
+#else
+#include "mac.h"
+#include "payload.h"
+#include "eth2.h"    
+#include "ip6.h"
+#endif
 
 ProtocolManager *OstProtocolManager;
 
@@ -55,11 +58,7 @@ ProtocolManager::ProtocolManager()
     /*! \todo (LOW) calls to registerProtocol() should be done by the protocols
      themselves (once this is done remove the #includes for all the protocols)
      */
-    registerProtocol(OstProto::Protocol::kMacFieldNumber,
-            (void*) MacProtocol::createInstance);
-
-    registerProtocol(OstProto::Protocol::kEth2FieldNumber,
-            (void*) Eth2Protocol::createInstance);
+#if 0
     registerProtocol(OstProto::Protocol::kDot3FieldNumber,
             (void*) Dot3Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kLlcFieldNumber,
@@ -82,8 +81,6 @@ ProtocolManager::ProtocolManager()
             (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
             (void*) Ip4Protocol::createInstance);
-    registerProtocol(OstProto::Protocol::kIp6FieldNumber,
-            (void*) Ip6Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6over4FieldNumber,
             (void*) Ip6over4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4over6FieldNumber,
@@ -108,14 +105,22 @@ ProtocolManager::ProtocolManager()
 
     registerProtocol(OstProto::Protocol::kHexDumpFieldNumber,
             (void*) HexDumpProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
-            (void*) PayloadProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
             (void*) UserScriptProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSampleFieldNumber,
             (void*) SampleProtocol::createInstance);
+#else
+    registerProtocol(OstProto::Protocol::kMacFieldNumber,
+            (void*) MacProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
+            (void*) PayloadProtocol::createInstance);
 
+    registerProtocol(OstProto::Protocol::kEth2FieldNumber,
+            (void*) Eth2Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIp6FieldNumber,
+            (void*) Ip6Protocol::createInstance);
+#endif
     populateNeighbourProtocols();
 }
 
@@ -178,7 +183,9 @@ AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
     pc = (AbstractProtocol* (*)(StreamBase*, AbstractProtocol*))
         factory.value(protoNumber);
     
-    Q_ASSERT(pc != NULL);
+    Q_ASSERT_X(pc != NULL, 
+               __FUNCTION__, 
+               numberToNameMap.value(protoNumber).toAscii().constData());
 
     p = (*pc)(stream, parent);
 

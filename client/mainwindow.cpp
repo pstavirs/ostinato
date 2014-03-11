@@ -100,14 +100,21 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete pgl;
+#ifdef Q_OS_WIN32
+    //! \todo - find a way to terminate cleanly
+    localServer_->kill();
+#else    
     localServer_->terminate();
-    localServer_->waitForFinished();
-    delete localServer_;
+#endif
+
+    delete pgl;
 
     QByteArray layout = saveState(0);
     appSettings->setValue(kApplicationWindowLayout, layout);
     appSettings->setValue(kApplicationWindowGeometryKey, geometry());
+
+    localServer_->waitForFinished();
+    delete localServer_;
 }
 
 void MainWindow::on_actionPreferences_triggered()

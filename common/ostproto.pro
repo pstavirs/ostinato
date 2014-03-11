@@ -1,32 +1,12 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += network script xml
-INCLUDEPATH += "../extra/qhexedit2/src"
+QT -= gui
+QT += network script
 LIBS += \
     -lprotobuf
-FORMS += \
-    pcapfileimport.ui \
-    mac.ui \
-    payload.ui \
-    eth2.ui \
-    dot3.ui \
-    llc.ui \
-    snap.ui \
-    vlan.ui \
-    arp.ui \
-    ip4.ui \
-    ip6.ui \
-    icmp.ui \
-    gmp.ui \
-    tcp.ui \
-    udp.ui \
-    textproto.ui \
-    userscript.ui \
-    hexdump.ui \
-    sample.ui 
-PROTOS += \
+
+PROTOS = \
     protocol.proto \
-    fileformat.proto \
     mac.proto \
     payload.proto \
     eth2.proto \
@@ -55,24 +35,22 @@ PROTOS += \
     userscript.proto \
     hexdump.proto \
     sample.proto 
-HEADERS += \
-    ostprotolib.h \
+
+HEADERS = \
     abstractprotocol.h    \
     comboprotocol.h    \
-    abstractfileformat.h \
-    fileformat.h \
-    pcapfileformat.h \
-    pdmlfileformat.h \
-    pdmlprotocol.h \
-    pdmlprotocols.h \
-    pdmlreader.h \
     protocolmanager.h \
     protocollist.h \
     protocollistiterator.h \
     streambase.h \
+
+HEADERS += \
     mac.h \
     payload.h \
     eth2.h \
+    ip6.h
+
+HEADERS1 += \
     dot3.h \
     llc.h \
     snap.h \
@@ -83,7 +61,6 @@ HEADERS += \
     vlanstack.h \
     arp.h \
     ip4.h \
-    ip6.h \
     ipv4addressdelegate.h \
     ipv6addressdelegate.h \
     ip6over4.h \
@@ -100,24 +77,22 @@ HEADERS += \
     userscript.h \
     hexdump.h \
     sample.h
-SOURCES += \
-    ostprotolib.cpp \
+
+SOURCES = \
     abstractprotocol.cpp \
     crc32c.cpp \
-    abstractfileformat.cpp \
-    fileformat.cpp \
-    pcapfileformat.cpp \
-    pdmlfileformat.cpp \
-    pdmlprotocol.cpp \
-    pdmlprotocols.cpp \
-    pdmlreader.cpp \
     protocolmanager.cpp \
     protocollist.cpp \
     protocollistiterator.cpp \
     streambase.cpp \
+
+SOURCES += \
     mac.cpp \
     payload.cpp \
     eth2.cpp \
+    ip6.cpp 
+
+SOURCES1 += \
     dot3.cpp \
     llc.cpp \
     snap.cpp \
@@ -125,7 +100,6 @@ SOURCES += \
     svlan.cpp \
     arp.cpp \
     ip4.cpp \
-    ip6.cpp \
     icmp.cpp \
     gmp.cpp \
     igmp.cpp \
@@ -140,3 +114,4 @@ SOURCES += \
 QMAKE_DISTCLEAN += object_script.*
 
 include(../protobuf.pri)
+

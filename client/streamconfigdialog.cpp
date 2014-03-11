@@ -22,13 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamconfigdialog.h"
 #include "stream.h"
 #include "abstractprotocol.h"
+#include "abstractprotocolconfig.h"
 #include "protocollistiterator.h"
 
 #include "modeltest.h"
 
-// FIXME(HI) - remove
 #include "../common/protocolmanager.h"
+#include "../common/protocolwidgetfactory.h"
+
 extern ProtocolManager *OstProtocolManager;
+extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
 QRect StreamConfigDialog::lastGeometry;
 int StreamConfigDialog::lastTopLevelTabIndex = 0;
@@ -83,6 +86,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
     connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
 
+#if 1 // temp mask
     // Setup valid subsequent protocols for L2 to L4 protocols
     for (int i = ProtoL2; i <= ProtoL4; i++)
     {
@@ -129,6 +133,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
             }
         }
     }
+#endif
 
     mpAvailableProtocolsModel = new QStringListModel(
         OstProtocolManager->protocolDatabase(), this);
@@ -306,8 +311,58 @@ StreamConfigDialog::~StreamConfigDialog()
     for (int i = ProtoMin; i < ProtoMax; i++)
         delete bgProto[i];
 
+    foreach (AbstractProtocolConfigForm* w, _protocolWidgets) {
+        OstProtocolWidgetFactory->deleteConfigWidget(w);
+    }
+
     delete _iter;
     delete mpStream;
+}
+
+void StreamConfigDialog::loadProtocolWidgets()
+{
+    ProtocolListIterator    *iter;
+
+    // NOTE: Protocol Widgets are created on demand. Once created we
+    //       store them in _protocolWidgets indexed by the protocol
+    //       object's address (to ensure unique widgets for multiple
+    //       objects of the same class). Subsequently we check
+    //       _protocolWidgets before creating a new widget
+    iter = mpStream->createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        AbstractProtocol* p = iter->next();
+        AbstractProtocolConfigForm *w = _protocolWidgets.value(p);
+        if (!w) {
+            w = OstProtocolWidgetFactory->createConfigWidget(
+                    p->protocolNumber());
+            _protocolWidgets.insert(p, w);
+        }
+        w->loadWidget(p);
+    }
+    delete iter;
+}
+
+void StreamConfigDialog::storeProtocolWidgets()
+{
+    ProtocolListIterator    *iter;
+
+    // NOTE: After creating a widget, we need to call loadWidget()
+    //       to load the protocol's default values
+    iter = mpStream->createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        AbstractProtocol* p = iter->next();
+        AbstractProtocolConfigForm *w = _protocolWidgets.value(p);
+        if (!w) {
+            w = OstProtocolWidgetFactory->createConfigWidget(
+                    p->protocolNumber());
+            w->loadWidget(p);
+            _protocolWidgets.insert(p, w);
+        }
+        w->storeWidget(p);
+    }
+    delete iter;
 }
 
 void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
@@ -565,12 +620,19 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
                 w->setParent(0);
             }
 
-            // Repopulate the widgets
+            // Repopulate the widgets - create new ones, if required
             _iter->toFront();
             while (_iter->hasNext())
             {
                 AbstractProtocol* p = _iter->next();
-                tbProtocolData->addItem(p->configWidget(), p->name());
+                AbstractProtocolConfigForm *w = _protocolWidgets.value(p);
+                if (!w) {
+                    w = OstProtocolWidgetFactory->createConfigWidget(
+                            p->protocolNumber());
+                    w->loadWidget(p);
+                    _protocolWidgets.insert(p, w);
+                }
+                tbProtocolData->addItem(w, p->name());
             }
 
             if (lastProtocolDataIndex < tbProtocolData->count())
@@ -892,7 +954,7 @@ void StreamConfigDialog::LoadCurrentStream()
         updateSelectProtocolsSimpleWidget();
         updateSelectProtocolsAdvancedWidget();
 
-        mpStream->loadProtocolWidgets();
+        loadProtocolWidgets();
     }
 
     // Stream Control
@@ -967,7 +1029,7 @@ void StreamConfigDialog::StoreCurrentStream()
 
     // Protocols
     {
-        pStream->storeProtocolWidgets();
+        storeProtocolWidgets();
     }
 
     // Stream Control
@@ -1005,8 +1067,8 @@ void StreamConfigDialog::on_tbProtocolData_currentChanged(int /*index*/)
     // protocols e.g. TCP/UDP port numbers are dependent on Port/Protocol 
     // selection in TextProtocol
 #if 0 // FIXME: temp mask to avoid crash till we fix it
-    mpStream->storeProtocolWidgets();
-    mpStream->loadProtocolWidgets();
+    storeProtocolWidgets();
+    loadProtocolWidgets();
 #endif
 }
 
