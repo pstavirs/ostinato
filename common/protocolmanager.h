@@ -40,6 +40,7 @@ public:
     ProtocolManager();
     ~ProtocolManager();
 
+    // TODO: make registerProtocol static
     void registerProtocol(int protoNumber, void *protoInstanceCreator);
 
     bool isRegisteredProtocol(int protoNumber);

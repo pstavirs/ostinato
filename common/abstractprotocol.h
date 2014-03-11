@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QString>
 #include <QVariant>
 #include <QByteArray>
-#include <QWidget>
 #include <QLinkedList>
 #include <QFlags>
+#include <qendian.h>
 
 //#include "../rpc/pbhelper.h"
 #include "protocol.pb.h"
@@ -154,10 +154,6 @@ public:
     quint32 protocolFramePayloadCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp,
         CksumScope cksumScope = CksumScopeAllProtocols) const;
-
-    virtual QWidget* configWidget() = 0;
-    virtual void loadConfigWidget() = 0;
-    virtual void storeConfigWidget() = 0;
 
     static quint64 lcm(quint64 u, quint64 v);
     static quint64 gcd(quint64 u, quint64 v);

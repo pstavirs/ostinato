@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "mainwindow.h"
 #include "../common/ostprotolib.h"
 #include "../common/protocolmanager.h"
+#include "../common/protocolwidgetfactory.h"
 #include "settings.h"
 
 #include <QApplication>
@@ -31,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 extern const char* version;
 extern const char* revision;
 extern ProtocolManager *OstProtocolManager;
+extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
 QSettings *appSettings;
 QMainWindow *mainWindow;
@@ -58,6 +60,7 @@ int main(int argc, char* argv[])
     app.setProperty("revision", revision);
 
     OstProtocolManager = new ProtocolManager();
+    OstProtocolWidgetFactory = new ProtocolWidgetFactory();
 
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location

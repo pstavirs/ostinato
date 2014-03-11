@@ -17,11 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+/*!
+ * \todo Remove this class
+ */
+
 #include <qendian.h>
 #include <QHostAddress>
 
 #include "stream.h"
-//#include "../common/protocollist.h"
 #include "../common/protocollistiterator.h"
 #include "../common/abstractprotocol.h"
 
@@ -37,43 +40,12 @@ Stream::~Stream()
 
 void Stream::loadProtocolWidgets()
 {
-#if 0
-    //protocols.loadConfigWidgets();
-    foreach(AbstractProtocol* proto, *currentFrameProtocols)
-    {
-        proto->loadConfigWidget();
-    }
-#else
-    ProtocolListIterator    *iter;
-
-    iter = createProtocolListIterator();
-    while (iter->hasNext())
-    {
-        AbstractProtocol* p = iter->next();
-        p->loadConfigWidget();
-    }
-    delete iter;
-#endif
+    qWarning("%s: DOES NOTHING", __PRETTY_FUNCTION__);
+    return;
 }
 
 void Stream::storeProtocolWidgets()
 {
-#if 0
-    //protocols.storeConfigWidgets();
-    foreach(const AbstractProtocol* proto, frameProtocol())
-    {
-        proto->storeConfigWidget();
-        _iter->toFront();
-    }
-#else
-    ProtocolListIterator    *iter;
-
-    iter = createProtocolListIterator();
-    while (iter->hasNext())
-    {
-        AbstractProtocol* p = iter->next();
-        p->storeConfigWidget();
-    }
-    delete iter;
-#endif
+    qWarning("%s: DOES NOTHING", __PRETTY_FUNCTION__);
+    return;
 }

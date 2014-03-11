@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 **
 */
 
+class AbstractProtocolConfigForm;
 
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
@@ -76,6 +77,7 @@ private:
 
     Stream                    *mpStream;
     ProtocolListIterator    *_iter;
+    QHash<AbstractProtocol*, AbstractProtocolConfigForm*> _protocolWidgets;
 
     bool            isUpdateInProgress;
 
@@ -92,6 +94,8 @@ private:
     void setupUiExtra();
     void LoadCurrentStream();
     void StoreCurrentStream();
+    void loadProtocolWidgets();
+    void storeProtocolWidgets();
 
 private slots:
     void on_cmbPktLenMode_currentIndexChanged(QString mode);

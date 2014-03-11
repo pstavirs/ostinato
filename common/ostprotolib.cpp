@@ -24,6 +24,7 @@ QString OstProtoLib::gzipPath_;
 QString OstProtoLib::diffPath_;
 QString OstProtoLib::awkPath_;
 
+// TODO: one set method for each external app
 void OstProtoLib::setExternalApplicationPaths(QString tsharkPath, 
         QString gzipPath, QString diffPath, QString awkPath)
 {
@@ -52,4 +53,3 @@ QString OstProtoLib::awkPath()
 {
     return awkPath_;
 }
-

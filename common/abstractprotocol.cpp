@@ -17,11 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-
 #include "abstractprotocol.h" 
-#include "streambase.h"
+
 #include "protocollistiterator.h"
+#include "streambase.h"
+
+#include <qendian.h>
 
 /*!
   \class AbstractProtocol
@@ -46,9 +47,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   - fieldFlags()
   - fieldData()
   - setFieldData()
-  - configWidget() [pure virtual]
-  - loadConfigWidget() [pure virtual]
-  - storeConfigWidget() [pure virtual]
 
   Depending on certain conditions, subclasses may need to reimplement the
   following additional methods -
@@ -107,6 +105,8 @@ AbstractProtocol* AbstractProtocol::createInstance(StreamBase* /* stream */,
   (file: protocol.proto)
 
   Subclasses MUST implement this function
+
+  \todo convert this to a protected data member instead of a virtual function
 */
 quint32 AbstractProtocol::protocolNumber() const
 {
@@ -837,36 +837,6 @@ out:
 
     return (quint16) ~sum;
 }
-
-/*!
-  \fn virtual QWidget* AbstractProtocol::configWidget() = 0;
-
-  Returns the configuration widget for the protocol. The protocol retains
-  ownership of the configuration widget - the caller should not free it.
-
-  In the base class this is a pure virtual function. Subclasses MUST implement 
-  this function. See the SampleProtocol for an example
-*/
-
-/*!
-  \fn virtual void AbstractProtocol::loadConfigWidget() = 0;
-
-  Loads data from the protocol's protobuf into the configuration widget of
-  the protocol
-
-  In the base class this is a pure virtual function. Subclasses MUST implement 
-  this function. See the SampleProtocol for an example
-*/
-
-/*!
-  \fn virtual void AbstractProtocol::storeConfigWidget() = 0;
-
-  Stores data from the configuration widget of the protocol into the protocol's
-  protobuf
-
-  In the base class this is a pure virtual function. Subclasses MUST implement 
-  this function. See the SampleProtocol for an example
-*/
 
 // Stein's binary GCD algo - from wikipedia
 quint64 AbstractProtocol::gcd(quint64 u, quint64 v)
