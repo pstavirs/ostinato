@@ -17,26 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "eth2.h"
-
-Eth2ConfigForm::Eth2ConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 Eth2Protocol::Eth2Protocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 Eth2Protocol::~Eth2Protocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* Eth2Protocol::createInstance(StreamBase *stream,
@@ -197,35 +186,3 @@ bool Eth2Protocol::setFieldData(int index, const QVariant &value,
     }
     return isOk;
 }
-
-QWidget* Eth2Protocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new Eth2ConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void Eth2Protocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cbOverrideType->setChecked(
-        fieldData(eth2_is_override_type, FieldValue).toBool());
-    configForm->leType->setText(uintToHexStr(
-        fieldData(eth2_type, FieldValue).toUInt(), 2));
-}
-
-void Eth2Protocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    setFieldData(eth2_is_override_type, 
-            configForm->cbOverrideType->isChecked());
-    data.set_type(configForm->leType->text().remove(QChar(' ')).toULong(&isOk, 16));
-}
-
