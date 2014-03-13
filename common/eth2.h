@@ -23,20 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "eth2.pb.h"
-#include "ui_eth2.h"
 
-class Eth2ConfigForm : public QWidget, public Ui::eth2
-{
-    Q_OBJECT
-public:
-    Eth2ConfigForm(QWidget *parent = 0);
-};
 
 class Eth2Protocol : public AbstractProtocol
 {
-private:
-    OstProto::Eth2    data;
-    Eth2ConfigForm    *configForm;
+public:
     enum eth2field
     {
         eth2_type = 0,
@@ -46,7 +37,6 @@ private:
         eth2_fieldCount
     };
 
-public:
     Eth2Protocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~Eth2Protocol();
 
@@ -69,10 +59,8 @@ public:
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
-
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Eth2    data;
 };
 
 #endif
