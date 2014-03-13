@@ -17,66 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "mac.h"
-
-MacConfigForm::MacConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
-
-    setupUi(this);
-    leDstMac->setValidator(new QRegExpValidator(reMac, this));
-    leSrcMac->setValidator(new QRegExpValidator(reMac, this));
-    leDstMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
-    leSrcMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
-}
-
-MacConfigForm::~MacConfigForm()
-{
-    qDebug("In MacConfigForm destructor");
-}
-
-void MacConfigForm::on_cmbDstMacMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leDstMacCount->setEnabled(false);
-        leDstMacStep->setEnabled(false);
-    }
-    else
-    {
-        leDstMacCount->setEnabled(true);
-        leDstMacStep->setEnabled(true);
-    }
-}
-
-void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leSrcMacCount->setEnabled(false);
-        leSrcMacStep->setEnabled(false);
-    }
-    else
-    {
-        leSrcMacCount->setEnabled(true);
-        leSrcMacStep->setEnabled(true);
-    }
-}
-
 
 MacProtocol::MacProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 MacProtocol::~MacProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* MacProtocol::createInstance(StreamBase *stream
@@ -239,13 +188,50 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+
         // Meta fields
         case mac_dstMacMode:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_mac_mode();
+                default: break;
+            }
+            break;
         case mac_dstMacCount:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_mac_count();
+                default: break;
+            }
+            break;
         case mac_dstMacStep:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_mac_step();
+                default: break;
+            }
+            break;
         case mac_srcMacMode:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_mac_mode();
+                default: break;
+            }
+            break;
         case mac_srcMacCount:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_mac_count();
+                default: break;
+            }
+            break;
         case mac_srcMacStep:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_mac_step();
+                default: break;
+            }
+            break;
         default:
             break;
     }
@@ -253,10 +239,86 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool MacProtocol::setFieldData(int /*index*/, const QVariant& /*value*/, 
-        FieldAttrib /*attrib*/)
+bool MacProtocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        goto _exit;
+
+    switch (index)
+    {
+        case mac_dstAddr:
+        {
+            quint64 mac = value.toString().toULongLong(&isOk, BASE_HEX);
+            if (isOk)
+                data.set_dst_mac(mac);
+            break;
+        }
+        case mac_srcAddr:
+        {
+            quint64 mac = value.toString().toULongLong(&isOk, BASE_HEX);
+            if (isOk)
+                data.set_src_mac(mac);
+            break;
+        }
+
+        // Meta-Fields
+        case mac_dstMacMode:
+        {
+            uint mode = value.toUInt(&isOk);
+            if (isOk && data.MacAddrMode_IsValid(mode))
+                data.set_dst_mac_mode((OstProto::Mac::MacAddrMode) mode);
+            else
+                isOk = false;
+            break;
+        }
+        case mac_dstMacCount:
+        {
+            uint count = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_mac_count(count);
+            break;
+        }
+        case mac_dstMacStep:
+        {
+            uint step = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_mac_step(step);
+            break;
+        }
+        case mac_srcMacMode:
+        {
+            uint mode = value.toUInt(&isOk);
+            if (isOk && data.MacAddrMode_IsValid(mode))
+                data.set_src_mac_mode((OstProto::Mac::MacAddrMode) mode);
+            else
+                isOk = false;
+            break;
+        }
+        case mac_srcMacCount:
+        {
+            uint count = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_mac_count(count);
+            break;
+        }
+        case mac_srcMacStep:
+        {
+            uint step = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_mac_step(step);
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+
+_exit:
+    return isOk;
 }
 
 bool MacProtocol::isProtocolFrameValueVariable() const
@@ -279,51 +341,5 @@ int MacProtocol::protocolFrameVariableCount() const
         count = AbstractProtocol::lcm(count, data.src_mac_count());
 
     return count;
-}
-
-QWidget* MacProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new MacConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void MacProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->leDstMac->setText(uintToHexStr(data.dst_mac(), 6));
-    configForm->cmbDstMacMode->setCurrentIndex(data.dst_mac_mode());
-    configForm->leDstMacCount->setText(QString().setNum(data.dst_mac_count()));
-    configForm->leDstMacStep->setText(QString().setNum(data.dst_mac_step()));
-
-    configForm->leSrcMac->setText(uintToHexStr(data.src_mac(), 6));
-    configForm->cmbSrcMacMode->setCurrentIndex(data.src_mac_mode());
-    configForm->leSrcMacCount->setText(QString().setNum(data.src_mac_count()));
-    configForm->leSrcMacStep->setText(QString().setNum(data.src_mac_step()));
-}
-
-void MacProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    data.set_dst_mac(configForm->leDstMac->text().remove(QChar(' ')).
-            toULongLong(&isOk, 16));
-    data.set_dst_mac_mode((OstProto::Mac::MacAddrMode) configForm->
-            cmbDstMacMode->currentIndex());
-    data.set_dst_mac_count(configForm->leDstMacCount->text().toULong(&isOk));
-    data.set_dst_mac_step(configForm->leDstMacStep->text().toULong(&isOk));
-
-    data.set_src_mac(configForm->leSrcMac->text().remove(QChar(' ')).
-            toULongLong(&isOk, 16));
-    data.set_src_mac_mode((OstProto::Mac::MacAddrMode) configForm->
-            cmbSrcMacMode->currentIndex());
-    data.set_src_mac_count(configForm->leSrcMacCount->text().toULong(&isOk));
-    data.set_src_mac_step(configForm->leSrcMacStep->text().toULong(&isOk));
 }
 

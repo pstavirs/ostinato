@@ -23,26 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "mac.pb.h"
-#include "ui_mac.h"
-
-#define MAX_MAC_ITER_COUNT  256
-
-class MacConfigForm : public QWidget, public Ui::mac
-{
-    Q_OBJECT
-public:
-    MacConfigForm(QWidget *parent = 0);
-    virtual ~MacConfigForm();
-private slots:
-    void on_cmbDstMacMode_currentIndexChanged(int index);
-    void on_cmbSrcMacMode_currentIndexChanged(int index);
-};
 
 class MacProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Mac    data;
-    MacConfigForm    *configForm;
+public:
     enum macfield
     {
         mac_dstAddr = 0,
@@ -58,7 +42,6 @@ private:
         mac_fieldCount
     };
 
-public:
     MacProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~MacProtocol();
 
@@ -83,9 +66,8 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Mac    data;
 };
 
 #endif
