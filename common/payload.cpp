@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2013-2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,46 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
-//#include "../client/stream.h"
 #include "payload.h"
 #include "streambase.h"
-
-
-PayloadConfigForm::PayloadConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
-
-void PayloadConfigForm::on_cmbPatternMode_currentIndexChanged(int index)
-{
-    switch(index)
-    {
-        case OstProto::Payload::e_dp_fixed_word:
-            lePattern->setEnabled(true);
-            break;
-        case OstProto::Payload::e_dp_inc_byte:
-        case OstProto::Payload::e_dp_dec_byte:
-        case OstProto::Payload::e_dp_random:
-            lePattern->setDisabled(true);
-            break;
-        default:
-            qWarning("Unhandled/Unknown PatternMode = %d",index);
-    }
-}
 
 PayloadProtocol::PayloadProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 PayloadProtocol::~PayloadProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* PayloadProtocol::createInstance(StreamBase *stream,
@@ -196,6 +166,12 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
         // Meta fields
 
         case payload_dataPatternMode:
+            switch(attrib)
+            {
+                case FieldValue: return data.pattern_mode();
+                default: break;
+            }
+            break;
         default:
             break;
     }
@@ -203,10 +179,38 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool PayloadProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool PayloadProtocol::setFieldData(int index, const QVariant &value, 
+        FieldAttrib attrib)
 {
-    return false;
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        return false;
+
+    switch (index)
+    {
+        case payload_dataPattern:
+        {
+            uint pattern = value.toUInt(&isOk);
+            if (isOk)
+                data.set_pattern(pattern);
+            break;
+        }
+        case payload_dataPatternMode:
+        {
+            uint mode = value.toUInt(&isOk);
+            if (isOk && data.DataPatternMode_IsValid(mode))
+                data.set_pattern_mode(OstProto::Payload::DataPatternMode(mode));
+            else
+                isOk = false;
+            break;
+        }
+        default:
+        qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+        break;
+    }
+    return isOk;
 }
 
 bool PayloadProtocol::isProtocolFrameValueVariable() const
@@ -252,33 +256,3 @@ int PayloadProtocol::protocolFrameVariableCount() const
 
     return count;
 }
-
-QWidget* PayloadProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new PayloadConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void PayloadProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cmbPatternMode->setCurrentIndex(data.pattern_mode());
-    configForm->lePattern->setText(uintToHexStr(data.pattern(), 4));
-}
-
-void PayloadProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    data.set_pattern_mode((OstProto::Payload::DataPatternMode) 
-        configForm->cmbPatternMode->currentIndex());
-    data.set_pattern(configForm->lePattern->text().remove(QChar(' ')).toULong(&isOk, 16));
-}
-

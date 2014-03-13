@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -23,22 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "payload.pb.h"
-#include "ui_payload.h"
-
-class PayloadConfigForm : public QWidget, public Ui::payload
-{
-    Q_OBJECT
-public:
-    PayloadConfigForm(QWidget *parent = 0);
-private slots:
-    void on_cmbPatternMode_currentIndexChanged(int index);
-};
 
 class PayloadProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Payload            data;
-    PayloadConfigForm    *configForm;
+public:
     enum payloadfield
     {
         payload_dataPattern,
@@ -49,7 +37,6 @@ private:
         payload_fieldCount
     };
 
-public:
     PayloadProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~PayloadProtocol();
 
@@ -77,9 +64,8 @@ public:
     virtual bool isProtocolFrameSizeVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Payload            data;
 };
 
 #endif
