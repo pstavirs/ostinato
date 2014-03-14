@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _IP6_H
 #define _IP6_H
 
-#include "ip6.pb.h"
-#include "ui_ip6.h"
-
 #include "abstractprotocol.h"
+#include "ip6.pb.h"
 
 /* 
 IPv6 Protocol Frame Format -
@@ -47,23 +45,9 @@ IPv6 Protocol Frame Format -
 Figures in brackets represent field width in bits
 */
 
-class Ip6ConfigForm : public QWidget, public Ui::Ip6
-{
-    Q_OBJECT
-public:
-    Ip6ConfigForm(QWidget *parent = 0);
-private slots:
-    void on_srcAddr_editingFinished();
-    void on_dstAddr_editingFinished();
-    void on_srcAddrModeCombo_currentIndexChanged(int index);
-    void on_dstAddrModeCombo_currentIndexChanged(int index);
-};
-
 class Ip6Protocol : public AbstractProtocol
 {
-private:
-    OstProto::Ip6    data;
-    Ip6ConfigForm    *configForm;
+public:
     enum ip6field
     {
         // Frame Fields
@@ -92,7 +76,6 @@ private:
         ip6_fieldCount
     };
 
-public:
     Ip6Protocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~Ip6Protocol();
 
@@ -122,10 +105,8 @@ public:
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
             CksumType cksumType = CksumIp) const;
-
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Ip6 data;
 };
 
 #endif
