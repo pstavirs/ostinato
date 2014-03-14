@@ -18,66 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "ip6.h"
-
-#include "ipv6addressvalidator.h"
-
 #include <QHostAddress>
-#include <qendian.h>
 
-Ip6ConfigForm::Ip6ConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-
-    version->setValidator(new QIntValidator(0, 0xF, this));
-    payloadLength->setValidator(new QIntValidator(0, 0xFFFF, this));
-    hopLimit->setValidator(new QIntValidator(0, 0xFF, this));
-
-    srcAddr->setValidator(new IPv6AddressValidator(this));
-    srcAddrCount->setValidator(new QIntValidator(this));
-    //srcAddrPrefix->setValidator(new QIntValidator(0, 128, this));
-
-    dstAddr->setValidator(new IPv6AddressValidator(this));
-    dstAddrCount->setValidator(new QIntValidator(this));
-    //dstAddrPrefix->setValidator(new QIntValidator(0, 128, this));
-}
-
-void Ip6ConfigForm::on_srcAddr_editingFinished()
-{
-    srcAddr->setText(QHostAddress(srcAddr->text()).toString());
-}
-
-void Ip6ConfigForm::on_dstAddr_editingFinished()
-{
-    dstAddr->setText(QHostAddress(dstAddr->text()).toString());
-}
-
-void Ip6ConfigForm::on_srcAddrModeCombo_currentIndexChanged(int index)
-{
-    bool enabled = (index > 0);
-
-    srcAddrCount->setEnabled(enabled);
-    srcAddrPrefix->setEnabled(enabled);
-}
-
-void Ip6ConfigForm::on_dstAddrModeCombo_currentIndexChanged(int index)
-{
-    bool enabled = (index > 0);
-
-    dstAddrCount->setEnabled(enabled);
-    dstAddrPrefix->setEnabled(enabled);
-}
 
 Ip6Protocol::Ip6Protocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    /* The configWidget is created lazily */
-    configForm = NULL;
 }
 
 Ip6Protocol::~Ip6Protocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* Ip6Protocol::createInstance(StreamBase *stream,
@@ -852,102 +802,5 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
         return ~sum;
     }
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
-}
-
-QWidget* Ip6Protocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new Ip6ConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void Ip6Protocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->isVersionOverride->setChecked(
-        fieldData(ip6_isOverrideVersion, FieldValue).toBool());
-    configForm->version->setText(
-        fieldData(ip6_version, FieldValue).toString());
-
-    configForm->trafficClass->setText(uintToHexStr(
-        fieldData(ip6_trafficClass, FieldValue).toUInt(), 1));
-
-    configForm->flowLabel->setText(QString("%1").arg(
-        fieldData(ip6_flowLabel, FieldValue).toUInt(),5, BASE_HEX, QChar('0')));
-
-    configForm->isPayloadLengthOverride->setChecked(
-        fieldData(ip6_isOverridePayloadLength, FieldValue).toBool());
-    configForm->payloadLength->setText(
-        fieldData(ip6_payloadLength, FieldValue).toString());
-
-    configForm->isNextHeaderOverride->setChecked(
-        fieldData(ip6_isOverrideNextHeader, FieldValue).toBool());
-    configForm->nextHeader->setText(uintToHexStr(
-        fieldData(ip6_nextHeader, FieldValue).toUInt(), 1));
-
-    configForm->hopLimit->setText(
-        fieldData(ip6_hopLimit, FieldValue).toString());
-
-    configForm->srcAddr->setText(
-        fieldData(ip6_srcAddress, FieldTextValue).toString());
-    configForm->srcAddrModeCombo->setCurrentIndex(
-        fieldData(ip6_srcAddrMode, FieldValue).toUInt());
-    configForm->srcAddrCount->setText(
-        fieldData(ip6_srcAddrCount, FieldValue).toString());
-    configForm->srcAddrPrefix->setText(
-        fieldData(ip6_srcAddrPrefix, FieldValue).toString());
-
-    configForm->dstAddr->setText(
-        fieldData(ip6_dstAddress, FieldTextValue).toString());
-    configForm->dstAddrModeCombo->setCurrentIndex(
-        fieldData(ip6_dstAddrMode, FieldValue).toUInt());
-    configForm->dstAddrCount->setText(
-        fieldData(ip6_dstAddrCount, FieldValue).toString());
-    configForm->dstAddrPrefix->setText(
-        fieldData(ip6_dstAddrPrefix, FieldValue).toString());
-}
-
-void Ip6Protocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    setFieldData(ip6_isOverrideVersion, 
-        configForm->isVersionOverride->isChecked());
-    setFieldData(ip6_version, configForm->version->text());
-
-    setFieldData(ip6_trafficClass, 
-        configForm->trafficClass->text().remove(QChar(' ')).toUInt(&isOk, BASE_HEX));
-
-    setFieldData(ip6_flowLabel, 
-        configForm->flowLabel->text().remove(QChar(' ')).toUInt(&isOk, BASE_HEX));
-
-    setFieldData(ip6_isOverridePayloadLength, 
-        configForm->isPayloadLengthOverride->isChecked());
-    setFieldData(ip6_payloadLength, configForm->payloadLength->text());
-
-    setFieldData(ip6_isOverrideNextHeader, 
-        configForm->isNextHeaderOverride->isChecked());
-    setFieldData(ip6_nextHeader, 
-        configForm->nextHeader->text().remove(QChar(' ')).toUInt(&isOk, BASE_HEX));
-
-    setFieldData(ip6_hopLimit, configForm->hopLimit->text());
-
-    setFieldData(ip6_srcAddress, configForm->srcAddr->text());
-    setFieldData(ip6_srcAddrMode, configForm->srcAddrModeCombo->currentIndex());
-    setFieldData(ip6_srcAddrCount, configForm->srcAddrCount->text());
-    setFieldData(ip6_srcAddrPrefix, configForm->srcAddrPrefix->text());
-
-    setFieldData(ip6_dstAddress, configForm->dstAddr->text());
-    setFieldData(ip6_dstAddrMode, configForm->dstAddrModeCombo->currentIndex());
-    setFieldData(ip6_dstAddrCount, configForm->dstAddrCount->text());
-    setFieldData(ip6_dstAddrPrefix, configForm->dstAddrPrefix->text());
 }
 
