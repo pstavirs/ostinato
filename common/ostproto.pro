@@ -47,11 +47,11 @@ HEADERS = \
 HEADERS += \
     mac.h \
     payload.h \
+    dot3.h \
     eth2.h \
     ip6.h
 
 HEADERS1 += \
-    dot3.h \
     llc.h \
     snap.h \
     dot2llc.h \
@@ -89,11 +89,11 @@ SOURCES = \
 SOURCES += \
     mac.cpp \
     payload.cpp \
+    dot3.cpp \
     eth2.cpp \
     ip6.cpp 
 
 SOURCES1 += \
-    dot3.cpp \
     llc.cpp \
     snap.cpp \
     vlan.cpp \

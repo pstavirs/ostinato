@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "dot3.h"    
 #include "llc.h"    
 #include "snap.h"    
 #include "dot2llc.h"
@@ -47,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #else
 #include "mac.h"
 #include "payload.h"
+#include "dot3.h"    
 #include "eth2.h"    
 #include "ip6.h"
 #endif
@@ -59,8 +59,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kDot3FieldNumber,
-            (void*) Dot3Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kLlcFieldNumber,
             (void*) LlcProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSnapFieldNumber,
@@ -116,6 +114,8 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
             (void*) PayloadProtocol::createInstance);
 
+    registerProtocol(OstProto::Protocol::kDot3FieldNumber,
+            (void*) Dot3Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6FieldNumber,
@@ -185,7 +185,8 @@ AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
     
     Q_ASSERT_X(pc != NULL, 
                __FUNCTION__, 
-               numberToNameMap.value(protoNumber).toAscii().constData());
+               QString("No Protocol Creator registered for protocol %1")
+                    .arg(protoNumber).toAscii().constData());
 
     p = (*pc)(stream, parent);
 
