@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -21,22 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _DOT3_H
 
 #include "abstractprotocol.h"
-
 #include "dot3.pb.h"
-#include "ui_dot3.h"
-
-class Dot3ConfigForm : public QWidget, public Ui::dot3
-{
-    Q_OBJECT
-public:
-    Dot3ConfigForm(QWidget *parent = 0);
-};
 
 class Dot3Protocol : public AbstractProtocol
 {
-private:
-    OstProto::Dot3    data;
-    Dot3ConfigForm    *configForm;
+public:
     enum Dot3field
     {
         dot3_length,
@@ -47,7 +36,6 @@ private:
         dot3_fieldCount
     };
 
-public:
     Dot3Protocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~Dot3Protocol();
 
@@ -72,9 +60,8 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Dot3    data;
 };
 
 #endif

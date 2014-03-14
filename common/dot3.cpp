@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -18,28 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "dot3.h"
-#include "streambase.h"
-
-#include <QHostAddress>
-#include <QIntValidator>
-#include <qendian.h>
-
-Dot3ConfigForm::Dot3ConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-    leLength->setValidator(new QIntValidator(0, 16384, this));
-}
 
 Dot3Protocol::Dot3Protocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 Dot3Protocol::~Dot3Protocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* Dot3Protocol::createInstance(StreamBase *stream,
@@ -76,7 +62,7 @@ QString Dot3Protocol::shortName() const
     return QString("802.3");
 }
 
-int    Dot3Protocol::fieldCount() const
+int Dot3Protocol::fieldCount() const
 {
     return dot3_fieldCount;
 }
@@ -92,6 +78,7 @@ AbstractProtocol::FieldFlags Dot3Protocol::fieldFlags(int index) const
         case dot3_length:
             break;
 
+        // Meta fields
         case dot3_is_override_length:
             flags &= ~FrameField;
             flags |= MetaField;
@@ -207,33 +194,3 @@ int Dot3Protocol::protocolFrameVariableCount() const
 {
     return protocolFramePayloadVariableCount();
 }
-
-QWidget* Dot3Protocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new Dot3ConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void Dot3Protocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cbOverrideLength->setChecked(
-        fieldData(dot3_is_override_length, FieldValue).toBool());
-    configForm->leLength->setText(
-        fieldData(dot3_length, FieldValue).toString());
-}
-
-void Dot3Protocol::storeConfigWidget()
-{
-    configWidget();
-
-    setFieldData(dot3_is_override_length, 
-            configForm->cbOverrideLength->isChecked());
-    setFieldData(dot3_length,configForm->leLength->text());
-}
-

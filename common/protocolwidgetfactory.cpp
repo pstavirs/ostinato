@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "macconfig.h"
 #include "payloadconfig.h"
+#include "dot3config.h"
 #include "eth2config.h"
 #include "ip6config.h"
 
@@ -40,6 +41,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             OstProto::Protocol::kPayloadFieldNumber, 
             (void*) PayloadConfigForm::createInstance);
 
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kDot3FieldNumber, 
+            (void*) Dot3ConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kEth2FieldNumber, 
             (void*) Eth2ConfigForm::createInstance);
