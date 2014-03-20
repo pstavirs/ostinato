@@ -86,7 +86,7 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
     connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
 
-#if 1 // temp mask
+#if 0 // temp mask
     // Setup valid subsequent protocols for L2 to L4 protocols
     for (int i = ProtoL2; i <= ProtoL4; i++)
     {
