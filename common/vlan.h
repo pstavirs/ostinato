@@ -17,25 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _Vlan_H
-#define _Vlan_H
+#ifndef _VLAN_H
+#define _VLAN_H
 
 #include "abstractprotocol.h"
-
 #include "vlan.pb.h"
-#include "ui_vlan.h"
-
-class VlanConfigForm : public QWidget, public Ui::Vlan
-{
-    Q_OBJECT
-public:
-    VlanConfigForm(QWidget *parent = 0);
-};
 
 class VlanProtocol : public AbstractProtocol
 {
-private:
-    VlanConfigForm    *configForm;
+public:
     enum Vlanfield
     {
         vlan_tpid,
@@ -49,10 +39,6 @@ private:
         vlan_fieldCount
     };
 
-protected:
-    OstProto::Vlan    data;
-
-public:
     VlanProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~VlanProtocol();
 
@@ -74,9 +60,8 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+protected:
+    OstProto::Vlan    data;
 };
 
 #endif

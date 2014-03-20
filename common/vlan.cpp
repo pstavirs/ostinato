@@ -17,25 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-
 #include "vlan.h"
-
-VlanConfigForm::VlanConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 VlanProtocol::VlanProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 VlanProtocol::~VlanProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* VlanProtocol::createInstance(StreamBase *stream,
@@ -206,6 +196,12 @@ QVariant VlanProtocol::fieldData(int index, FieldAttrib attrib,
         // Meta fields
 
         case vlan_isOverrideTpid:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_tpid();
+                default: break;
+            }
+            break;
         default:
             break;
     }
@@ -213,45 +209,62 @@ QVariant VlanProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-bool VlanProtocol::setFieldData(int /*index*/, const QVariant &/*value*/, 
-        FieldAttrib /*attrib*/)
+bool VlanProtocol::setFieldData(int index, const QVariant &value,
+        FieldAttrib attrib)
 {
-    return false;
-}
+    bool isOk = false;
 
+    if (attrib != FieldValue)
+        goto _exit;
 
-QWidget* VlanProtocol::configWidget()
-{
-    if (configForm == NULL)
+    switch (index)
     {
-        configForm = new VlanConfigForm;
-        loadConfigWidget();
+        case vlan_tpid:
+        {
+            uint tpid = value.toUInt(&isOk);
+            if (isOk)
+                data.set_tpid(tpid);
+            break;
+        }
+        case vlan_prio:
+        {
+            uint prio = value.toUInt(&isOk);
+            if (isOk)
+                data.set_vlan_tag(
+                    ((prio & 0x07) << 13) | (data.vlan_tag() & 0x1FFF));
+            break;
+        }
+        case vlan_cfiDei:
+        {
+            uint cfiDei = value.toUInt(&isOk);
+            if (isOk)
+                data.set_vlan_tag(
+                    ((cfiDei & 0x01) << 12) | (data.vlan_tag() & 0xEFFF));
+            break;
+        }
+        case vlan_vlanId:
+        {
+            uint vlanId = value.toUInt(&isOk);
+            if (isOk)
+                data.set_vlan_tag(
+                    (vlanId & 0x0FFF) | (data.vlan_tag() & 0xF000));
+            break;
+        }
+
+        // Meta-Fields
+        case vlan_isOverrideTpid:
+        {
+            bool override = value.toUInt(&isOk);
+            if (isOk)
+                data.set_is_override_tpid(override);
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
     }
-    return configForm;
+
+_exit:
+    return isOk;
 }
-
-void VlanProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cbTpidOverride->setChecked(data.is_override_tpid());
-    configForm->leTpid->setText(uintToHexStr(fieldData(vlan_tpid, FieldValue).toUInt(), 2));
-    configForm->cmbPrio->setCurrentIndex(fieldData(vlan_prio, FieldValue).toUInt());
-    configForm->cmbCfiDei->setCurrentIndex(fieldData(vlan_cfiDei, FieldValue).toUInt());
-    configForm->leVlanId->setText(fieldData(vlan_vlanId, FieldValue).toString());
-}
-
-void VlanProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    data.set_is_override_tpid(configForm->cbTpidOverride->isChecked());
-    data.set_tpid(configForm->leTpid->text().remove(QChar(' ')).toULong(&isOk, BASE_HEX));
-    data.set_vlan_tag(
-        ((configForm->cmbPrio->currentIndex()   & 0x07) << 13) |
-        ((configForm->cmbCfiDei->currentIndex() & 0x01) << 12) |
-        (configForm->leVlanId->text().toULong(&isOk) & 0x0FFF));
-}
-
