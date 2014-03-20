@@ -5,155 +5,157 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>268</width>
-    <height>96</height>
+    <width>274</width>
+    <height>106</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" >
-   <property name="spacing" >
-    <number>6</number>
-   </property>
-   <property name="leftMargin" >
-    <number>9</number>
-   </property>
-   <property name="topMargin" >
-    <number>9</number>
-   </property>
-   <property name="rightMargin" >
-    <number>9</number>
-   </property>
-   <property name="bottomMargin" >
-    <number>9</number>
-   </property>
-   <item>
-    <widget class="QGroupBox" name="groupBox" >
-     <property name="title" >
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QCheckBox" name="cbTpidOverride" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <property name="text" >
+      <string>Override TPID</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="QLabel" name="label_9" >
+     <property name="text" >
+      <string>Priority</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" >
+    <widget class="QLabel" name="label_8" >
+     <property name="text" >
+      <string>CFI/DEI</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" >
+    <widget class="QLabel" name="label_10" >
+     <property name="text" >
       <string>VLAN</string>
      </property>
-     <layout class="QGridLayout" >
-      <item row="0" column="0" >
-       <widget class="QCheckBox" name="cbTpidOverride" >
-        <property name="enabled" >
-         <bool>true</bool>
-        </property>
-        <property name="text" >
-         <string>Override TPID</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" >
-       <widget class="QLabel" name="label_9" >
-        <property name="text" >
-         <string>Priority</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2" >
-       <widget class="QLabel" name="label_8" >
-        <property name="text" >
-         <string>CFI/DEI</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3" >
-       <widget class="QLabel" name="label_10" >
-        <property name="text" >
-         <string>VLAN</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" >
-       <widget class="QLineEdit" name="leTpid" >
-        <property name="enabled" >
-         <bool>false</bool>
-        </property>
-        <property name="inputMask" >
-         <string>>HH HH; </string>
-        </property>
-        <property name="text" >
-         <string> </string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" >
-       <widget class="QComboBox" name="cmbPrio" >
-        <property name="enabled" >
-         <bool>true</bool>
-        </property>
-        <item>
-         <property name="text" >
-          <string>0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>2</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>3</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>4</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>5</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>6</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>7</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="1" column="2" >
-       <widget class="QComboBox" name="cmbCfiDei" >
-        <property name="enabled" >
-         <bool>true</bool>
-        </property>
-        <item>
-         <property name="text" >
-          <string>0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text" >
-          <string>1</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="1" column="3" >
-       <widget class="QLineEdit" name="leVlanId" >
-        <property name="enabled" >
-         <bool>true</bool>
-        </property>
-        <property name="text" >
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLineEdit" name="leTpid" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="inputMask" >
+      <string>>HH HH; </string>
+     </property>
+     <property name="text" >
+      <string> </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QComboBox" name="cmbPrio" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text" >
+       <string>0</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>1</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>3</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>4</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>5</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>6</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>7</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="2" >
+    <widget class="QComboBox" name="cmbCfiDei" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text" >
+       <string>0</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>1</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="3" >
+    <widget class="QLineEdit" name="leVlanId" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <property name="text" >
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>111</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="0" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>51</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

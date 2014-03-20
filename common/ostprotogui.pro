@@ -10,6 +10,7 @@ FORMS = \
 FORMS += \
     mac.ui \
     payload.ui \
+    vlan.ui \
     dot3.ui \
     eth2.ui \
     ip6.ui \
@@ -17,7 +18,6 @@ FORMS += \
 FORMS1 += \
     llc.ui \
     snap.ui \
-    vlan.ui \
     arp.ui \
     ip4.ui \
     icmp.ui \
@@ -48,6 +48,7 @@ HEADERS += \
     protocolwidgetfactory.h \
     macconfig.h \ 
     payloadconfig.h \
+    vlanconfig.h \
     dot3config.h \
     eth2config.h \
     ip6config.h   
@@ -66,6 +67,7 @@ SOURCES += \
     protocolwidgetfactory.cpp \
     macconfig.cpp \
     payloadconfig.cpp \
+    vlanconfig.cpp \
     dot3config.cpp \
     eth2config.cpp \
     ip6config.cpp
