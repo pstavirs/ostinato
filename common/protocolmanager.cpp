@@ -46,7 +46,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "mac.h"
 #include "payload.h"
 #include "dot3.h"    
-#include "vlan.h"    
+#include "vlan.h"
+#include "svlan.h"
 #include "eth2.h"    
 #include "ip6.h"
 #endif
@@ -68,8 +69,6 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
             (void*) Dot2SnapProtocol::createInstance);
 
-    registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
-            (void*) SVlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
             (void*) VlanStackProtocol::createInstance);
 
@@ -117,6 +116,8 @@ ProtocolManager::ProtocolManager()
 
     registerProtocol(OstProto::Protocol::kVlanFieldNumber,
             (void*) VlanProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
+            (void*) SVlanProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);

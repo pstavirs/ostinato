@@ -49,6 +49,7 @@ HEADERS += \
     payload.h \
     dot3.h \
     vlan.h \
+    svlan.h \
     eth2.h \
     ip6.h
 
@@ -57,7 +58,6 @@ HEADERS1 += \
     snap.h \
     dot2llc.h \
     dot2snap.h \
-    svlan.h \
     vlanstack.h \
     arp.h \
     ip4.h \
@@ -90,6 +90,7 @@ SOURCES += \
     mac.cpp \
     payload.cpp \
     vlan.cpp \
+    svlan.cpp \
     dot3.cpp \
     eth2.cpp \
     ip6.cpp 
@@ -97,7 +98,6 @@ SOURCES += \
 SOURCES1 += \
     llc.cpp \
     snap.cpp \
-    svlan.cpp \
     arp.cpp \
     ip4.cpp \
     icmp.cpp \

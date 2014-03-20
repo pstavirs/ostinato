@@ -49,6 +49,7 @@ HEADERS += \
     macconfig.h \ 
     payloadconfig.h \
     vlanconfig.h \
+    svlanconfig.h \
     dot3config.h \
     eth2config.h \
     ip6config.h   
