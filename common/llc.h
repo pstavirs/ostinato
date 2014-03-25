@@ -20,26 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _LLC_H
 #define _LLC_H
 
-#include <QSize>
-#include <qdebug.h>
-
 #include "abstractprotocol.h"
 
 #include "llc.pb.h"
-#include "ui_llc.h"
-
-class LlcConfigForm : public QWidget, public Ui::llc
-{
-    Q_OBJECT
-public:
-    LlcConfigForm(QWidget *parent = 0);
-};
 
 class LlcProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Llc    data;
-    LlcConfigForm    *configForm;
+public:
     enum llcfield
     {
         llc_dsap = 0,
@@ -54,7 +41,6 @@ private:
         llc_fieldCount
     };
 
-public:
     LlcProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~LlcProtocol();
 
@@ -78,9 +64,8 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Llc data;
 };
 
 #endif

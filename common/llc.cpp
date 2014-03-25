@@ -17,26 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "llc.h"
-
-LlcConfigForm::LlcConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 LlcProtocol::LlcProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 LlcProtocol::~LlcProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* LlcProtocol::createInstance(StreamBase *stream,
@@ -273,59 +262,3 @@ bool LlcProtocol::setFieldData(int index, const QVariant &value,
     }
     return isOk;
 }
-
-
-QWidget* LlcProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new LlcConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void LlcProtocol::loadConfigWidget()
-{
-#define uintToHexStr(num, bytes)    \
-    QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
-
-    configWidget();
-
-    configForm->cbOverrideDsap->setChecked(
-        fieldData(llc_is_override_dsap, FieldValue).toBool());
-    configForm->leDsap->setText(uintToHexStr(
-        fieldData(llc_dsap, FieldValue).toUInt(), 1));
-
-    configForm->cbOverrideSsap->setChecked(
-        fieldData(llc_is_override_ssap, FieldValue).toBool());
-    configForm->leSsap->setText(uintToHexStr(
-        fieldData(llc_ssap, FieldValue).toUInt(), 1));
-
-    configForm->cbOverrideControl->setChecked(
-        fieldData(llc_is_override_ctl, FieldValue).toBool());
-    configForm->leControl->setText(uintToHexStr(
-        fieldData(llc_ctl, FieldValue).toUInt(), 1));
-#undef uintToHexStr
-}
-
-void LlcProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    setFieldData(llc_is_override_dsap, 
-            configForm->cbOverrideDsap->isChecked());
-    setFieldData(llc_dsap, configForm->leDsap->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(llc_is_override_ssap, 
-            configForm->cbOverrideSsap->isChecked());
-    setFieldData(llc_ssap, configForm->leSsap->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(llc_is_override_ctl, 
-            configForm->cbOverrideControl->isChecked());
-    setFieldData(llc_ctl, 
-            configForm->leControl->text().toUInt(&isOk, BASE_HEX));
-}
-

@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "llc.h"    
 #include "snap.h"    
 #include "dot2llc.h"
 #include "dot2snap.h"
@@ -44,10 +43,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #else
 #include "mac.h"
 #include "payload.h"
-#include "dot3.h"    
 #include "vlan.h"
 #include "svlan.h"
 #include "vlanstack.h"    
+#include "dot3.h"    
+#include "llc.h"    
 #include "eth2.h"    
 #include "ip6.h"
 #endif
@@ -60,8 +60,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kLlcFieldNumber,
-            (void*) LlcProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSnapFieldNumber,
             (void*) SnapProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot2LlcFieldNumber,
@@ -108,9 +106,6 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
             (void*) PayloadProtocol::createInstance);
 
-    registerProtocol(OstProto::Protocol::kDot3FieldNumber,
-            (void*) Dot3Protocol::createInstance);
-
     registerProtocol(OstProto::Protocol::kVlanFieldNumber,
             (void*) VlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSvlanFieldNumber,
@@ -120,6 +115,10 @@ ProtocolManager::ProtocolManager()
 
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kDot3FieldNumber,
+            (void*) Dot3Protocol::createInstance);
+    registerProtocol(OstProto::Protocol::kLlcFieldNumber,
+            (void*) LlcProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kIp6FieldNumber,
             (void*) Ip6Protocol::createInstance);
