@@ -11,12 +11,12 @@ FORMS += \
     mac.ui \
     payload.ui \
     vlan.ui \
-    dot3.ui \
     eth2.ui \
+    dot3.ui \
+    llc.ui \
     ip6.ui \
 
 FORMS1 += \
-    llc.ui \
     snap.ui \
     arp.ui \
     ip4.ui \
@@ -52,8 +52,9 @@ HEADERS += \
     vlanconfig.h \
     svlanconfig.h \
     vlanstackconfig.h \
-    dot3config.h \
     eth2config.h \
+    dot3config.h \
+    llcconfig.h \
     ip6config.h   
 
 SOURCES += \
@@ -71,8 +72,9 @@ SOURCES += \
     macconfig.cpp \
     payloadconfig.cpp \
     vlanconfig.cpp \
-    dot3config.cpp \
     eth2config.cpp \
+    dot3config.cpp \
+    llcconfig.cpp \
     ip6config.cpp
 
 QMAKE_DISTCLEAN += object_script.*

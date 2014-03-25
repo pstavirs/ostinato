@@ -21,11 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "macconfig.h"
 #include "payloadconfig.h"
-#include "dot3config.h"
 #include "vlanconfig.h"
 #include "svlanconfig.h"
 #include "vlanstackconfig.h"
 #include "eth2config.h"
+#include "dot3config.h"
+#include "llcconfig.h"
 #include "ip6config.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -45,10 +46,6 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             (void*) PayloadConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
-            OstProto::Protocol::kDot3FieldNumber, 
-            (void*) Dot3ConfigForm::createInstance);
-
-    OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kVlanFieldNumber, 
             (void*) VlanConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
@@ -61,6 +58,12 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kEth2FieldNumber, 
             (void*) Eth2ConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kDot3FieldNumber, 
+            (void*) Dot3ConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kLlcFieldNumber, 
+            (void*) LlcConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp6FieldNumber, 
