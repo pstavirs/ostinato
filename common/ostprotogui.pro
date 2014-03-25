@@ -45,11 +45,13 @@ HEADERS = \
 
 HEADERS += \
     abstractprotocolconfig.h \
+    comboprotocolconfig.h \
     protocolwidgetfactory.h \
     macconfig.h \ 
     payloadconfig.h \
     vlanconfig.h \
     svlanconfig.h \
+    vlanstackconfig.h \
     dot3config.h \
     eth2config.h \
     ip6config.h   

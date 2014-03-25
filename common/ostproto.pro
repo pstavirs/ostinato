@@ -50,6 +50,7 @@ HEADERS += \
     dot3.h \
     vlan.h \
     svlan.h \
+    vlanstack.h \
     eth2.h \
     ip6.h
 
@@ -58,7 +59,6 @@ HEADERS1 += \
     snap.h \
     dot2llc.h \
     dot2snap.h \
-    vlanstack.h \
     arp.h \
     ip4.h \
     ipv4addressdelegate.h \

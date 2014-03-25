@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dot3config.h"
 #include "vlanconfig.h"
 #include "svlanconfig.h"
+#include "vlanstackconfig.h"
 #include "eth2config.h"
 #include "ip6config.h"
 
@@ -53,6 +54,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kSvlanFieldNumber, 
             (void*) SVlanConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kVlanStackFieldNumber, 
+            (void*) VlanStackConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kEth2FieldNumber, 

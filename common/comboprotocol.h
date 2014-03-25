@@ -28,7 +28,6 @@ class ComboProtocol : public AbstractProtocol
 protected:
     ProtoA    *protoA;
     ProtoB    *protoB;
-    QWidget *configForm;
 
 public:
     ComboProtocol(StreamBase *stream, AbstractProtocol *parent = 0)
@@ -38,7 +37,6 @@ public:
         protoB = new ProtoB(stream, this);
         protoA->next = protoB;
         protoB->prev = protoA;
-        configForm = NULL;
 
         qDebug("%s: protoNumber = %d, %p <--> %p", __FUNCTION__,
             protoNumber, protoA, protoB);
@@ -46,12 +44,6 @@ public:
 
     virtual ~ComboProtocol()
     {
-        if (configForm)
-        {
-            protoA->configWidget()->setParent(0);
-            protoB->configWidget()->setParent(0);
-            delete configForm;
-        }
         delete protoA;
         delete protoB;
     }
@@ -192,32 +184,7 @@ public:
     quint32 protocolFramePayloadCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;
 #endif
-
-    virtual QWidget* configWidget()
-    {
-        if (configForm == NULL)
-        {
-            QVBoxLayout    *layout = new QVBoxLayout;
-
-            configForm = new QWidget;
-            layout->addWidget(protoA->configWidget());
-            layout->addWidget(protoB->configWidget());
-            layout->setSpacing(0);
-            layout->setContentsMargins(0, 0, 0, 0);
-            configForm->setLayout(layout);
-        }
-        return configForm;
-    }
-    virtual void loadConfigWidget()
-    {
-        protoA->loadConfigWidget();
-        protoB->loadConfigWidget();
-    }
-    virtual void storeConfigWidget()
-    {
-        protoA->storeConfigWidget();
-        protoB->storeConfigWidget();
-    }
+    template <int protocolNumber, class FormA, class FormB, class ProtocolA, class ProtocolB> friend class ComboProtocolConfigForm;
 };
 
 #endif
