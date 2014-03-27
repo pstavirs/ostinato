@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "llcconfig.h"
 #include "dot2llcconfig.h"
 #include "snapconfig.h"
+#include "dot2snapconfig.h"
 #include "ip6config.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -72,6 +73,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kSnapFieldNumber, 
             (void*) SnapConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kDot2SnapFieldNumber, 
+            (void*) Dot2SnapConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp6FieldNumber, 
