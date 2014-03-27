@@ -57,6 +57,7 @@ HEADERS += \
     llcconfig.h \
     dot2llcconfig.h \
     snapconfig.h \
+    dot2snapconfig.h \
     ip6config.h   
 
 SOURCES += \

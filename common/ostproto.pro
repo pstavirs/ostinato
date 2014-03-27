@@ -55,10 +55,10 @@ HEADERS += \
     llc.h \
     dot2llc.h \
     snap.h \
+    dot2snap.h \
     ip6.h
 
 HEADERS1 += \
-    dot2snap.h \
     arp.h \
     ip4.h \
     ipv4addressdelegate.h \
