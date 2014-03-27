@@ -54,10 +54,10 @@ HEADERS += \
     dot3.h \
     llc.h \
     dot2llc.h \
+    snap.h \
     ip6.h
 
 HEADERS1 += \
-    snap.h \
     dot2snap.h \
     arp.h \
     ip4.h \
@@ -94,10 +94,10 @@ SOURCES += \
     eth2.cpp \
     dot3.cpp \
     llc.cpp \
+    snap.cpp \
     ip6.cpp 
 
 SOURCES1 += \
-    snap.cpp \
     arp.cpp \
     ip4.cpp \
     icmp.cpp \

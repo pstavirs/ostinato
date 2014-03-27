@@ -78,6 +78,20 @@ public:
     {
         // Do nothing!
     }
+
+/*!
+  Convenience Method - can be used by storeConfigWidget() implementations
+*/
+    uint hexStrToUInt(QString text, bool *ok=NULL)
+    {
+        bool isOk;
+        uint a_uint =  text.remove(QChar(' ')).toUInt(&isOk, 16);
+
+        if (ok)
+            *ok = isOk;
+
+        return a_uint;
+    }
 };
 
 #endif
