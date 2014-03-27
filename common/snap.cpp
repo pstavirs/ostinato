@@ -17,28 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "snap.h"
 
 quint32 kStdOui = 0x000000;
 
-SnapConfigForm::SnapConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
-
 SnapProtocol::SnapProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 SnapProtocol::~SnapProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* SnapProtocol::createInstance(StreamBase *stream,
@@ -263,45 +252,4 @@ bool SnapProtocol::setFieldData(int index, const QVariant &value,
     }
     return isOk;
 
-}
-
-QWidget* SnapProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new SnapConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void SnapProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cbOverrideOui->setChecked(
-        fieldData(snap_is_override_oui, FieldValue).toBool());
-    configForm->leOui->setText(uintToHexStr(
-        fieldData(snap_oui, FieldValue).toUInt(), 3));
-
-    configForm->cbOverrideType->setChecked(
-        fieldData(snap_is_override_type, FieldValue).toBool());
-    configForm->leType->setText(uintToHexStr(
-        fieldData(snap_type, FieldValue).toUInt(), 2));
-}
-
-void SnapProtocol::storeConfigWidget()
-{
-    bool isOk;
-    configWidget();
-
-    setFieldData(snap_is_override_oui, 
-            configForm->cbOverrideOui->isChecked());
-    setFieldData(snap_oui, configForm->leOui->text().remove(QChar(' '))
-            .toUInt(&isOk, BASE_HEX));
-
-    setFieldData(snap_is_override_type, 
-            configForm->cbOverrideType->isChecked());
-    setFieldData(snap_type, configForm->leType->text().remove(QChar(' '))
-            .toUInt(&isOk, BASE_HEX));
 }

@@ -23,20 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "snap.pb.h"
-#include "ui_snap.h"
-
-class SnapConfigForm : public QWidget, public Ui::snap
-{
-    Q_OBJECT
-public:
-    SnapConfigForm(QWidget *parent = 0);
-};
 
 class SnapProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Snap    data;
-    SnapConfigForm    *configForm;
+public:
     enum snapfield
     {
         snap_oui = 0,
@@ -49,7 +39,6 @@ private:
         snap_fieldCount
     };
 
-public:
     SnapProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~SnapProtocol();
 
@@ -74,9 +63,8 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Snap    data;
 };
 
 #endif
