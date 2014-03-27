@@ -55,6 +55,7 @@ HEADERS += \
     eth2config.h \
     dot3config.h \
     llcconfig.h \
+    dot2llcconfig.h \
     ip6config.h   
 
 SOURCES += \

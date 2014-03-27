@@ -53,11 +53,11 @@ HEADERS += \
     eth2.h \
     dot3.h \
     llc.h \
+    dot2llc.h \
     ip6.h
 
 HEADERS1 += \
     snap.h \
-    dot2llc.h \
     dot2snap.h \
     arp.h \
     ip4.h \
