@@ -92,6 +92,20 @@ public:
 
         return a_uint;
     }
+
+/*!
+  Convenience Method - can be used by storeConfigWidget() implementations
+*/
+    quint64 hexStrToUInt64(QString text, bool *ok=NULL)
+    {
+        bool isOk;
+        quint64 a_uint =  text.remove(QChar(' ')).toULongLong(&isOk, 16);
+
+        if (ok)
+            *ok = isOk;
+
+        return a_uint;
+    }
 };
 
 #endif

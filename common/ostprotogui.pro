@@ -15,10 +15,10 @@ FORMS += \
     dot3.ui \
     llc.ui \
     snap.ui \
+    arp.ui \
     ip6.ui \
 
 FORMS1 += \
-    arp.ui \
     ip4.ui \
     icmp.ui \
     gmp.ui \
@@ -58,6 +58,7 @@ HEADERS += \
     dot2llcconfig.h \
     snapconfig.h \
     dot2snapconfig.h \
+    arpconfig.h \
     ip6config.h   
 
 SOURCES += \
@@ -79,6 +80,7 @@ SOURCES += \
     dot3config.cpp \
     llcconfig.cpp \
     snapconfig.cpp \
+    arpconfig.cpp \
     ip6config.cpp
 
 QMAKE_DISTCLEAN += object_script.*

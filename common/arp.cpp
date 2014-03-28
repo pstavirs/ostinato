@@ -17,84 +17,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "arp.h"
 
-ArpConfigForm::ArpConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-
-    opCodeCombo->setValidator(new QIntValidator(0, 0xFFFF, this));
-    opCodeCombo->addItem(1, "ARP Request");
-    opCodeCombo->addItem(2, "ARP Reply");
-
-    connect(senderHwAddrMode, SIGNAL(currentIndexChanged(int)), 
-            SLOT(on_senderHwAddrMode_currentIndexChanged(int)));
-    connect(senderProtoAddrMode, SIGNAL(currentIndexChanged(int)), 
-            SLOT(on_senderProtoAddrMode_currentIndexChanged(int)));
-    connect(targetHwAddrMode, SIGNAL(currentIndexChanged(int)), 
-            SLOT(on_targetHwAddrMode_currentIndexChanged(int)));
-    connect(targetProtoAddrMode, SIGNAL(currentIndexChanged(int)), 
-            SLOT(on_targetProtoAddrMode_currentIndexChanged(int)));
-}
-
-void ArpConfigForm::on_senderHwAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Arp::kFixed)
-        senderHwAddrCount->setDisabled(true);
-    else
-        senderHwAddrCount->setEnabled(true);
-}
-
-void ArpConfigForm::on_targetHwAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Arp::kFixed)
-        targetHwAddrCount->setDisabled(true);
-    else
-        targetHwAddrCount->setEnabled(true);
-}
-
-void ArpConfigForm::on_senderProtoAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Arp::kFixedHost)
-    {
-        senderProtoAddrCount->setDisabled(true);
-        senderProtoAddrMask->setDisabled(true);
-    }
-    else
-    {
-        senderProtoAddrCount->setEnabled(true);
-        senderProtoAddrMask->setEnabled(true);
-    }
-}
-
-void ArpConfigForm::on_targetProtoAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Arp::kFixedHost)
-    {
-        targetProtoAddrCount->setDisabled(true);
-        targetProtoAddrMask->setDisabled(true);
-    }
-    else
-    {
-        targetProtoAddrCount->setEnabled(true);
-        targetProtoAddrMask->setEnabled(true);
-    }
-}
+#include <QHostAddress>
 
 ArpProtocol::ArpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
     _hasPayload = false;
-    configForm = NULL;
 }
 
 ArpProtocol::~ArpProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* ArpProtocol::createInstance(StreamBase *stream,
@@ -884,110 +818,3 @@ int ArpProtocol::protocolFrameVariableCount() const
 
     return count;
 }
-
-QWidget* ArpProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new ArpConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void ArpProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->hwType->setText(
-            fieldData(arp_hwType, FieldValue).toString());
-    configForm->protoType->setText(uintToHexStr(
-            fieldData(arp_protoType, FieldValue).toUInt(), 2));
-    configForm->hwAddrLen->setText(
-        fieldData(arp_hwAddrLen, FieldValue).toString());
-    configForm->protoAddrLen->setText(
-        fieldData(arp_protoAddrLen, FieldValue).toString());
-
-    configForm->opCodeCombo->setValue(
-            fieldData(arp_opCode, FieldValue).toUInt());
-
-    configForm->senderHwAddr->setText(uintToHexStr(
-        fieldData(arp_senderHwAddr, FieldValue).toULongLong(), 6));
-    configForm->senderHwAddrMode->setCurrentIndex(
-        fieldData(arp_senderHwAddrMode, FieldValue).toUInt());
-    configForm->senderHwAddrCount->setText(
-        fieldData(arp_senderHwAddrCount, FieldValue).toString());
-
-    configForm->senderProtoAddr->setText(QHostAddress(
-        fieldData(arp_senderProtoAddr, FieldValue).toUInt()).toString());
-    configForm->senderProtoAddrMode->setCurrentIndex(
-        fieldData(arp_senderProtoAddrMode, FieldValue).toUInt());
-    configForm->senderProtoAddrCount->setText(
-        fieldData(arp_senderProtoAddrCount, FieldValue).toString());
-    configForm->senderProtoAddrMask->setText(QHostAddress(
-        fieldData(arp_senderProtoAddrMask, FieldValue).toUInt()).toString());
-
-    configForm->targetHwAddr->setText(uintToHexStr(
-        fieldData(arp_targetHwAddr, FieldValue).toULongLong(), 6));
-    configForm->targetHwAddrMode->setCurrentIndex(
-        fieldData(arp_targetHwAddrMode, FieldValue).toUInt());
-    configForm->targetHwAddrCount->setText(
-        fieldData(arp_targetHwAddrCount, FieldValue).toString());
-
-    configForm->targetProtoAddr->setText(QHostAddress(
-        fieldData(arp_targetProtoAddr, FieldValue).toUInt()).toString());
-    configForm->targetProtoAddrMode->setCurrentIndex(
-        fieldData(arp_targetProtoAddrMode, FieldValue).toUInt());
-    configForm->targetProtoAddrCount->setText(
-        fieldData(arp_targetProtoAddrCount, FieldValue).toString());
-    configForm->targetProtoAddrMask->setText(QHostAddress(
-        fieldData(arp_targetProtoAddrMask, FieldValue).toUInt()).toString());
-
-}
-
-void ArpProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    setFieldData(arp_hwType, configForm->hwType->text());
-    setFieldData(arp_protoType, configForm->protoType->text().toUInt(
-                &isOk, BASE_HEX));
-    setFieldData(arp_hwAddrLen, configForm->hwAddrLen->text());
-    setFieldData(arp_protoAddrLen, configForm->protoAddrLen->text());
-
-    setFieldData(arp_opCode, configForm->opCodeCombo->currentValue());
-
-    setFieldData(arp_senderHwAddr, configForm->senderHwAddr->text()
-            .remove(QChar(' ')).toULongLong(&isOk, BASE_HEX));
-    setFieldData(arp_senderHwAddrMode, 
-            configForm->senderHwAddrMode->currentIndex());
-    setFieldData(arp_senderHwAddrCount, configForm->senderHwAddrCount->text());
-
-    setFieldData(arp_senderProtoAddr, QHostAddress(
-            configForm->senderProtoAddr->text()).toIPv4Address());
-    setFieldData(arp_senderProtoAddrMode, 
-            configForm->senderProtoAddrMode->currentIndex());
-    setFieldData(arp_senderProtoAddrCount, 
-            configForm->senderProtoAddrCount->text());
-    setFieldData(arp_senderProtoAddrMask, QHostAddress( 
-            configForm->senderProtoAddrMask->text()).toIPv4Address());
-
-    setFieldData(arp_targetHwAddr, configForm->targetHwAddr->text()
-            .remove(QChar(' ')).toULongLong(&isOk, BASE_HEX));
-    setFieldData(arp_targetHwAddrMode, 
-            configForm->targetHwAddrMode->currentIndex());
-    setFieldData(arp_targetHwAddrCount, configForm->targetHwAddrCount->text());
-
-    setFieldData(arp_targetProtoAddr, QHostAddress(
-            configForm->targetProtoAddr->text()).toIPv4Address());
-    setFieldData(arp_targetProtoAddrMode, 
-            configForm->targetProtoAddrMode->currentIndex());
-    setFieldData(arp_targetProtoAddrCount, 
-            configForm->targetProtoAddrCount->text());
-    setFieldData(arp_targetProtoAddrMask, QHostAddress( 
-            configForm->targetProtoAddrMask->text()).toIPv4Address());
-}
-
