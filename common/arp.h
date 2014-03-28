@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _ARP_H
 #define _ARP_H
 
-#include "arp.pb.h"
-#include "ui_arp.h"
-
 #include "abstractprotocol.h"
+#include "arp.pb.h"
 
 /* 
 Arp Protocol Frame Format -
@@ -34,23 +32,9 @@ Arp Protocol Frame Format -
 Figures in brackets represent field width in bytes
 */
 
-class ArpConfigForm : public QWidget, public Ui::Arp
-{
-    Q_OBJECT
-public:
-    ArpConfigForm(QWidget *parent = 0);
-private slots:
-    void on_senderHwAddrMode_currentIndexChanged(int index);
-    void on_senderProtoAddrMode_currentIndexChanged(int index);
-    void on_targetHwAddrMode_currentIndexChanged(int index);
-    void on_targetProtoAddrMode_currentIndexChanged(int index);
-};
-
 class ArpProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Arp    data;
-    ArpConfigForm    *configForm;
+public:
     enum arpfield
     {
         // Frame Fields
@@ -86,7 +70,6 @@ private:
         arp_fieldCount
     };
 
-public:
     ArpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~ArpProtocol();
 
@@ -113,9 +96,8 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Arp    data;
 };
 
 #endif
