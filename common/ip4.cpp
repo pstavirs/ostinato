@@ -17,66 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "ip4.h"
 
-Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-
-    leIpVersion->setValidator(new QIntValidator(0, 15, this));
-
-    connect(cmbIpSrcAddrMode, SIGNAL(currentIndexChanged(int)),
-        this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));
-    connect(cmbIpDstAddrMode, SIGNAL(currentIndexChanged(int)),
-        this, SLOT(on_cmbIpDstAddrMode_currentIndexChanged(int)));
-}
-
-Ip4ConfigForm::~Ip4ConfigForm()
-{
-    qDebug("IPv4 Config Form destructor called");
-}
-
-void Ip4ConfigForm::on_cmbIpSrcAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Ip4::e_im_fixed)
-    {
-        leIpSrcAddrCount->setDisabled(true);
-        leIpSrcAddrMask->setDisabled(true);
-    }
-    else
-    {
-        leIpSrcAddrCount->setEnabled(true);
-        leIpSrcAddrMask->setEnabled(true);
-    }
-}
-
-void Ip4ConfigForm::on_cmbIpDstAddrMode_currentIndexChanged(int index)
-{
-    if (index == OstProto::Ip4::e_im_fixed)
-    {
-        leIpDstAddrCount->setDisabled(true);
-        leIpDstAddrMask->setDisabled(true);
-    }
-    else
-    {
-        leIpDstAddrCount->setEnabled(true);
-        leIpDstAddrMask->setEnabled(true);
-    }
-}
+#include <QHostAddress>
 
 Ip4Protocol::Ip4Protocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 Ip4Protocol::~Ip4Protocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* Ip4Protocol::createInstance(StreamBase *stream,
@@ -558,21 +509,87 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
-        // Meta fields
 
+        // Meta fields
         case ip4_isOverrideVer:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_ver();
+                default: break;
+            }
+            break;
         case ip4_isOverrideHdrLen:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_hdrlen();
+                default: break;
+            }
+            break;
         case ip4_isOverrideTotLen:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_totlen();
+                default: break;
+            }
+            break;
         case ip4_isOverrideProto:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_proto();
+                default: break;
+            }
+            break;
         case ip4_isOverrideCksum:
+            switch(attrib)
+            {
+                case FieldValue: return data.is_override_cksum();
+                default: break;
+            }
+            break;
 
         case ip4_srcAddrMode:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_ip_mode();
+                default: break;
+            }
+            break;
         case ip4_srcAddrCount:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_ip_count();
+                default: break;
+            }
+            break;
         case ip4_srcAddrMask:
+            switch(attrib)
+            {
+                case FieldValue: return data.src_ip_mask();
+                default: break;
+            }
+            break;
 
         case ip4_dstAddrMode:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_ip_mode();
+                default: break;
+            }
+            break;
         case ip4_dstAddrCount:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_ip_count();
+                default: break;
+            }
+            break;
         case ip4_dstAddrMask:
+            switch(attrib)
+            {
+                case FieldValue: return data.dst_ip_mask();
+                default: break;
+            }
+            break;
         default:
             break;
     }
@@ -586,19 +603,191 @@ bool Ip4Protocol::setFieldData(int index, const QVariant &value,
     bool isOk = false;
 
     if (attrib != FieldValue)
-        return false;
+        goto _exit;
 
     switch (index)
     {
+        case ip4_ver:
+        {
+            uint version = value.toUInt(&isOk);
+            if (isOk)
+                data.set_ver_hdrlen(
+                        ((version & 0xF) << 4)
+                      | (data.ver_hdrlen() & 0x0F));
+            break;
+        }
+        case ip4_hdrLen:
+        {
+            uint hdrLen = value.toUInt(&isOk);
+            if (isOk)
+                data.set_ver_hdrlen(
+                        (data.ver_hdrlen() & 0xF0)
+                      | (hdrLen & 0x0F));
+            break;
+        }
+        case ip4_tos:
+        {
+            uint tos = value.toUInt(&isOk);
+            if (isOk)
+                data.set_tos(tos);
+            break;
+        }
+        case ip4_totLen:
+        {
+            uint totLen = value.toUInt(&isOk);
+            if (isOk)
+                data.set_totlen(totLen);
+            break;
+        }
+        case ip4_id:
+        {
+            uint id = value.toUInt(&isOk);
+            if (isOk)
+                data.set_id(id);
+            break;
+        }
+        case ip4_flags:
+        {
+            uint flags = value.toUInt(&isOk);
+            if (isOk)
+                data.set_flags(flags);
+            break;
+        }
+        case ip4_fragOfs:
+        {
+            uint fragOfs = value.toUInt(&isOk);
+            if (isOk)
+                data.set_frag_ofs(fragOfs);
+            break;
+        }
+        case ip4_ttl:
+        {
+            uint ttl = value.toUInt(&isOk);
+            if (isOk)
+                data.set_ttl(ttl);
+            break;
+        }
         case ip4_proto:
         {
             uint proto = value.toUInt(&isOk);
             if (isOk)
                 data.set_proto(proto);
+            break;
         }
+        case ip4_cksum:
+        {
+            uint cksum = value.toUInt(&isOk);
+            if (isOk)
+                data.set_cksum(cksum);
+            break;
+        }
+        case ip4_srcAddr:
+        {
+            quint32 srcIp = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_ip(srcIp);
+            break;
+        }
+        case ip4_dstAddr:
+        {
+            quint32 dstIp = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_ip(dstIp);
+            break;
+        }
+
+        // Meta-fields
+        case ip4_isOverrideVer:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_ver(ovr);
+            isOk = true;
+            break;
+        }
+        case ip4_isOverrideHdrLen:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_hdrlen(ovr);
+            isOk = true;
+            break;
+        }
+        case ip4_isOverrideTotLen:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_totlen(ovr);
+            isOk = true;
+            break;
+        }
+        case ip4_isOverrideProto:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_proto(ovr);
+            isOk = true;
+            break;
+        }
+        case ip4_isOverrideCksum:
+        {
+            bool ovr = value.toBool();
+            data.set_is_override_cksum(ovr);
+            isOk = true;
+            break;
+        }
+
+        case ip4_srcAddrMode:
+        {
+            uint mode = value.toUInt(&isOk);
+            if (isOk && data.IpAddrMode_IsValid(mode))
+                data.set_src_ip_mode(OstProto::Ip4::IpAddrMode(mode));
+            else
+                isOk = false;
+            break;
+        }
+        case ip4_srcAddrCount:
+        {
+            uint count = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_ip_count(count);
+            break;
+        }
+        case ip4_srcAddrMask:
+        {
+            quint32 mask = value.toUInt(&isOk);
+            if (isOk)
+                data.set_src_ip_mask(mask);
+            break;
+        }
+
+        case ip4_dstAddrMode:
+        {
+            uint mode = value.toUInt(&isOk);
+            if (isOk && data.IpAddrMode_IsValid(mode))
+                data.set_dst_ip_mode(OstProto::Ip4::IpAddrMode(mode));
+            else
+                isOk = false;
+            break;
+        }
+        case ip4_dstAddrCount:
+        {
+            uint count = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_ip_count(count);
+            break;
+        }
+        case ip4_dstAddrMask:
+        {
+            quint32 mask = value.toUInt(&isOk);
+            if (isOk)
+                data.set_dst_ip_mask(mask);
+            break;
+        }
+
         default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
             break;
     }
+
+_exit:
     return isOk;
 }
 
@@ -655,98 +844,3 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
 
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }
-
-QWidget* Ip4Protocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new Ip4ConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void Ip4Protocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->cbIpVersionOverride->setChecked(data.is_override_ver());
-    configForm->leIpVersion->setText(fieldData(ip4_ver, FieldValue).toString());
-
-    configForm->cbIpHdrLenOverride->setChecked(data.is_override_hdrlen());
-    configForm->leIpHdrLen->setText(fieldData(ip4_hdrLen, FieldValue).toString());
-    
-    configForm->leIpTos->setText(uintToHexStr(data.tos(), 1));
-
-    configForm->cbIpLengthOverride->setChecked(data.is_override_totlen());
-    configForm->leIpLength->setText(fieldData(ip4_totLen, FieldValue).toString());
-
-    configForm->leIpId->setText(uintToHexStr(data.id(), 2));
-    configForm->leIpFragOfs->setText(QString().setNum(data.frag_ofs()));
-    configForm->cbIpFlagsDf->setChecked((data.flags() & IP_FLAG_DF) > 0);
-    configForm->cbIpFlagsMf->setChecked((data.flags() & IP_FLAG_MF) > 0);
-
-    configForm->leIpTtl->setText(QString().setNum(data.ttl()));
-
-    configForm->cbIpProtocolOverride->setChecked(data.is_override_proto());
-    configForm->leIpProto->setText(uintToHexStr(
-        fieldData(ip4_proto, FieldValue).toUInt(), 1));
-
-    configForm->cbIpCksumOverride->setChecked(data.is_override_cksum());
-    configForm->leIpCksum->setText(uintToHexStr(
-        fieldData(ip4_cksum, FieldValue).toUInt(), 2));
-
-    configForm->leIpSrcAddr->setText(QHostAddress(data.src_ip()).toString());
-    configForm->cmbIpSrcAddrMode->setCurrentIndex(data.src_ip_mode());
-    configForm->leIpSrcAddrCount->setText(QString().setNum(data.src_ip_count()));
-    configForm->leIpSrcAddrMask->setText(QHostAddress(data.src_ip_mask()).toString());
-
-    configForm->leIpDstAddr->setText(QHostAddress(data.dst_ip()).toString());
-    configForm->cmbIpDstAddrMode->setCurrentIndex(data.dst_ip_mode());
-    configForm->leIpDstAddrCount->setText(QString().setNum(data.dst_ip_count()));
-    configForm->leIpDstAddrMask->setText(QHostAddress(data.dst_ip_mask()).toString());
-}
-
-void Ip4Protocol::storeConfigWidget()
-{
-    uint ff = 0;
-    bool isOk;
-
-    configWidget();
-
-    data.set_is_override_ver(configForm->cbIpVersionOverride->isChecked());
-    data.set_ver_hdrlen(((configForm->leIpVersion->text().toULong(&isOk) & 0x0F) << 4) |
-            (configForm->leIpHdrLen->text().toULong(&isOk) & 0x0F));
-    data.set_is_override_hdrlen(configForm->cbIpHdrLenOverride->isChecked());
-
-    data.set_tos(configForm->leIpTos->text().toULong(&isOk, 16));
-
-    data.set_totlen(configForm->leIpLength->text().toULong(&isOk));
-    data.set_is_override_totlen(configForm->cbIpLengthOverride->isChecked());
-
-    data.set_id(configForm->leIpId->text().remove(QChar(' ')).toULong(&isOk, 16));
-    data.set_frag_ofs(configForm->leIpFragOfs->text().toULong(&isOk));
-
-    if (configForm->cbIpFlagsDf->isChecked()) ff |= IP_FLAG_DF;
-    if (configForm->cbIpFlagsMf->isChecked()) ff |= IP_FLAG_MF;
-    data.set_flags(ff);
-
-    data.set_ttl(configForm->leIpTtl->text().toULong(&isOk));
-
-    data.set_is_override_proto(configForm->cbIpProtocolOverride->isChecked());
-    data.set_proto(configForm->leIpProto->text().remove(QChar(' ')).toULong(&isOk, 16));
-    
-    data.set_is_override_cksum(configForm->cbIpCksumOverride->isChecked());
-    data.set_cksum(configForm->leIpCksum->text().remove(QChar(' ')).toULong(&isOk, 16));
-
-    data.set_src_ip(QHostAddress(configForm->leIpSrcAddr->text()).toIPv4Address());
-    data.set_src_ip_mode((OstProto::Ip4_IpAddrMode)configForm->cmbIpSrcAddrMode->currentIndex());
-    data.set_src_ip_count(configForm->leIpSrcAddrCount->text().toULong(&isOk));
-    data.set_src_ip_mask(QHostAddress(configForm->leIpSrcAddrMask->text()).toIPv4Address());
-
-    data.set_dst_ip(QHostAddress(configForm->leIpDstAddr->text()).toIPv4Address());
-    data.set_dst_ip_mode((OstProto::Ip4_IpAddrMode)configForm->cmbIpDstAddrMode->currentIndex());
-    data.set_dst_ip_count(configForm->leIpDstAddrCount->text().toULong(&isOk));
-    data.set_dst_ip_mask(QHostAddress(configForm->leIpDstAddrMask->text()).toIPv4Address());
-}
-

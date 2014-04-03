@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "snapconfig.h"
 #include "dot2snapconfig.h"
 #include "arpconfig.h"
+#include "ip4config.h"
 #include "ip6config.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -81,6 +82,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kArpFieldNumber, 
             (void*) ArpConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIp4FieldNumber, 
+            (void*) Ip4ConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp6FieldNumber, 
             (void*) Ip6ConfigForm::createInstance);
