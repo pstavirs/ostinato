@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "ip4.h"    
 #include "ip6over4.h"    
 #include "ip4over6.h"    
 #include "ip4over4.h"    
@@ -49,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dot2snap.h"
 #include "eth2.h"    
 #include "arp.h"    
+#include "ip4.h"    
 #include "ip6.h"
 #endif
 
@@ -60,8 +60,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kIp4FieldNumber,
-            (void*) Ip4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6over4FieldNumber,
             (void*) Ip6over4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4over6FieldNumber,
@@ -119,6 +117,8 @@ ProtocolManager::ProtocolManager()
 
     registerProtocol(OstProto::Protocol::kArpFieldNumber,
             (void*) ArpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kIp4FieldNumber,
+            (void*) Ip4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6FieldNumber,
             (void*) Ip6Protocol::createInstance);
 #endif

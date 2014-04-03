@@ -57,10 +57,10 @@ HEADERS += \
     snap.h \
     dot2snap.h \
     arp.h \
+    ip4.h \
     ip6.h
 
 HEADERS1 += \
-    ip4.h \
     ipv4addressdelegate.h \
     ipv6addressdelegate.h \
     ip6over4.h \
@@ -96,10 +96,10 @@ SOURCES += \
     llc.cpp \
     snap.cpp \
     arp.cpp \
+    ip4.cpp \
     ip6.cpp 
 
 SOURCES1 += \
-    ip4.cpp \
     icmp.cpp \
     gmp.cpp \
     igmp.cpp \
