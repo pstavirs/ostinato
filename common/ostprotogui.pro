@@ -60,7 +60,8 @@ HEADERS += \
     dot2snapconfig.h \
     arpconfig.h \
     ip4config.h \
-    ip6config.h   
+    ip6config.h \
+    ip4over4config.h
 
 SOURCES += \
     ostprotolib.cpp \
