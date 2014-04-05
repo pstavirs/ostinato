@@ -59,14 +59,14 @@ HEADERS += \
     arp.h \
     ip4.h \
     ip6.h \
-    ip4over4.h
+    ip4over4.h \
+    ip4over6.h \
+    ip6over4.h \
+    ip6over6.h
 
 HEADERS1 += \
     ipv4addressdelegate.h \
     ipv6addressdelegate.h \
-    ip6over4.h \
-    ip4over6.h \
-    ip6over6.h \
     icmp.h \
     gmp.h \
     igmp.h \
