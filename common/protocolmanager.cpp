@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #if 0
 #include "ip6over4.h"    
 #include "ip4over6.h"    
-#include "ip4over4.h"    
 #include "ip6over6.h"    
 #include "icmp.h"    
 #include "igmp.h"    
@@ -50,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "arp.h"    
 #include "ip4.h"    
 #include "ip6.h"
+#include "ip4over4.h"    
 #endif
 
 ProtocolManager *OstProtocolManager;
@@ -64,8 +64,6 @@ ProtocolManager::ProtocolManager()
             (void*) Ip6over4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4over6FieldNumber,
             (void*) Ip4over6Protocol::createInstance);
-    registerProtocol(OstProto::Protocol::kIp4over4FieldNumber,
-            (void*) Ip4over4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6over6FieldNumber,
             (void*) Ip6over6Protocol::createInstance);
 
@@ -121,6 +119,9 @@ ProtocolManager::ProtocolManager()
             (void*) Ip4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6FieldNumber,
             (void*) Ip6Protocol::createInstance);
+
+    registerProtocol(OstProto::Protocol::kIp4over4FieldNumber,
+            (void*) Ip4over4Protocol::createInstance);
 #endif
     populateNeighbourProtocols();
 }

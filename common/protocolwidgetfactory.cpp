@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "arpconfig.h"
 #include "ip4config.h"
 #include "ip6config.h"
+#include "ip4over4config.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -88,6 +89,10 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp6FieldNumber, 
             (void*) Ip6ConfigForm::createInstance);
+
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIp4over4FieldNumber, 
+            (void*) Ip4over4ConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()
