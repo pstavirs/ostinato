@@ -34,6 +34,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4config.h"
 #include "ip6config.h"
 #include "ip4over4config.h"
+#include "ip4over6config.h"
+#include "ip6over4config.h"
+#include "ip6over6config.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -93,6 +96,15 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp4over4FieldNumber, 
             (void*) Ip4over4ConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIp4over6FieldNumber, 
+            (void*) Ip4over6ConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIp6over4FieldNumber, 
+            (void*) Ip6over4ConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIp6over6FieldNumber, 
+            (void*) Ip6over6ConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()
