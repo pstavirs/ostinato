@@ -17,12 +17,12 @@ FORMS += \
     snap.ui \
     arp.ui \
     ip4.ui \
-    ip6.ui
+    ip6.ui \
+    tcp.ui
 
 FORMS1 += \
     icmp.ui \
     gmp.ui \
-    tcp.ui \
     udp.ui \
     textproto.ui \
     userscript.ui \
@@ -61,7 +61,8 @@ HEADERS += \
     arpconfig.h \
     ip4config.h \
     ip6config.h \
-    ip4over4config.h
+    ip4over4config.h \
+    tcpconfig.h
 
 SOURCES += \
     ostprotolib.cpp \
@@ -84,7 +85,8 @@ SOURCES += \
     snapconfig.cpp \
     arpconfig.cpp \
     ip4config.cpp \
-    ip6config.cpp
+    ip6config.cpp \
+    tcpconfig.cpp
 
 QMAKE_DISTCLEAN += object_script.*
 

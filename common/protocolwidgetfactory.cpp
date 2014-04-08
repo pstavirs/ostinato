@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4over6config.h"
 #include "ip6over4config.h"
 #include "ip6over6config.h"
+#include "tcpconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -83,6 +84,7 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             OstProto::Protocol::kDot2SnapFieldNumber, 
             (void*) Dot2SnapConfigForm::createInstance);
 
+    // Layer 3 Protocols
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kArpFieldNumber, 
             (void*) ArpConfigForm::createInstance);
@@ -105,6 +107,11 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kIp6over6FieldNumber, 
             (void*) Ip6over6ConfigForm::createInstance);
+
+    // Layer 4 Protocols
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kTcpFieldNumber, 
+            (void*) TcpConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()
