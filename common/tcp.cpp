@@ -17,26 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "tcp.h"
 
-TcpConfigForm::TcpConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 TcpProtocol::TcpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 TcpProtocol::~TcpProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* TcpProtocol::createInstance(StreamBase *stream,
@@ -612,98 +602,5 @@ int TcpProtocol::protocolFrameVariableCount() const
         return 1;
 
     return protocolFramePayloadVariableCount();
-}
-
-QWidget* TcpProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new TcpConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void TcpProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->leTcpSrcPort->setText(
-        fieldData(tcp_src_port, FieldValue).toString());
-    configForm->cbTcpSrcPortOverride->setChecked(
-        fieldData(tcp_is_override_src_port, FieldValue).toBool());
-
-    configForm->leTcpDstPort->setText(
-        fieldData(tcp_dst_port, FieldValue).toString());
-    configForm->cbTcpDstPortOverride->setChecked(
-        fieldData(tcp_is_override_dst_port, FieldValue).toBool());
-
-    configForm->leTcpSeqNum->setText(
-        fieldData(tcp_seq_num, FieldValue).toString());
-    configForm->leTcpAckNum->setText(
-        fieldData(tcp_ack_num, FieldValue).toString());
-
-    configForm->leTcpHdrLen->setText(
-        fieldData(tcp_hdrlen, FieldValue).toString());
-    configForm->cbTcpHdrLenOverride->setChecked(
-        fieldData(tcp_is_override_hdrlen, FieldValue).toBool());
-
-    configForm->leTcpWindow->setText(
-        fieldData(tcp_window, FieldValue).toString());
-
-    configForm->leTcpCksum->setText(QString("%1").arg(
-        fieldData(tcp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
-    configForm->cbTcpCksumOverride->setChecked(
-        fieldData(tcp_is_override_cksum, FieldValue).toBool());
-
-    configForm->leTcpUrgentPointer->setText(
-        fieldData(tcp_urg_ptr, FieldValue).toString());
-    
-    uint flags = fieldData(tcp_flags, FieldValue).toUInt();
-    configForm->cbTcpFlagsUrg->setChecked((flags & TCP_FLAG_URG) > 0);
-    configForm->cbTcpFlagsAck->setChecked((flags & TCP_FLAG_ACK) > 0);
-    configForm->cbTcpFlagsPsh->setChecked((flags & TCP_FLAG_PSH) > 0);
-    configForm->cbTcpFlagsRst->setChecked((flags & TCP_FLAG_RST) > 0);
-    configForm->cbTcpFlagsSyn->setChecked((flags & TCP_FLAG_SYN) > 0);
-    configForm->cbTcpFlagsFin->setChecked((flags & TCP_FLAG_FIN) > 0);
-}
-
-void TcpProtocol::storeConfigWidget()
-{
-    bool isOk;
-    int ff = 0;
-
-    configWidget();
-
-    setFieldData(tcp_src_port, configForm->leTcpSrcPort->text());
-    setFieldData(tcp_is_override_src_port, 
-        configForm->cbTcpSrcPortOverride->isChecked());
-    setFieldData(tcp_dst_port, configForm->leTcpDstPort->text());
-    setFieldData(tcp_is_override_dst_port, 
-        configForm->cbTcpDstPortOverride->isChecked());
-
-    setFieldData(tcp_seq_num, configForm->leTcpSeqNum->text());
-    setFieldData(tcp_ack_num, configForm->leTcpAckNum->text());
-
-    setFieldData(tcp_hdrlen, configForm->leTcpHdrLen->text());
-    setFieldData(tcp_is_override_hdrlen, 
-        configForm->cbTcpHdrLenOverride->isChecked());
-
-    setFieldData(tcp_window, configForm->leTcpWindow->text());
-
-    setFieldData(tcp_cksum, configForm->leTcpCksum->text().remove(QChar(' '))
-        .toUInt(&isOk, BASE_HEX));
-    setFieldData(tcp_is_override_cksum, 
-        configForm->cbTcpCksumOverride->isChecked());
-
-    setFieldData(tcp_urg_ptr, configForm->leTcpUrgentPointer->text());
-
-    if (configForm->cbTcpFlagsUrg->isChecked()) ff |= TCP_FLAG_URG;
-    if (configForm->cbTcpFlagsAck->isChecked()) ff |= TCP_FLAG_ACK;
-    if (configForm->cbTcpFlagsPsh->isChecked()) ff |= TCP_FLAG_PSH;
-    if (configForm->cbTcpFlagsRst->isChecked()) ff |= TCP_FLAG_RST;
-    if (configForm->cbTcpFlagsSyn->isChecked()) ff |= TCP_FLAG_SYN;
-    if (configForm->cbTcpFlagsFin->isChecked()) ff |= TCP_FLAG_FIN;
-    setFieldData(tcp_flags, ff);
 }
 

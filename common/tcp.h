@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "tcp.pb.h"
-#include "ui_tcp.h"
 
 #define TCP_FLAG_URG    0x20
 #define TCP_FLAG_ACK    0x10
@@ -32,18 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define TCP_FLAG_SYN    0x02
 #define TCP_FLAG_FIN    0x01
 
-class TcpConfigForm : public QWidget, public Ui::tcp
-{
-    Q_OBJECT
-public:
-    TcpConfigForm(QWidget *parent = 0);
-};
-
 class TcpProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Tcp    data;
-    TcpConfigForm    *configForm;
+public:
     enum tcpfield
     {
         tcp_src_port = 0,
@@ -65,7 +55,6 @@ private:
         tcp_fieldCount
     };
 
-public:
     TcpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~TcpProtocol();
 
@@ -93,9 +82,8 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Tcp    data;
 };
 
 #endif

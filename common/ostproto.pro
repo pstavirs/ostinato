@@ -62,7 +62,8 @@ HEADERS += \
     ip4over4.h \
     ip4over6.h \
     ip6over4.h \
-    ip6over6.h
+    ip6over6.h \
+    tcp.h 
 
 HEADERS1 += \
     ipv4addressdelegate.h \
@@ -71,7 +72,6 @@ HEADERS1 += \
     gmp.h \
     igmp.h \
     mld.h \
-    tcp.h \
     udp.h \
     textproto.h \
     userscript.h \
@@ -97,14 +97,14 @@ SOURCES += \
     snap.cpp \
     arp.cpp \
     ip4.cpp \
-    ip6.cpp 
+    ip6.cpp \
+    tcp.cpp
 
 SOURCES1 += \
     icmp.cpp \
     gmp.cpp \
     igmp.cpp \
     mld.cpp \
-    tcp.cpp \
     udp.cpp \
     textproto.cpp \
     userscript.cpp \

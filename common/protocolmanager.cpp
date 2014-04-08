@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "icmp.h"    
 #include "igmp.h"    
 #include "mld.h"    
-#include "tcp.h"    
 #include "udp.h"    
 #include "textproto.h"
 #include "userscript.h"
@@ -43,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "snap.h"    
 #include "dot2snap.h"
 #include "eth2.h"    
+// L3 Protos
 #include "arp.h"    
 #include "ip4.h"    
 #include "ip6.h"
@@ -50,6 +50,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4over6.h"    
 #include "ip6over4.h"    
 #include "ip6over6.h"    
+// L4 Protos
+#include "tcp.h"    
 #endif
 
 ProtocolManager *OstProtocolManager;
@@ -66,8 +68,6 @@ ProtocolManager::ProtocolManager()
             (void*) IgmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kMldFieldNumber,
             (void*) MldProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kTcpFieldNumber,
-            (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
             (void*) UdpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
@@ -106,6 +106,7 @@ ProtocolManager::ProtocolManager()
     registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
             (void*) Dot2SnapProtocol::createInstance);
 
+    // Layer 3 Protocols
     registerProtocol(OstProto::Protocol::kArpFieldNumber,
             (void*) ArpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp4FieldNumber,
@@ -121,6 +122,10 @@ ProtocolManager::ProtocolManager()
             (void*) Ip6over4Protocol::createInstance);
     registerProtocol(OstProto::Protocol::kIp6over6FieldNumber,
             (void*) Ip6over6Protocol::createInstance);
+
+    // Layer 4 Protocols
+    registerProtocol(OstProto::Protocol::kTcpFieldNumber,
+            (void*) TcpProtocol::createInstance);
 #endif
     populateNeighbourProtocols();
 }
