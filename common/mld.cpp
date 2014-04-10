@@ -19,64 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mld.h"
 
-#include "ipv6addressdelegate.h"
-#include "ipv6addressvalidator.h"
 #include "iputils.h"
 
 #include <QHostAddress>
-#include <qendian.h>
-
-MldConfigForm::MldConfigForm(QWidget *parent)
-    : GmpConfigForm(parent)
-{
-    connect(msgTypeCombo, SIGNAL(currentIndexChanged(int)),
-            SLOT(on_msgTypeCombo_currentIndexChanged(int)));
-
-    msgTypeCombo->setValueMask(0xFF);
-    msgTypeCombo->addItem(kMldV1Query,  "MLDv1 Query");
-    msgTypeCombo->addItem(kMldV1Report, "MLDv1 Report");
-    msgTypeCombo->addItem(kMldV1Done,   "MLDv1 Done");
-    msgTypeCombo->addItem(kMldV2Query,  "MLDv2 Query");
-    msgTypeCombo->addItem(kMldV2Report, "MLDv2 Report");
-
-    _defaultGroupIp  = "::";
-    _defaultSourceIp = "::";
-
-    groupAddress->setValidator(new IPv6AddressValidator(this));
-    groupRecordAddress->setValidator(new IPv6AddressValidator(this));
-    sourceList->setItemDelegate(new IPv6AddressDelegate(this));
-    groupRecordSourceList->setItemDelegate(new IPv6AddressDelegate(this));
-}
-
-void MldConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
-{
-    switch(msgTypeCombo->currentValue())
-    {
-    case kMldV1Query:
-    case kMldV1Report:
-    case kMldV1Done:
-        asmGroup->show();
-        ssmWidget->hide();
-        break;
-
-    case kMldV2Query:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmQueryPage);
-        ssmWidget->show();
-        break;
-
-    case kMldV2Report:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmReportPage);
-        ssmWidget->show();
-        break;
-
-    default:
-        asmGroup->hide();
-        ssmWidget->hide();
-        break;
-    }
-}
+#include <QStringList>
 
 MldProtocol::MldProtocol(StreamBase *stream, AbstractProtocol *parent)
     : GmpProtocol(stream, parent)
@@ -589,33 +535,6 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
 
 _exit:
     return isOk;
-}
-
-QWidget* MldProtocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new MldConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void MldProtocol::loadConfigWidget()
-{
-    GmpProtocol::loadConfigWidget();
-
-    configForm->maxResponseTime->setText(
-            fieldData(kMldMrt, FieldValue).toString());
-}
-
-void MldProtocol::storeConfigWidget()
-{
-    GmpProtocol::storeConfigWidget();
-
-    setFieldData(kMldMrt, configForm->maxResponseTime->text());
 }
 
 quint16 MldProtocol::checksum(int streamIndex) const

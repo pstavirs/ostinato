@@ -18,68 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "igmp.h"
-
-#include "ipv4addressdelegate.h"
 #include "iputils.h"
 
 #include <QHostAddress>
-#include <qendian.h>
-
-IgmpConfigForm::IgmpConfigForm(QWidget *parent)
-    : GmpConfigForm(parent)
-{
-    connect(msgTypeCombo, SIGNAL(currentIndexChanged(int)),
-            SLOT(on_msgTypeCombo_currentIndexChanged(int)));
-
-    msgTypeCombo->setValueMask(0xFF);
-    msgTypeCombo->addItem(kIgmpV1Query,  "IGMPv1 Query");
-    msgTypeCombo->addItem(kIgmpV1Report, "IGMPv1 Report");
-    msgTypeCombo->addItem(kIgmpV2Query,  "IGMPv2 Query");
-    msgTypeCombo->addItem(kIgmpV2Report, "IGMPv2 Report");
-    msgTypeCombo->addItem(kIgmpV2Leave,  "IGMPv2 Leave");
-    msgTypeCombo->addItem(kIgmpV3Query,  "IGMPv3 Query");
-    msgTypeCombo->addItem(kIgmpV3Report, "IGMPv3 Report");
-
-    _defaultGroupIp = "0.0.0.0";
-    _defaultSourceIp = "0.0.0.0";
-
-    groupAddress->setInputMask("009.009.009.009;"); // FIXME: use validator
-    groupRecordAddress->setInputMask("009.009.009.009;"); // FIXME:use validator
-    sourceList->setItemDelegate(new IPv4AddressDelegate(this));
-    groupRecordSourceList->setItemDelegate(new IPv4AddressDelegate(this));
-}
-
-void IgmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
-{
-    switch(msgTypeCombo->currentValue())
-    {
-    case kIgmpV1Query:
-    case kIgmpV1Report:
-    case kIgmpV2Query:
-    case kIgmpV2Report:
-    case kIgmpV2Leave:
-        asmGroup->show();
-        ssmWidget->hide();
-        break;
-
-    case kIgmpV3Query:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmQueryPage);
-        ssmWidget->show();
-        break;
-
-    case kIgmpV3Report:
-        asmGroup->hide();
-        ssmWidget->setCurrentIndex(kSsmReportPage);
-        ssmWidget->show();
-        break;
-
-    default:
-        asmGroup->hide();
-        ssmWidget->hide();
-        break;
-    }
-}
+#include <QStringList>
 
 IgmpProtocol::IgmpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : GmpProtocol(stream, parent)
@@ -401,33 +343,6 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
 
 _exit:
     return isOk;
-}
-
-QWidget* IgmpProtocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new IgmpConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void IgmpProtocol::loadConfigWidget()
-{
-    GmpProtocol::loadConfigWidget();
-
-    configForm->maxResponseTime->setText(
-            fieldData(kRsvdMrtCode, FieldValue).toString());
-}
-
-void IgmpProtocol::storeConfigWidget()
-{
-    GmpProtocol::storeConfigWidget();
-
-    setFieldData(kRsvdMrtCode, configForm->maxResponseTime->text());
 }
 
 quint16 IgmpProtocol::checksum(int streamIndex) const

@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _MLD_H
 #define _MLD_H
 
-#include "mld.pb.h"
 #include "gmp.h"
+#include "mld.pb.h"
 
 // MLD uses the same msg type value for 'Query' messages across
 // versions despite the fields being different. To distinguish 
@@ -34,15 +34,6 @@ enum MldMsgType
 
     kMldV2Query = 0xFF82,
     kMldV2Report = 0x8F
-};
-
-class MldConfigForm : public GmpConfigForm 
-{
-    Q_OBJECT
-public:
-    MldConfigForm(QWidget *parent = 0);
-private slots:
-    void on_msgTypeCombo_currentIndexChanged(int index);
 };
 
 class MldProtocol : public GmpProtocol
@@ -68,10 +59,6 @@ public:
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
-
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
 
 protected:
     virtual bool isSsmReport() const;

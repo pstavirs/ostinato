@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _IGMP_H
 #define _IGMP_H
 
-#include "igmp.pb.h"
 #include "gmp.h"
+#include "igmp.pb.h"
 
 // IGMP uses the same msg type value for 'Query' messages across
 // versions despite the fields being different. To distinguish 
@@ -37,15 +37,6 @@ enum IgmpMsgType
 
     kIgmpV3Query = 0xFE11,
     kIgmpV3Report = 0x22,
-};
-
-class IgmpConfigForm : public GmpConfigForm 
-{
-    Q_OBJECT
-public:
-    IgmpConfigForm(QWidget *parent = 0);
-private slots:
-    void on_msgTypeCombo_currentIndexChanged(int index);
 };
 
 class IgmpProtocol : public GmpProtocol
@@ -70,10 +61,6 @@ public:
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
-
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
 
 protected:
     virtual bool isSsmReport() const;

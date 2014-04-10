@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dot2llcconfig.h"
 #include "snapconfig.h"
 #include "dot2snapconfig.h"
+// L3 Protocol Widgets
 #include "arpconfig.h"
 #include "ip4config.h"
 #include "ip6config.h"
@@ -37,6 +38,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4over6config.h"
 #include "ip6over4config.h"
 #include "ip6over6config.h"
+// L4 Protocol Widgets
+#include "igmpconfig.h"
+#include "mldconfig.h"
 #include "tcpconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -109,6 +113,12 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             (void*) Ip6over6ConfigForm::createInstance);
 
     // Layer 4 Protocols
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kIgmpFieldNumber, 
+            (void*) IgmpConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kMldFieldNumber, 
+            (void*) MldConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kTcpFieldNumber, 
             (void*) TcpConfigForm::createInstance);

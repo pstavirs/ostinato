@@ -18,11 +18,11 @@ FORMS += \
     arp.ui \
     ip4.ui \
     ip6.ui \
+    gmp.ui \
     tcp.ui
 
 FORMS1 += \
     icmp.ui \
-    gmp.ui \
     udp.ui \
     textproto.ui \
     userscript.ui \
@@ -37,6 +37,8 @@ HEADERS = \
     ostprotolib.h \
     abstractfileformat.h \
     fileformat.h \
+    ipv4addressdelegate.h \
+    ipv6addressdelegate.h \
     pcapfileformat.h \
     pdmlfileformat.h \
     pdmlprotocol.h \
@@ -62,6 +64,9 @@ HEADERS += \
     ip4config.h \
     ip6config.h \
     ip4over4config.h \
+    gmpconfig.h \
+    igmpconfig.h \
+    mldconfig.h \
     tcpconfig.h
 
 SOURCES += \
@@ -86,6 +91,9 @@ SOURCES += \
     arpconfig.cpp \
     ip4config.cpp \
     ip6config.cpp \
+    gmpconfig.cpp \
+    igmpconfig.cpp \
+    mldconfig.cpp \
     tcpconfig.cpp
 
 QMAKE_DISTCLEAN += object_script.*

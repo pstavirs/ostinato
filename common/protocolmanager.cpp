@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocol.pb.h"
 #if 0
 #include "icmp.h"    
-#include "igmp.h"    
-#include "mld.h"    
 #include "udp.h"    
 #include "textproto.h"
 #include "userscript.h"
@@ -51,6 +49,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip6over4.h"    
 #include "ip6over6.h"    
 // L4 Protos
+#include "igmp.h"    
+#include "mld.h"    
 #include "tcp.h"    
 #endif
 
@@ -64,10 +64,6 @@ ProtocolManager::ProtocolManager()
 #if 0
     registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
             (void*) IcmpProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kIgmpFieldNumber,
-            (void*) IgmpProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kMldFieldNumber,
-            (void*) MldProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
             (void*) UdpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
@@ -124,6 +120,10 @@ ProtocolManager::ProtocolManager()
             (void*) Ip6over6Protocol::createInstance);
 
     // Layer 4 Protocols
+    registerProtocol(OstProto::Protocol::kIgmpFieldNumber,
+            (void*) IgmpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kMldFieldNumber,
+            (void*) MldProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
             (void*) TcpProtocol::createInstance);
 #endif
