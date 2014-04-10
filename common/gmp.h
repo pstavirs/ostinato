@@ -20,72 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _GMP_H
 #define _GMP_H
 
-#include "gmp.pb.h"
-#include "ui_gmp.h"
-
 #include "abstractprotocol.h"
+#include "gmp.pb.h"
 
 #include <QHash>
 
 /* 
 Gmp Protocol Frame Format - TODO: for now see the respective RFCs
 */
-class GmpProtocol;
-
-class GmpConfigForm : public QWidget, public Ui::Gmp
-{
-    Q_OBJECT
-public:
-    GmpConfigForm(QWidget *parent = 0);
-    ~GmpConfigForm();
-    void update();
-protected:
-    QString _defaultGroupIp;
-    QString _defaultSourceIp;
-    enum {
-        kSsmQueryPage = 0,
-        kSsmReportPage = 1
-    };
-private slots:
-    void on_groupMode_currentIndexChanged(int index);
-    void on_addSource_clicked();
-    void on_deleteSource_clicked();
-
-    void on_addGroupRecord_clicked();
-    void on_deleteGroupRecord_clicked();
-    void on_groupList_currentItemChanged(QListWidgetItem *current,
-            QListWidgetItem *previous);
-    void on_addGroupRecordSource_clicked();
-    void on_deleteGroupRecordSource_clicked();
-    void on_auxData_textChanged(const QString &text);
-};
 
 class GmpProtocol : public AbstractProtocol
 {
 public:
-    GmpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-    virtual ~GmpProtocol();
-
-    virtual ProtocolIdType protocolIdType() const;
-
-    virtual int fieldCount() const;
-    virtual int frameFieldCount() const;
-
-    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
-    virtual QVariant fieldData(int index, FieldAttrib attrib,
-               int streamIndex = 0) const;
-    virtual bool setFieldData(int index, const QVariant &value, 
-            FieldAttrib attrib = FieldValue);
-
-    virtual int protocolFrameSize(int streamIndex = 0) const;
-
-    virtual bool isProtocolFrameValueVariable() const;
-    virtual int protocolFrameVariableCount() const;
-
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
-
-protected:
     enum GmpField
     {
       // ------------
@@ -134,8 +80,27 @@ protected:
         FIELD_COUNT
     };
 
+    GmpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
+    virtual ~GmpProtocol();
+
+    virtual ProtocolIdType protocolIdType() const;
+
+    virtual int fieldCount() const;
+    virtual int frameFieldCount() const;
+
+    virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
+    virtual QVariant fieldData(int index, FieldAttrib attrib,
+               int streamIndex = 0) const;
+    virtual bool setFieldData(int index, const QVariant &value, 
+            FieldAttrib attrib = FieldValue);
+
+    virtual int protocolFrameSize(int streamIndex = 0) const;
+
+    virtual bool isProtocolFrameValueVariable() const;
+    virtual int protocolFrameVariableCount() const;
+
+protected:
     OstProto::Gmp    data;
-    GmpConfigForm    *configForm;
 
     int msgType() const;
 
@@ -146,6 +111,7 @@ protected:
     int qqic(int value) const;
 
     virtual quint16 checksum(int streamIndex) const = 0;
+
 private:
     static QHash<int, int> frameFieldCountMap;
 };
