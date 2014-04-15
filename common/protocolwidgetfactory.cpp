@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "igmpconfig.h"
 #include "mldconfig.h"
 #include "tcpconfig.h"
+#include "udpconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -122,6 +123,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kTcpFieldNumber, 
             (void*) TcpConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kUdpFieldNumber, 
+            (void*) UdpConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()
