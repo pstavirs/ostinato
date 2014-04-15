@@ -17,26 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-#include <QHostAddress>
-
 #include "udp.h"
-
-UdpConfigForm::UdpConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 UdpProtocol::UdpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    configForm = NULL;
 }
 
 UdpProtocol::~UdpProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* UdpProtocol::createInstance(StreamBase *stream,
@@ -440,61 +429,3 @@ int UdpProtocol::protocolFrameVariableCount() const
 
     return protocolFramePayloadVariableCount();
 }
-
-QWidget* UdpProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new UdpConfigForm;
-        loadConfigWidget();
-    }
-    return configForm;
-}
-
-void UdpProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->leUdpSrcPort->setText(
-        fieldData(udp_srcPort, FieldValue).toString());
-    configForm->cbUdpSrcPortOverride->setChecked(
-        fieldData(udp_isOverrideSrcPort, FieldValue).toBool());
-    configForm->leUdpDstPort->setText(
-        fieldData(udp_dstPort, FieldValue).toString());
-    configForm->cbUdpDstPortOverride->setChecked(
-        fieldData(udp_isOverrideDstPort, FieldValue).toBool());
-
-    configForm->leUdpLength->setText(
-        fieldData(udp_totLen, FieldValue).toString());
-    configForm->cbUdpLengthOverride->setChecked(
-        fieldData(udp_isOverrideTotLen, FieldValue).toBool());
-
-    configForm->leUdpCksum->setText(QString("%1").arg(
-        fieldData(udp_cksum, FieldValue).toUInt(), 4, BASE_HEX, QChar('0')));
-    configForm->cbUdpCksumOverride->setChecked(
-        fieldData(udp_isOverrideCksum, FieldValue).toBool());
-}
-
-void UdpProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-
-    setFieldData(udp_srcPort, configForm->leUdpSrcPort->text());
-    setFieldData(udp_isOverrideSrcPort, 
-        configForm->cbUdpSrcPortOverride->isChecked());
-    setFieldData(udp_dstPort, configForm->leUdpDstPort->text());
-    setFieldData(udp_isOverrideDstPort, 
-        configForm->cbUdpDstPortOverride->isChecked());
-
-    setFieldData(udp_totLen, configForm->leUdpLength->text());
-    setFieldData(udp_isOverrideTotLen, 
-        configForm->cbUdpLengthOverride->isChecked());
-
-    setFieldData(udp_cksum, configForm->leUdpCksum->text().remove(QChar(' '))
-            .toUInt(&isOk, BASE_HEX));
-    setFieldData(udp_isOverrideCksum, 
-        configForm->cbUdpCksumOverride->isChecked());
-}
-

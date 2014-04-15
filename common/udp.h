@@ -21,22 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _UDP_H
 
 #include "abstractprotocol.h"
-
 #include "udp.pb.h"
-#include "ui_udp.h"
-
-class UdpConfigForm : public QWidget, public Ui::udp
-{
-    Q_OBJECT
-public:
-    UdpConfigForm(QWidget *parent = 0);
-};
 
 class UdpProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Udp    data;
-    UdpConfigForm    *configForm;
+public:
     enum udpfield
     {
         udp_srcPort = 0,
@@ -52,7 +41,6 @@ private:
         udp_fieldCount
     };
 
-public:
     UdpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~UdpProtocol();
 
@@ -80,9 +68,8 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Udp    data;
 };
 
 #endif

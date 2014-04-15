@@ -66,11 +66,11 @@ HEADERS += \
     gmp.h \
     igmp.h \
     mld.h \
-    tcp.h 
+    tcp.h \
+    udp.h
 
 HEADERS1 += \
     icmp.h \
-    udp.h \
     textproto.h \
     userscript.h \
     hexdump.h \
@@ -99,11 +99,11 @@ SOURCES += \
     gmp.cpp \
     igmp.cpp \
     mld.cpp \
-    tcp.cpp
+    tcp.cpp \
+    udp.cpp
 
 SOURCES1 += \
     icmp.cpp \
-    udp.cpp \
     textproto.cpp \
     userscript.cpp \
     hexdump.cpp \

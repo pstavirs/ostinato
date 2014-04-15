@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocol.pb.h"
 #if 0
 #include "icmp.h"    
-#include "udp.h"    
 #include "textproto.h"
 #include "userscript.h"
 #include "hexdump.h"
@@ -52,6 +51,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "igmp.h"    
 #include "mld.h"    
 #include "tcp.h"    
+#include "udp.h"    
 #endif
 
 ProtocolManager *OstProtocolManager;
@@ -64,8 +64,6 @@ ProtocolManager::ProtocolManager()
 #if 0
     registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
             (void*) IcmpProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kUdpFieldNumber,
-            (void*) UdpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
             (void*) TextProtocol::createInstance);
 
@@ -126,6 +124,8 @@ ProtocolManager::ProtocolManager()
             (void*) MldProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTcpFieldNumber,
             (void*) TcpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kUdpFieldNumber,
+            (void*) UdpProtocol::createInstance);
 #endif
     populateNeighbourProtocols();
 }
