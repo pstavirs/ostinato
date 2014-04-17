@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "icmp.h"    
 #include "textproto.h"
 #include "userscript.h"
 #include "hexdump.h"
@@ -48,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip6over4.h"    
 #include "ip6over6.h"    
 // L4 Protos
+#include "icmp.h"    
 #include "igmp.h"    
 #include "mld.h"    
 #include "tcp.h"    
@@ -62,8 +62,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
-            (void*) IcmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
             (void*) TextProtocol::createInstance);
 
@@ -118,6 +116,8 @@ ProtocolManager::ProtocolManager()
             (void*) Ip6over6Protocol::createInstance);
 
     // Layer 4 Protocols
+    registerProtocol(OstProto::Protocol::kIcmpFieldNumber,
+            (void*) IcmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kIgmpFieldNumber,
             (void*) IgmpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kMldFieldNumber,

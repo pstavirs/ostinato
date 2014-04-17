@@ -19,11 +19,11 @@ FORMS += \
     ip4.ui \
     ip6.ui \
     gmp.ui \
+    icmp.ui \
     tcp.ui \
     udp.ui
 
 FORMS1 += \
-    icmp.ui \
     textproto.ui \
     userscript.ui \
     hexdump.ui \
@@ -65,6 +65,7 @@ HEADERS += \
     ip6config.h \
     ip4over4config.h \
     gmpconfig.h \
+    icmpconfig.h \
     igmpconfig.h \
     mldconfig.h \
     tcpconfig.h \
@@ -93,6 +94,7 @@ SOURCES += \
     ip4config.cpp \
     ip6config.cpp \
     gmpconfig.cpp \
+    icmpconfig.cpp \
     igmpconfig.cpp \
     mldconfig.cpp \
     tcpconfig.cpp \
