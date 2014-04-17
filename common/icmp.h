@@ -20,12 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _ICMP_H
 #define _ICMP_H
 
-#include "icmp.pb.h"
-#include "ui_icmp.h"
-
 #include "abstractprotocol.h"
-
-#include <QButtonGroup>
+#include "icmp.pb.h"
 
 /* 
 Icmp Protocol Frame Format -
@@ -37,23 +33,9 @@ Fields within [] are applicable only to certain TYPEs
 Figures in braces represent field width in bytes
 */
 
-class IcmpConfigForm : public QWidget, public Ui::Icmp
-{
-    Q_OBJECT
-public:
-    QButtonGroup *versionGroup;
-
-    IcmpConfigForm(QWidget *parent = 0);
-private slots:
-    void on_typeCombo_currentIndexChanged(int index);
-    void when_versionGroup_buttonClicked(int id);
-};
-
 class IcmpProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Icmp    data;
-    IcmpConfigForm    *configForm;
+public:
     enum icmpfield
     {
         // Frame Fields
@@ -73,18 +55,6 @@ private:
         icmp_fieldCount
     };
 
-    OstProto::Icmp::Version icmpVersion() const
-    {
-        return OstProto::Icmp::Version(
-                fieldData(icmp_version, FieldValue).toUInt());
-    }
-
-    int icmpType() const
-    {
-        return fieldData(icmp_type, FieldValue).toInt();
-    }
-
-public:
     IcmpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~IcmpProtocol();
 
@@ -109,9 +79,18 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Icmp    data;
+
+    OstProto::Icmp::Version icmpVersion() const
+    {
+        return OstProto::Icmp::Version(
+                fieldData(icmp_version, FieldValue).toUInt());
+    }
+    int icmpType() const
+    {
+        return fieldData(icmp_type, FieldValue).toInt();
+    }
 };
 
 #endif

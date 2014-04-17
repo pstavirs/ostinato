@@ -64,13 +64,13 @@ HEADERS += \
     ip6over4.h \
     ip6over6.h \
     gmp.h \
+    icmp.h \
     igmp.h \
     mld.h \
     tcp.h \
     udp.h
 
 HEADERS1 += \
-    icmp.h \
     textproto.h \
     userscript.h \
     hexdump.h \
@@ -97,13 +97,13 @@ SOURCES += \
     ip4.cpp \
     ip6.cpp \
     gmp.cpp \
+    icmp.cpp \
     igmp.cpp \
     mld.cpp \
     tcp.cpp \
     udp.cpp
 
 SOURCES1 += \
-    icmp.cpp \
     textproto.cpp \
     userscript.cpp \
     hexdump.cpp \
