@@ -44,6 +44,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "mldconfig.h"
 #include "tcpconfig.h"
 #include "udpconfig.h"
+// L5 Protocol Widgets
+#include "textprotoconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -130,6 +132,11 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kUdpFieldNumber, 
             (void*) UdpConfigForm::createInstance);
+
+    // Layer 5 Protocols
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kTextProtocolFieldNumber, 
+            (void*) TextProtocolConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()

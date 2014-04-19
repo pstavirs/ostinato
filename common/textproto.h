@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _TEXT_PROTOCOL_H
 #define _TEXT_PROTOCOL_H
 
-#include "textproto.pb.h"
-#include "ui_textproto.h"
-
 #include "abstractprotocol.h"
+#include "textproto.pb.h"
 
 /* 
 TextProtocol Protocol Frame Format -
@@ -31,19 +29,9 @@ TextProtocol Protocol Frame Format -
    specified encoding 
 */
 
-class TextProtocolConfigForm : public QWidget, public Ui::TextProtocol
-{
-    Q_OBJECT
-public:
-    TextProtocolConfigForm(QWidget *parent = 0);
-private slots:
-};
-
 class TextProtocol : public AbstractProtocol
 {
-private:
-    OstProto::TextProtocol    data;
-    TextProtocolConfigForm    *configForm;
+public:
     enum textProtocolField
     {
         // Frame Fields
@@ -57,7 +45,6 @@ private:
         textProto_fieldCount
     };
 
-public:
     TextProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~TextProtocol();
 
@@ -83,9 +70,8 @@ public:
 
     virtual int protocolFrameSize(int streamIndex = 0) const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::TextProtocol    data;
 };
 
 #endif

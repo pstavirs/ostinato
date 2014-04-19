@@ -21,10 +21,10 @@ FORMS += \
     gmp.ui \
     icmp.ui \
     tcp.ui \
-    udp.ui
+    udp.ui \
+    textproto.ui
 
 FORMS1 += \
-    textproto.ui \
     userscript.ui \
     hexdump.ui \
     sample.ui 
@@ -69,7 +69,8 @@ HEADERS += \
     igmpconfig.h \
     mldconfig.h \
     tcpconfig.h \
-    udpconfig.h
+    udpconfig.h \
+    textprotoconfig.h 
 
 SOURCES += \
     ostprotolib.cpp \
@@ -98,7 +99,8 @@ SOURCES += \
     igmpconfig.cpp \
     mldconfig.cpp \
     tcpconfig.cpp \
-    udpconfig.cpp
+    udpconfig.cpp \
+    textprotoconfig.cpp 
 
 QMAKE_DISTCLEAN += object_script.*
 

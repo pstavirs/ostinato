@@ -17,32 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-
 #include "textproto.h"
-
-TextProtocolConfigForm::TextProtocolConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-
-    portNumCombo->setValidator(new QIntValidator(0, 0xFFFF, this));
-    portNumCombo->addItem(0, "Reserved");
-    portNumCombo->addItem(80, "HTTP");
-    portNumCombo->addItem(554, "RTSP");
-    portNumCombo->addItem(5060, "SIP");
-}
 
 TextProtocol::TextProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    /* The configWidget is created lazily */
-    configForm = NULL;
 }
 
 TextProtocol::~TextProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* TextProtocol::createInstance(StreamBase *stream,
@@ -255,41 +238,3 @@ int TextProtocol::protocolFrameSize(int streamIndex) const
     return fieldData(textProto_text, FieldFrameValue, streamIndex)
             .toByteArray().size() ;
 }
-
-QWidget* TextProtocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new TextProtocolConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void TextProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->portNumCombo->setValue(
-            fieldData(textProto_portNum, FieldValue).toUInt());
-    configForm->eolCombo->setCurrentIndex(
-            fieldData(textProto_eol, FieldValue).toUInt());
-    configForm->encodingCombo->setCurrentIndex(
-            fieldData(textProto_encoding, FieldValue).toUInt());
-    configForm->protoText->setText(
-            fieldData(textProto_text, FieldValue).toString());
-}
-
-void TextProtocol::storeConfigWidget()
-{
-    configWidget();
-
-    setFieldData(textProto_portNum, configForm->portNumCombo->currentValue());
-    setFieldData(textProto_eol, configForm->eolCombo->currentIndex());
-    setFieldData(textProto_encoding, configForm->encodingCombo->currentIndex());
-
-    setFieldData(textProto_text, configForm->protoText->toPlainText());
-}
-

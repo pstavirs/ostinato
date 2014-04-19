@@ -68,10 +68,10 @@ HEADERS += \
     igmp.h \
     mld.h \
     tcp.h \
-    udp.h
+    udp.h \
+    textproto.h 
 
 HEADERS1 += \
-    textproto.h \
     userscript.h \
     hexdump.h \
     sample.h
@@ -101,10 +101,10 @@ SOURCES += \
     igmp.cpp \
     mld.cpp \
     tcp.cpp \
-    udp.cpp
+    udp.cpp \
+    textproto.cpp
 
 SOURCES1 += \
-    textproto.cpp \
     userscript.cpp \
     hexdump.cpp \
     sample.cpp

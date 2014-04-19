@@ -1,6 +1,6 @@
 <ui version="4.0" >
- <class>TextProtocol</class>
- <widget class="QWidget" name="TextProtocol" >
+ <class>TextProto</class>
+ <widget class="QWidget" name="TextProto" >
   <property name="geometry" >
    <rect>
     <x>0</x>
