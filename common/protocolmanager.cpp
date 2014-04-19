@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "textproto.h"
 #include "userscript.h"
 #include "hexdump.h"
 #include "sample.h"
@@ -52,6 +51,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "mld.h"    
 #include "tcp.h"    
 #include "udp.h"    
+// L5 Protos
+#include "textproto.h"
 #endif
 
 ProtocolManager *OstProtocolManager;
@@ -62,9 +63,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
-            (void*) TextProtocol::createInstance);
-
     registerProtocol(OstProto::Protocol::kHexDumpFieldNumber,
             (void*) HexDumpProtocol::createInstance);
 
@@ -126,6 +124,11 @@ ProtocolManager::ProtocolManager()
             (void*) TcpProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUdpFieldNumber,
             (void*) UdpProtocol::createInstance);
+
+    // Layer 5 Protocols
+    registerProtocol(OstProto::Protocol::kTextProtocolFieldNumber,
+            (void*) TextProtocol::createInstance);
+
 #endif
     populateNeighbourProtocols();
 }
