@@ -20,35 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "hexdump.h"
 #include "streambase.h"
 
-#include <qendian.h>
-
-HexDumpConfigForm::HexDumpConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-
-    hexEdit->setFont(QFont("Courier"));
-    hexEdit->setOverwriteMode(false);
-}
-
-void HexDumpConfigForm::on_hexEdit_overwriteModeChanged(bool isOverwriteMode)
-{
-    if (isOverwriteMode)
-        mode->setText(tr("Ovr"));
-    else
-        mode->setText(tr("Ins"));
-}
-
 HexDumpProtocol::HexDumpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    /* The configWidget is created lazily */
-    configForm = NULL;
 }
 
 HexDumpProtocol::~HexDumpProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* HexDumpProtocol::createInstance(StreamBase *stream,
@@ -229,35 +207,5 @@ int HexDumpProtocol::protocolFrameSize(int streamIndex) const
     }
 
     return len;
-}
-
-QWidget* HexDumpProtocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new HexDumpConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void HexDumpProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->hexEdit->setData(
-            fieldData(hexDump_content, FieldValue).toByteArray());
-    configForm->padUntilEnd->setChecked(
-        fieldData(hexDump_pad_until_end, FieldValue).toBool());
-}
-
-void HexDumpProtocol::storeConfigWidget()
-{
-    configWidget();
-
-    setFieldData(hexDump_content, configForm->hexEdit->data());
-    setFieldData(hexDump_pad_until_end, configForm->padUntilEnd->isChecked());
 }
 

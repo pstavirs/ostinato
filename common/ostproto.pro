@@ -69,11 +69,11 @@ HEADERS += \
     mld.h \
     tcp.h \
     udp.h \
-    textproto.h 
+    textproto.h \
+    hexdump.h
 
 HEADERS1 += \
     userscript.h \
-    hexdump.h \
     sample.h
 
 SOURCES = \
@@ -102,11 +102,11 @@ SOURCES += \
     mld.cpp \
     tcp.cpp \
     udp.cpp \
-    textproto.cpp
+    textproto.cpp \
+    hexdump.cpp
 
 SOURCES1 += \
     userscript.cpp \
-    hexdump.cpp \
     sample.cpp
 
 QMAKE_DISTCLEAN += object_script.*
