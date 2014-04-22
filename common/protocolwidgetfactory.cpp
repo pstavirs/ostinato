@@ -46,6 +46,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "udpconfig.h"
 // L5 Protocol Widgets
 #include "textprotoconfig.h"
+// Special Protocol Widgets
+#include "hexdumpconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -137,6 +139,11 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kTextProtocolFieldNumber, 
             (void*) TextProtocolConfigForm::createInstance);
+
+    // Special Protocols
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kHexDumpFieldNumber, 
+            (void*) HexDumpConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()

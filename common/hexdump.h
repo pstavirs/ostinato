@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _HEXDUMP_H
 #define _HEXDUMP_H
 
-#include "hexdump.pb.h"
-#include "ui_hexdump.h"
-
 #include "abstractprotocol.h"
+#include "hexdump.pb.h"
 
 /* 
 HexDump Protocol Frame Format -
@@ -33,18 +31,19 @@ HexDump Protocol Frame Format -
     +---------+---------+
 */
 
-class HexDumpConfigForm : public QWidget, public Ui::HexDump
-{
-    Q_OBJECT
-public:
-    HexDumpConfigForm(QWidget *parent = 0);
-private slots:
-    void on_hexEdit_overwriteModeChanged(bool isOverwriteMode);
-};
-
 class HexDumpProtocol : public AbstractProtocol
 {
 public:
+    enum hexDumpfield
+    {
+        // Frame Fields
+        hexDump_content = 0,
+
+        // Meta Fields
+        hexDump_pad_until_end,
+
+        hexDump_fieldCount
+    };
     HexDumpProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~HexDumpProtocol();
 
@@ -68,22 +67,7 @@ public:
 
     virtual int protocolFrameSize(int streamIndex = 0) const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
-
 private:
     OstProto::HexDump    data;
-    HexDumpConfigForm    *configForm;
-    enum hexDumpfield
-    {
-        // Frame Fields
-        hexDump_content = 0,
-
-        // Meta Fields
-        hexDump_pad_until_end,
-
-        hexDump_fieldCount
-    };
 };
 #endif
