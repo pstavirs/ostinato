@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocolwidgetfactory.h"
 
 #include "macconfig.h"
-#include "payloadconfig.h"
 #include "vlanconfig.h"
 #include "svlanconfig.h"
 #include "vlanstackconfig.h"
+// L2 Protocol Widgets
 #include "eth2config.h"
 #include "dot3config.h"
 #include "llcconfig.h"
@@ -48,6 +48,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "textprotoconfig.h"
 // Special Protocol Widgets
 #include "hexdumpconfig.h"
+#include "payloadconfig.h"
+#include "sampleconfig.h"
 #include "userscriptconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -62,9 +64,6 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kMacFieldNumber, 
             (void*) MacConfigForm::createInstance);
-    OstProtocolWidgetFactory->registerProtocolConfigWidget(
-            OstProto::Protocol::kPayloadFieldNumber, 
-            (void*) PayloadConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kVlanFieldNumber, 
@@ -145,6 +144,12 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kHexDumpFieldNumber, 
             (void*) HexDumpConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kPayloadFieldNumber, 
+            (void*) PayloadConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kSampleFieldNumber, 
+            (void*) SampleConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kUserScriptFieldNumber, 
             (void*) UserScriptConfigForm::createInstance);

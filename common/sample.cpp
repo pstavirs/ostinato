@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,26 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <qendian.h>
-
 #include "sample.h"
-
-SampleConfigForm::SampleConfigForm(QWidget *parent)
-    : QWidget(parent)
-{
-    setupUi(this);
-}
 
 SampleProtocol::SampleProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    /* The configWidget is created lazily */
-    configForm = NULL;
 }
 
 SampleProtocol::~SampleProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* SampleProtocol::createInstance(StreamBase *stream,
@@ -97,7 +86,9 @@ quint32 SampleProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
     {
-        case ProtocolIdIp: return 1234;
+        case ProtocolIdLlc: return 0xFFFFFF;
+        case ProtocolIdEth: return 0xFFFF;
+        case ProtocolIdIp: return 0xFF;
         default:break;
     }
 
@@ -120,7 +111,7 @@ int SampleProtocol::fieldCount() const
 */
 int SampleProtocol::frameFieldCount() const
 {
-    return 0;
+    return AbstractProtocol::frameFieldCount();
 }
 
 /*!
@@ -384,14 +375,14 @@ bool SampleProtocol::setFieldData(int index, const QVariant &value,
         {
             uint a = value.toUInt(&isOk);
             if (isOk)
-                data.set_ab((data.ab() & 0xe000) | (a << 13));
+                data.set_ab((data.ab() & 0x1FFF) | ((a & 0x07) << 13));
             break;
         }
         case sample_b:
         {
             uint b = value.toUInt(&isOk);
             if (isOk)
-                data.set_ab((data.ab() & 0x1FFF) | b);
+                data.set_ab((data.ab() & 0xe000) | (b & 0x1FFF));
             break;
         }
         case sample_payloadLength:
@@ -484,63 +475,3 @@ int SampleProtocol::protocolFrameVariableCount() const
 {
     return 1;
 }
-
-QWidget* SampleProtocol::configWidget()
-{
-    /* Lazy creation of the configWidget */
-    if (configForm == NULL)
-    {
-        configForm = new SampleConfigForm;
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-/*!
-TODO: Edit this function to load each field's data into the config Widget
-
-See AbstractProtocol::loadConfigWidget() for more info
-*/
-void SampleProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->sampleA->setText(fieldData(sample_a, FieldValue).toString());
-    configForm->sampleB->setText(fieldData(sample_b, FieldValue).toString());
-
-    configForm->samplePayloadLength->setText(
-        fieldData(sample_payloadLength, FieldValue).toString());
-
-    configForm->isChecksumOverride->setChecked(
-        fieldData(sample_is_override_checksum, FieldValue).toBool());
-    configForm->sampleChecksum->setText(uintToHexStr(
-        fieldData(sample_checksum, FieldValue).toUInt(), 2));
-
-    configForm->sampleX->setText(fieldData(sample_x, FieldValue).toString());
-    configForm->sampleY->setText(fieldData(sample_y, FieldValue).toString());
-
-}
-
-/*!
-TODO: Edit this function to store each field's data from the config Widget
-
-See AbstractProtocol::storeConfigWidget() for more info
-*/
-void SampleProtocol::storeConfigWidget()
-{
-    bool isOk;
-
-    configWidget();
-    setFieldData(sample_a, configForm->sampleA->text());
-    setFieldData(sample_b, configForm->sampleB->text());
-
-    setFieldData(sample_payloadLength, configForm->samplePayloadLength->text());
-    setFieldData(sample_is_override_checksum, 
-        configForm->isChecksumOverride->isChecked());
-    setFieldData(sample_checksum, configForm->sampleChecksum->text().toUInt(&isOk, BASE_HEX));
-
-    setFieldData(sample_x, configForm->sampleX->text());
-    setFieldData(sample_y, configForm->sampleY->text());
-}
-

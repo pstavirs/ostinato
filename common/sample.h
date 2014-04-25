@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SAMPLE_H
 #define _SAMPLE_H
 
-#include "sample.pb.h"
-#include "ui_sample.h"
-
 #include "abstractprotocol.h"
+#include "sample.pb.h"
 
 /* 
 Sample Protocol Frame Format -
@@ -34,19 +32,9 @@ Sample Protocol Frame Format -
 Figures in brackets represent field width in bits
 */
 
-class SampleConfigForm : public QWidget, public Ui::Sample
-{
-    Q_OBJECT
-public:
-    SampleConfigForm(QWidget *parent = 0);
-private slots:
-};
-
 class SampleProtocol : public AbstractProtocol
 {
-private:
-    OstProto::Sample    data;
-    SampleConfigForm    *configForm;
+public:
     enum samplefield
     {
         // Frame Fields
@@ -63,7 +51,6 @@ private:
         sample_fieldCount
     };
 
-public:
     SampleProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~SampleProtocol();
 
@@ -95,9 +82,8 @@ public:
     virtual bool isProtocolFrameSizeVariable() const;
     virtual int protocolFrameVariableCount() const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
+private:
+    OstProto::Sample    data;
 };
 
 #endif
