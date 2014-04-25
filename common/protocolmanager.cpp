@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 #if 0
-#include "userscript.h"
 #include "sample.h"
 #else
 #include "mac.h"
@@ -54,6 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "textproto.h"
 // Special Protos
 #include "hexdump.h"
+#include "userscript.h"
 #endif
 
 ProtocolManager *OstProtocolManager;
@@ -64,8 +64,6 @@ ProtocolManager::ProtocolManager()
      themselves (once this is done remove the #includes for all the protocols)
      */
 #if 0
-    registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
-            (void*) UserScriptProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSampleFieldNumber,
             (void*) SampleProtocol::createInstance);
 #else
@@ -130,6 +128,8 @@ ProtocolManager::ProtocolManager()
     // Special Protocols
     registerProtocol(OstProto::Protocol::kHexDumpFieldNumber,
             (void*) HexDumpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
+            (void*) UserScriptProtocol::createInstance);
 
 #endif
     populateNeighbourProtocols();

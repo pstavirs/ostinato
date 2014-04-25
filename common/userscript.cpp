@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -19,54 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "userscript.h"
 
-#include <QMessageBox>
-
-//
-// -------------------- UserScriptConfigForm --------------------
-//
-
-UserScriptConfigForm::UserScriptConfigForm(UserScriptProtocol *protocol,
-    QWidget *parent) : QWidget(parent), protocol_(protocol)
-{
-    setupUi(this);
-    updateStatus();
-}
-
-void UserScriptConfigForm::updateStatus()
-{
-    if (protocol_->isScriptValid())
-    {
-        statusLabel->setText(QString("<font color=\"green\">Success</font>"));
-        compileButton->setDisabled(true);
-    }
-    else
-    {
-        statusLabel->setText(
-                QString("<font color=\"red\">Error: %1: %2</font>").arg(
-                protocol_->userScriptErrorLineNumber()).arg(
-                protocol_->userScriptErrorText()));
-        compileButton->setEnabled(true);
-    }
-}
-
-void UserScriptConfigForm::on_programEdit_textChanged()
-{
-    compileButton->setEnabled(true);
-}
-
-void UserScriptConfigForm::on_compileButton_clicked(bool /*checked*/)
-{
-    protocol_->storeConfigWidget();
-    if (!protocol_->isScriptValid())
-    {
-        QMessageBox::critical(this, "Error", 
-            QString("%1: %2").arg(
-                protocol_->userScriptErrorLineNumber()).arg(
-                protocol_->userScriptErrorText()));
-    }
-    updateStatus();
-}
-
 //
 // -------------------- UserScriptProtocol --------------------
 //
@@ -75,7 +27,6 @@ UserScriptProtocol::UserScriptProtocol(StreamBase *stream, AbstractProtocol *par
     : AbstractProtocol(stream, parent),
         userProtocol_(this)
 {
-    configForm = NULL;
     isScriptValid_ = false;
     errorLineNumber_ = 0;
 
@@ -88,7 +39,6 @@ UserScriptProtocol::UserScriptProtocol(StreamBase *stream, AbstractProtocol *par
 
 UserScriptProtocol::~UserScriptProtocol()
 {
-    delete configForm;
 }
 
 AbstractProtocol* UserScriptProtocol::createInstance(StreamBase *stream,
@@ -230,6 +180,7 @@ bool UserScriptProtocol::setFieldData(int index, const QVariant &value,
         case userScript_program:
         {
             data.set_program(value.toString().toStdString());
+            evaluateUserScript();
             break;
         }
         default:
@@ -306,32 +257,6 @@ quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
 
 _do_default:
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
-}
-
-QWidget* UserScriptProtocol::configWidget()
-{
-    if (configForm == NULL)
-    {
-        configForm = new UserScriptConfigForm(this);
-        loadConfigWidget();
-    }
-
-    return configForm;
-}
-
-void UserScriptProtocol::loadConfigWidget()
-{
-    configWidget();
-
-    configForm->programEdit->setPlainText(
-        fieldData(userScript_program, FieldValue).toString());
-}
-
-void UserScriptProtocol::storeConfigWidget()
-{
-    configWidget();
-    setFieldData(userScript_program, configForm->programEdit->toPlainText());
-    evaluateUserScript();
 }
 
 void UserScriptProtocol::evaluateUserScript() const

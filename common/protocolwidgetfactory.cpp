@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "textprotoconfig.h"
 // Special Protocol Widgets
 #include "hexdumpconfig.h"
+#include "userscriptconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QMap<int, void*> ProtocolWidgetFactory::configWidgetFactory;
@@ -144,6 +145,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kHexDumpFieldNumber, 
             (void*) HexDumpConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kUserScriptFieldNumber, 
+            (void*) UserScriptConfigForm::createInstance);
 }
 
 ProtocolWidgetFactory::~ProtocolWidgetFactory()
