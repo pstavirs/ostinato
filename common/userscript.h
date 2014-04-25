@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractprotocol.h"
 #include "userscript.pb.h"
-#include "ui_userscript.h"
 
 #include <QScriptEngine>
 #include <QScriptValue>
@@ -99,30 +98,17 @@ private:
     int protocolFrameVariableCount_;
 };
 
-
-
-class UserScriptConfigForm : public QWidget, public Ui::UserScript
-{
-    Q_OBJECT
-
-public:
-    UserScriptConfigForm(UserScriptProtocol *protocol, QWidget *parent = 0);
-
-private:
-    void updateStatus();
-    UserScriptProtocol        *protocol_;
-
-private slots:
-    void on_programEdit_textChanged();
-    void on_compileButton_clicked(bool checked = false);
-};
-
-
-
 class UserScriptProtocol : public AbstractProtocol
 {
-
 public:
+    enum userScriptfield
+    {
+        // Frame Fields
+        userScript_program = 0,
+
+        userScript_fieldCount
+    };
+
     UserScriptProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
     virtual ~UserScriptProtocol();
 
@@ -154,10 +140,6 @@ public:
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
             CksumType cksumType = CksumIp) const;
 
-    virtual QWidget* configWidget();
-    virtual void loadConfigWidget();
-    virtual void storeConfigWidget();
-
     void evaluateUserScript() const;
     bool isScriptValid() const;
     int userScriptErrorLineNumber() const;
@@ -166,15 +148,7 @@ public:
 private:
     int userScriptLineCount() const;
 
-    enum userScriptfield
-    {
-        // Frame Fields
-        userScript_program = 0,
-
-        userScript_fieldCount
-    };
     OstProto::UserScript    data;
-    UserScriptConfigForm    *configForm;
 
     mutable QScriptEngine   engine_;
     mutable UserProtocol    userProtocol_;
@@ -186,5 +160,3 @@ private:
 };
 
 #endif
-
-/* vim: set shiftwidth=4 tabstop=8 softtabstop=4 expandtab: */

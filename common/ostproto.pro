@@ -70,10 +70,10 @@ HEADERS += \
     tcp.h \
     udp.h \
     textproto.h \
-    hexdump.h
+    hexdump.h \
+    userscript.h 
 
 HEADERS1 += \
-    userscript.h \
     sample.h
 
 SOURCES = \
@@ -103,10 +103,10 @@ SOURCES += \
     tcp.cpp \
     udp.cpp \
     textproto.cpp \
-    hexdump.cpp
+    hexdump.cpp \
+    userscript.cpp
 
 SOURCES1 += \
-    userscript.cpp \
     sample.cpp
 
 QMAKE_DISTCLEAN += object_script.*
