@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -21,20 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 
 #include "protocol.pb.h"
-#if 0
-#include "sample.h"
-#else
+
 #include "mac.h"
-#include "payload.h"
 #include "vlan.h"
 #include "svlan.h"
-#include "vlanstack.h"    
+#include "vlanstack.h"
+
+// L2 Protos
 #include "dot3.h"    
 #include "llc.h"    
 #include "dot2llc.h"
 #include "snap.h"    
 #include "dot2snap.h"
 #include "eth2.h"    
+
 // L3 Protos
 #include "arp.h"    
 #include "ip4.h"    
@@ -43,18 +43,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4over6.h"    
 #include "ip6over4.h"    
 #include "ip6over6.h"    
+
 // L4 Protos
 #include "icmp.h"    
 #include "igmp.h"    
 #include "mld.h"    
 #include "tcp.h"    
 #include "udp.h"    
+
 // L5 Protos
 #include "textproto.h"
+
 // Special Protos
 #include "hexdump.h"
+#include "payload.h"
+#include "sample.h"
 #include "userscript.h"
-#endif
 
 ProtocolManager *OstProtocolManager;
 
@@ -63,14 +67,8 @@ ProtocolManager::ProtocolManager()
     /*! \todo (LOW) calls to registerProtocol() should be done by the protocols
      themselves (once this is done remove the #includes for all the protocols)
      */
-#if 0
-    registerProtocol(OstProto::Protocol::kSampleFieldNumber,
-            (void*) SampleProtocol::createInstance);
-#else
     registerProtocol(OstProto::Protocol::kMacFieldNumber,
             (void*) MacProtocol::createInstance);
-    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
-            (void*) PayloadProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kVlanFieldNumber,
             (void*) VlanProtocol::createInstance);
@@ -128,10 +126,13 @@ ProtocolManager::ProtocolManager()
     // Special Protocols
     registerProtocol(OstProto::Protocol::kHexDumpFieldNumber,
             (void*) HexDumpProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kPayloadFieldNumber,
+            (void*) PayloadProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kSampleFieldNumber,
+            (void*) SampleProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
             (void*) UserScriptProtocol::createInstance);
 
-#endif
     populateNeighbourProtocols();
 }
 

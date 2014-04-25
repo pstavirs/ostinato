@@ -10,7 +10,6 @@ FORMS = \
 
 FORMS += \
     mac.ui \
-    payload.ui \
     vlan.ui \
     eth2.ui \
     dot3.ui \
@@ -25,15 +24,14 @@ FORMS += \
     udp.ui \
     textproto.ui \
     hexdump.ui \
+    payload.ui \
+    sample.ui \
     userscript.ui
-
-FORMS1 += \
-    sample.ui 
 
 PROTOS = \
     fileformat.proto 
 
-# TODO: Move fileformat related stuff into a different library
+# TODO: Move fileformat related stuff into a different library - why?
 HEADERS = \
     ostprotolib.h \
     abstractfileformat.h \
@@ -51,7 +49,6 @@ HEADERS += \
     comboprotocolconfig.h \
     protocolwidgetfactory.h \
     macconfig.h \ 
-    payloadconfig.h \
     vlanconfig.h \
     svlanconfig.h \
     vlanstackconfig.h \
@@ -73,6 +70,8 @@ HEADERS += \
     udpconfig.h \
     textprotoconfig.h \
     hexdumpconfig.h \
+    payloadconfig.h \
+    sampleconfig.h \
     userscriptconfig.h
 
 SOURCES += \
@@ -88,7 +87,6 @@ SOURCES += \
 SOURCES += \
     protocolwidgetfactory.cpp \
     macconfig.cpp \
-    payloadconfig.cpp \
     vlanconfig.cpp \
     eth2config.cpp \
     dot3config.cpp \
@@ -105,6 +103,8 @@ SOURCES += \
     udpconfig.cpp \
     textprotoconfig.cpp \
     hexdumpconfig.cpp \
+    payloadconfig.cpp \
+    sampleconfig.cpp \
     userscriptconfig.cpp
 
 QMAKE_DISTCLEAN += object_script.*

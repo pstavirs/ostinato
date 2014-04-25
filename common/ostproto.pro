@@ -46,7 +46,6 @@ HEADERS = \
 
 HEADERS += \
     mac.h \
-    payload.h \
     vlan.h \
     svlan.h \
     vlanstack.h \
@@ -71,10 +70,9 @@ HEADERS += \
     udp.h \
     textproto.h \
     hexdump.h \
+    payload.h \
+    sample.h \
     userscript.h 
-
-HEADERS1 += \
-    sample.h
 
 SOURCES = \
     abstractprotocol.cpp \
@@ -86,7 +84,6 @@ SOURCES = \
 
 SOURCES += \
     mac.cpp \
-    payload.cpp \
     vlan.cpp \
     svlan.cpp \
     eth2.cpp \
@@ -104,10 +101,9 @@ SOURCES += \
     udp.cpp \
     textproto.cpp \
     hexdump.cpp \
+    payload.cpp \
+    sample.cpp \
     userscript.cpp
-
-SOURCES1 += \
-    sample.cpp
 
 QMAKE_DISTCLEAN += object_script.*
 
