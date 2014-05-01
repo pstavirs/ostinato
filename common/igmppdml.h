@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PDML_PROTOCOLS_H
-#define _PDML_PROTOCOLS_H
+#ifndef _IGMP_PDML_H
+#define _IGMP_PDML_H
 
 #include "pdmlprotocol.h"
 
-class PdmlUnknownProtocol : public PdmlProtocol
+class PdmlIgmpProtocol : public PdmlProtocol
 {
 public:
     static PdmlProtocol* createInstance();
@@ -30,42 +30,20 @@ public:
     virtual void preProtocolHandler(QString name, 
             const QXmlStreamAttributes &attributes, int expectedPos, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void prematureEndHandler(int pos, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
 protected:
-    PdmlUnknownProtocol();
-
+    PdmlIgmpProtocol();
 private:
-    int endPos_;
-    int expPos_;
-};
+    static const uint kIgmpQuery = 0x11;
+    static const uint kIgmpV1Query = 0x11;
+    static const uint kIgmpV2Query = 0xFF11;
+    static const uint kIgmpV3Query = 0xFE11;
 
-class PdmlGenInfoProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-protected:
-    PdmlGenInfoProtocol();
-
-};
-
-class PdmlFrameProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-
-protected:
-    PdmlFrameProtocol();
+    uint version_;
 };
 
 #endif

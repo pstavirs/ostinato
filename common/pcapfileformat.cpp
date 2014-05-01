@@ -615,7 +615,7 @@ bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams,
         fd_.writeRawData(pktBuf.data(), pktHdr.inclLen);
 
         if (s.packetRate())
-            pktHdr.tsUsec += 1000000/s.packetRate();
+            pktHdr.tsUsec += quint32(1e6/s.packetRate());
         if (pktHdr.tsUsec >= 1000000)
         {
             pktHdr.tsSec++;

@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PDML_PROTOCOLS_H
-#define _PDML_PROTOCOLS_H
+#ifndef _VLAN_PDML_H
+#define _VLAN_PDML_H
 
 #include "pdmlprotocol.h"
 
-class PdmlUnknownProtocol : public PdmlProtocol
+class PdmlVlanProtocol : public PdmlProtocol
 {
 public:
     static PdmlProtocol* createInstance();
@@ -30,42 +30,11 @@ public:
     virtual void preProtocolHandler(QString name, 
             const QXmlStreamAttributes &attributes, int expectedPos, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void prematureEndHandler(int pos, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
-    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
 protected:
-    PdmlUnknownProtocol();
-
-private:
-    int endPos_;
-    int expPos_;
-};
-
-class PdmlGenInfoProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-protected:
-    PdmlGenInfoProtocol();
-
-};
-
-class PdmlFrameProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-
-protected:
-    PdmlFrameProtocol();
+    PdmlVlanProtocol();
 };
 
 #endif

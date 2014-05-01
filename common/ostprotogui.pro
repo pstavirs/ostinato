@@ -107,6 +107,22 @@ SOURCES += \
     sampleconfig.cpp \
     userscriptconfig.cpp
 
+SOURCES += \
+    vlanpdml.cpp \
+    svlanpdml.cpp \
+    eth2pdml.cpp \
+    llcpdml.cpp \
+    arppdml.cpp \
+    ip4pdml.cpp \
+    ip6pdml.cpp \
+    icmppdml.cpp \
+    icmp6pdml.cpp \
+    igmppdml.cpp \
+    mldpdml.cpp \
+    tcppdml.cpp \
+    udppdml.cpp \
+    textprotopdml.cpp
+
 QMAKE_DISTCLEAN += object_script.*
 
 include(../protobuf.pri)

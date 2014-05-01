@@ -17,55 +17,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PDML_PROTOCOLS_H
-#define _PDML_PROTOCOLS_H
+#ifndef _ICMP_PDML_H
+#define _ICMP_PDML_H
 
 #include "pdmlprotocol.h"
 
-class PdmlUnknownProtocol : public PdmlProtocol
+class PdmlIcmpProtocol : public PdmlProtocol
 {
+    friend class PdmlIcmp6Protocol;
 public:
     static PdmlProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
             const QXmlStreamAttributes &attributes, int expectedPos, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void prematureEndHandler(int pos, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
+    virtual void unknownFieldHandler(QString name, int pos, int size, 
+            const QXmlStreamAttributes &attributes, 
+            OstProto::Protocol *pbProto, OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
 protected:
-    PdmlUnknownProtocol();
-
+    PdmlIcmpProtocol();
 private:
-    int endPos_;
-    int expPos_;
-};
+    static const uint kIcmpInvalidType   = 0xFFFFFFFF;
 
-class PdmlGenInfoProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-protected:
-    PdmlGenInfoProtocol();
-
-};
-
-class PdmlFrameProtocol : public PdmlProtocol
-{
-public:
-    static PdmlProtocol* createInstance();
-
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-
-protected:
-    PdmlFrameProtocol();
+    static const uint kIcmp6EchoRequest = 128;
+    static const uint kIcmp6EchoReply   = 129;
 };
 
 #endif
