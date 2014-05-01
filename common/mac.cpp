@@ -19,6 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mac.h"
 
+#include <QRegExp>
+
+#define uintToMacStr(num)    \
+    QString("%1").arg(num, 6*2, BASE_HEX, QChar('0')) \
+        .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
+
 MacProtocol::MacProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
@@ -129,7 +135,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                     return dstMac;
                 case FieldTextValue:
-                    return uintToHexStr(dstMac, 6);
+                    return uintToMacStr(dstMac);
                 case FieldFrameValue:
                 {
                     QByteArray fv;
@@ -174,7 +180,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                     return srcMac;
                 case FieldTextValue:
-                    return uintToHexStr(srcMac, 6);
+                    return uintToMacStr(srcMac);
                 case FieldFrameValue:
                 {
                     QByteArray fv;

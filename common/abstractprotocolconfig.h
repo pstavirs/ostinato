@@ -23,6 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 class AbstractProtocol;
 
+/*!
+  Convenience Macro - can be used by loadWidget() methods
+*/
+#define uintToHexStr(num, bytes)    \
+    QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
+
 class AbstractProtocolConfigForm : public QWidget
 {
     Q_OBJECT
@@ -80,7 +86,7 @@ public:
     }
 
 /*!
-  Convenience Method - can be used by storeConfigWidget() implementations
+  Convenience Method - can be used by storeWidget() implementations
 */
     uint hexStrToUInt(QString text, bool *ok=NULL)
     {
@@ -94,7 +100,7 @@ public:
     }
 
 /*!
-  Convenience Method - can be used by storeConfigWidget() implementations
+  Convenience Method - can be used by storeWidget() implementations
 */
     quint64 hexStrToUInt64(QString text, bool *ok=NULL)
     {
