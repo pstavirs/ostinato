@@ -26,6 +26,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdmlprotocols.h"
 
+#include "arppdml.h"
+#include "eth2pdml.h"
+#include "llcpdml.h"
+#include "icmppdml.h"
+#include "icmp6pdml.h"
+#include "igmppdml.h"
+#include "ip4pdml.h"
+#include "ip6pdml.h"
+#include "mldpdml.h"
+#include "svlanpdml.h"
+#include "tcppdml.h"
+#include "textprotopdml.h"
+#include "udppdml.h"
+#include "vlanpdml.h"
+
 PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
 {
     //gPdmlReader = this;

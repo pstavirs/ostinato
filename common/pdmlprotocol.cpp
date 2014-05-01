@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdmlprotocol.h"
 
-const int kBaseHex = 16;
-
 PdmlProtocol::PdmlProtocol()
 {
     ostProtoId_ = -1;
