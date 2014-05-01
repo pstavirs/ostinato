@@ -35,9 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define BASE_DEC (10)
 #define BASE_HEX (16)
 
-#define uintToHexStr(num, bytes)    \
-    QString("%1").arg(num, bytes*2, BASE_HEX, QChar('0'))
-
 class StreamBase;
 class ProtocolListIterator;
 
