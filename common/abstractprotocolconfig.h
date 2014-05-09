@@ -63,7 +63,8 @@ public:
 
 /*!
   Loads data from the protocol using it's fieldData() method into this 
-  widget
+  widget. Any conversion to user friendly display/editing formats (e.g.
+  hex format) SHOULD be done by this method.
 
   Subclasses MUST implement this function. See the SampleProtocol for 
   an example
@@ -75,7 +76,9 @@ public:
 
 /*!
   Stores data from this widget into the protocol using the protocol's
-  setFieldData() method
+  setFieldData() method. Field values MUST be converted from any
+  user friendly display/editing formats (e.g. hex format) to simple
+  Qt-style integers/strings before passing to setFieldData() 
 
   Subclasses MUST implement this function. See the SampleProtocol for 
   an example

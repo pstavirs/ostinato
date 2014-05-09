@@ -19,35 +19,97 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pdmlprotocol.h"
 
+/*!
+  \class PdmlProtocol
+
+  PdmlProtocol is the base class which provides the interface for all
+  PDML decode helper protocols
+
+  All Pdml helper classes derived from PdmlProtocol MUST register 
+  themselves with PdmlReader. When PdmlReader encounters a 'proto' tag 
+  in the PDML during parsing, it instantiates the corresponding helper 
+  PdmlProtocol class and calls its methods to decode the protocol.
+
+  A subclass MUST initialize the following inherited protected variables 
+  in its constructor -
+  - ostProtoId_
+  - fieldMap_
+
+  A subclass typically needs to reimplement the following methods -
+  - createInstance()
+
+  Depending on certain conditions, subclasses may need to reimplement
+  the following additional methods -
+  - unknownFieldHandler()
+  - preProtocolHandler()
+  - postProtocolHandler()
+
+  See the description of the methods for more information.
+
+  Use the SamplePdmlProtocol implementation as boilerplate code and
+  for guidelines and tips
+*/
+
+/*!
+ Constructs the PdmlProtocol
+*/
 PdmlProtocol::PdmlProtocol()
 {
     ostProtoId_ = -1;
 }
 
+/*!
+ Destroys the PdmlProtocol
+*/
 PdmlProtocol::~PdmlProtocol()
 {
 }
 
+/*!
+ Allocates and returns a new instance of the class
+
+ Caller is responsible for freeing up after use. Subclasses MUST implement
+ this function and register it with PdmlReader
+*/
 PdmlProtocol* PdmlProtocol::createInstance()
 {
     return new PdmlProtocol();
 }
 
+/*!
+  Returns the protocol's field number as defined in message 'Protocol', enum 'k'
+  (file: protocol.proto)
+*/
 int PdmlProtocol::ostProtoId() const
 {
     return ostProtoId_;
 }
 
+/*!
+ Returns true if name is a 'known' field that can be directly mapped
+ to the protobuf field
+*/
 bool PdmlProtocol::hasField(QString name) const
 {
     return fieldMap_.contains(name);
 }
 
+/*!
+ Returns the protocol's protobuf field number corresponding to name
+*/
 int PdmlProtocol::fieldId(QString name) const
 {
     return fieldMap_.value(name);
 }
 
+/*!
+ This method is called by PdmlReader before any fields within the protocol
+ are processed. All attributes associated with the 'proto' tag in the PDML
+ are passed to this method
+
+ Use this method to do any special handling that may be required for
+ preprocessing
+*/
 void PdmlProtocol::preProtocolHandler(QString /*name*/, 
         const QXmlStreamAttributes& /*attributes*/, 
         int /*expectedPos*/, OstProto::Protocol* /*pbProto*/,
@@ -56,18 +118,41 @@ void PdmlProtocol::preProtocolHandler(QString /*name*/,
     return; // do nothing!
 }
 
+/*!
+ This method is called by PdmlReader when it encounters a nested
+ protocol in the PDML i.e. a protocol within a protocol or a protocol
+ within a field
+
+ This is a notification to the protocol that protocol processing will
+ be ending prematurely. postProtocolHandler() will still be called in
+ such cases.
+*/
 void PdmlProtocol::prematureEndHandler(int /*pos*/, 
         OstProto::Protocol* /*pbProto*/, OstProto::Stream* /*stream*/)
 {
     return; // do nothing!
 }
 
+/*!
+ This method is called by PdmlReader after all fields within the protocol
+ are processed.
+
+ Use this method to do any special handling that may be required for
+ postprocessing
+*/
 void PdmlProtocol::postProtocolHandler(OstProto::Protocol* /*pbProto*/,
         OstProto::Stream* /*stream*/)
 {
     return; // do nothing!
 }
 
+
+/*!
+ This method is called by PdmlReader for each field in the protocol
+
+ Depending on whether it is a known or unknown field, the virtual methods
+ knownFieldHandler() and unknownFieldHandler() are invoked
+*/
 void PdmlProtocol::fieldHandler(QString name, 
         const QXmlStreamAttributes &attributes, 
         OstProto::Protocol *pbProto, OstProto::Stream *stream)
@@ -99,6 +184,12 @@ void PdmlProtocol::fieldHandler(QString name,
     }
 }
 
+/*!
+ Handles a 'known' field
+
+ Uses protobuf reflection interface to set the protobuf field name to 
+ valueHexStr as per the field's datatype
+*/
 void PdmlProtocol::knownFieldHandler(QString name, QString valueHexStr,
         OstProto::Protocol *pbProto)
 {
@@ -143,6 +234,12 @@ void PdmlProtocol::knownFieldHandler(QString name, QString valueHexStr,
     }
 }
 
+/*!
+ Handles a 'unknown' field
+
+ The default implementation does nothing. Subclasses may need to implement
+ this if the protocol contains 'unknown' fields.
+*/
 void PdmlProtocol::unknownFieldHandler(QString /*name*/, 
         int /*pos*/, int /*size*/, const QXmlStreamAttributes& /*attributes*/, 
         OstProto::Protocol* /*pbProto*/, OstProto::Stream* /*stream*/)

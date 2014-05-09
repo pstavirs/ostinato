@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,28 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PDML_PROTOCOL_H
-#define _PDML_PROTOCOL_H
+#ifndef _SAMPLE_PDML_H
+#define _SAMPLE_PDML_H
 
-#include "protocol.pb.h"
+#include "pdmlprotocol.h"
 
-#include <google/protobuf/descriptor.h>
-#include <QMap>
-#include <QString>
-#include <QXmlStreamAttributes>
-
-const int kBaseHex = 16;
-
-class PdmlProtocol
+class PdmlSampleProtocol : public PdmlProtocol
 {
 public:
-    virtual ~PdmlProtocol();
+    virtual ~PdmlSampleProtocol();
 
-    static PdmlProtocol* createInstance();
-
-    int ostProtoId() const;
-    bool hasField(QString name) const;
-    int fieldId(QString name) const;
+    static PdmlSampleProtocol* createInstance();
 
     virtual void preProtocolHandler(QString name, 
             const QXmlStreamAttributes &attributes, int expectedPos, 
@@ -50,19 +39,12 @@ public:
 
     void fieldHandler(QString name, const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    void knownFieldHandler(QString name, QString valueHexStr,
-            OstProto::Protocol *pbProto);
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
 
 protected:
-    PdmlProtocol();
-
-    //!< Protocol's field number as defined in message 'Protocol', enum 'k'
-    int ostProtoId_;
-    //!< Map of PDML field names to protobuf field numbers for 'known' fields
-    QMap<QString, int> fieldMap_;
+    PdmlSampleProtocol();
 };
 
 #endif
