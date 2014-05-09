@@ -121,7 +121,8 @@ SOURCES += \
     mldpdml.cpp \
     tcppdml.cpp \
     udppdml.cpp \
-    textprotopdml.cpp
+    textprotopdml.cpp \
+    samplepdml.cpp
 
 QMAKE_DISTCLEAN += object_script.*
 
