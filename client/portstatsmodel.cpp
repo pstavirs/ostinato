@@ -200,6 +200,8 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
             QString notes;
             uint portGroupIdx, portIdx;
 
+            if (numPorts.isEmpty() || section >= numPorts.last())
+                return QVariant();
             getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
             notes = pgl->mPortGroups.at(portGroupIdx)->mPorts[portIdx]->notes();
             if (!notes.isEmpty())
@@ -219,8 +221,12 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
         uint portGroupIdx, portIdx;
         QString portName;
 
+        if (numPorts.isEmpty() || section >= numPorts.last())
+            return QVariant();
         getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
-        portName = QString("Port %1-%2").arg(portGroupIdx).arg(portIdx);
+        portName = QString("Port %1-%2")
+            .arg(pgl->mPortGroups.at(portGroupIdx)->id())
+            .arg(pgl->mPortGroups.at(portGroupIdx)->mPorts.at(portIdx)->id());
         if (portGroupIdx < (uint) pgl->mPortGroups.size() 
             && portIdx < (uint) pgl->mPortGroups.at(portGroupIdx)->mPorts.size())
         {
