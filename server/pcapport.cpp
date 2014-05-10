@@ -502,7 +502,8 @@ void PcapPort::PortTransmitter::run()
                 packetSequenceList_.at(i)->usecDuration_);
     }
 
-    for(i = 0; i < packetSequenceList_.size(); i++)
+    i = 0;
+    while (i < packetSequenceList_.size())
     {
 
 _restart:
@@ -566,6 +567,9 @@ _restart:
                 }
             }
         }
+
+        // Move to the next Packet Set
+        i += rptSz;
     }
 
     if (returnToQIdx_ >= 0)
