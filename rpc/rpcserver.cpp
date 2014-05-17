@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -19,7 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "rpcserver.h"
 
-#include "rpcthread.h"
+#include "rpcconn.h"
+
+#include <QThread>
+
+// FIXME: QThreadX till we change minimum version of Qt from Qt4.3+ to Qt4.4+
+class QThreadX: public QThread
+{
+protected:
+    virtual ~QThreadX() { qDebug("QThreadX going down!"); }
+    void run() { exec(); }
+};
 
 RpcServer::RpcServer()
 {
@@ -50,8 +60,19 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
 
 void RpcServer::incomingConnection(int socketDescriptor)
 {
-    RpcThread *thread = new RpcThread(socketDescriptor, service, this);
+    QThread *thread = new QThreadX; // FIXME:QThreadX pending Qt4.4+
+    RpcConnection *conn = new RpcConnection(socketDescriptor, service);
 
+    conn->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), conn, SLOT(start()));
+
+    // NOTE: conn "self-destructs" after emitting closed
+    // use 'closed' to stop execution of the thread
+    connect(conn, SIGNAL(closed()), thread, SLOT(quit()));
+
+    // setup thread to "self-destruct" when it is done
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
     thread->start();
 }

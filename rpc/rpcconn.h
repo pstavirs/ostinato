@@ -17,10 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _RPC_THREAD_H
-#define _RPC_THREAD_H
+#ifndef _RPC_CONNECTION_H
+#define _RPC_CONNECTION_H
 
-#include <QThread>
 #include <QAbstractSocket>
 
 // forward declarations
@@ -36,25 +35,25 @@ namespace google {
     }
 }
 
-class RpcThread : public QThread
+class RpcConnection : public QObject
 {
     Q_OBJECT
 
 public:
-    RpcThread(int socketDescriptor, 
-              ::google::protobuf::Service *service,
-              QObject *parent);
-    virtual ~RpcThread();
-    void run();
+    RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
+    virtual ~RpcConnection();
 
 private:
-    QString errorString(); // FIXME: needed? why?
-    void done(PbRpcController *controller);
+    void sendRpcReply(PbRpcController *controller);
+
+signals:
+    void closed();
 
 private slots:
-    void when_disconnected();
-    void when_dataAvail();
-    void when_error(QAbstractSocket::SocketError socketError);
+    void start();
+    void on_clientSock_dataAvail();
+    void on_clientSock_error(QAbstractSocket::SocketError socketError);
+    void on_clientSock_disconnected();
 
 private:
     int socketDescriptor;
@@ -66,7 +65,6 @@ private:
 
     bool isPending;
     int pendingMethodId;
-    QString errorString_;
 };
 
 #endif

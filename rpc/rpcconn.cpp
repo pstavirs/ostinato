@@ -17,28 +17,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "rpcthread.h"
+#include "rpcconn.h"
 
 #include "pbqtio.h"
 #include "pbrpccommon.h"
+#include "pbrpccontroller.h"
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
-#include "pbrpccontroller.h" // FIXME: move up the order and fix warnings
-
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <qendian.h>
 
-RpcThread::RpcThread(
-        int socketDescriptor, 
-        ::google::protobuf::Service *service,
-        QObject *parent) 
-    : QThread(parent), 
-      socketDescriptor(socketDescriptor),
+RpcConnection::RpcConnection(int socketDescriptor, 
+                             ::google::protobuf::Service *service)
+    : socketDescriptor(socketDescriptor),
       service(service)
 {
     inStream = NULL;
@@ -46,18 +42,29 @@ RpcThread::RpcThread(
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
-
-    moveToThread(this);
 }
 
-RpcThread::~RpcThread()
+RpcConnection::~RpcConnection()
 { 
+    qDebug("destroying connection to %s: %d", 
+            clientSock->peerAddress().toString().toAscii().constData(),
+            clientSock->peerPort());
+
+    // If still connected, disconnect 
+    if (clientSock->state() != QAbstractSocket::UnconnectedState) {
+        clientSock->disconnectFromHost();
+        clientSock->waitForDisconnected();
+    }
+
+    delete inStream;
+    delete outStream;
+
+    delete clientSock;
 }
 
-void RpcThread::run()
+void RpcConnection::start()
 {
     clientSock = new QTcpSocket;
-    //qDebug("clientSock = %p, %p", clientSock, this->clientSock);
     if (!clientSock->setSocketDescriptor(socketDescriptor)) {
         qWarning("Unable to initialize TCP socket for incoming connection");
         return;
@@ -67,36 +74,27 @@ void RpcThread::run()
             clientSock->peerAddress().toString().toAscii().constData(),
             clientSock->peerPort());
     inStream = new google::protobuf::io::CopyingInputStreamAdaptor(
-            new PbQtInputStream(clientSock));
+                            new PbQtInputStream(clientSock));
     inStream->SetOwnsCopyingStream(true);
     outStream = new google::protobuf::io::CopyingOutputStreamAdaptor(
-            new PbQtOutputStream(clientSock));
+                            new PbQtOutputStream(clientSock));
     outStream->SetOwnsCopyingStream(true);
 
     connect(clientSock, SIGNAL(readyRead()), 
-        this, SLOT(when_dataAvail()), Qt::DirectConnection);
+        this, SLOT(on_clientSock_dataAvail()));
     connect(clientSock, SIGNAL(disconnected()), 
-        this, SLOT(when_disconnected()));
+        this, SLOT(on_clientSock_disconnected()));
     connect(clientSock, SIGNAL(error(QAbstractSocket::SocketError)), 
-        this, SLOT(when_error(QAbstractSocket::SocketError)));
-
-    exec();
+        this, SLOT(on_clientSock_error(QAbstractSocket::SocketError)));
 }
 
-QString RpcThread::errorString()
-{
-    return errorString_;
-}
-
-void RpcThread::done(PbRpcController *controller)
+void RpcConnection::sendRpcReply(PbRpcController *controller)
 {
     google::protobuf::Message *response = controller->response();
     QIODevice *blob;
     char msgBuf[PB_HDR_SIZE];
     char* const msg = &msgBuf[0];
     int len;
-
-    //qDebug("In RpcThread::done");
 
     if (controller->Failed())
     {
@@ -160,28 +158,23 @@ _exit:
     isPending = false;
 }
 
-void RpcThread::when_disconnected()
+void RpcConnection::on_clientSock_disconnected()
 {
     qDebug("connection closed from %s: %d",
             clientSock->peerAddress().toString().toAscii().constData(),
             clientSock->peerPort());
 
-    delete inStream;
-    delete outStream;
-
-    clientSock->deleteLater();
-    clientSock = NULL;
-
-    quit();
+    deleteLater();
+    emit closed();
 }
 
-void RpcThread::when_error(QAbstractSocket::SocketError socketError)
+void RpcConnection::on_clientSock_error(QAbstractSocket::SocketError socketError)
 {
     qDebug("%s (%d)", clientSock->errorString().toAscii().constData(), 
             socketError);
 }
 
-void RpcThread::when_dataAvail()
+void RpcConnection::on_clientSock_dataAvail()
 {
     uchar    msg[PB_HDR_SIZE];
     int        msgLen;
@@ -256,7 +249,8 @@ void RpcThread::when_dataAvail()
     //qDebug("before service->callmethod()");
 
     service->CallMethod(methodDesc, controller, req, resp,
-        google::protobuf::NewCallback(this, &RpcThread::done, controller));
+        google::protobuf::NewCallback(this, &RpcConnection::sendRpcReply, 
+                                      controller));
 
     parsing = false;
 
