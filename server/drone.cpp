@@ -45,7 +45,7 @@ bool Drone::init()
 
     if (!rpcServer->registerService(service, myport ? myport : 7878))
     {
-        qCritical(qPrintable(rpcServer->errorString()));
+        //qCritical(qPrintable(rpcServer->errorString()));
         return false;
     }
 

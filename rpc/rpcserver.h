@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -20,32 +20,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _RPC_SERVER_H
 #define _RPC_SERVER_H
 
+#if 0
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
-#include <google/protobuf/service.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
-#include <QTcpServer>
 #include <QTcpSocket>
 
 #include "pbrpccommon.h"
 #include "pbrpccontroller.h"
+#endif
 
+#include <QTcpServer>
 
-class RpcServer : public QObject
+// forward declaration
+namespace google {
+    namespace protobuf {
+        class Service;
+    }
+}
+
+class RpcServer : public QTcpServer
 {
     Q_OBJECT
 
+#if 0
     QTcpServer *server;
     QTcpSocket *clientSock;
 
-    ::google::protobuf::Service *service;
     ::google::protobuf::io::CopyingInputStreamAdaptor  *inStream;
     ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
     bool isPending;
     int pendingMethodId;
     QString errorString_;
+#endif
 
 public:
     RpcServer();    //! \todo (LOW) use 'parent' param
@@ -53,6 +62,11 @@ public:
 
     bool registerService(::google::protobuf::Service *service,
         quint16 tcpPortNum);
+
+protected:
+    void incomingConnection(int socketDescriptor);
+
+#if 0
     QString errorString();
     void done(PbRpcController *controller);
 
@@ -61,6 +75,9 @@ private slots:
      void when_disconnected();
      void when_dataAvail();
     void when_error(QAbstractSocket::SocketError socketError);
+#endif
+private:
+    ::google::protobuf::Service *service;
 };
 
 #endif
