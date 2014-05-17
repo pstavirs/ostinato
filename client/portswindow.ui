@@ -1,0 +1,299 @@
+<ui version="4.0" >
+ <class>PortsWindow</class>
+ <widget class="QWidget" name="PortsWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>710</width>
+    <height>352</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QSplitter" name="splitter" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="childrenCollapsible" >
+      <bool>false</bool>
+     </property>
+     <widget class="QTreeView" name="tvPortList" >
+      <property name="contextMenuPolicy" >
+       <enum>Qt::ActionsContextMenu</enum>
+      </property>
+      <property name="selectionMode" >
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+     </widget>
+     <widget class="QStackedWidget" name="swDetail" >
+      <property name="currentIndex" >
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="portDetail" >
+       <layout class="QGridLayout" >
+        <property name="leftMargin" >
+         <number>0</number>
+        </property>
+        <property name="topMargin" >
+         <number>0</number>
+        </property>
+        <property name="rightMargin" >
+         <number>0</number>
+        </property>
+        <property name="bottomMargin" >
+         <number>0</number>
+        </property>
+        <item row="0" column="0" >
+         <layout class="QHBoxLayout" >
+          <item>
+           <widget class="QFrame" name="frAggregate" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape" >
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow" >
+             <enum>QFrame::Sunken</enum>
+            </property>
+            <layout class="QGridLayout" >
+             <item row="0" column="0" >
+              <widget class="QRadioButton" name="radioButton" >
+               <property name="text" >
+                <string>Avg pps</string>
+               </property>
+               <property name="checked" >
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1" >
+              <widget class="QLineEdit" name="averagePacketsPerSec" />
+             </item>
+             <item row="1" column="0" >
+              <widget class="QRadioButton" name="radioButton_2" >
+               <property name="text" >
+                <string>Avg bps</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" >
+              <widget class="QLineEdit" name="averageBitsPerSec" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2" >
+              <spacer>
+               <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" >
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" >
+            <item>
+             <widget class="QPushButton" name="pbApply" >
+              <property name="text" >
+               <string>Apply</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0" >
+         <widget class="QTableView" name="tvStreamList" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="contextMenuPolicy" >
+           <enum>Qt::ActionsContextMenu</enum>
+          </property>
+          <property name="frameShape" >
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="lineWidth" >
+           <number>1</number>
+          </property>
+          <property name="selectionMode" >
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+          <property name="selectionBehavior" >
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="portGroupDetail" >
+       <layout class="QHBoxLayout" >
+        <item>
+         <widget class="QLabel" name="label_5" >
+          <property name="text" >
+           <string>Select a port to configure streams</string>
+          </property>
+          <property name="alignment" >
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="blankPage" />
+     </widget>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionNew_Port_Group" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/portgroup_add.png</iconset>
+   </property>
+   <property name="text" >
+    <string>New Port Group</string>
+   </property>
+  </action>
+  <action name="actionDelete_Port_Group" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/portgroup_delete.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Delete Port Group</string>
+   </property>
+  </action>
+  <action name="actionConnect_Port_Group" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/portgroup_connect.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Connect Port Group</string>
+   </property>
+  </action>
+  <action name="actionDisconnect_Port_Group" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/portgroup_disconnect.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Disconnect Port Group</string>
+   </property>
+  </action>
+  <action name="actionNew_Stream" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/stream_add.png</iconset>
+   </property>
+   <property name="text" >
+    <string>New Stream</string>
+   </property>
+  </action>
+  <action name="actionDelete_Stream" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/stream_delete.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Delete Stream</string>
+   </property>
+  </action>
+  <action name="actionEdit_Stream" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/stream_edit.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Edit Stream</string>
+   </property>
+  </action>
+  <action name="actionExclusive_Control" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Exclusive Port Control (EXPERIMENTAL)</string>
+   </property>
+  </action>
+  <action name="actionOpen_Streams" >
+   <property name="text" >
+    <string>Open Streams ...</string>
+   </property>
+  </action>
+  <action name="actionSave_Streams" >
+   <property name="text" >
+    <string>Save Streams ...</string>
+   </property>
+  </action>
+  <action name="actionPort_Configuration" >
+   <property name="text" >
+    <string>Port Configuration ...</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>radioButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>averagePacketsPerSec</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>313</x>
+     <y>28</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>380</x>
+     <y>28</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radioButton_2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>averageBitsPerSec</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>333</x>
+     <y>55</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>395</x>
+     <y>56</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

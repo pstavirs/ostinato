@@ -1,0 +1,44 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// Any Text based protocol
+message TextProtocol {
+    enum TextEncoding {
+        kUtf8 = 0;
+    }
+    
+    enum EndOfLine {
+        kCr = 0;
+        kLf = 1;
+        kCrLf = 2;
+    }
+
+    optional uint32 port_num = 1 [default = 80]; 
+    optional TextEncoding encoding = 2 [default = kUtf8];
+    optional string text = 3;
+    optional EndOfLine eol = 4 [default = kLf];
+}
+
+extend Protocol {
+    optional TextProtocol textProtocol = 500;
+}

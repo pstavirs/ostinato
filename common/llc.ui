@@ -1,0 +1,161 @@
+<ui version="4.0" >
+ <class>llc</class>
+ <widget class="QWidget" name="llc" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>396</width>
+    <height>98</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>LLC</string>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QCheckBox" name="cbOverrideDsap" >
+        <property name="text" >
+         <string>DSAP</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leDsap" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbOverrideSsap" >
+        <property name="text" >
+         <string>SSAP</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leSsap" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbOverrideControl" >
+        <property name="text" >
+         <string>Control</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="leControl" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>>HH; </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="0" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cbOverrideDsap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leDsap</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>54</x>
+     <y>34</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>92</x>
+     <y>33</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbOverrideSsap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leSsap</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>167</x>
+     <y>34</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>192</x>
+     <y>33</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbOverrideControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>leControl</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>285</x>
+     <y>34</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>310</x>
+     <y>33</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

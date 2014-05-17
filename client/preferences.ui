@@ -1,0 +1,226 @@
+<ui version="4.0" >
+ <class>Preferences</class>
+ <widget class="QDialog" name="Preferences" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>220</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Preferences</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset resource="ostinato.qrc" >:/icons/preferences.png</iconset>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="QFrame" name="frame" >
+     <property name="frameShape" >
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label" >
+        <property name="text" >
+         <string>'wireshark' Path</string>
+        </property>
+        <property name="buddy" >
+         <cstring>wiresharkPathEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLineEdit" name="wiresharkPathEdit" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QToolButton" name="wiresharkPathButton" >
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_2" >
+        <property name="text" >
+         <string>'tshark' Path</string>
+        </property>
+        <property name="buddy" >
+         <cstring>tsharkPathEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="tsharkPathEdit" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QToolButton" name="tsharkPathButton" >
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QLabel" name="label_5" >
+        <property name="text" >
+         <string>'gzip' Path</string>
+        </property>
+        <property name="buddy" >
+         <cstring>diffPathEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QLineEdit" name="gzipPathEdit" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" >
+       <widget class="QToolButton" name="gzipPathButton" >
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" >
+       <widget class="QLabel" name="label_3" >
+        <property name="text" >
+         <string>'diff' Path</string>
+        </property>
+        <property name="buddy" >
+         <cstring>diffPathEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1" >
+       <widget class="QLineEdit" name="diffPathEdit" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" >
+       <widget class="QToolButton" name="diffPathButton" >
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" >
+       <widget class="QLabel" name="label_4" >
+        <property name="text" >
+         <string>'awk' Path</string>
+        </property>
+        <property name="buddy" >
+         <cstring>awkPathEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" >
+       <widget class="QLineEdit" name="awkPathEdit" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" >
+       <widget class="QToolButton" name="awkPathButton" >
+        <property name="text" >
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" >
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>21</width>
+          <height>61</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons" >
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::NoButton|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>wiresharkPathEdit</tabstop>
+  <tabstop>wiresharkPathButton</tabstop>
+  <tabstop>tsharkPathEdit</tabstop>
+  <tabstop>tsharkPathButton</tabstop>
+  <tabstop>gzipPathEdit</tabstop>
+  <tabstop>gzipPathButton</tabstop>
+  <tabstop>diffPathEdit</tabstop>
+  <tabstop>diffPathButton</tabstop>
+  <tabstop>awkPathEdit</tabstop>
+  <tabstop>awkPathButton</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Preferences</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Preferences</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

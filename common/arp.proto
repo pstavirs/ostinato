@@ -1,0 +1,67 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// ARP Protocol
+message Arp {
+
+    enum HwAddrMode {
+        kFixed = 0;
+        kIncrement = 1;
+        kDecrement = 2;
+    }
+
+    enum ProtoAddrMode {
+        kFixedHost = 0;
+        kIncrementHost = 1;
+        kDecrementHost = 2;
+        kRandomHost = 3;
+    }
+
+    optional uint32 hw_type = 1 [default = 1];
+    optional uint32 proto_type = 2 [default = 0x800]; 
+    optional uint32 hw_addr_len = 3 [default = 6];
+    optional uint32 proto_addr_len = 4 [default = 4]; 
+    optional uint32 op_code = 5 [default = 1]; // 1 => ARP Request
+
+    optional uint64 sender_hw_addr = 6; 
+    optional HwAddrMode sender_hw_addr_mode = 7 [default = kFixed]; 
+    optional uint32 sender_hw_addr_count = 8 [default = 16]; 
+
+    optional uint32 sender_proto_addr = 9; 
+    optional ProtoAddrMode sender_proto_addr_mode = 10 [default = kFixedHost]; 
+    optional uint32 sender_proto_addr_count = 11 [default = 16]; 
+    optional fixed32 sender_proto_addr_mask = 12 [default = 0xFFFFFF00]; 
+
+    optional uint64 target_hw_addr = 13; 
+    optional HwAddrMode target_hw_addr_mode = 14 [default = kFixed]; 
+    optional uint32 target_hw_addr_count = 15 [default = 16]; 
+
+    optional uint32 target_proto_addr = 16; 
+    optional ProtoAddrMode target_proto_addr_mode = 17 [default = kFixedHost]; 
+    optional uint32 target_proto_addr_count = 18 [default = 16]; 
+    optional fixed32 target_proto_addr_mask = 19 [default = 0xFFFFFF00]; 
+}
+
+extend Protocol {
+    optional Arp arp = 300;
+}

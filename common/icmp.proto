@@ -1,0 +1,44 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// Icmp Protocol
+message Icmp {
+
+    enum Version {
+        kIcmp4 = 4;
+        kIcmp6 = 6;
+    }
+
+    optional Version icmp_version = 1 [default = kIcmp4];
+    optional bool is_override_checksum = 2;
+
+    optional uint32 type = 6 [default = 0x8];  // echo request
+    optional uint32 code = 7; 
+    optional uint32 checksum = 8;
+    optional uint32 identifier = 9 [default = 1234];
+    optional uint32 sequence = 10;
+}
+
+extend Protocol {
+    optional Icmp icmp = 402;
+}
