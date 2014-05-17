@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PB_RPC_CONTROLLER_H
 #define _PB_RPC_CONTROLLER_H
 
+#include <google/protobuf/message.h>
 #include <google/protobuf/service.h>
 
 class QIODevice;
