@@ -140,7 +140,7 @@ void WinPcapPort::PortMonitor::run()
     quint64 lastTxPkts = 0;
     quint64 lastTxBytes = 0;
 
-    qWarning("in %s", __PRETTY_FUNCTION__);
+    qDebug("in %s", __PRETTY_FUNCTION__);
 
     lastTs.tv_sec = 0;
     lastTs.tv_usec = 0;

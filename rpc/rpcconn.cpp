@@ -42,6 +42,8 @@ RpcConnection::RpcConnection(int socketDescriptor,
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
+
+    parsing = false;
 }
 
 RpcConnection::~RpcConnection()
@@ -69,6 +71,7 @@ void RpcConnection::start()
         qWarning("Unable to initialize TCP socket for incoming connection");
         return;
     }
+    qDebug("clientSock Thread = %p", clientSock->thread());
 
     qDebug("accepting new connection from %s: %d", 
             clientSock->peerAddress().toString().toAscii().constData(),
@@ -129,8 +132,11 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
 
     if (!response->IsInitialized())
     {
-        qWarning("response missing required fields!!");
-        qDebug("%s", response->InitializationErrorString().c_str());
+        qWarning("response missing required fields!! <----");
+        qDebug("response = \n%s"
+               "missing = \n%s---->",
+                response->DebugString().c_str(),
+                response->InitializationErrorString().c_str());
         qFatal("exiting");
         goto _exit;
     }
@@ -144,9 +150,11 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
     // Avoid printing stats since it happens once every couple of seconds
     if (pendingMethodId != 13)
     {
-        qDebug("Server(%s): sending %d bytes to client encoding <%s>", 
-            __FUNCTION__, len + PB_HDR_SIZE, response->DebugString().c_str());
-        //BUFDUMP(msg, len + 8);
+        qDebug("Server(%s): sending %d bytes to client <----",
+            __FUNCTION__, len + PB_HDR_SIZE);
+        BUFDUMP(msg, len + 8);
+        qDebug("method = %d\nreq = \n%s---->", 
+            pendingMethodId, response->DebugString().c_str());
     }
 
     clientSock->write(msg, PB_HDR_SIZE);
@@ -178,9 +186,11 @@ void RpcConnection::on_clientSock_dataAvail()
 {
     uchar    msg[PB_HDR_SIZE];
     int        msgLen;
+#if 0
     static bool parsing = false;
     static quint16    type, method;
     static quint32 len;
+#endif
     const ::google::protobuf::MethodDescriptor    *methodDesc;
     ::google::protobuf::Message    *req, *resp;
     PbRpcController *controller;
@@ -228,21 +238,35 @@ void RpcConnection::on_clientSock_dataAvail()
     req = service->GetRequestPrototype(methodDesc).New();
     resp = service->GetResponsePrototype(methodDesc).New();
 
-    if (len)
-        req->ParseFromBoundedZeroCopyStream(inStream, len);
+    if (len) {
+        bool ok = req->ParseFromBoundedZeroCopyStream(inStream, len);
+        if (!ok)
+            qWarning("ParseFromBoundedZeroCopyStream fail "
+                     "for method %d and len %d", method, len);
+    }
 
     if (!req->IsInitialized())
     {
-        qWarning("Missing required fields in request");
-        qDebug("%s", req->InitializationErrorString().c_str());
+        qWarning("Missing required fields in request <----");
+        qDebug("method = %d\n"
+               "req = \n%s"
+               "missing = \n%s----->",
+                method, req->DebugString().c_str(),
+                req->InitializationErrorString().c_str());
         qFatal("exiting");
         delete req;
         delete resp;
 
         goto _error_exit2;
     }
-    //qDebug("Server(%s): successfully parsed as <%s>", __FUNCTION__, 
-        //resp->DebugString().c_str());
+    
+    if (method != 13) {
+        qDebug("Server(%s): successfully received/parsed msg <----", __FUNCTION__);
+        qDebug("method = %d\n"
+               "req = \n%s---->",
+                method,
+                req->DebugString().c_str());
+    }
 
     controller = new PbRpcController(req, resp);
 

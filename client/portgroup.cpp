@@ -138,6 +138,8 @@ void PortGroup::on_rpcChannel_disconnected()
     emit portListChanged(mPortGroupId);
     emit portGroupDataChanged(mPortGroupId);
 
+    isGetStatsPending_ = false;
+
     if (reconnect)
     {
         qDebug("starting reconnect timer for %d ms ...", reconnectAfter);
