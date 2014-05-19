@@ -102,9 +102,10 @@ void PbRpcChannel::CallMethod(
     if (isPending)
     {
         RpcCall call;
-        qDebug("RpcChannel: queueing method %d since %d is pending; "
-                "queued message = <%s>", 
-                method->index(), pendingMethodId, req->DebugString().c_str());
+        qDebug("RpcChannel: queueing rpc since method %d is pending;<----\n "
+                "queued method = %d\n"
+                "queued message = \n%s\n---->", 
+                pendingMethodId, method->index(), req->DebugString().c_str());
 
         call.method = method;
         call.controller = controller;
@@ -122,10 +123,9 @@ void PbRpcChannel::CallMethod(
 
     if (!req->IsInitialized())
     {
-        qWarning("RpcChannel: missing required fields in request");
-        qDebug("%s", req->InitializationErrorString().c_str());
-
-        qFatal("exiting");
+        qWarning("RpcChannel: missing required fields in request <----");
+        qDebug("req = \n%s", req->DebugString().c_str());
+        qDebug("error = \n%s\n--->", req->InitializationErrorString().c_str());
 
         controller->SetFailed("Required fields missing");
         done->Run();
@@ -146,9 +146,11 @@ void PbRpcChannel::CallMethod(
     // Avoid printing stats since it happens every couple of seconds
     if (pendingMethodId != 13)
     {
-        qDebug("client(%s) sending %d bytes encoding <%s>", __FUNCTION__, 
-                PB_HDR_SIZE + len, req->DebugString().c_str());
+        qDebug("client(%s) sending %d bytes <----", __FUNCTION__, 
+                PB_HDR_SIZE + len);
         BUFDUMP(msg, PB_HDR_SIZE);
+        qDebug("method = %d\n req = \n%s\n---->", 
+                method->index(), req->DebugString().c_str());
     }
 
     mpSocket->write(msg, PB_HDR_SIZE);
@@ -256,14 +258,17 @@ void PbRpcChannel::on_mpSocket_readyRead()
             // Avoid printing stats
             if (method != 13)
             {
-                qDebug("client(%s): Parsed as %s", __FUNCTION__,
-                    response->DebugString().c_str());
+                qDebug("client(%s): Received Msg <---- ", __FUNCTION__);
+                qDebug("method = %d\nresp = \n%s\n---->",
+                        method, response->DebugString().c_str());
             }
 
             if (!response->IsInitialized())
             {
-                qWarning("RpcChannel: missing required fields in response");
-                qDebug("%s", response->InitializationErrorString().c_str());
+                qWarning("RpcChannel: missing required fields in response <----");
+                qDebug("resp = \n%s", response->DebugString().c_str());
+                qDebug("error = \n%s\n--->", 
+                        response->InitializationErrorString().c_str());
 
                 controller->SetFailed("Required fields missing");
             }
@@ -286,7 +291,9 @@ void PbRpcChannel::on_mpSocket_readyRead()
     if (pendingCallList.size())
     {
         RpcCall call = pendingCallList.takeFirst();
-        qDebug("RpcChannel: executing queued method %d <%s>", 
+        qDebug("RpcChannel: executing queued method <----\n"
+               "method = %d\n"
+               "req = \n%s\n---->", 
                 call.method->index(), call.request->DebugString().c_str());
         CallMethod(call.method, call.controller, call.request, call.response,
                 call.done);
@@ -298,7 +305,9 @@ _error_exit:
     inStream->Skip(len);
 _error_exit2:
     parsing = false;
-    qDebug("client(%s) discarding received msg", __FUNCTION__);
+    qDebug("client(%s) discarding received msg <----", __FUNCTION__);
+    qDebug("method = %d\nreq = \n%s\n---->",
+            method, response->DebugString().c_str());
     return;
 }
 
