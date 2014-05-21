@@ -42,8 +42,6 @@ RpcConnection::RpcConnection(int socketDescriptor,
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
-
-    parsing = false;
 }
 
 RpcConnection::~RpcConnection()
@@ -185,32 +183,38 @@ void RpcConnection::on_clientSock_error(QAbstractSocket::SocketError socketError
 void RpcConnection::on_clientSock_dataAvail()
 {
     uchar    msg[PB_HDR_SIZE];
-    int        msgLen;
-#if 0
-    static bool parsing = false;
-    static quint16    type, method;
-    static quint32 len;
-#endif
+    int      msgLen;
+    quint16 type, method;
+    quint32 len;
     const ::google::protobuf::MethodDescriptor    *methodDesc;
     ::google::protobuf::Message    *req, *resp;
     PbRpcController *controller;
 
-    if (!parsing)
-    {
-        if (clientSock->bytesAvailable() < PB_HDR_SIZE)
-            return;
+    // Do we have enough bytes for a msg header? 
+    // If yes, peek into the header and get msg length
+    if (clientSock->bytesAvailable() < PB_HDR_SIZE)
+        return;
 
-        msgLen = clientSock->read((char*)msg, PB_HDR_SIZE);
-
-        Q_ASSERT(msgLen == PB_HDR_SIZE);
-
-        type = qFromBigEndian<quint16>(&msg[0]);
-        method = qFromBigEndian<quint16>(&msg[2]);
-        len = qFromBigEndian<quint32>(&msg[4]);
-        //qDebug("type = %d, method = %d, len = %d", type, method, len);
-
-        parsing = true;
+    msgLen = clientSock->peek((char*)msg, PB_HDR_SIZE);
+    if (msgLen != PB_HDR_SIZE) {
+        qWarning("asked to peek %d bytes, was given only %d bytes",
+                PB_HDR_SIZE, msgLen);
+        return;
     }
+
+    len = qFromBigEndian<quint32>(&msg[4]);
+
+    // Is the full msg available to read? If not, wait till such time
+    if (clientSock->bytesAvailable() < (PB_HDR_SIZE+len))
+        return;
+
+    msgLen = clientSock->read((char*)msg, PB_HDR_SIZE);
+    Q_ASSERT(msgLen == PB_HDR_SIZE);
+
+    type = qFromBigEndian<quint16>(&msg[0]);
+    method = qFromBigEndian<quint16>(&msg[2]);
+    len = qFromBigEndian<quint32>(&msg[4]);
+    //qDebug("type = %d, method = %d, len = %d", type, method, len);
 
     if (type != PB_MSG_TYPE_REQUEST)
     {
@@ -276,14 +280,11 @@ void RpcConnection::on_clientSock_dataAvail()
         google::protobuf::NewCallback(this, &RpcConnection::sendRpcReply, 
                                       controller));
 
-    parsing = false;
-
     return;
 
 _error_exit:
     inStream->Skip(len);
 _error_exit2:
-    parsing = false;
     qDebug("server(%s): discarding msg from client", __FUNCTION__);
     return;
 }
