@@ -65,11 +65,6 @@ private:
 
     bool isPending;
     int pendingMethodId;
-
-    bool parsing;
-    quint16 type;
-    quint16 method;
-    quint32 len;
 };
 
 #endif
