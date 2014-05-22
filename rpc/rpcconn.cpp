@@ -29,8 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include <QHostAddress>
+#include <QString>
 #include <QTcpSocket>
+#include <QThreadStorage>
+#include <QtGlobal>
 #include <qendian.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+
+static QThreadStorage<QString*> connId;
 
 RpcConnection::RpcConnection(int socketDescriptor, 
                              ::google::protobuf::Service *service)
@@ -64,12 +72,16 @@ RpcConnection::~RpcConnection()
 
 void RpcConnection::start()
 {
+    QString id = QString("[%1:%2] ");
     clientSock = new QTcpSocket;
     if (!clientSock->setSocketDescriptor(socketDescriptor)) {
         qWarning("Unable to initialize TCP socket for incoming connection");
         return;
     }
     qDebug("clientSock Thread = %p", clientSock->thread());
+
+    connId.setLocalData(new QString(id.arg(clientSock->peerAddress().toString())
+                                      .arg(clientSock->peerPort())));
 
     qDebug("accepting new connection from %s: %d", 
             clientSock->peerAddress().toString().toAscii().constData(),
@@ -150,7 +162,7 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
     {
         qDebug("Server(%s): sending %d bytes to client <----",
             __FUNCTION__, len + PB_HDR_SIZE);
-        BUFDUMP(msg, len + 8);
+        BUFDUMP(msg, 8);
         qDebug("method = %d\nreq = \n%s---->", 
             pendingMethodId, response->DebugString().c_str());
     }
@@ -289,3 +301,15 @@ _error_exit2:
     return;
 }
 
+void RpcConnection::connIdMsgHandler(QtMsgType type, const char* msg)
+{
+    if (connId.hasLocalData()) {
+        QString newMsg(*connId.localData());
+        newMsg.append(msg);
+        newMsg.replace(QChar('\n'), QString("\n").append(*connId.localData()));
+        msg = qPrintable(newMsg);
+    }
+
+    fprintf(stderr, "%s\n", msg);
+    fflush(stderr);
+}

@@ -34,6 +34,8 @@ protected:
 RpcServer::RpcServer()
 {
     service = NULL; 
+
+    qInstallMsgHandler(RpcConnection::connIdMsgHandler);
 }
 
 RpcServer::~RpcServer()
