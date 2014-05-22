@@ -69,7 +69,7 @@ public:
   Subclasses MUST implement this function. See the SampleProtocol for 
   an example
 */
-    virtual void loadWidget(AbstractProtocol *proto)
+    virtual void loadWidget(AbstractProtocol* /*proto*/)
     {
         // Do nothing!
     }
@@ -83,7 +83,7 @@ public:
   Subclasses MUST implement this function. See the SampleProtocol for 
   an example
 */
-    virtual void storeWidget(AbstractProtocol *proto)
+    virtual void storeWidget(AbstractProtocol* /*proto*/)
     {
         // Do nothing!
     }

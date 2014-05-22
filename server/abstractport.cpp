@@ -172,7 +172,7 @@ void AbstractPort::updatePacketListSequential()
     {
         if (streamList_[i]->isEnabled())
         {
-            int len;
+            int len = 0;
             ulong n, x, y;
             ulong burstSize;
             double ibg = 0;
@@ -366,7 +366,7 @@ void AbstractPort::updatePacketListInterleaved()
         double numBursts = 0;
         double numPackets = 0;
 
-        quint64 _burstSize;
+        quint64 _burstSize = 0;
         double ibg = 0;
         quint64 _ibg1 = 0, _ibg2 = 0;
         quint64 _nb1 = 0, _nb2 = 0;
