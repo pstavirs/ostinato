@@ -20,9 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _MY_SERVICE_H
 #define _MY_SERVICE_H
 
-#include <QList>
-
 #include "../common/protocol.pb.h"
+
+#include <QList>
+#include <QReadWriteLock>
 
 #define MAX_PKT_HDR_SIZE            1536
 #define MAX_STREAM_NAME_SIZE        64
@@ -98,8 +99,18 @@ public:
         ::google::protobuf::Closure* done);
 
 private:
-    /*! AbstractPort::id() and index into portInfo[] are same! */
+    /* 
+     * NOTES:
+     * - AbstractPort::id() and index into portInfo[] are same!
+     * - portLock[] size and order should be same as portInfo[] as the
+     *   same index is used for both.
+     * - we assume that once populated by the constructor, the list(s) 
+     *   never change (objects in the list can change, but not the list itself)
+     * - locking is at port granularity, not at stream granularity - for now
+     *   this seems sufficient. Revisit later, if required
+     */
     QList<AbstractPort*>    portInfo;
+    QList<QReadWriteLock*>  portLock;
 
 };
 
