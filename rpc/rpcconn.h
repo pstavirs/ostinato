@@ -42,6 +42,7 @@ class RpcConnection : public QObject
 public:
     RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
     virtual ~RpcConnection();
+    static void connIdMsgHandler(QtMsgType type, const char* msg);
 
 private:
     void sendRpcReply(PbRpcController *controller);
