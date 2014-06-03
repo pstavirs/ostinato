@@ -1,6 +1,7 @@
 syntax: glob
 
 # generated object files
+*.pyc
 *.o
 *.a
 *.exe
@@ -20,6 +21,7 @@ Makefile*
 # protobuf generated files
 *.pb.h
 *.pb.cc
+*_pb2.py
 
 # ostinato generated files
 version.cpp

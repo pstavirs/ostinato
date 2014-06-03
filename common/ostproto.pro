@@ -107,5 +107,8 @@ SOURCES += \
 
 QMAKE_DISTCLEAN += object_script.*
 
+#binding.depends = compiler_protobuf_py_make_all
+#QMAKE_EXTRA_TARGETS += binding
+
 include(../protobuf.pri)
 
