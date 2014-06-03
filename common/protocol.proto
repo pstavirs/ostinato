@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 package OstProto;
 option cc_generic_services = true;
+option py_generic_services = true;
 
 message StreamId {
     required uint32 id = 1;
