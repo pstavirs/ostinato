@@ -1,7 +1,10 @@
+#! /usr/bin/env python
+
 # standard modules
+import logging
+import os
 import sys
 import time
-import logging
 
 # ostinato modules - prepend 'ostinato.' to the module names when using
 # an installed package i.e ostinato.core and ostinato.protocols.xxx
@@ -88,13 +91,22 @@ try:
     drone.clearStats(tx_port)
     drone.clearStats(rx_port)
 
-    # start transmit
+    # start capture and transmit
+    log.info('starting capture')
+    drone.startCapture(rx_port)
+    time.sleep(1)
     log.info('starting transmit')
     drone.startTx(tx_port)
 
     # wait for transmit to finish
     log.info('waiting for transmit to finish ...')
     time.sleep(7)
+
+    # stop transmit and capture
+    log.info('stopping transmit')
+    drone.stopTx(tx_port)
+    log.info('stopping capture')
+    drone.stopCapture(rx_port)
 
     # get tx/rx stats
     log.info('retreiving stats')
@@ -105,6 +117,21 @@ try:
     log.info('--> (rx_stats)' + rx_stats.__str__())
     log.info('tx pkts = %d, rx pkts = %d' % 
             (tx_stats.port_stats[0].tx_pkts, rx_stats.port_stats[0].rx_pkts))
+
+    # retrieve and dump received packets
+    log.info('getting Rx capture buffer')
+    buff = drone.getCaptureBuffer(rx_port.port_id[0])
+    drone.saveCaptureBuffer(buff, 'capture.pcap')
+    log.info('dumping Rx capture buffer')
+    os.system('tshark -r capture.pcap')
+    os.remove('capture.pcap')
+
+    # delete streams
+    log.info('deleting tx_stream %d' % stream_id.stream_id[0].id)
+    drone.deleteStream(stream_id)
+
+    # bye for now
+    drone.disconnect()
 
 except Exception, ex:
     log.exception(ex)
