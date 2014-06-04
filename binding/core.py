@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import os
 from rpc import OstinatoRpcChannel, OstinatoRpcController
 import protocols.protocol_pb2 as ost_pb
 
@@ -40,9 +41,19 @@ class DroneProxy(object):
     def connect(self):
         self.channel.connect(self.host, self.port)
 
+    def disconnect(self):
+        self.channel.disconnect()
+
     def callRpcMethod(self, method_name, request):
         controller = OstinatoRpcController()
         ost_pb.OstService_Stub.__dict__[method_name](
                     self.stub, controller, request, None)
         return controller.response
+
+    def saveCaptureBuffer(self, buffer, file_name):
+         f= open(file_name, 'wb')
+         f.write(buffer)
+         f.flush()
+         os.fsync(f.fileno())
+         f.close()
 

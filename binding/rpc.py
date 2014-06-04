@@ -31,13 +31,20 @@ class OstinatoRpcChannel(RpcChannel):
     def connect(self, host, port):
         self.sock.connect((host, port))
 
+    def disconnect(self):
+        self.sock.close()
+
     def CallMethod(self, method, controller, request, response_class, done):
         OST_PB_MSG_HDR_SIZE = 8
         OST_PB_MSG_TYPE_REQUEST = 1
+        OST_PB_MSG_TYPE_RESPONSE = 2
+        OST_PB_MSG_TYPE_BLOB = 3
+
         req = request.SerializeToString()
         self.sock.sendall(struct.pack('>HHI', 
             OST_PB_MSG_TYPE_REQUEST, method.index, len(req)) + req)
 
+        # receive and parse header
         hdr = ''
         while len(hdr) < OST_PB_MSG_HDR_SIZE:
             chunk = self.sock.recv(OST_PB_MSG_HDR_SIZE - len(hdr))
@@ -47,6 +54,7 @@ class OstinatoRpcChannel(RpcChannel):
 
         (type, method, resp_len) = struct.unpack('>HHI', hdr)
 
+        # receive and parse the actual response message
         resp = ''
         while len(resp) < resp_len:
             chunk = self.sock.recv(resp_len - len(resp))
@@ -54,8 +62,14 @@ class OstinatoRpcChannel(RpcChannel):
                 raise RuntimeError("socket connection broken")
             resp = resp + chunk
 
-        response = response_class()
-        response.ParseFromString(resp)
+        if type == OST_PB_MSG_TYPE_RESPONSE:
+            response = response_class()
+            response.ParseFromString(resp)
+        elif type == OST_PB_MSG_TYPE_BLOB:
+            response = resp
+        else:
+            print 'unsupported msg type %d received in respone to %s' % \
+                    type, method.name
 
         controller.response = response
 
