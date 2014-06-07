@@ -15,3 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import json
+from os.path import dirname
+
+with open(dirname(__file__) + '/pkg_info.json') as f:
+    _info = json.load(f)
+
+__version__ = _info['version']
+__revision__ = _info['revision']
+
