@@ -15,28 +15,56 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import json
 import os
+import re
 import shutil
 import sys
 from setuptools import setup
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(fname).read()
 
-if sys.argv[1] == 'clean_sdist':
+def get_pkg_info():
+    info = {}
+    t = open('../server/version.cpp').read()
+    info['version'] = re.search('version = "([^"]*)"', t).group(1)
+    info['revision'] = re.search('revision = "([^"]*)"', t).group(1)
+    return info
+
+# ------- script starts from here ------- #
+
+if len(sys.argv) >= 2 and sys.argv[1] == 'clean_sdist':
     shutil.rmtree('dist', ignore_errors = True)
     shutil.rmtree('ostinato.egg-info', ignore_errors = True)
+    if os.path.exists('pkg_info.json'):
+        os.remove('pkg_info.json')
     sys.exit(0)
 
+if len(sys.argv) >= 2 and sys.argv[1] == 'sdist':
+    if os.path.split(os.getcwd())[1] != 'binding':
+        print 'This script needs to be run from the binding directory'
+        print 'Current Working Directory is %s' % os.getcwd()
+        sys.exit(1)
+
+    pkg_info = get_pkg_info()
+    with open('pkg_info.json', 'wt') as f:
+        json.dump(pkg_info, f, indent=4)
+else:
+    with open('pkg_info.json') as f:
+        pkg_info = json.load(f)
+
 setup(name = 'ostinato',
-      version = 'FIXME',
+      version = pkg_info['version'],
       author = 'Srivats P',
       author_email = 'pstavirs@gmail.com',
       license = "GPLv3+",
       url = 'http://ostinato.org',
       description = 'Ostinato is a network packet and traffic generator and analyzer. It aims to be "Wireshark in Reverse" and become complementary to Wireshark. It features custom packet crafting via a GUI or a script',
       long_description = read('README.txt'),
-      install_requires = ['google.protobuf>=2.3'],
-      packages=['ostinato', 'ostinato.protocols'],
-      package_dir={'ostinato': ''}
+      install_requires = ['protobuf>=2.3.0'],
+      packages = ['ostinato', 'ostinato.protocols'],
+      package_dir = {'ostinato': '.'},
+      package_data = {'ostinato': ['pkg_info.json']},
       )
+
