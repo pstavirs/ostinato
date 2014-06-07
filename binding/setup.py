@@ -66,5 +66,12 @@ setup(name = 'ostinato',
       packages = ['ostinato', 'ostinato.protocols'],
       package_dir = {'ostinato': '.'},
       package_data = {'ostinato': ['pkg_info.json']},
+      platforms = ['Any'],
+      classifiers = [
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Telecommunications Industry',
+          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+          'Topic :: Software Development :: Testing :: Traffic Generation',
+          'Topic :: System :: Networking']
       )
 
