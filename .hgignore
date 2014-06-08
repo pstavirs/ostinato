@@ -4,6 +4,8 @@ syntax: glob
 *.pyc
 *.o
 *.a
+*.dll
+*.so
 *.exe
 *.app
 drone
