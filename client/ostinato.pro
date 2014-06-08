@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += qt
+CONFIG += qt ver_info
 macx: TARGET = Ostinato
 win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns

@@ -6,4 +6,6 @@ SUBDIRS = \
     common/ostproto.pro \
     common/ostprotogui.pro \
     server/drone.pro \
-    client/ostinato.pro
+    client/ostinato.pro \
+    binding/binding.pro
+

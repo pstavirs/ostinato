@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += qt 
+CONFIG += qt ver_info
 QT += network script
 QT -= gui
 DEFINES += HAVE_REMOTE WPCAP
