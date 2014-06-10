@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright (C) 2014 Srivats P.
 # 
 # This file is part of "Ostinato"
@@ -66,7 +67,8 @@ setup(name = 'ostinato',
       install_requires = ['protobuf>=2.3.0'],
       packages = ['ostinato', 'ostinato.protocols'],
       package_dir = {'ostinato': '.'},
-      package_data = {'ostinato': ['pkg_info.json']},
+      package_data = {'ostinato': ['pkg_info.json', 'LICENSE.txt']},
+      scripts = ['example.py'],
       platforms = ['Any'],
       classifiers = [
           'Development Status :: 5 - Production/Stable',
