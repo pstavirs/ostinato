@@ -26,9 +26,10 @@ class DroneProxy(object):
         self.port = port_number
         self.channel = OstinatoRpcChannel()
         self.stub = ost_pb.OstService_Stub(self.channel)
+        self.void = ost_pb.Void()
 
         for method in self.stub.GetDescriptor().methods:
-            fn = lambda request, method_name=method.name: \
+            fn = lambda request=self.void, method_name=method.name: \
                 self.callRpcMethod(method_name, request)
             self.__dict__[method.name] = fn
 

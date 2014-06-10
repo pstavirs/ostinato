@@ -12,13 +12,17 @@ from core import ost_pb, DroneProxy
 from protocols.mac_pb2 import mac
 from protocols.ip4_pb2 import ip4, Ip4
 
+# initialize defaults
 host_name = '127.0.0.1'
-tx_port_number = 1
-rx_port_number = 1
+tx_port_number = 0
+rx_port_number = 0
 
 # setup logging
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
+host_name = s or host_name
 
 drone = DroneProxy(host_name)
 
@@ -28,28 +32,37 @@ try:
             % (drone.hostName(), drone.portNumber()))
     drone.connect()
 
+    # retreive port id list
+    log.info('retreiving port list')
+    port_id_list = drone.getPortIdList()
+
+    # retreive port config list
+    log.info('retreiving port config for all ports')
+    port_config_list = drone.getPortConfig(port_id_list)
+
+    # print port list and get tx/rx port id 
+    print 'Port List'
+    print '---------'
+    for port in port_config_list.port:
+        print '%d.%s (%s)' % (port.port_id.id, port.name, port.description) 
+        # use a loopback port as default tx/rx port 
+        if ('lo' in port.name or 'loopback' in port.description.lower()):
+            tx_port_number = port.port_id.id
+            rx_port_number = port.port_id.id
+
+    p = raw_input('Tx Port Id [%d]: ' % (tx_port_number))
+    if p:
+        tx_port_number = int(p)
+
+    p = raw_input('Rx Port Id [%d]: ' % (rx_port_number))
+    if p:
+        rx_port_number = int(p)
+
     tx_port = ost_pb.PortIdList()
     tx_port.port_id.add().id = tx_port_number;
 
     rx_port = ost_pb.PortIdList()
     rx_port.port_id.add().id = rx_port_number;
-
-    # verify tx and rx ports exist
-    log.info('verifying tx_port %d' % tx_port.port_id[0].id)
-    port_config_list = drone.getPortConfig(tx_port)
-    log.info('-->' + port_config_list.__str__())
-    if len(port_config_list.port) <= 0:
-        log.error('invalid tx_port'
-                + tx_port_number)
-        sys.exit(1)
-
-    log.info('verifying rx_port %d' % rx_port.port_id[0].id)
-    port_config_list = drone.getPortConfig(rx_port)
-    log.info('-->' + port_config_list.__str__())
-    if len(port_config_list.port) <= 0:
-        log.error('invalid rx_port'
-                + rx_port_number)
-        sys.exit(1)
 
     # add a stream
     stream_id = ost_pb.StreamIdList()
@@ -113,8 +126,8 @@ try:
     tx_stats = drone.getStats(tx_port)
     rx_stats = drone.getStats(rx_port)
 
-    log.info('--> (tx_stats)' + tx_stats.__str__())
-    log.info('--> (rx_stats)' + rx_stats.__str__())
+    #log.info('--> (tx_stats)' + tx_stats.__str__())
+    #log.info('--> (rx_stats)' + rx_stats.__str__())
     log.info('tx pkts = %d, rx pkts = %d' % 
             (tx_stats.port_stats[0].tx_pkts, rx_stats.port_stats[0].rx_pkts))
 
