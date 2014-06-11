@@ -27,6 +27,7 @@ Makefile*
 
 # ostinato generated files
 version.cpp
+pkg_info.json
 
 # vim swap files
 *.swp
