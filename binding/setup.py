@@ -68,7 +68,6 @@ setup(name = 'ostinato',
       packages = ['ostinato', 'ostinato.protocols'],
       package_dir = {'ostinato': '.'},
       package_data = {'ostinato': ['pkg_info.json', 'LICENSE.txt']},
-      scripts = ['example.py'],
       platforms = ['Any'],
       classifiers = [
           'Development Status :: 5 - Production/Stable',
