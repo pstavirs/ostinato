@@ -18,6 +18,7 @@
 from google.protobuf.message import EncodeError, DecodeError
 from google.protobuf.service import RpcChannel
 from google.protobuf.service import RpcController
+import logging
 import socket
 import struct
 import sys
@@ -49,10 +50,13 @@ class OstinatoRpcController(RpcController):
 
 class OstinatoRpcChannel(RpcChannel):
     def __init__(self):
+        self.log = logging.getLogger('ostinato.rpc')
+        self.log.debug('opening socket')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def connect(self, host, port):
         self.peer = '%s:%d' % (host, port)
+        self.log.debug('connecting to %s', self.peer)
         try:
             self.sock.connect((host, port))
         except socket.error, e:
@@ -62,31 +66,40 @@ class OstinatoRpcChannel(RpcChannel):
             raise
 
     def disconnect(self):
+        self.log.debug('closing socket')
         self.sock.close()
 
     def CallMethod(self, method, controller, request, response_class, done):
-        OST_PB_MSG_HDR_SIZE = 8
-        OST_PB_MSG_TYPE_REQUEST = 1
-        OST_PB_MSG_TYPE_RESPONSE = 2
-        OST_PB_MSG_TYPE_BLOB = 3
+        MSG_HDR_SIZE = 8
+        MSG_TYPE_REQUEST = 1
+        MSG_TYPE_RESPONSE = 2
+        MSG_TYPE_BLOB = 3
 
         error = ''
         try:
+            self.log.debug('invoking RPC %s(%s): %s', method.name, 
+                    type(request).__name__, response_class.__name__)
+            self.log.debug('serializing request arg %s', request)
             req = request.SerializeToString()
-            self.sock.sendall(struct.pack('>HHI', 
-                OST_PB_MSG_TYPE_REQUEST, method.index, len(req)) + req)
+            hdr = struct.pack('>HHI', MSG_TYPE_REQUEST, method.index, len(req))
+            self.log.debug('req.hdr = %r', hdr)
+            self.sock.sendall(hdr + req)
 
             # receive and parse header
+            self.log.debug('receiving response hdr')
             hdr = ''
-            while len(hdr) < OST_PB_MSG_HDR_SIZE:
-                chunk = self.sock.recv(OST_PB_MSG_HDR_SIZE - len(hdr))
+            while len(hdr) < MSG_HDR_SIZE:
+                chunk = self.sock.recv(MSG_HDR_SIZE - len(hdr))
                 if chunk == '':
                     raise PeerClosedConnError('connection closed by peer')
                 hdr = hdr + chunk
 
             (msg_type, method_index, resp_len) = struct.unpack('>HHI', hdr)
+            self.log.debug('resp hdr: type = %d, method = %d, len = %d',
+                    msg_type, method_index, resp_len)
 
             # receive and parse the actual response message
+            self.log.debug('receiving response data')
             resp = ''
             while len(resp) < resp_len:
                 chunk = self.sock.recv(resp_len - len(resp))
@@ -99,10 +112,11 @@ class OstinatoRpcChannel(RpcChannel):
                 raise RpcMismatchError('RPC mismatch', 
                         expected = method.index, received = method_index)
 
-            if msg_type == OST_PB_MSG_TYPE_RESPONSE:
+            if msg_type == MSG_TYPE_RESPONSE:
                     response = response_class()
                     response.ParseFromString(resp)
-            elif msg_type == OST_PB_MSG_TYPE_BLOB:
+                    self.log.debug('parsed response %s', response)
+            elif msg_type == MSG_TYPE_BLOB:
                 response = resp
             else:
                 raise RpcError('unknown RPC msg type %d' % msg_type)
@@ -112,29 +126,35 @@ class OstinatoRpcChannel(RpcChannel):
         except socket.error, e:
             error = 'ERROR: RPC %s() to Drone %s failed (%s)' % (
                     method.name, self.peer, e)
+            self.log.exception(error+e)
             raise
         except PeerClosedConnError, e:
             error = 'ERROR: Drone %s closed connection receiving reply ' \
                   'for RPC %s() (%s)' % (
                     self.peer, method.name, e)
+            self.log.exception(error)
             raise
         except EncodeError, e:
             error = 'ERROR: Failed to serialize %s arg for RPC %s() ' \
                   'to Drone %s (%s)' % (
                     type(request).__name__, method.name, self.peer, e)
+            self.log.exception(error)
             raise
         except DecodeError, e:
             error = 'ERROR: Failed to parse %s response for RPC %s() ' \
                   'from Drone %s (%s)' % (
                     type(response).__name__, method.name, self.peer, e)
+            self.log.exception(error)
             raise
         except RpcMismatchError, e:
             error = 'ERROR: Rpc Mismatch for RPC %s() (%s)' % (
                     method.name, e)
+            self.log.exception(error)
             raise
         except RpcError, e:
             error = 'ERROR: Unknown reply received for RPC %s() (%s) ' % (
                     method.name, e)
+            self.log.exception(error)
             raise
         finally:
             if error:

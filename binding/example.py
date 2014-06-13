@@ -6,23 +6,37 @@ import os
 import sys
 import time
 
-# ostinato modules - prepend 'ostinato.' to the module names when using
-# an installed package i.e ostinato.core and ostinato.protocols.xxx
+# ostinato modules 
+# (user scripts using the installed package should prepend ostinato. i.e
+#  ostinato.core and ostinato.protocols)
 from core import ost_pb, DroneProxy
 from protocols.mac_pb2 import mac
 from protocols.ip4_pb2 import ip4, Ip4
 
 # initialize defaults
+use_defaults = False
 host_name = '127.0.0.1'
 tx_port_number = 0
 rx_port_number = 0
 
 # setup logging
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
-host_name = s or host_name
+# command-line option/arg processing
+if len(sys.argv) > 1:
+    if sys.argv[1] in ('-d', '--use-defaults'):
+        use_defaults = True
+    if sys.argv[1] in ('-h', '--help'):
+        print '%s [OPTION]...' % (sys.argv[0])
+        print 'Options:'
+        print ' -d --use-defaults   run using default values'
+        print ' -h --help           show this help'
+        sys.exit(0)
+
+if not use_defaults:
+    s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
+    host_name = s or host_name
 
 drone = DroneProxy(host_name)
 
@@ -50,13 +64,14 @@ try:
             tx_port_number = port.port_id.id
             rx_port_number = port.port_id.id
 
-    p = raw_input('Tx Port Id [%d]: ' % (tx_port_number))
-    if p:
-        tx_port_number = int(p)
+    if not use_defaults:
+        p = raw_input('Tx Port Id [%d]: ' % (tx_port_number))
+        if p:
+            tx_port_number = int(p)
 
-    p = raw_input('Rx Port Id [%d]: ' % (rx_port_number))
-    if p:
-        rx_port_number = int(p)
+        p = raw_input('Rx Port Id [%d]: ' % (rx_port_number))
+        if p:
+            rx_port_number = int(p)
 
     tx_port = ost_pb.PortIdList()
     tx_port.port_id.add().id = tx_port_number;
