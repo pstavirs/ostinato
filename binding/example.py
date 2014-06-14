@@ -28,10 +28,10 @@ if len(sys.argv) > 1:
     if sys.argv[1] in ('-d', '--use-defaults'):
         use_defaults = True
     if sys.argv[1] in ('-h', '--help'):
-        print '%s [OPTION]...' % (sys.argv[0])
-        print 'Options:'
-        print ' -d --use-defaults   run using default values'
-        print ' -h --help           show this help'
+        print('%s [OPTION]...' % (sys.argv[0]))
+        print('Options:')
+        print(' -d --use-defaults   run using default values')
+        print(' -h --help           show this help')
         sys.exit(0)
 
 if not use_defaults:
@@ -55,10 +55,10 @@ try:
     port_config_list = drone.getPortConfig(port_id_list)
 
     # print port list and get tx/rx port id 
-    print 'Port List'
-    print '---------'
+    print('Port List')
+    print('---------')
     for port in port_config_list.port:
-        print '%d.%s (%s)' % (port.port_id.id, port.name, port.description) 
+        print('%d.%s (%s)' % (port.port_id.id, port.name, port.description))
         # use a loopback port as default tx/rx port 
         if ('lo' in port.name or 'loopback' in port.description.lower()):
             tx_port_number = port.port_id.id
@@ -161,6 +161,6 @@ try:
     # bye for now
     drone.disconnect()
 
-except Exception, ex:
+except Exception as ex:
     log.exception(ex)
     sys.exit(1)
