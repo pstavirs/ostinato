@@ -28,8 +28,8 @@ def read(fname):
 
 def ensure_cwd():
     if os.path.split(os.getcwd())[1] != 'binding':
-        print 'ERROR: This script needs to be run from the binding directory'
-        print 'Current Working Directory is %s' % os.getcwd()
+        print('ERROR: This script needs to be run from the binding directory')
+        print('Current Working Directory is %s' % os.getcwd())
         sys.exit(1)
 
 class sdist(_sdist):
@@ -49,14 +49,15 @@ class sdist_clean(Command):
     def run(self):
         ensure_cwd()
         shutil.rmtree('dist', ignore_errors = True)
-        shutil.rmtree('ostinato.egg-info', ignore_errors = True)
+        shutil.rmtree('python-ostinato.egg-info', ignore_errors = True)
+        shutil.rmtree('python_ostinato.egg-info', ignore_errors = True)
 
 # ------- script starts from here ------- #
 
 with open(os.path.join(os.path.dirname(__file__), 'pkg_info.json')) as f:
     pkg_info = json.load(f)
 
-setup(name = 'ostinato',
+setup(name = 'python-ostinato',
       version = pkg_info['version'],
       author = 'Srivats P',
       author_email = 'pstavirs@gmail.com',
@@ -70,7 +71,8 @@ setup(name = 'ostinato',
       package_data = {'ostinato': ['pkg_info.json', 'LICENSE.txt']},
       platforms = ['Any'],
       classifiers = [
-          'Development Status :: 5 - Production/Stable',
+          'Development Status :: 4 - Beta',
+          'Programming Language :: Python :: 2.7',
           'Intended Audience :: Telecommunications Industry',
           'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
           'Topic :: Software Development :: Testing :: Traffic Generation',
