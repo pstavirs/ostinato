@@ -59,10 +59,10 @@ class OstinatoRpcChannel(RpcChannel):
         self.log.debug('connecting to %s', self.peer)
         try:
             self.sock.connect((host, port))
-        except socket.error, e:
+        except socket.error as e:
             error = 'ERROR: Unable to connect to Drone %s (%s)' % (
                     self.peer, str(e))
-            print error
+            print(error)
             raise
 
     def disconnect(self):
@@ -123,42 +123,42 @@ class OstinatoRpcChannel(RpcChannel):
 
             controller.response = response
 
-        except socket.error, e:
+        except socket.error as e:
             error = 'ERROR: RPC %s() to Drone %s failed (%s)' % (
                     method.name, self.peer, e)
             self.log.exception(error+e)
             raise
-        except PeerClosedConnError, e:
+        except PeerClosedConnError as e:
             error = 'ERROR: Drone %s closed connection receiving reply ' \
                   'for RPC %s() (%s)' % (
                     self.peer, method.name, e)
             self.log.exception(error)
             raise
-        except EncodeError, e:
+        except EncodeError as e:
             error = 'ERROR: Failed to serialize %s arg for RPC %s() ' \
                   'to Drone %s (%s)' % (
                     type(request).__name__, method.name, self.peer, e)
             self.log.exception(error)
             raise
-        except DecodeError, e:
+        except DecodeError as e:
             error = 'ERROR: Failed to parse %s response for RPC %s() ' \
                   'from Drone %s (%s)' % (
                     type(response).__name__, method.name, self.peer, e)
             self.log.exception(error)
             raise
-        except RpcMismatchError, e:
+        except RpcMismatchError as e:
             error = 'ERROR: Rpc Mismatch for RPC %s() (%s)' % (
                     method.name, e)
             self.log.exception(error)
             raise
-        except RpcError, e:
+        except RpcError as e:
             error = 'ERROR: Unknown reply received for RPC %s() (%s) ' % (
                     method.name, e)
             self.log.exception(error)
             raise
         finally:
             if error:
-                print error
+                print(error)
 
 
 
