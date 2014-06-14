@@ -1,7 +1,7 @@
-========
-Ostinato
-========
+===============
+python-ostinato
+===============
 
-Ostinato provides a scripting interface to the Ostinato Packet/Traffic Generator and Analyzer
+python-ostinato provides python bindings for the Ostinato Packet/Traffic Generator and Analyzer 
 
 Documentation is available in the wiki at http://ostinato.org
