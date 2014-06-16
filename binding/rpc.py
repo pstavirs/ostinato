@@ -50,7 +50,7 @@ class OstinatoRpcController(RpcController):
 
 class OstinatoRpcChannel(RpcChannel):
     def __init__(self):
-        self.log = logging.getLogger('ostinato.rpc')
+        self.log = logging.getLogger(__name__)
         self.log.debug('opening socket')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -77,7 +77,7 @@ class OstinatoRpcChannel(RpcChannel):
 
         error = ''
         try:
-            self.log.debug('invoking RPC %s(%s): %s', method.name, 
+            self.log.info('invoking RPC %s(%s): %s', method.name, 
                     type(request).__name__, response_class.__name__)
             self.log.debug('serializing request arg %s', request)
             req = request.SerializeToString()

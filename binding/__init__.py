@@ -25,4 +25,4 @@ with open(dirname(__file__) + '/pkg_info.json') as f:
 __version__ = _info['version']
 __revision__ = _info['revision']
 
-__log__ = logging.getLogger('ostinato')
+__log__ = logging.getLogger(__name__)
