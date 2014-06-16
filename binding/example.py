@@ -91,9 +91,10 @@ try:
     stream_cfg.port_id.CopyFrom(tx_port.port_id[0])
     s = stream_cfg.stream.add()
     s.stream_id.id = stream_id.stream_id[0].id
-    s.core.is_enabled = 1
+    s.core.is_enabled = True
     s.control.num_packets = 5
 
+    # setup stream protocols as mac:eth2:ip4:udp:payload
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
     p.Extensions[mac].dst_mac = 0x001122334455
@@ -104,9 +105,11 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
-    p.Extensions[ip4].src_ip = 0x01020304
-    p.Extensions[ip4].dst_ip = 0x05060708
-    p.Extensions[ip4].dst_ip_mode = Ip4.e_im_inc_host
+    # reduce typing by creating a shorter reference to p.Extensions[ip4]
+    ip = p.Extensions[ip4]
+    ip.src_ip = 0x01020304
+    ip.dst_ip = 0x05060708
+    ip.dst_ip_mode = Ip4.e_im_inc_host
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
