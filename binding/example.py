@@ -34,6 +34,22 @@ if len(sys.argv) > 1:
         print(' -h --help           show this help')
         sys.exit(0)
 
+print('')
+print('This example expects the following topology -')
+print('')
+print(' +-------+          +-------+')
+print(' |       |Tx--->----|       |')
+print(' | Drone |          |  DUT  |')
+print(' |       |Rx---<----|       |')
+print(' +-------+          +-------+')
+print('')
+print('Drone has 2 ports connected to DUT. Packets sent on the Tx port')
+print('are expected to be received back on the Rx port')
+print('')
+print('An easy way to simulate the above topology is to select the loopback')
+print('port as both Tx and Rx ports')
+print('')
+
 if not use_defaults:
     s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
     host_name = s or host_name
