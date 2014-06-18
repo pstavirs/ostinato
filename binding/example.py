@@ -70,6 +70,10 @@ try:
     log.info('retreiving port config for all ports')
     port_config_list = drone.getPortConfig(port_id_list)
 
+    if len(port_config_list.port) == 0:
+        log.warning('drone has no ports!')
+        sys.exit(1)
+
     # print port list and get tx/rx port id 
     print('Port List')
     print('---------')
