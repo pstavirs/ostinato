@@ -324,6 +324,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
         Q_ASSERT_X(false, "PortTransmitter::PortTransmitter",
                 "This Win32 platform does not support performance counter");
 #endif
+    state_ = kNotStarted;
     returnToQIdx_ = -1;
     loopDelay_ = 0;
     stop_ = false;
@@ -490,7 +491,7 @@ void PcapPort::PortTransmitter::run()
 
     qDebug("packetSequenceList_.size = %d", packetSequenceList_.size());
     if (packetSequenceList_.size() <= 0)
-        return;
+        goto _exit;
 
     for(i = 0; i < packetSequenceList_.size(); i++) {
         qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d, usecDelay = %ld", i, 
@@ -502,6 +503,7 @@ void PcapPort::PortTransmitter::run()
                 packetSequenceList_.at(i)->usecDuration_);
     }
 
+    state_ = kRunning;
     i = 0;
     while (i < packetSequenceList_.size())
     {
@@ -563,7 +565,7 @@ _restart:
                     qDebug("error %d in sendQueueTransmit()", ret);
                     qDebug("overHead = %ld", overHead);
                     stop_ = false;
-                    return;
+                    goto _exit;
                 }
             }
         }
@@ -587,12 +589,31 @@ _restart:
         i = returnToQIdx_;
         goto _restart;
     }
+
+_exit:
+    state_ = kFinished;
+}
+
+void PcapPort::PortTransmitter::start()
+{
+    // FIXME: return error
+    if (state_ == kRunning)
+        return;
+
+    state_ = kNotStarted;
+    QThread::start();
+
+    while (state_ == kNotStarted)
+        QThread::msleep(10);
 }
 
 void PcapPort::PortTransmitter::stop()
 {
-    if (isRunning())
+    if (state_ == kRunning) {
         stop_ = true;
+        while (state_ == kRunning)
+            QThread::msleep(10);
+    }
 }
 
 int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
@@ -692,6 +713,7 @@ PcapPort::PortCapturer::PortCapturer(const char *device)
 {
     device_ = QString::fromAscii(device);
     stop_ = false;
+    state_ = kNotStarted;
 
     if (!capFile_.open())
         qWarning("Unable to open temp cap file");
@@ -717,7 +739,7 @@ void PcapPort::PortCapturer::run()
     if (!capFile_.isOpen())
     {
         qWarning("temp cap file is not open");
-        return;
+        goto _exit;
     }
 _retry:
     handle_ = pcap_open_live(device_.toAscii().constData(), 65535, 
@@ -736,13 +758,13 @@ _retry:
         {
             qDebug("%s: Error opening port %s: %s\n", __FUNCTION__,
                     device_.toAscii().constData(), errbuf);
-            return;
+            goto _exit;
         }
     }
 
     dumpHandle_ = pcap_dump_open(handle_, 
             capFile_.fileName().toAscii().constData());
-
+    state_ = kRunning;
     while (1)
     {
         int ret;
@@ -778,12 +800,31 @@ _retry:
     dumpHandle_ = NULL;
     handle_ = NULL;
     stop_ = false;
+
+_exit:
+    state_ = kFinished;
+}
+
+void PcapPort::PortCapturer::start()
+{
+    // FIXME: return error
+    if (state_ == kRunning)
+        return;
+
+    state_ = kNotStarted;
+    QThread::start();
+
+    while (state_ == kNotStarted)
+        QThread::msleep(10);
 }
 
 void PcapPort::PortCapturer::stop()
 {
-    if (isRunning())
+    if (state_ == kRunning) {
         stop_ = true;
+        while (state_ == kRunning)
+            QThread::msleep(10);
+    }
 }
 
 QFile* PcapPort::PortCapturer::captureFile()
