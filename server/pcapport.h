@@ -114,8 +114,15 @@ protected:
         void setHandle(pcap_t *handle);
         void useExternalStats(AbstractPort::PortStats *stats);
         void run();
+        void start();
         void stop();
     private:
+        enum State 
+        {
+            kNotStarted,
+            kRunning,
+            kFinished
+        };
 
         class PacketSequence
         {
@@ -183,6 +190,7 @@ protected:
         bool usingInternalHandle_;
         pcap_t *handle_;
         volatile bool stop_;
+        volatile State state_;
     };
 
     class PortCapturer: public QThread
@@ -191,15 +199,24 @@ protected:
         PortCapturer(const char *device);
         ~PortCapturer();
         void run();
+        void start();
         void stop();
         QFile* captureFile();
 
     private:
+        enum State 
+        {
+            kNotStarted,
+            kRunning,
+            kFinished
+        };
+
         QString         device_;
         volatile bool   stop_;
         QTemporaryFile  capFile_;
         pcap_t          *handle_;
         pcap_dumper_t   *dumpHandle_;
+        volatile State  state_;
     };
 
     PortMonitor     *monitorRx_;

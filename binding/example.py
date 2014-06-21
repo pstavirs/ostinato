@@ -145,7 +145,6 @@ try:
     # start capture and transmit
     log.info('starting capture')
     drone.startCapture(rx_port)
-    time.sleep(1)
     log.info('starting transmit')
     drone.startTx(tx_port)
 
