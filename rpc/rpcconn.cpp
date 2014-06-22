@@ -307,7 +307,9 @@ void RpcConnection::connIdMsgHandler(QtMsgType type, const char* msg)
         QString newMsg(*connId.localData());
         newMsg.append(msg);
         newMsg.replace(QChar('\n'), QString("\n").append(*connId.localData()));
-        msg = qPrintable(newMsg);
+        fprintf(stderr, "%s\n", qPrintable(newMsg));
+        fflush(stderr);
+        return;
     }
 
     fprintf(stderr, "%s\n", msg);
