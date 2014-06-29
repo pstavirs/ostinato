@@ -1213,54 +1213,70 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
   <tabstop>lePktLen</tabstop>
   <tabstop>lePktLenMin</tabstop>
   <tabstop>lePktLenMax</tabstop>
+  <tabstop>rbL1None</tabstop>
+  <tabstop>rbL1Mac</tabstop>
+  <tabstop>rbL1Other</tabstop>
+  <tabstop>rbVlanNone</tabstop>
+  <tabstop>rbVlanSingle</tabstop>
+  <tabstop>rbVlanDouble</tabstop>
+  <tabstop>rbFtNone</tabstop>
   <tabstop>rbFtEthernet2</tabstop>
   <tabstop>rbFt802Dot3Raw</tabstop>
   <tabstop>rbFt802Dot3Llc</tabstop>
   <tabstop>rbFtLlcSnap</tabstop>
   <tabstop>rbFtOther</tabstop>
-  <tabstop>rbVlanNone</tabstop>
-  <tabstop>rbVlanSingle</tabstop>
-  <tabstop>rbVlanDouble</tabstop>
   <tabstop>rbL3None</tabstop>
+  <tabstop>rbL3Arp</tabstop>
   <tabstop>rbL3Ipv4</tabstop>
   <tabstop>rbL3Ipv6</tabstop>
-  <tabstop>rbL3Arp</tabstop>
+  <tabstop>rbL3Ip6over4</tabstop>
+  <tabstop>rbL3Ip4over6</tabstop>
+  <tabstop>rbL3Ip4over4</tabstop>
+  <tabstop>rbL3Ip6over6</tabstop>
   <tabstop>rbL3Other</tabstop>
   <tabstop>rbL4None</tabstop>
   <tabstop>rbL4Icmp</tabstop>
   <tabstop>rbL4Igmp</tabstop>
+  <tabstop>rbL4Mld</tabstop>
   <tabstop>rbL4Tcp</tabstop>
   <tabstop>rbL4Udp</tabstop>
   <tabstop>rbL4Other</tabstop>
+  <tabstop>rbL5None</tabstop>
+  <tabstop>rbL5Text</tabstop>
+  <tabstop>rbL5Other</tabstop>
+  <tabstop>rbPayloadNone</tabstop>
   <tabstop>rbPayloadPattern</tabstop>
+  <tabstop>rbPayloadHexDump</tabstop>
   <tabstop>rbPayloadOther</tabstop>
-  <tabstop>pbPrev</tabstop>
-  <tabstop>pbNext</tabstop>
-  <tabstop>pbOk</tabstop>
-  <tabstop>pbCancel</tabstop>
-  <tabstop>rbSendBursts</tabstop>
-  <tabstop>leNumPackets</tabstop>
-  <tabstop>leNumBursts</tabstop>
-  <tabstop>lePacketsPerBurst</tabstop>
-  <tabstop>rbActionStop</tabstop>
-  <tabstop>rbActionGotoNext</tabstop>
-  <tabstop>rbActionGotoStream</tabstop>
-  <tabstop>leStreamId</tabstop>
-  <tabstop>rbModeFixed</tabstop>
-  <tabstop>rbModeContinuous</tabstop>
-  <tabstop>lePacketsPerSec</tabstop>
-  <tabstop>leBurstsPerSec</tabstop>
-  <tabstop>leGapIsg</tabstop>
-  <tabstop>leGapIpg</tabstop>
-  <tabstop>leGapIbg</tabstop>
-  <tabstop>tvPacketTree</tabstop>
+  <tabstop>lvAllProtocols</tabstop>
+  <tabstop>tbAdd</tabstop>
+  <tabstop>tbUp</tabstop>
   <tabstop>tbDown</tabstop>
   <tabstop>tbDelete</tabstop>
   <tabstop>lvSelectedProtocols</tabstop>
   <tabstop>rbSendPackets</tabstop>
-  <tabstop>tbUp</tabstop>
-  <tabstop>lvAllProtocols</tabstop>
-  <tabstop>tbAdd</tabstop>
+  <tabstop>rbSendBursts</tabstop>
+  <tabstop>rbModeFixed</tabstop>
+  <tabstop>rbModeContinuous</tabstop>
+  <tabstop>leNumPackets</tabstop>
+  <tabstop>leNumBursts</tabstop>
+  <tabstop>lePacketsPerBurst</tabstop>
+  <tabstop>lePacketsPerSec</tabstop>
+  <tabstop>leBurstsPerSec</tabstop>
+  <tabstop>rbBitsPerSec</tabstop>
+  <tabstop>leBitsPerSec</tabstop>
+  <tabstop>rbActionStop</tabstop>
+  <tabstop>rbActionGotoNext</tabstop>
+  <tabstop>rbActionGotoStream</tabstop>
+  <tabstop>leStreamId</tabstop>
+  <tabstop>leGapIsg</tabstop>
+  <tabstop>leGapIbg</tabstop>
+  <tabstop>leGapIpg</tabstop>
+  <tabstop>tvPacketTree</tabstop>
+  <tabstop>pbPrev</tabstop>
+  <tabstop>pbNext</tabstop>
+  <tabstop>pbOk</tabstop>
+  <tabstop>pbCancel</tabstop>
  </tabstops>
  <resources>
   <include location="ostinato.qrc" />
