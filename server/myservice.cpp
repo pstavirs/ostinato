@@ -208,6 +208,9 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
     if ((portId < 0) || (portId >= portInfo.size()))
         goto _invalid_port;
 
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->stream_id_size(); i++)
     {
@@ -232,8 +235,13 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
     done->Run();
     return;
 
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+
 _invalid_port:
     controller->SetFailed("invalid portid");
+_exit:
     done->Run();
 }
 
@@ -250,6 +258,9 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     if ((portId < 0) || (portId >= portInfo.size()))
         goto _invalid_port;
 
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->stream_id_size(); i++)
         portInfo[portId]->deleteStream(request->stream_id(i).id());
@@ -260,8 +271,12 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     done->Run();
     return;
 
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
 _invalid_port:
     controller->SetFailed("invalid portid");
+_exit:
     done->Run();
 }
 
@@ -277,6 +292,9 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
     portId = request->port_id().id();
     if ((portId < 0) || (portId >= portInfo.size()))
         goto _invalid_port;
+
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
 
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->stream_size(); i++)
@@ -300,8 +318,12 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
     done->Run();
     return;
 
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
 _invalid_port:
     controller->SetFailed("invalid portid");
+_exit:
     done->Run();
 }
 

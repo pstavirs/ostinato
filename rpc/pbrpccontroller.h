@@ -44,14 +44,17 @@ public:
     ::google::protobuf::Message* response() { return response_; }
 
     // Client Side Methods
-    void Reset() { failed = false; blob = NULL; }
+    void Reset() { failed = false; blob = NULL; errStr = ""; }
     bool Failed() const { return failed; }
     void StartCancel() { /*! \todo (MED) */}
-    std::string ErrorText() const { return errStr; }
+    std::string ErrorText() const { return errStr.toStdString(); }
 
     // Server Side Methods
+    void SetFailed(const QString &reason) 
+        { failed = true; errStr = reason; qWarning(qPrintable(errStr)); }
     void SetFailed(const std::string &reason) 
-        { failed = true; errStr = reason; }
+        { SetFailed(QString::fromStdString(reason)); }
+    QString ErrorString() const { return errStr; }
     bool IsCanceled() const { return false; };
     void NotifyOnCancel(::google::protobuf::Closure* /* callback */) {
         /*! \todo (MED) */ 
@@ -64,7 +67,7 @@ public:
 private:
     bool failed;
     QIODevice *blob;
-    std::string errStr;
+    QString errStr;
     ::google::protobuf::Message *request_;
     ::google::protobuf::Message *response_;
 

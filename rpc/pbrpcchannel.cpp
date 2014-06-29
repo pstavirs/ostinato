@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <qendian.h>
 
+static uchar msgBuf[4096];
+
 PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port)
 {
     isPending = false;
@@ -94,8 +96,7 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Message *response,
     ::google::protobuf::Closure* done)
 {
-    char    msgBuf[PB_HDR_SIZE];
-    char* const msg = &msgBuf[0];
+    char* const msg = (char*) &msgBuf[0];
     int     len;
     bool    ret;
   
@@ -161,8 +162,7 @@ void PbRpcChannel::CallMethod(
 
 void PbRpcChannel::on_mpSocket_readyRead()
 {
-    uchar   msg[PB_HDR_SIZE];
-    uchar   *p = (uchar*) &msg;
+    uchar   *msg = (uchar*) &msgBuf;
     int        msgLen;
     static bool parsing = false;
     static quint16    type, method;
@@ -183,9 +183,9 @@ void PbRpcChannel::on_mpSocket_readyRead()
 
         Q_ASSERT(msgLen == PB_HDR_SIZE);
 
-        type = qFromBigEndian<quint16>(p+0);
-        method = qFromBigEndian<quint16>(p+2);
-        len = qFromBigEndian<quint32>(p+4);
+        type = qFromBigEndian<quint16>(msg+0);
+        method = qFromBigEndian<quint16>(msg+2);
+        len = qFromBigEndian<quint32>(msg+4);
 
         //BUFDUMP(msg, PB_HDR_SIZE);
         //qDebug("type = %hu, method = %hu, len = %u", type, method, len);
@@ -207,8 +207,8 @@ void PbRpcChannel::on_mpSocket_readyRead()
             {
                 int l;
 
-                l = mpSocket->read((char*)msg, sizeof(msg));
-                blob->write((char*)msg, l);
+                l = mpSocket->read((char*)msgBuf, sizeof(msgBuf));
+                blob->write((char*)msgBuf, l);
                 cumLen += l;
             }
 
@@ -221,13 +221,13 @@ void PbRpcChannel::on_mpSocket_readyRead()
 
             if (!isPending)
             {
-                qDebug("not waiting for response");
+                qWarning("not waiting for response");
                 goto _error_exit2;
             }
 
             if (pendingMethodId != method)
             {
-                qDebug("invalid method id %d (expected = %d)", method, 
+                qWarning("invalid method id %d (expected = %d)", method, 
                     pendingMethodId);
                 goto _error_exit2;
             }
@@ -241,13 +241,13 @@ void PbRpcChannel::on_mpSocket_readyRead()
 
             if (!isPending)
             {
-                qDebug("not waiting for response");
+                qWarning("not waiting for response");
                 goto _error_exit;
             }
 
             if (pendingMethodId != method)
             {
-                qDebug("invalid method id %d (expected = %d)", method, 
+                qWarning("invalid method id %d (expected = %d)", method, 
                     pendingMethodId);
                 goto _error_exit;
             }
@@ -273,6 +273,47 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 controller->SetFailed("Required fields missing");
             }
             break;
+
+        case PB_MSG_TYPE_ERROR:
+        {
+            static quint32 cumLen = 0;
+            static QByteArray error;
+
+            while ((cumLen < len) && mpSocket->bytesAvailable())
+            {
+                int l;
+
+                l = mpSocket->read((char*)msgBuf, sizeof(msgBuf));
+                error.append(QByteArray((char*)msgBuf,l));
+                cumLen += l;
+            }
+
+            qDebug("%s: error rcvd %d/%d", __PRETTY_FUNCTION__, cumLen, len);
+
+            if (cumLen < len)
+                return;
+
+            static_cast<PbRpcController*>(controller)->SetFailed(
+                    QString::fromUtf8(error, len));
+
+            cumLen = 0;
+            error.resize(0);
+
+            if (!isPending)
+            {
+                qWarning("not waiting for response");
+                goto _error_exit2;
+            }
+
+            if (pendingMethodId != method)
+            {
+                qWarning("invalid method id %d (expected = %d)", method, 
+                    pendingMethodId);
+                goto _error_exit2;
+            }
+
+            break;
+        }
 
         default:
             qFatal("%s: unexpected type %d", __PRETTY_FUNCTION__, type);

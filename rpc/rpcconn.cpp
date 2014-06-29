@@ -101,6 +101,14 @@ void RpcConnection::start()
         this, SLOT(on_clientSock_error(QAbstractSocket::SocketError)));
 }
 
+void RpcConnection::writeHeader(char* header, quint16 type, quint16 method, 
+                                quint32 length)
+{
+    *((quint16*)(header+0)) = qToBigEndian(type);
+    *((quint16*)(header+2)) = qToBigEndian(method);
+    *((quint32*)(header+4)) = qToBigEndian(length);
+}
+
 void RpcConnection::sendRpcReply(PbRpcController *controller)
 {
     google::protobuf::Message *response = controller->response();
@@ -111,7 +119,14 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("rpc failed");
+        QByteArray err = controller->ErrorString().toUtf8();
+
+        qWarning("rpc failed (%s)", qPrintable(controller->ErrorString()));
+        len = err.size();
+        writeHeader(msg, PB_MSG_TYPE_ERROR, pendingMethodId, len);
+        clientSock->write(msg, PB_HDR_SIZE);
+        clientSock->write(err.constData(), len);
+
         goto _exit;
     }
 
@@ -121,10 +136,7 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
         len = blob->size();
         qDebug("is binary blob of len %d", len);
 
-        *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_BINBLOB)); // type
-        *((quint16*)(msg+2)) = qToBigEndian(quint16(pendingMethodId)); // method
-        (*(quint32*)(msg+4)) = qToBigEndian(quint32(len)); // len
-
+        writeHeader(msg, PB_MSG_TYPE_BINBLOB, pendingMethodId, len);
         clientSock->write(msg, PB_HDR_SIZE);
 
         blob->seek(0);
@@ -152,10 +164,7 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
     }
 
     len = response->ByteSize();
-
-    *((quint16*)(msg+0)) = qToBigEndian(quint16(PB_MSG_TYPE_RESPONSE)); // type
-    *((quint16*)(msg+2)) = qToBigEndian(quint16(pendingMethodId)); // method
-    *((quint32*)(msg+4)) = qToBigEndian(quint32(len)); // len
+    writeHeader(msg, PB_MSG_TYPE_RESPONSE, pendingMethodId, len);
 
     // Avoid printing stats since it happens once every couple of seconds
     if (pendingMethodId != 13)
