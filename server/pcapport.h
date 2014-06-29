@@ -116,6 +116,7 @@ protected:
         void run();
         void start();
         void stop();
+        bool isRunning();
     private:
         enum State 
         {
@@ -201,6 +202,7 @@ protected:
         void run();
         void start();
         void stop();
+        bool isRunning();
         QFile* captureFile();
 
     private:

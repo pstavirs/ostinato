@@ -597,8 +597,10 @@ _exit:
 void PcapPort::PortTransmitter::start()
 {
     // FIXME: return error
-    if (state_ == kRunning)
+    if (state_ == kRunning) {
+        qWarning("Transmit start requested but is already running!");
         return;
+    }
 
     state_ = kNotStarted;
     QThread::start();
@@ -614,6 +616,16 @@ void PcapPort::PortTransmitter::stop()
         while (state_ == kRunning)
             QThread::msleep(10);
     }
+    else {
+        // FIXME: return error
+        qWarning("Transmit stop requested but is not running!");
+        return;
+    }
+}
+
+bool PcapPort::PortTransmitter::isRunning()
+{
+    return (state_ == kRunning);
 }
 
 int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
@@ -808,8 +820,10 @@ _exit:
 void PcapPort::PortCapturer::start()
 {
     // FIXME: return error
-    if (state_ == kRunning)
+    if (state_ == kRunning) {
+        qWarning("Capture start requested but is already running!");
         return;
+    }
 
     state_ = kNotStarted;
     QThread::start();
@@ -825,6 +839,16 @@ void PcapPort::PortCapturer::stop()
         while (state_ == kRunning)
             QThread::msleep(10);
     }
+    else {
+        // FIXME: return error
+        qWarning("Capture stop requested but is not running!");
+        return;
+    }
+}
+
+bool PcapPort::PortCapturer::isRunning()
+{
+    return (state_ == kRunning);
 }
 
 QFile* PcapPort::PortCapturer::captureFile()

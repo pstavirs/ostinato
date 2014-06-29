@@ -74,6 +74,7 @@ class OstinatoRpcChannel(RpcChannel):
         MSG_TYPE_REQUEST = 1
         MSG_TYPE_RESPONSE = 2
         MSG_TYPE_BLOB = 3
+        MSG_TYPE_ERROR = 4
 
         error = ''
         try:
@@ -118,6 +119,8 @@ class OstinatoRpcChannel(RpcChannel):
                     self.log.debug('parsed response %s', response)
             elif msg_type == MSG_TYPE_BLOB:
                 response = resp
+            elif msg_type == MSG_TYPE_ERROR:
+                raise RpcError(unicode(resp, 'utf-8'))
             else:
                 raise RpcError('unknown RPC msg type %d' % msg_type)
 
@@ -152,7 +155,7 @@ class OstinatoRpcChannel(RpcChannel):
             self.log.exception(error)
             raise
         except RpcError as e:
-            error = 'ERROR: Unknown reply received for RPC %s() (%s) ' % (
+            error = 'ERROR: error received for RPC %s() (%s) ' % (
                     method.name, e)
             self.log.exception(error)
             raise

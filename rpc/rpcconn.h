@@ -45,6 +45,8 @@ public:
     static void connIdMsgHandler(QtMsgType type, const char* msg);
 
 private:
+    void writeHeader(char* header, quint16 type, quint16 method, 
+                     quint32 length);
     void sendRpcReply(PbRpcController *controller);
 
 signals:

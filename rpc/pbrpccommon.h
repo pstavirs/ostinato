@@ -35,5 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define PB_MSG_TYPE_REQUEST        1
 #define PB_MSG_TYPE_RESPONSE    2
 #define PB_MSG_TYPE_BINBLOB        3
+#define PB_MSG_TYPE_ERROR          4
 
 #endif
