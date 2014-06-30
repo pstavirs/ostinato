@@ -187,7 +187,7 @@ try:
 
     passed = False
     suite.test_begin('addStreamDuringTransmitFails')
-    drone.startTx(tx_port)
+    drone.startTransmit(tx_port)
     try:
         log.info('adding tx_stream %d' % sid.stream_id[0].id)
         drone.addStream(sid)
@@ -197,7 +197,7 @@ try:
         else:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
     passed = False
@@ -209,7 +209,7 @@ try:
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kMacFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kArpFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
-    drone.startTx(tx_port)
+    drone.startTransmit(tx_port)
     try:
         log.info('configuring tx_stream %d' % sid.stream_id[0].id)
         drone.modifyStream(scfg)
@@ -219,12 +219,12 @@ try:
         else:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
     passed = False
     suite.test_begin('deleteStreamDuringTransmitFails')
-    drone.startTx(tx_port)
+    drone.startTransmit(tx_port)
     try:
         log.info('deleting tx_stream %d' % sid.stream_id[0].id)
         drone.deleteStream(sid)
@@ -234,31 +234,31 @@ try:
         else:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
 
     # ----------------------------------------------------------------- #
-    # TESTCASE: Verify invoking startTx() during transmit is a NOP, 
+    # TESTCASE: Verify invoking startTransmit() during transmit is a NOP, 
     #           not a restart
     # ----------------------------------------------------------------- #
     passed = False
-    suite.test_begin('startTxDuringTransmitIsNopNotRestart')
+    suite.test_begin('startTransmitDuringTransmitIsNopNotRestart')
     drone.startCapture(rx_port)
-    drone.startTx(tx_port)
+    drone.startTransmit(tx_port)
     try:
         log.info('sleeping for 4s ...')
         time.sleep(4)
         log.info('starting transmit multiple times')
-        drone.startTx(tx_port)
+        drone.startTransmit(tx_port)
         time.sleep(1)
-        drone.startTx(tx_port)
+        drone.startTransmit(tx_port)
         time.sleep(1)
-        drone.startTx(tx_port)
+        drone.startTransmit(tx_port)
         time.sleep(1)
         log.info('waiting for transmit to finish ...')
         time.sleep(5)
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         drone.stopCapture(rx_port)
 
         buff = drone.getCaptureBuffer(rx_port.port_id[0])
@@ -272,7 +272,7 @@ try:
     except RpcError as e:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
 
@@ -284,7 +284,7 @@ try:
     suite.test_begin('startCaptureDuringTransmitIsNopNotRestart')
     try:
         drone.startCapture(rx_port)
-        drone.startTx(tx_port)
+        drone.startTransmit(tx_port)
         log.info('sleeping for 4s ...')
         time.sleep(4)
         log.info('starting capture multiple times')
@@ -296,7 +296,7 @@ try:
         time.sleep(1)
         log.info('waiting for transmit to finish ...')
         time.sleep(5)
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         drone.stopCapture(rx_port)
 
         buff = drone.getCaptureBuffer(rx_port.port_id[0])
@@ -310,26 +310,26 @@ try:
     except RpcError as e:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
-    # TESTCASE: Verify invoking stopTx() when transmit is not running
+    # TESTCASE: Verify invoking stopTransmit() when transmit is not running
     #           is a NOP 
     # ----------------------------------------------------------------- #
     passed = False
-    suite.test_begin('stopTxWhenTransmitNotRunningIsNop')
+    suite.test_begin('stopTransmitWhenTransmitNotRunningIsNop')
     try:
         tx_stats = drone.getStats(tx_port)
         log.info('--> (tx_stats)' + tx_stats.__str__())
         if tx_stats.port_stats[0].state.is_transmit_on:
             raise Exception('Unexpected transmit ON state')
         log.info('stopping transmit multiple times')
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         time.sleep(1)
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         time.sleep(1)
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
 
         # if we reached here, that means there was no exception
         passed = True
@@ -364,19 +364,19 @@ try:
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
-    # TESTCASE: Verify startCapture(), startTx() sequence captures the
+    # TESTCASE: Verify startCapture(), startTransmit() sequence captures the
     #           first packet
-    # TESTCASE: Verify stopTx(), stopCapture() sequence captures the
+    # TESTCASE: Verify stopTransmit(), stopCapture() sequence captures the
     #           last packet
     # ----------------------------------------------------------------- #
     passed = False
     suite.test_begin('startStopTransmitCaptureOrderCapturesAllPackets')
     try:
         drone.startCapture(rx_port)
-        drone.startTx(tx_port)
+        drone.startTransmit(tx_port)
         log.info('waiting for transmit to finish ...')
         time.sleep(12)
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         drone.stopCapture(rx_port)
 
         log.info('getting Rx capture buffer')
@@ -391,7 +391,7 @@ try:
     except RpcError as e:
             raise
     finally:
-        drone.stopTx(tx_port)
+        drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
     suite.complete()

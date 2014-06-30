@@ -69,11 +69,11 @@ public:
         const ::OstProto::StreamConfigList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
-    virtual void startTx(::google::protobuf::RpcController* controller,
+    virtual void startTransmit(::google::protobuf::RpcController* controller,
         const ::OstProto::PortIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
-    virtual void stopTx(::google::protobuf::RpcController* controller,
+    virtual void stopTransmit(::google::protobuf::RpcController* controller,
         const ::OstProto::PortIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);

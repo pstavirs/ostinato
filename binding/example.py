@@ -146,7 +146,7 @@ try:
     log.info('starting capture')
     drone.startCapture(rx_port)
     log.info('starting transmit')
-    drone.startTx(tx_port)
+    drone.startTransmit(tx_port)
 
     # wait for transmit to finish
     log.info('waiting for transmit to finish ...')
@@ -154,7 +154,7 @@ try:
 
     # stop transmit and capture
     log.info('stopping transmit')
-    drone.stopTx(tx_port)
+    drone.stopTransmit(tx_port)
     log.info('stopping capture')
     drone.stopCapture(rx_port)
 
