@@ -737,8 +737,8 @@ int GmpProtocol::protocolFrameSize(int streamIndex) const
 
 bool GmpProtocol::isProtocolFrameValueVariable() const
 {
-    // No fields vary for Ssm Query and Report
-    if (isSsmReport() || isSsmQuery())
+    // No fields vary for Ssm Report
+    if (isSsmReport())
         return false;
 
     // For all other msg types, check the group mode
@@ -753,8 +753,8 @@ int GmpProtocol::protocolFrameVariableCount() const
 {
     int count = 1;
 
-    // No fields vary for Ssm Query and Report
-    if (isSsmReport() || isSsmQuery())
+    // No fields vary for Ssm Report
+    if (isSsmReport())
         return count;
 
     // For all other msg types, check the group mode
