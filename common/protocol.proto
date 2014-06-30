@@ -237,8 +237,8 @@ service OstService {
     rpc deleteStream(StreamIdList) returns (Ack);
     rpc modifyStream(StreamConfigList) returns (Ack);
 
-    rpc startTx(PortIdList) returns (Ack);
-    rpc stopTx(PortIdList) returns (Ack);
+    rpc startTransmit(PortIdList) returns (Ack);
+    rpc stopTransmit(PortIdList) returns (Ack);
 
     rpc startCapture(PortIdList) returns (Ack);
     rpc stopCapture(PortIdList) returns (Ack);

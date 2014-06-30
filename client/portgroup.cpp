@@ -574,7 +574,7 @@ void PortGroup::startTx(QList<uint> *portList)
             portId->set_id(portList->at(i));
         }
 
-        serviceStub->startTx(controller, portIdList, ack,
+        serviceStub->startTransmit(controller, portIdList, ack,
                 NewCallback(this, &PortGroup::processStartTxAck, controller));
     }
 _exit:
@@ -609,7 +609,7 @@ void PortGroup::stopTx(QList<uint> *portList)
             portId->set_id(portList->at(i));
         }
 
-        serviceStub->stopTx(controller, portIdList, ack,
+        serviceStub->stopTransmit(controller, portIdList, ack,
                 NewCallback(this, &PortGroup::processStopTxAck, controller));
     }
 _exit:

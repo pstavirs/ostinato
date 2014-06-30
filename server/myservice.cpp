@@ -327,7 +327,7 @@ _exit:
     done->Run();
 }
 
-void MyService::startTx(::google::protobuf::RpcController* /*controller*/,
+void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
@@ -352,7 +352,7 @@ void MyService::startTx(::google::protobuf::RpcController* /*controller*/,
     done->Run();
 }
 
-void MyService::stopTx(::google::protobuf::RpcController* /*controller*/,
+void MyService::stopTransmit(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
