@@ -92,7 +92,7 @@ void IgmpConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
         break;
 
     case kIgmpV3Query:
-        asmGroup->hide();
+        asmGroup->show();
         ssmWidget->setCurrentIndex(kSsmQueryPage);
         ssmWidget->show();
         break;

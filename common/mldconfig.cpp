@@ -90,7 +90,7 @@ void MldConfigForm::on_msgTypeCombo_currentIndexChanged(int /*index*/)
         break;
 
     case kMldV2Query:
-        asmGroup->hide();
+        asmGroup->show();
         ssmWidget->setCurrentIndex(kSsmQueryPage);
         ssmWidget->show();
         break;
