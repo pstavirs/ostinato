@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #endif
 
 extern ProtocolManager *OstProtocolManager;
+extern char *version;
+extern char *revision;
 
 int myport;
 
@@ -59,6 +61,9 @@ int main(int argc, char *argv[])
         exitCode = -1;
         goto _exit;
     }
+
+    qDebug("Version: %s", version);
+    qDebug("Revision: %s", revision);
 
 #ifdef Q_OS_UNIX
     struct sigaction sa;
