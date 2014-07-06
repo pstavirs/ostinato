@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 using ::google::protobuf::NewCallback;
 
 extern QMainWindow *mainWindow;
+extern char *version;
 
 quint32 PortGroup::mPortGroupAllocId = 0;
 
@@ -46,6 +47,8 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
 
     statsController = new PbRpcController(portIdList_, portStatsList_);
     isGetStatsPending_ = false;
+
+    compat = kUnknown;
 
     reconnect = false;
     reconnectAfter = kMinReconnectWaitTime;
@@ -112,19 +115,62 @@ void PortGroup::on_rpcChannel_stateChanged(QAbstractSocket::SocketState state)
 
 void PortGroup::on_rpcChannel_connected()
 {
-    OstProto::Void *void_ = new OstProto::Void;
-    OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+    OstProto::VersionInfo *verInfo = new OstProto::VersionInfo;
+    OstProto::VersionCompatibility *verCompat = 
+            new OstProto::VersionCompatibility;
     
     qDebug("connected\n");
     emit portGroupDataChanged(mPortGroupId);
 
     reconnectAfter = kMinReconnectWaitTime;
 
-    qDebug("requesting portlist ...");
+    qDebug("requesting version check ...");
+    verInfo->set_version(version);
     
-    PbRpcController *controller = new PbRpcController(void_, portIdList);
-    serviceStub->getPortIdList(controller, void_, portIdList, 
-            NewCallback(this, &PortGroup::processPortIdList, controller));
+    PbRpcController *controller = new PbRpcController(verInfo, verCompat);
+    serviceStub->checkVersion(controller, verInfo, verCompat, 
+            NewCallback(this, &PortGroup::processVersionCompatibility, 
+                        controller));
+}
+
+void PortGroup::processVersionCompatibility(PbRpcController *controller)
+{
+    OstProto::VersionCompatibility *verCompat 
+        = static_cast<OstProto::VersionCompatibility*>(controller->response());
+
+    Q_ASSERT(verCompat != NULL);
+
+    qDebug("got version result ...");
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
+        goto _error_exit;
+    }
+
+    if (verCompat->result() == OstProto::VersionCompatibility::kIncompatible) {
+        qWarning("incompatible version %s (%s)", version, 
+                qPrintable(QString::fromStdString(verCompat->notes())));
+        compat = kIncompatible;
+        emit portGroupDataChanged(mPortGroupId);
+        goto _error_exit;
+    }
+
+    compat = kCompatible;
+
+    {
+        OstProto::Void *void_ = new OstProto::Void;
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+
+        qDebug("requesting portlist ...");
+        PbRpcController *controller = new PbRpcController(void_, portIdList);
+        serviceStub->getPortIdList(controller, void_, portIdList, 
+                NewCallback(this, &PortGroup::processPortIdList, controller));
+    }
+
+_error_exit:
+    delete controller;
 }
 
 void PortGroup::on_rpcChannel_disconnected()
@@ -151,6 +197,9 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
 {
     qDebug("%s: error %d", __FUNCTION__, socketError);
     emit portGroupDataChanged(mPortGroupId);
+
+    if (socketError == QAbstractSocket::RemoteHostClosedError)
+        reconnect = false;
 
     qDebug("%s: state %d", __FUNCTION__, rpcChannel->state());
     if ((rpcChannel->state() == QAbstractSocket::UnconnectedState) && reconnect)
@@ -188,7 +237,8 @@ void PortGroup::processPortIdList(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _error_exit;
     }
 
@@ -239,7 +289,8 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _error_exit;
     }
 
@@ -369,7 +420,8 @@ void PortGroup::processModifyPortAck(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _exit;
     }
 
@@ -400,7 +452,8 @@ void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _exit;
     }
 
@@ -450,7 +503,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _exit;
     }
 
@@ -521,7 +575,8 @@ void PortGroup::processStreamConfigList(int portIndex,
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(controller->ErrorString()));
         goto _exit;
     }
 
@@ -781,7 +836,8 @@ void PortGroup::processPortStatsList()
 
     if (statsController->Failed())
     {
-        qDebug("%s: rpc failed", __FUNCTION__);
+        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+                qPrintable(statsController->ErrorString()));
         goto _error_exit;
     }
 

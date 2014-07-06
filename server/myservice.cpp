@@ -33,6 +33,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../rpc/pbrpccontroller.h"
 #include "portmanager.h"
 
+#include <QStringList>
+
+
+extern char *version;
+
 MyService::MyService()
 {
     PortManager *portManager = PortManager::instance();
@@ -529,5 +534,48 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
 
     //! \todo (LOW): fill-in response "Ack"????
 
+    done->Run();
+}
+
+void MyService::checkVersion(::google::protobuf::RpcController* controller,
+    const ::OstProto::VersionInfo* request,
+    ::OstProto::VersionCompatibility* response,
+    ::google::protobuf::Closure* done)
+{
+    QString myVersion(version);
+    QString clientVersion;
+    QStringList my, client;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    my = myVersion.split('.');
+
+    Q_ASSERT(my.size() >= 2);
+
+    clientVersion = QString::fromStdString(request->version());
+    client = clientVersion.split('.');
+
+    qDebug("client = %s, my = %s", 
+            qPrintable(clientVersion), qPrintable(myVersion));
+    
+    if (client.size() < 2)
+        goto _invalid_version;
+
+    // Compare only major and minor numbers
+    if (client[0] == my[0] && client[1] == my[1]) {
+        response->set_result(OstProto::VersionCompatibility::kCompatible);
+    }
+    else {
+        response->set_result(OstProto::VersionCompatibility::kIncompatible);
+        response->set_notes(QString("Drone needs client version %1.%2.x")
+                .arg(my[0], my[1]).toStdString());
+        static_cast<PbRpcController*>(controller)->TriggerDisconnect();
+    }
+
+    done->Run();
+    return;
+
+_invalid_version:
+    controller->SetFailed("invalid version information");
     done->Run();
 }

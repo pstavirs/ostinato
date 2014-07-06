@@ -50,6 +50,8 @@ RpcConnection::RpcConnection(int socketDescriptor,
 
     isPending = false;
     pendingMethodId = -1; // don't care as long as isPending is false
+
+    isCompatCheckDone = false;
 }
 
 RpcConnection::~RpcConnection()
@@ -180,7 +182,13 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
     response->SerializeToZeroCopyStream(outStream);
     outStream->Flush();
 
+    if (pendingMethodId == 15)
+        isCompatCheckDone = true;
+
 _exit:
+    if (controller->Disconnect())
+        clientSock->disconnectFromHost();
+
     delete controller;
     isPending = false;
 }
@@ -210,6 +218,7 @@ void RpcConnection::on_clientSock_dataAvail()
     const ::google::protobuf::MethodDescriptor    *methodDesc;
     ::google::protobuf::Message    *req, *resp;
     PbRpcController *controller;
+    QString error;
 
     // Do we have enough bytes for a msg header? 
     // If yes, peek into the header and get msg length
@@ -241,6 +250,23 @@ void RpcConnection::on_clientSock_dataAvail()
     {
         qDebug("server(%s): unexpected msg type %d (expected %d)", __FUNCTION__,
             type, PB_MSG_TYPE_REQUEST);
+        error = QString("unexpected msg type %1; expected %2")
+                .arg(type).arg(PB_MSG_TYPE_REQUEST);
+        goto _error_exit;
+    }
+
+    // If RPC is not checkVersion, ensure compat check is already done
+    if (!isCompatCheckDone && method != 15) {
+        qDebug("server(%s): version compatibility check pending", 
+                __FUNCTION__);
+        error = "version compatibility check pending";
+        goto _error_exit;
+    }
+
+    if (method >= service->GetDescriptor()->method_count())
+    {
+        qDebug("server(%s): invalid method id %d", __FUNCTION__, method);
+        error = QString("invalid RPC method %1").arg(method);
         goto _error_exit;
     }
 
@@ -248,13 +274,18 @@ void RpcConnection::on_clientSock_dataAvail()
     if (!methodDesc)
     {
         qDebug("server(%s): invalid method id %d", __FUNCTION__, method);
-        goto _error_exit; //! \todo Return Error to client
+        error = QString("invalid RPC method %1").arg(method);
+        goto _error_exit;
     }
 
     if (isPending)
     {
         qDebug("server(%s): rpc pending, try again", __FUNCTION__);
-        goto _error_exit; //! \todo Return Error to client
+        error = QString("RPC %1() is pending; only one RPC allowed at a time; "
+                        "try again!").arg(QString::fromStdString(
+                            service->GetDescriptor()->method(
+                                pendingMethodId)->name()));
+        goto _error_exit;
     }
 
     pendingMethodId = method;
@@ -278,7 +309,11 @@ void RpcConnection::on_clientSock_dataAvail()
                "missing = \n%s----->",
                 method, req->DebugString().c_str(),
                 req->InitializationErrorString().c_str());
-        qFatal("exiting");
+        error = QString("RPC %1() missing required fields in request - %2")
+                    .arg(QString::fromStdString(
+                                service->GetDescriptor()->method(
+                                    pendingMethodId)->name()),
+                        QString(req->InitializationErrorString().c_str()));
         delete req;
         delete resp;
 
@@ -306,7 +341,14 @@ void RpcConnection::on_clientSock_dataAvail()
 _error_exit:
     inStream->Skip(len);
 _error_exit2:
-    qDebug("server(%s): discarding msg from client", __FUNCTION__);
+    qDebug("server(%s): return error %s for msg from client", __FUNCTION__,
+            qPrintable(error));
+    pendingMethodId = method;
+    isPending = true;
+    controller = new PbRpcController(NULL, NULL);
+    controller->SetFailed(error);
+    controller->TriggerDisconnect();
+    sendRpcReply(controller);
     return;
 }
 

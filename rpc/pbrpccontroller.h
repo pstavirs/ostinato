@@ -44,7 +44,12 @@ public:
     ::google::protobuf::Message* response() { return response_; }
 
     // Client Side Methods
-    void Reset() { failed = false; blob = NULL; errStr = ""; }
+    void Reset() { 
+        failed = false; 
+        disconnect = false; 
+        blob = NULL; 
+        errStr = ""; 
+    }
     bool Failed() const { return failed; }
     void StartCancel() { /*! \todo (MED) */}
     std::string ErrorText() const { return errStr.toStdString(); }
@@ -59,6 +64,12 @@ public:
     void NotifyOnCancel(::google::protobuf::Closure* /* callback */) {
         /*! \todo (MED) */ 
     }
+    void TriggerDisconnect() {
+        disconnect = true;
+    }
+    bool Disconnect() const {
+        return disconnect;
+    }
 
     // srivatsp added
     QIODevice* binaryBlob() { return blob; };
@@ -66,6 +77,7 @@ public:
 
 private:
     bool failed;
+    bool disconnect;
     QIODevice *blob;
     QString errStr;
     ::google::protobuf::Message *request_;

@@ -21,6 +21,19 @@ package OstProto;
 option cc_generic_services = true;
 option py_generic_services = true;
 
+message VersionInfo {
+    required string version = 1;
+}
+
+message VersionCompatibility {
+    enum Compatibility {
+        kIncompatible = 0;
+        kCompatible = 1;
+    }
+    required Compatibility result = 1;
+    optional string notes = 2;
+}
+
 message StreamId {
     required uint32 id = 1;
 }
@@ -246,5 +259,7 @@ service OstService {
 
     rpc getStats(PortIdList) returns (PortStatsList);
     rpc clearStats(PortIdList) returns (Ack);
+
+    rpc checkVersion(VersionInfo) returns (VersionCompatibility);
 }
 
