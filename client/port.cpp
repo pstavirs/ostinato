@@ -121,7 +121,7 @@ void Port::recalculateAverageRates()
 
 void Port::setAveragePacketRate(double packetsPerSec)
 {
-    double rate;
+    double rate = 0;
     double pps = 0;
     double bps = 0;
     int n = 0;

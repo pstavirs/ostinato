@@ -363,7 +363,7 @@ bool StreamBase::setBurstRate(double burstsPerSec)
 /*! Convenience Function */
 double StreamBase::averagePacketRate() const
 {
-    double avgPacketRate;
+    double avgPacketRate = 0;
 
     switch (sendUnit())
     {

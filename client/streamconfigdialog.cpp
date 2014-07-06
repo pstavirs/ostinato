@@ -811,6 +811,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
 
         ret = skipProtocols(level-1);
         Q_ASSERT(ret == true);
+        Q_UNUSED(ret);
 
         Q_ASSERT(oldId != newId);
         Q_ASSERT(newId != ButtonIdOther);

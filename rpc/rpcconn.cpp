@@ -149,6 +149,7 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
             len = blob->read(msg, sizeof(msgBuf));
             l = clientSock->write(msg, len);
             Q_ASSERT(l == len);
+            Q_UNUSED(l);
         }
 
         goto _exit;
@@ -355,7 +356,7 @@ _error_exit2:
     return;
 }
 
-void RpcConnection::connIdMsgHandler(QtMsgType type, const char* msg)
+void RpcConnection::connIdMsgHandler(QtMsgType /*type*/, const char* msg)
 {
     if (connId.hasLocalData()) {
         QString newMsg(*connId.localData());
