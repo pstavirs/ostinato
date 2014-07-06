@@ -52,12 +52,12 @@ class OstinatoRpcChannel(RpcChannel):
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.log.debug('opening socket')
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def connect(self, host, port):
         self.peer = '%s:%d' % (host, port)
         self.log.debug('connecting to %s', self.peer)
         try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((host, port))
         except socket.error as e:
             error = 'ERROR: Unable to connect to Drone %s (%s)' % (

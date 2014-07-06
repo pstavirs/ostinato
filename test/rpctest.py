@@ -63,6 +63,7 @@ class TestSuite:
 host_name = '127.0.0.1'
 tx_port_number = -1
 rx_port_number = -1 
+drone_version = ['0', '0', '0']
 
 if sys.platform == 'win32':
     tshark = r'C:\Program Files\Wireshark\tshark.exe'
@@ -91,7 +92,123 @@ drone = DroneProxy(host_name)
 
 try:
     # ----------------------------------------------------------------- #
-    # Baseline Configuration
+    # TESTCASE: Verify any RPC before checkVersion() fails and the server
+    #           closes the connection
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('anyRpcBeforeCheckVersionFails')
+    drone.channel.connect(drone.host, drone.port)
+    try:
+        port_id_list = drone.getPortIdList()
+    except RpcError as e:
+        if ('compatibility check pending' in str(e)):
+            passed = True
+        else:
+            raise
+    finally:
+        drone.channel.disconnect()
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # TESTCASE: Verify DroneProxy.connect() fails for incompatible version
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('connectFailsForIncompatibleVersion')
+    try:
+        drone.proxy_version = '0.1.1'
+        drone.connect()
+    except RpcError as e:
+        if ('needs client version' in str(e)):
+            passed = True
+            drone_version = str(e).split()[-1].split('.')
+        else:
+            raise
+    finally:
+        drone.proxy_version = None
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # TESTCASE: Verify checkVersion() fails for invalid client version format
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('checkVersionFailsForInvalidClientVersion')
+    try:
+        drone.proxy_version = '0-1-1'
+        drone.connect()
+    except RpcError as e:
+        if ('invalid version' in str(e)):
+            passed = True
+        else:
+            raise
+    finally:
+        drone.proxy_version = None
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # TESTCASE: Verify checkVersion() returns incompatible if the 'major'
+    #           part of the <major.minor.revision> numbering format is
+    #           different than the server's version and the server closes
+    #           the connection
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('checkVersionReturnsIncompatForDifferentMajorVersion')
+    try:
+        drone.proxy_version = (str(int(drone_version[0])+1)
+                                + '.' + drone_version[1])
+        drone.connect()
+    except RpcError as e:
+        #FIXME: How to check for a closed connection?
+        if ('needs client version' in str(e)):
+            passed = True
+        else:
+            raise
+    finally:
+        drone.proxy_version = None
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # TESTCASE: Verify checkVersion() returns incompatible if the 'minor'
+    #           part of the <major.minor.revision> numbering format is
+    #           different than the server's version and the server closes
+    #           the connection
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('checkVersionReturnsIncompatForDifferentMinorVersion')
+    try:
+        drone.proxy_version = (drone_version[0]
+                                + '.' + str(int(drone_version[1])+1))
+        drone.connect()
+    except RpcError as e:
+        #FIXME: How to check for a closed connection?
+        if ('needs client version' in str(e)):
+            passed = True
+        else:
+            raise
+    finally:
+        drone.proxy_version = None
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # TESTCASE: Verify checkVersion() returns compatible if the 'revision'
+    #           part of the <major.minor.revision> numbering format is
+    #           different than the server's version
+    # ----------------------------------------------------------------- #
+    passed = False
+    suite.test_begin('checkVersionReturnsCompatForDifferentRevisionVersion')
+    try:
+        drone.proxy_version = (drone_version[0]
+                                + '.' + drone_version[1]
+                                + '.' + '999')
+        drone.connect()
+        passed = True
+    except RpcError as e:
+        raise
+    finally:
+        drone.proxy_version = None
+        suite.test_end(passed)
+
+    # ----------------------------------------------------------------- #
+    # Baseline Configuration for subsequent testcases
     # ----------------------------------------------------------------- #
 
     # connect to drone
@@ -125,7 +242,7 @@ try:
         log.warning('loopback port not found')
         sys.exit(1)
 
-    print('Using port %d as tx/rx port(s)')
+    print('Using port %d as tx/rx port(s)' % tx_port_number)
 
     tx_port = ost_pb.PortIdList()
     tx_port.port_id.add().id = tx_port_number;
@@ -175,6 +292,31 @@ try:
     log.info('clearing tx/rx stats')
     drone.clearStats(tx_port)
     drone.clearStats(rx_port)
+
+    # ----------------------------------------------------------------- #
+    # TODO:
+    # TESTCASE: Verify a RPC with missing required fields in request fails
+    #           and subsequently passes when the fields are initialized
+    # ----------------------------------------------------------------- #
+#    passed = False
+#    suite.test_begin('rpcWithMissingRequiredFieldsFails')
+#    pid = ost_pb.PortId()
+#    try:
+#        sid_list = drone.getStreamIdList(pid)
+#    except RpcError as e:
+#        if ('missing required fields in request' in str(e)):
+#            passed = True
+#        else:
+#            raise
+#
+#    try:
+#        pid.id = tx_port_number
+#        sid_list = drone.getStreamIdList(pid)
+#    except RpcError as e:
+#        passed = False
+#        raise
+#    finally:
+#        suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
     # TESTCASE: Verify invoking addStream() during transmit fails

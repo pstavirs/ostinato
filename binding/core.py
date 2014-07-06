@@ -16,8 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os
-from rpc import OstinatoRpcChannel, OstinatoRpcController
+from rpc import OstinatoRpcChannel, OstinatoRpcController, RpcError
 import protocols.protocol_pb2 as ost_pb
+from __init__ import __version__
 
 class DroneProxy(object):
 
@@ -41,6 +42,12 @@ class DroneProxy(object):
 
     def connect(self):
         self.channel.connect(self.host, self.port)
+        ver = ost_pb.VersionInfo()
+        ver.version = __version__
+        compat = self.checkVersion(ver)
+        if compat.result == ost_pb.VersionCompatibility.kIncompatible:
+            raise RpcError('incompatible version %s (%s)' % 
+                    (ver.version, compat.notes))
 
     def disconnect(self):
         self.channel.disconnect()

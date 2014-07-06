@@ -43,6 +43,7 @@ class PortGroup : public QObject {
     Q_OBJECT
 
 private:
+    enum { kIncompatible, kCompatible, kUnknown } compat;
     static quint32 mPortGroupAllocId;
     quint32        mPortGroupId;
     QString        mUserAlias;            // user defined
@@ -69,9 +70,16 @@ public:
         quint16 port = DEFAULT_SERVER_PORT); 
     ~PortGroup();
 
-    void connectToHost() { reconnect = true; rpcChannel->establish(); }
-    void connectToHost(QHostAddress ip, quint16 port) 
-        { reconnect = true; rpcChannel->establish(ip, port); }
+    void connectToHost() { 
+        reconnect = true;
+        compat = kUnknown;
+        rpcChannel->establish(); 
+    }
+    void connectToHost(QHostAddress ip, quint16 port) { 
+        reconnect = true;
+        compat = kUnknown;
+        rpcChannel->establish(ip, port);
+    }
     void disconnectFromHost() { reconnect = false; rpcChannel->tearDown(); }
 
     int numPorts() const { return mPorts.size(); }
@@ -84,9 +92,13 @@ public:
         { return rpcChannel->serverAddress(); } 
     quint16 serverPort() const 
         { return rpcChannel->serverPort(); } 
-    QAbstractSocket::SocketState state() const
-        { return rpcChannel->state(); }    
+    QAbstractSocket::SocketState state() const {
+        if (compat == kIncompatible)
+            return QAbstractSocket::SocketState(-1);
+        return rpcChannel->state(); 
+    }    
 
+    void processVersionCompatibility(PbRpcController *controller);
     void processPortIdList(PbRpcController *controller);
     void processPortConfigList(PbRpcController *controller);
 

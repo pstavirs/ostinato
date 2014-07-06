@@ -68,6 +68,8 @@ private:
 
     bool isPending;
     int pendingMethodId;
+
+    bool isCompatCheckDone;
 };
 
 #endif

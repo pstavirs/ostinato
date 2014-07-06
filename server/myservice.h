@@ -97,6 +97,10 @@ public:
         const ::OstProto::PortIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
+    virtual void checkVersion(::google::protobuf::RpcController* controller,
+        const ::OstProto::VersionInfo* request,
+        ::OstProto::VersionCompatibility* response,
+        ::google::protobuf::Closure* done);
 
 private:
     /* 
