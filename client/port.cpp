@@ -192,7 +192,7 @@ void Port::setAveragePacketRate(double packetsPerSec)
 
 void Port::setAverageBitRate(double bitsPerSec)
 {
-    double rate;
+    double rate = 0;
     double pps = 0;
     double bps = 0;
     int n = 0;
