@@ -96,7 +96,7 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Message *response,
     ::google::protobuf::Closure* done)
 {
-    char* const msg = (char*) &msgBuf[0];
+    char* msg = (char*) &msgBuf[0];
     int     len;
     bool    ret;
   
@@ -157,6 +157,7 @@ void PbRpcChannel::CallMethod(
     mpSocket->write(msg, PB_HDR_SIZE);
     ret = req->SerializeToZeroCopyStream(outStream);
     Q_ASSERT(ret == true);
+    Q_UNUSED(ret);
     outStream->Flush();
 }
 
@@ -182,6 +183,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
         msgLen = mpSocket->read((char*)msg, PB_HDR_SIZE);
 
         Q_ASSERT(msgLen == PB_HDR_SIZE);
+        Q_UNUSED(msgLen);
 
         type = qFromBigEndian<quint16>(msg+0);
         method = qFromBigEndian<quint16>(msg+2);

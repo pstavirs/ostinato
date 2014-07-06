@@ -56,7 +56,7 @@ public:
 
     // Server Side Methods
     void SetFailed(const QString &reason) 
-        { failed = true; errStr = reason; qWarning(qPrintable(errStr)); }
+        { failed = true; errStr = reason; qWarning("%s", qPrintable(errStr)); }
     void SetFailed(const std::string &reason) 
         { SetFailed(QString::fromStdString(reason)); }
     QString ErrorString() const { return errStr; }
