@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-sys.path.append('../binding')
+sys.path.insert(1, '../binding')
 from core import ost_pb, DroneProxy
 from rpc import RpcError
 from protocols.mac_pb2 import mac
