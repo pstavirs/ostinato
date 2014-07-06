@@ -219,6 +219,7 @@ void RpcConnection::on_clientSock_dataAvail()
     ::google::protobuf::Message    *req, *resp;
     PbRpcController *controller;
     QString error;
+    bool disconnect = false;
 
     // Do we have enough bytes for a msg header? 
     // If yes, peek into the header and get msg length
@@ -260,6 +261,7 @@ void RpcConnection::on_clientSock_dataAvail()
         qDebug("server(%s): version compatibility check pending", 
                 __FUNCTION__);
         error = "version compatibility check pending";
+        disconnect = true;
         goto _error_exit;
     }
 
@@ -347,7 +349,8 @@ _error_exit2:
     isPending = true;
     controller = new PbRpcController(NULL, NULL);
     controller->SetFailed(error);
-    controller->TriggerDisconnect();
+    if (disconnect)
+        controller->TriggerDisconnect();
     sendRpcReply(controller);
     return;
 }
