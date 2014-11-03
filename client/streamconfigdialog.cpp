@@ -136,8 +136,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     mpAvailableProtocolsModel = new QStringListModel(
         OstProtocolManager->protocolDatabase(), this);
     lvAllProtocols->setModel(mpAvailableProtocolsModel);
+    lvAllProtocols->setEditTriggers(QAbstractItemView::NoEditTriggers);
     mpSelectedProtocolsModel = new QStringListModel(this);
     lvSelectedProtocols->setModel(mpSelectedProtocolsModel);
+    lvSelectedProtocols->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 
     connect(lvAllProtocols->selectionModel(),
