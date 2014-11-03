@@ -1138,6 +1138,9 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
           <property name="selectionBehavior" >
            <enum>QAbstractItemView::SelectItems</enum>
           </property>
+          <property name="verticalScrollMode" >
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
           <property name="wordWrap" >
            <bool>true</bool>
           </property>
