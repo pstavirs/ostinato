@@ -516,6 +516,8 @@ void StreamConfigDialog::on_tbDelete_clicked()
 
     Q_CHECK_PTR(p);
     _iter->remove();
+    // Free both protocol and associated widget
+    delete _protocolWidgets.take(p);
     delete p;
 
     updateSelectProtocolsAdvancedWidget();
@@ -835,6 +837,8 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
                             newId, mpStream));
                 else
                     _iter->remove();
+                // Free both protocol and associated widget
+                delete _protocolWidgets.take(p);
                 delete p;
                 if (level == ProtoPayload)
                 {
@@ -842,6 +846,8 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
                     {
                         p = _iter->next();
                         _iter->remove();
+                        // Free both protocol and associated widget
+                        delete _protocolWidgets.take(p);
                         delete p;
                     }
                 }
