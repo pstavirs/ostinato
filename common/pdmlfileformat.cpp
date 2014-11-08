@@ -141,7 +141,14 @@ bool PdmlFileFormat::isMyFileFormat(const QString fileName)
     if (xml.hasError() || !xml.isStartDocument())
         goto _close_exit;
 
-    xml.readNext();
+    // skip everything until the start of the first element
+    while (!xml.isStartElement()) 
+    {
+        xml.readNext();
+        if (xml.hasError())
+            goto _close_exit;
+    }
+
     if (!xml.hasError() && xml.isStartElement() && (xml.name() == "pdml"))
         ret = true;
     else
