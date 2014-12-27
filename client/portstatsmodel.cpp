@@ -77,7 +77,7 @@ void PortStatsModel::getDomainIndexes(const QModelIndex &index,
     if (portGroupIdx)
     {
         if (numPorts.at(portGroupIdx -1))
-            portIdx = (portNum - 1) % numPorts.at(portGroupIdx - 1); 
+            portIdx = (portNum - 1) - numPorts.at(portGroupIdx - 1); 
         else
             portIdx = portNum - 1; 
     }
