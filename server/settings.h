@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2014 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,30 +17,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _SERVER_PORT_MANAGER_H
-#define _SERVER_PORT_MANAGER_H
+#ifndef _SETTINGS_H
+#define _SETTINGS_H
 
-#include <QList>
-#include "abstractport.h"
+#include <QSettings>
+#include <QString>
 
-class PortManager
-{
-public:
-    PortManager();
-    ~PortManager();
+extern QSettings *appSettings;
 
-    int portCount() { return portList_.size(); }
-    AbstractPort* port(int id) { return portList_[id]; }
-
-    static PortManager* instance();
-
-private:
-    bool filterAcceptsPort(const char *name);
-
-private:
-    QList<AbstractPort*>    portList_;
-
-    static PortManager      *instance_;
-};
+//
+// PortList Section Keys
+//
+const QString kPortListIncludeKey("PortList/Include");
+const QString kPortListExcludeKey("PortList/Exclude");
 
 #endif
