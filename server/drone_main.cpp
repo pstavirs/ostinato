@@ -72,9 +72,6 @@ int main(int argc, char *argv[])
                                     app.organizationName(), 
                                     app.applicationName().toLower());
 
-    if (QFile::exists(appSettings->fileName()))
-        qDebug("Read settings from %s", qPrintable(appSettings->fileName()));
-
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();
 
