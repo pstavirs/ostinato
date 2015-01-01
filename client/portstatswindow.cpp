@@ -148,7 +148,7 @@ void PortStatsWindow::on_tbClearAll_clicked()
 {
     for (int i = 0; i < pgl->numPortGroups(); i++)
     {
-        pgl->portGroupByIndex(0).clearPortStats();
+        pgl->portGroupByIndex(i).clearPortStats();
     }
 }
 
