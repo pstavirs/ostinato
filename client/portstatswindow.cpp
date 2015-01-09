@@ -158,23 +158,29 @@ void PortStatsWindow::on_tbFilter_clicked()
     QList<uint>    currentColumns, newColumns;
     PortStatsFilterDialog    dialog;
 
-    for(int i = 0; i < model->columnCount(); i++)
-        if (!tvPortStats->isColumnHidden(i))
-            currentColumns.append(i);
+    // create the input list for the filter dialog -
+    // list of logical-indexes ordered by their current visual indexes
+    for(int vi = 0; vi < model->columnCount(); vi++) {
+        int li = tvPortStats->horizontalHeader()->logicalIndex(vi);
+        if (!tvPortStats->isColumnHidden(li)) {
+            currentColumns.append(li);
+        }
+    }
 
+    // return list from the filter dialog -
+    // list of logical-indexes ordered by their new visual indexes
     newColumns = dialog.getItemList(&ok, model, Qt::Horizontal, currentColumns);
 
     if (ok)
     {
+        QHeaderView *hv = tvPortStats->horizontalHeader();
+
         // hide/show sections first ...
-        for(int i = 0; i < model->columnCount(); i++)
-            tvPortStats->setColumnHidden(i, !newColumns.contains(i));
+        for(int li = 0; li < model->columnCount(); li++)
+            tvPortStats->setColumnHidden(li, !newColumns.contains(li));
 
         // ... then for the 'shown' columns, set the visual index
-        for(int i = 0; i < newColumns.size(); i++)
-        {
-            tvPortStats->horizontalHeader()->moveSection(tvPortStats->
-                    horizontalHeader()->visualIndex(newColumns.at(i)), i);
-        }
+        for(int vi = 0; vi < newColumns.size(); vi++)
+            hv->moveSection(hv->visualIndex(newColumns.at(vi)), vi);
     }
 }
