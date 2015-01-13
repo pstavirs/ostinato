@@ -262,10 +262,17 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldFrameValue:
                 case FieldTextValue:
-                    if (data.is_override_next_header())
+                    if (data.is_override_next_header()) {
                         nextHdr = data.next_header();
-                    else
+                    }
+                    else {
                         nextHdr = payloadProtocolId(ProtocolIdIp);
+                        if ((nextHdr == 0) 
+                                && next 
+                                && (next->protocolIdType() == ProtocolIdNone)) {
+                            nextHdr = 0x3b; // IPv6 No-Next-Header
+                        }
+                    }
                     break;
                 default:
                     nextHdr = 0; // avoid the 'maybe used unitialized' warning
