@@ -50,7 +50,8 @@ HEADERS += \
     settings.h \
     streamconfigdialog.h \
     streamlistdelegate.h \
-    streammodel.h 
+    streammodel.h \
+    updater.h
 
 FORMS += \
     about.ui \
@@ -81,7 +82,8 @@ SOURCES += \
     preferences.cpp \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
-    streammodel.cpp 
+    streammodel.cpp \
+    updater.cpp
 
 
 QMAKE_DISTCLEAN += object_script.*
