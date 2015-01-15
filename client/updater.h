@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2015 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,39 +17,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _MAIN_WINDOW_H
-#define _MAIN_WINDOW_H
+#ifndef _UPDATER_H
+#define _UPDATER_H
 
-#include "ui_mainwindow.h"
-#include <QMainWindow>
+#include <QHttpResponseHeader>
+#include <QString>
 
-class PortsWindow;
-class PortStatsWindow;
+class QHttp;
+class QTemporaryFile;
 
-class QDockWidget;
-class QProcess;
-
-class MainWindow : public QMainWindow, private Ui::MainWindow
+class Updater : public QObject
 {
     Q_OBJECT
-
-private:
-    QProcess        *localServer_;
-    PortsWindow        *portsWindow;
-    PortStatsWindow *statsWindow;
-    QDockWidget        *portsDock;
-    QDockWidget        *statsDock;
-
 public:
-    MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    Updater();
+    virtual ~Updater();
+    void checkForNewVersion();
+    static bool isVersionNewer(QString newVersion, QString curVersion);
 
-public slots:
-    void on_actionPreferences_triggered();
-    void on_actionHelpAbout_triggered();
+signals:
+    void newVersionAvailable(QString);
 
 private slots:
-    void onNewVersion(QString version);
+    void stateUpdate(int state);
+    void responseReceived(QHttpResponseHeader response);
+    void parseXml(int id, bool error);
+
+private:
+    QHttp *http_;
+    QTemporaryFile *file_;
 };
 
 #endif
