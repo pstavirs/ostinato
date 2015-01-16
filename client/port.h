@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PORT_H
 #define _PORT_H
 
+#include <QDir>
 #include <QList>
 #include <QString>
 #include <QTemporaryFile>
@@ -101,7 +102,10 @@ public:
     QTemporaryFile* getCaptureFile() 
     {
         delete capFile_;
-        capFile_ = new QTemporaryFile();
+        capFile_ = new QTemporaryFile(QString(QDir::tempPath())
+                                        .append("/")
+                                        .append(name())
+                                        .append(".XXXXXX"));
         return capFile_; 
     }
 
