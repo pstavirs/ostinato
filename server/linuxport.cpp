@@ -40,6 +40,15 @@ QList<LinuxPort*> LinuxPort::allPorts_;
 LinuxPort::StatsMonitor *LinuxPort::monitor_;
 
 const quint32 kMaxValue32 = 0xffffffff;
+const quint64 kMaxValue64 = 0xffffffffffffffffULL;
+
+#ifdef HAVE_IFLA_STATS64
+#define X_IFLA_STATS IFLA_STATS64
+typedef struct rtnl_link_stats64 x_rtnl_link_stats;
+#else
+#define X_IFLA_STATS IFLA_STATS
+typedef struct rtnl_link_stats x_rtnl_link_stats;
+#endif
 
 LinuxPort::LinuxPort(int id, const char *device)
     : PcapPort(id, device) 
@@ -62,7 +71,10 @@ LinuxPort::LinuxPort(int id, const char *device)
     qDebug("adding dev to all ports list <%s>", device);
     allPorts_.append(this);
 
-    maxStatsValue_ = 0xffffffff;
+    // A port can support either 32 or 64 bit stats - we will attempt
+    // to guess this for each port and initialize this variable at 
+    // run time when the counter wraps around
+    maxStatsValue_ = 0;
 }
 
 LinuxPort::~LinuxPort()
@@ -332,6 +344,7 @@ void LinuxPort::StatsMonitor::procStats()
                 AbstractPort::PortStats *stats = portStats[index];
                 if (stats)
                 {
+                    // TODO: fix the pps/Bps calc similar to netlink stats
                     stats->rxPps = 
                         ((rxPkts >= stats->rxPkts) ? 
                                 rxPkts - stats->rxPkts : 
@@ -378,6 +391,7 @@ void LinuxPort::StatsMonitor::procStats()
 int LinuxPort::StatsMonitor::netlinkStats()
 {
     QHash<uint, PortStats*> portStats;
+    QHash<uint, quint64*> portMaxStatsValue;
     QHash<uint, OstProto::LinkState*> linkState;
     int fd;
     struct sockaddr_nl local;
@@ -555,6 +569,8 @@ _retry:
             if (strcmp(port->name(), ifname) == 0)
             {
                 portStats[uint(ifi->ifi_index)] = &(port->stats_);
+                portMaxStatsValue[uint(ifi->ifi_index)] = 
+                        &(port->maxStatsValue_);
                 linkState[uint(ifi->ifi_index)] = &(port->linkState_);
 
                 if (setPromisc(port->name()))
@@ -640,43 +656,76 @@ _retry_recv:
             rtaLen = len - NLMSG_LENGTH(sizeof(*ifi));
             while (RTA_OK(rta, rtaLen))
             {
-                // TODO: IFLA_STATS64
-                if (rta->rta_type == IFLA_STATS)
+                if (rta->rta_type == X_IFLA_STATS)
                 {
-                    struct rtnl_link_stats *rtnlStats = 
-                            (struct rtnl_link_stats*) RTA_DATA(rta);
+                    x_rtnl_link_stats *rtnlStats = 
+                            (x_rtnl_link_stats*) RTA_DATA(rta);
                     AbstractPort::PortStats *stats = portStats[ifi->ifi_index];
+                    quint64 *maxStatsValue = portMaxStatsValue[ifi->ifi_index];
                     OstProto::LinkState *state = linkState[ifi->ifi_index];
 
                     if (!stats)
                         break;
 
-                    stats->rxPps = 
-                        ((rtnlStats->rx_packets >= stats->rxPkts) ?
-                            rtnlStats->rx_packets - stats->rxPkts :
-                            rtnlStats->rx_packets + (kMaxValue32 
-                                                        - stats->rxPkts))
-                        / kRefreshFreq_;
-                    stats->rxBps = 
-                        ((rtnlStats->rx_bytes >= stats->rxBytes) ?
-                            rtnlStats->rx_bytes - stats->rxBytes :
-                            rtnlStats->rx_bytes + (kMaxValue32 
-                                                        - stats->rxBytes))
-                        / kRefreshFreq_;
+                    if (rtnlStats->rx_packets >= stats->rxPkts) {
+                        stats->rxPps = (rtnlStats->rx_packets - stats->rxPkts)
+                                            / kRefreshFreq_;
+                    }
+                    else {
+                        if (*maxStatsValue == 0) {
+                            *maxStatsValue = stats->rxPkts > kMaxValue32 ?
+                                kMaxValue64 : kMaxValue32;
+                        }
+                        stats->rxPps = ((*maxStatsValue - stats->rxPkts)
+                                            + rtnlStats->rx_packets)
+                                        / kRefreshFreq_;
+                    }
+
+                    if (rtnlStats->rx_bytes >= stats->rxBytes) {
+                        stats->rxBps = (rtnlStats->rx_bytes - stats->rxBytes)
+                                            / kRefreshFreq_;
+                    }
+                    else {
+                        if (*maxStatsValue == 0) {
+                            *maxStatsValue = stats->rxBytes > kMaxValue32 ?
+                                kMaxValue64 : kMaxValue32;
+                        }
+                        stats->rxBps = ((*maxStatsValue - stats->rxBytes)
+                                            + rtnlStats->rx_bytes)
+                                        / kRefreshFreq_;
+                    }
+
                     stats->rxPkts  = rtnlStats->rx_packets;
                     stats->rxBytes = rtnlStats->rx_bytes;
-                    stats->txPps = 
-                        ((rtnlStats->tx_packets >= stats->txPkts) ?
-                            rtnlStats->tx_packets - stats->txPkts :
-                            rtnlStats->tx_packets + (kMaxValue32 
-                                                        - stats->txPkts))
-                        / kRefreshFreq_;
-                    stats->txBps = 
-                        ((rtnlStats->tx_bytes >= stats->txBytes) ?
-                            rtnlStats->tx_bytes - stats->txBytes :
-                            rtnlStats->tx_bytes + (kMaxValue32 
-                                                        - stats->txBytes))
-                        / kRefreshFreq_;
+
+                    if (rtnlStats->tx_packets >= stats->txPkts) {
+                        stats->txPps = (rtnlStats->tx_packets - stats->txPkts)
+                                            / kRefreshFreq_;
+                    }
+                    else {
+                        if (*maxStatsValue == 0) {
+                            *maxStatsValue = stats->txPkts > kMaxValue32 ?
+                                kMaxValue64 : kMaxValue32;
+                        }
+                        stats->txPps = ((*maxStatsValue - stats->txPkts)
+                                            + rtnlStats->tx_packets)
+                                        / kRefreshFreq_;
+                    }
+
+                    if (rtnlStats->tx_bytes >= stats->txBytes) {
+                        stats->txBps = (rtnlStats->tx_bytes - stats->txBytes)
+                                            / kRefreshFreq_;
+                    }
+                    else {
+                        if (*maxStatsValue == 0) {
+                            *maxStatsValue = stats->txBytes > kMaxValue32 ?
+                                kMaxValue64 : kMaxValue32;
+                        }
+                        stats->txBps = ((*maxStatsValue - stats->txBytes)
+                                            + rtnlStats->tx_bytes)
+                                        / kRefreshFreq_;
+                    }
+
                     stats->txPkts  = rtnlStats->tx_packets;
                     stats->txBytes = rtnlStats->tx_bytes;
 

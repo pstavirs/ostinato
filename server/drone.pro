@@ -3,6 +3,8 @@ CONFIG += qt ver_info
 QT += network script
 QT -= gui
 DEFINES += HAVE_REMOTE WPCAP
+linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
+    DEFINES += HAVE_IFLA_STATS64
 INCLUDEPATH += "../rpc"
 win32 {
     CONFIG += console
