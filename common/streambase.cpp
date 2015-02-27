@@ -49,6 +49,7 @@ StreamBase::StreamBase() :
     iter->insert(proto);
     qDebug("stream: payload = %p", proto);
 
+#ifndef QT_NO_DEBUG_OUTPUT
     {
         iter->toFront();
         while (iter->hasNext())
@@ -63,6 +64,7 @@ StreamBase::StreamBase() :
         //    qDebug("{{%p}: %d}", iter->peekNext(), iter->next()->protocolNumber());
         }
     }
+#endif
 
     delete iter;
 }
