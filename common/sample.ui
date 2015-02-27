@@ -1,0 +1,191 @@
+<ui version="4.0" >
+ <class>Sample</class>
+ <widget class="QWidget" name="Sample" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>263</width>
+    <height>116</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label_22" >
+     <property name="text" >
+      <string>Field A</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy" >
+      <cstring>sampleA</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="QLineEdit" name="sampleA" >
+     <property name="inputMask" >
+      <string>>HH; </string>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" >
+    <widget class="QCheckBox" name="isChecksumOverride" >
+     <property name="text" >
+      <string>Checksum</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" >
+    <widget class="QLineEdit" name="sampleChecksum" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="inputMask" >
+      <string>>HH HH; </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLabel" name="label_24" >
+     <property name="text" >
+      <string>Field B</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy" >
+      <cstring>sampleB</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QLineEdit" name="sampleB" >
+     <property name="inputMask" >
+      <string>>HH HH; </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" >
+    <widget class="QLabel" name="label_25" >
+     <property name="text" >
+      <string>Field X</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy" >
+      <cstring>sampleX</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3" >
+    <widget class="QLineEdit" name="sampleX" />
+   </item>
+   <item row="1" column="4" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="0" >
+    <widget class="QLabel" name="label_27" >
+     <property name="text" >
+      <string>Length</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy" >
+      <cstring>samplePayloadLength</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QLineEdit" name="samplePayloadLength" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" >
+    <widget class="QLabel" name="label_26" >
+     <property name="text" >
+      <string>Field Y</string>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy" >
+      <cstring>sampleY</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3" >
+    <widget class="QLineEdit" name="sampleY" >
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>sampleA</tabstop>
+  <tabstop>sampleB</tabstop>
+  <tabstop>samplePayloadLength</tabstop>
+  <tabstop>isChecksumOverride</tabstop>
+  <tabstop>sampleChecksum</tabstop>
+  <tabstop>sampleX</tabstop>
+  <tabstop>sampleY</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>isChecksumOverride</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>sampleChecksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>345</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>406</x>
+     <y>122</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

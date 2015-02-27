@@ -1,0 +1,94 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// Group Management Protocol (i.e. IGMP and MLD)
+message Gmp {
+    //
+    // Common fields for both ASM and SSM messages
+    //
+    optional uint32 type = 1;
+    optional bool is_override_rsvd_code = 2;
+    optional uint32 rsvd_code = 3;
+    // MaxRespTime is in milliseconds - MaxRespCode will be derived
+    optional uint32 max_response_time = 4 [default = 100]; 
+    optional bool is_override_checksum = 5;
+    optional uint32 checksum = 6;
+
+    message IpAddress {
+        optional fixed32 v4 = 1;
+        optional fixed64 v6_hi = 2;
+        optional fixed64 v6_lo = 3;
+    }
+
+    //
+    // Fields used in ASM messages
+    //
+    enum GroupMode {
+        kFixed = 0;
+        kIncrementGroup = 1;
+        kDecrementGroup = 2;
+        kRandomGroup = 3;
+    }
+    optional IpAddress group_address = 10;
+    optional GroupMode group_mode = 11 [default = kFixed];
+    optional uint32 group_count = 12 [default = 16];
+    optional uint32 group_prefix = 13 [default = 24];
+
+    //
+    // Fields used in SSM Query
+    //
+    optional bool s_flag = 20;
+    optional uint32 qrv = 21 [default = 2];
+    // QuerierQueryInterval is in seconds - QQIC will be derived
+    optional uint32 qqi = 22 [default = 125];
+    repeated IpAddress sources = 23;
+    optional bool is_override_source_count = 24;
+    optional uint32 source_count = 25;
+
+    //
+    // Fields used in SSM Reports
+    //
+    message GroupRecord {
+        enum RecordType {
+            kReserved = 0;
+            kIsInclude = 1;
+            kIsExclude = 2;
+            kToInclude = 3;
+            kToExclude = 4;
+            kAllowNew = 5;
+            kBlockOld = 6;
+        }
+
+        optional RecordType type = 1 [default = kIsInclude];
+        optional IpAddress group_address = 2;
+        repeated IpAddress sources = 3;
+        optional bool is_override_source_count = 4;
+        optional uint32 source_count = 5;
+        optional bytes aux_data = 6;
+        optional bool is_override_aux_data_length = 7;
+        optional uint32 aux_data_length = 8; 
+    }
+    repeated GroupRecord group_records = 30;
+    optional bool is_override_group_record_count = 31;
+    optional uint32 group_record_count = 32;
+}

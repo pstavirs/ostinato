@@ -1,0 +1,108 @@
+<ui version="4.0" >
+ <class>TextProto</class>
+ <widget class="QWidget" name="TextProto" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>535</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" >
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label_2" >
+     <property name="text" >
+      <string>TCP/UDP Port Number (Protocol)</string>
+     </property>
+     <property name="buddy" >
+      <cstring>portNumCombo</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="IntComboBox" name="portNumCombo" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+       <horstretch>2</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" >
+    <widget class="QLabel" name="label_3" >
+     <property name="text" >
+      <string>Line Ending</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" >
+    <widget class="QComboBox" name="eolCombo" >
+     <property name="currentIndex" >
+      <number>2</number>
+     </property>
+     <item>
+      <property name="text" >
+       <string>CR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>LF</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>CRLF</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="4" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>Encode as</string>
+     </property>
+     <property name="buddy" >
+      <cstring>encodingCombo</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="5" >
+    <widget class="QComboBox" name="encodingCombo" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <item>
+      <property name="text" >
+       <string>UTF-8</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="6" >
+    <widget class="QTextEdit" name="protoText" >
+     <property name="acceptRichText" >
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IntComboBox</class>
+   <extends>QComboBox</extends>
+   <header>intcombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

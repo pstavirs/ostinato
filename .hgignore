@@ -1,0 +1,38 @@
+syntax: glob
+
+# generated object files
+*.pyc
+*.o
+*.a
+*.dll
+*.so
+*.exe
+*.app
+drone
+ostinato
+
+# Qt generated files
+ui_*.h
+moc_*.cpp
+qrc_*.cpp
+
+# QMake generated files
+Makefile*
+*\object_script.*
+
+# protobuf generated files
+*.pb.h
+*.pb.cc
+*_pb2.py
+
+# ostinato generated files
+version.cpp
+pkg_info.json
+
+# vim swap files
+*.swp
+.DS_Store
+
+# ctags
+tags
+

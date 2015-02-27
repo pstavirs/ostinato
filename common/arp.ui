@@ -1,0 +1,518 @@
+<ui version="4.0" >
+ <class>Arp</class>
+ <widget class="QWidget" name="Arp" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>528</width>
+    <height>286</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string/>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label" >
+        <property name="text" >
+         <string>Hardware Type</string>
+        </property>
+        <property name="buddy" >
+         <cstring>hwType</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLineEdit" name="hwType" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_3" >
+        <property name="text" >
+         <string>Hardware Address Length</string>
+        </property>
+        <property name="buddy" >
+         <cstring>hwAddrLen</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLineEdit" name="hwAddrLen" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_2" >
+        <property name="text" >
+         <string>Protocol Type</string>
+        </property>
+        <property name="buddy" >
+         <cstring>protoType</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="protoType" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QLabel" name="label_4" >
+        <property name="text" >
+         <string>Protocol Address Length</string>
+        </property>
+        <property name="buddy" >
+         <cstring>protoAddrLen</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="protoAddrLen" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2" >
+     <property name="title" >
+      <string/>
+     </property>
+     <layout class="QHBoxLayout" >
+      <item>
+       <widget class="QLabel" name="label_6" >
+        <property name="text" >
+         <string>Operation Code</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="IntComboBox" name="opCodeCombo" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="editable" >
+         <bool>true</bool>
+        </property>
+        <property name="insertPolicy" >
+         <enum>QComboBox::NoInsert</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>161</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_7" >
+     <property name="title" >
+      <string/>
+     </property>
+     <property name="flat" >
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <spacer>
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" >
+         <size>
+          <width>101</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="label_32" >
+        <property name="text" >
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_31" >
+        <property name="text" >
+         <string>Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="label_23" >
+        <property name="text" >
+         <string>Count</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QLabel" name="label_30" >
+        <property name="text" >
+         <string>Mask</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_7" >
+        <property name="text" >
+         <string>Sender Hardware</string>
+        </property>
+        <property name="buddy" >
+         <cstring>senderHwAddr</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QLineEdit" name="senderHwAddr" >
+        <property name="inputMask" >
+         <string>>HH HH HH HH HH HH; </string>
+        </property>
+        <property name="text" >
+         <string>     </string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QComboBox" name="senderHwAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="senderHwAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>255</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QLabel" name="label_20" >
+        <property name="text" >
+         <string>Sender Protocol</string>
+        </property>
+        <property name="buddy" >
+         <cstring>senderProtoAddr</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QLineEdit" name="senderProtoAddr" >
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" >
+       <widget class="QComboBox" name="senderProtoAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="3" >
+       <widget class="QLineEdit" name="senderProtoAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>255</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4" >
+       <widget class="QLineEdit" name="senderProtoAddrMask" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" >
+       <widget class="QLabel" name="label_5" >
+        <property name="text" >
+         <string>Target Hardware</string>
+        </property>
+        <property name="buddy" >
+         <cstring>targetHwAddr</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1" >
+       <widget class="QLineEdit" name="targetHwAddr" >
+        <property name="minimumSize" >
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="inputMask" >
+         <string>>HH HH HH HH HH HH; </string>
+        </property>
+        <property name="text" >
+         <string>     </string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" >
+       <widget class="QComboBox" name="targetHwAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="3" >
+       <widget class="QLineEdit" name="targetHwAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>255</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+        <property name="cursorPosition" >
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" >
+       <widget class="QLabel" name="label_21" >
+        <property name="text" >
+         <string>Target Protocol</string>
+        </property>
+        <property name="buddy" >
+         <cstring>targetProtoAddr</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" >
+       <widget class="QLineEdit" name="targetProtoAddr" >
+        <property name="inputMask" >
+         <string>000.000.000.000; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" >
+       <widget class="QComboBox" name="targetProtoAddrMode" >
+        <item>
+         <property name="text" >
+          <string>Fixed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Increment Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Decrement Host</string>
+         </property>
+        </item>
+        <item>
+         <property name="text" >
+          <string>Random Host</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="4" column="3" >
+       <widget class="QLineEdit" name="targetProtoAddrCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>255</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4" >
+       <widget class="QLineEdit" name="targetProtoAddrMask" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="inputMask" >
+         <string>009.009.009.009; </string>
+        </property>
+        <property name="text" >
+         <string>...</string>
+        </property>
+        <property name="alignment" >
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>61</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IntComboBox</class>
+   <extends>QComboBox</extends>
+   <header>intcombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>hwType</tabstop>
+  <tabstop>protoType</tabstop>
+  <tabstop>hwAddrLen</tabstop>
+  <tabstop>protoAddrLen</tabstop>
+  <tabstop>senderHwAddr</tabstop>
+  <tabstop>senderHwAddrMode</tabstop>
+  <tabstop>senderHwAddrCount</tabstop>
+  <tabstop>senderProtoAddr</tabstop>
+  <tabstop>senderProtoAddrMode</tabstop>
+  <tabstop>senderProtoAddrCount</tabstop>
+  <tabstop>senderProtoAddrMask</tabstop>
+  <tabstop>targetHwAddr</tabstop>
+  <tabstop>targetHwAddrMode</tabstop>
+  <tabstop>targetHwAddrCount</tabstop>
+  <tabstop>targetProtoAddr</tabstop>
+  <tabstop>targetProtoAddrMode</tabstop>
+  <tabstop>targetProtoAddrCount</tabstop>
+  <tabstop>targetProtoAddrMask</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

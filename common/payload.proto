@@ -1,0 +1,41 @@
+/*
+Copyright (C) 2010 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+message Payload {
+    enum DataPatternMode {
+        e_dp_fixed_word = 0;
+        e_dp_inc_byte = 1;
+        e_dp_dec_byte = 2;
+        e_dp_random = 3;
+    }
+
+    // Data Pattern
+    optional DataPatternMode    pattern_mode = 1;
+    optional uint32                pattern = 2;
+
+    //optional uint32                data_start_ofs = 13;
+}
+
+extend Protocol {
+    optional Payload payload = 101;
+}
