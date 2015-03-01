@@ -40,6 +40,7 @@ HEADERS = \
     ipv6addressdelegate.h \
     pcapfileformat.h \
     pdmlfileformat.h \
+    pythonfileformat.h \
     pdmlprotocol.h \
     pdmlprotocols.h \
     pdmlreader.h
@@ -80,6 +81,7 @@ SOURCES += \
     fileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \
+    pythonfileformat.cpp \
     pdmlprotocol.cpp \
     pdmlprotocols.cpp \
     pdmlreader.cpp \
