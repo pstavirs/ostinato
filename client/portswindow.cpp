@@ -636,7 +636,8 @@ _retry:
         goto _exit;
 
     fileType = fileType.remove(QRegExp("\\(.*\\)")).trimmed();
-    if (!fileType.startsWith("Ostinato"))
+    if (!fileType.startsWith("Ostinato") 
+            && !fileType.startsWith("Python"))
     {
         if (QMessageBox::warning(this, tr("Ostinato"), 
             QString("You have chosen to save in %1 format. All stream "
