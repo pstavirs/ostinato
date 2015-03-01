@@ -422,6 +422,31 @@ void Port::updateStats(OstProto::PortStats *portStats)
     }
 }
 
+void Port::duplicateStreams(const QList<int> &list, int count)
+{
+    QList<OstProto::Stream> sources;
+    foreach(int index, list) {
+        OstProto::Stream stream;
+        Q_ASSERT(index < mStreams.size());
+        mStreams.at(index)->protoDataCopyInto(stream);
+        sources.append(stream);
+    }
+
+    int insertAt = mStreams.size();
+    for (int i=0; i < count; i++) {
+        for (int j=0; j < sources.size(); j++) {
+            newStreamAt(insertAt, &sources.at(j));
+            // Rename stream by appending the copy count
+            mStreams.at(insertAt)->setName(QString("%1 (%2)")
+                    .arg(mStreams.at(insertAt)->name())
+                    .arg(i+1));
+            insertAt++;
+        }
+    }
+
+    emit streamListChanged(mPortGroupId, mPortId);
+}
+
 bool Port::openStreams(QString fileName, bool append, QString &error)
 {
     bool ret = false; 

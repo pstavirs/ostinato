@@ -258,6 +258,14 @@
     <string>Port Configuration ...</string>
    </property>
   </action>
+  <action name="actionDuplicate_Stream" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/stream_duplicate.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Duplicate Stream</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="ostinato.qrc" />
