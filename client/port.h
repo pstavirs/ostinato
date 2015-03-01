@@ -138,6 +138,8 @@ public:
     void recalculateAverageRates();
     void updateStats(OstProto::PortStats *portStats);
 
+    void duplicateStreams(const QList<int> &list, int count);
+
     bool openStreams(QString fileName, bool append, QString &error);
     bool saveStreams(QString fileName, QString fileType, QString &error);
 

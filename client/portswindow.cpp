@@ -60,6 +60,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     // Populate StramList Context Menu Actions
     tvStreamList->addAction(actionNew_Stream);
     tvStreamList->addAction(actionEdit_Stream);
+    tvStreamList->addAction(actionDuplicate_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
     sep = new QAction(this);
@@ -280,7 +281,8 @@ void PortsWindow::updateStreamViewActions()
                 actionEdit_Stream->setEnabled(true);
         }
 
-        // Delete is always enabled as long as we have a selection
+        // Duplicate/Delete are always enabled as long as we have a selection
+        actionDuplicate_Stream->setEnabled(true);
         actionDelete_Stream->setEnabled(true);
     }
     else
@@ -291,6 +293,7 @@ void PortsWindow::updateStreamViewActions()
         else
             actionNew_Stream->setDisabled(true);
         actionEdit_Stream->setDisabled(true);
+        actionDuplicate_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }
     actionOpen_Streams->setEnabled(plm->isPort(
@@ -523,6 +526,30 @@ void PortsWindow::on_actionEdit_Stream_triggered()
         on_tvStreamList_activated(tvStreamList->selectionModel()->
                 selection().at(0).topLeft());
     }
+}
+
+void PortsWindow::on_actionDuplicate_Stream_triggered()
+{
+    QItemSelectionModel* model = tvStreamList->selectionModel();
+    QModelIndex current = tvPortList->selectionModel()->currentIndex();
+    qDebug("Duplicate Stream Action");
+
+    if (model->hasSelection())
+    {
+        bool isOk;
+        int count = QInputDialog::getInteger(this, "Duplicate Streams",
+                "Count", 1, 1, 9999, 1, &isOk);
+
+        if (!isOk)
+            return;
+
+        QList<int> list;
+        foreach(QModelIndex index, model->selectedRows())
+            list.append(index.row());
+        plm->port(current).duplicateStreams(list, count);
+    }
+    else
+        qDebug("No selection");
 }
 
 void PortsWindow::on_actionDelete_Stream_triggered()
