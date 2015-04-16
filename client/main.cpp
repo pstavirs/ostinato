@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/ostprotolib.h"
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
+#include "preferences.h"
 #include "settings.h"
 
 #include <QApplication>
@@ -77,6 +78,8 @@ int main(int argc, char* argv[])
         appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
+
+    Preferences::initDefaults();
 
     mainWindow = new MainWindow;
     mainWindow->show();

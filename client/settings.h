@@ -74,6 +74,8 @@ const QString kAwkPathDefaultValue("/usr/bin/awk");
 const QString kAwkPathDefaultValue("/usr/bin/awk");
 #endif
 
+const QString kUserKey("User");
+extern QString kUserDefaultValue;
 
 //
 // LastUse Section Keys

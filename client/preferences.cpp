@@ -23,6 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "settings.h"
 
 #include <QFileDialog>
+#include <QtGlobal>
+
+QString kUserDefaultValue;
 
 Preferences::Preferences()
 {
@@ -40,10 +43,25 @@ Preferences::Preferences()
             kDiffPathDefaultValue).toString());
     awkPathEdit->setText(appSettings->value(kAwkPathKey, 
             kAwkPathDefaultValue).toString());
+
+    // TODO(only if required): kUserKey
 }
 
 Preferences::~Preferences()
 {
+}
+
+void Preferences::initDefaults()
+{
+    Q_ASSERT(appSettings);
+
+    // Read username from the environment
+#ifdef Q_OS_WIN32
+    kUserDefaultValue = QString(qgetenv("USERNAME").constData());
+#else
+    kUserDefaultValue = QString(qgetenv("USER").constData());
+#endif
+    qDebug("current user <%s>", qPrintable(kUserDefaultValue));
 }
 
 void Preferences::accept()

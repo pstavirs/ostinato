@@ -490,6 +490,7 @@ void PortsWindow::on_actionPort_Configuration_triggered()
     OstProto::Port config;
     config.set_transmit_mode(plm->port(current).transmitMode());
     config.set_is_exclusive_control(plm->port(current).hasExclusiveControl());
+    config.set_user_name(plm->port(current).userName().toStdString());
 
     PortConfigDialog dialog(config, this);
 

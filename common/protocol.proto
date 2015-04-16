@@ -178,6 +178,7 @@ message Port {
     optional bool is_enabled = 5;
     optional bool is_exclusive_control = 6;
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
+    optional string user_name = 8;
 }
 
 message PortConfigList {

@@ -74,6 +74,8 @@ public:
         { return QString().fromStdString(d.description()); }
     const QString notes() const 
         { return QString().fromStdString(d.notes()); }
+    const QString userName() const 
+        { return QString().fromStdString(d.user_name()); }
     AdminStatus adminStatus() 
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
     bool hasExclusiveControl() 

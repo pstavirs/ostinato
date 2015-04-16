@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>244</width>
-    <height>160</height>
+    <height>233</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -40,6 +40,29 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>Reservation</string>
+     </property>
+     <layout class="QVBoxLayout" >
+      <item>
+       <widget class="QLabel" name="reservedBy" >
+        <property name="text" >
+         <string>Reserved by: </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="reserveButton" >
+        <property name="text" >
+         <string>Reserve</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="exclusiveControlButton" >
      <property name="text" >
       <string>Exclusive Control</string>
@@ -53,8 +76,8 @@
      </property>
      <property name="sizeHint" >
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>226</width>
+       <height>71</height>
       </size>
      </property>
     </spacer>
@@ -80,12 +103,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>248</x>
-     <y>254</y>
+     <x>234</x>
+     <y>205</y>
     </hint>
     <hint type="destinationlabel" >
      <x>157</x>
-     <y>274</y>
+     <y>214</y>
     </hint>
    </hints>
   </connection>
@@ -96,12 +119,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>316</x>
-     <y>260</y>
+     <x>234</x>
+     <y>205</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>286</x>
-     <y>274</y>
+     <x>243</x>
+     <y>214</y>
     </hint>
    </hints>
   </connection>

@@ -33,6 +33,8 @@ private:
     virtual void accept();
 
     OstProto::Port &portConfig_;
+    enum { kNone, kSelf, kOther } reservedBy_;
+    QString myself_;
 };
 
 #endif

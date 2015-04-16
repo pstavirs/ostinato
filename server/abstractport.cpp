@@ -76,6 +76,11 @@ bool AbstractPort::modify(const OstProto::Port &port)
     if (port.has_transmit_mode())
         data_.set_transmit_mode(port.transmit_mode());
 
+    if (port.has_user_name()) {
+        data_.set_user_name(port.user_name());
+        // TODO: notify other users
+    }
+
     return ret;
 }    
 
