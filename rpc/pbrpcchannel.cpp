@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pbrpcchannel.h"
 #include "pbqtio.h"
 
+#include "../common/protocol.pb.h" // FIXME: temp
+
 #include <qendian.h>
 
 static uchar msgBuf[4096];
@@ -169,6 +171,17 @@ void PbRpcChannel::on_mpSocket_readyRead()
     static quint16    type, method;
     static quint32    len;
 
+    /*
+     * FIXME(HI): This function has some serious bugs!
+     * # It should not read both directly from the socket and via instream;
+     *   reading via instream will consume more than the msg being parsed,
+     *   so next time we read from socket - we are in trouble!
+     * # It should ensure that it has read all the available data before
+     *   it returns, otherwise the readyRead singal will not be raised
+     *   again - so we'll never read another message even if they are all
+     *   sitting in the buffer waiting for us!
+     */
+
     //qDebug("%s: bytesAvail = %d", __FUNCTION__, mpSocket->bytesAvailable());
 
     if (!parsing)
@@ -317,6 +330,47 @@ void PbRpcChannel::on_mpSocket_readyRead()
             break;
         }
 
+        case PB_MSG_TYPE_NOTIFY: 
+        {
+            //qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
+            //BUFDUMP(msg, msgLen);
+#if 0
+            notif = serviceStub->GetNotificationPrototype(method).New();
+#else
+            notif = new OstProto::Notification;
+#endif
+            if (!notif)
+            {
+                qWarning("invalid notif type %d", method);
+                goto _error_exit;
+            }
+
+            if (len)
+                notif->ParseFromBoundedZeroCopyStream(inStream, len);
+
+            qDebug("client(%s): Received Notif Msg <---- ", __FUNCTION__);
+            qDebug("type = %d\nnotif = \n%s\n---->",
+                    method, notif->DebugString().c_str());
+
+            if (!notif->IsInitialized())
+            {
+                qWarning("RpcChannel: missing required fields in notify <----");
+                qDebug("notify = \n%s", notif->DebugString().c_str());
+                qDebug("error = \n%s\n--->", 
+                        notif->InitializationErrorString().c_str());
+            }
+            else 
+                emit notification(method, notif);
+
+            delete notif;
+            notif = NULL;
+
+            parsing = false;
+            goto _exit;
+
+            break;
+        }
+
         default:
             qFatal("%s: unexpected type %d", __PRETTY_FUNCTION__, type);
             goto _error_exit;
@@ -342,6 +396,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 call.done);
     }
 
+_exit:
     return;
 
 _error_exit:
@@ -349,8 +404,7 @@ _error_exit:
 _error_exit2:
     parsing = false;
     qDebug("client(%s) discarding received msg <----", __FUNCTION__);
-    qDebug("method = %d\nreq = \n%s\n---->",
-            method, response->DebugString().c_str());
+    qDebug("method = %d\n---->", method);
     return;
 }
 

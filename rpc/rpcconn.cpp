@@ -194,6 +194,38 @@ _exit:
     isPending = false;
 }
 
+void RpcConnection::sendNotification(int notifType,
+        ::google::protobuf::Message *notifData)
+{
+    char msgBuf[PB_HDR_SIZE];
+    char* const msg = &msgBuf[0];
+    int len;
+
+    if (!notifData->IsInitialized())
+    {
+        qWarning("notification missing required fields!! <----");
+        qDebug("notif = \n%s"
+               "missing = \n%s---->",
+                notifData->DebugString().c_str(),
+                notifData->InitializationErrorString().c_str());
+        qFatal("exiting");
+        return;
+    }
+
+    len = notifData->ByteSize();
+    writeHeader(msg, PB_MSG_TYPE_NOTIFY, notifType, len);
+
+    qDebug("Server(%s): sending %d bytes to client <----",
+        __FUNCTION__, len + PB_HDR_SIZE);
+    BUFDUMP(msg, 8);
+    qDebug("notif = %d\ndata = \n%s---->", 
+        notifType, notifData->DebugString().c_str());
+
+    clientSock->write(msg, PB_HDR_SIZE);
+    notifData->SerializeToZeroCopyStream(outStream);
+    outStream->Flush();
+}
+
 void RpcConnection::on_clientSock_disconnected()
 {
     qDebug("connection closed from %s: %d",
