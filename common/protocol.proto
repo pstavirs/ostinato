@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2015 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -238,6 +238,15 @@ message PortStats {
 
 message PortStatsList {
     repeated PortStats port_stats = 1;
+}
+
+enum NotifType {
+    portConfigChanged = 1;
+} 
+
+message Notification {
+    required NotifType notif_type = 1;
+    optional PortIdList port_id_list = 6;
 }
 
 service OstService {

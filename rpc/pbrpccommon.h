@@ -27,14 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 /*
 ** RPC Header (8)
 **    - MSG_TYPE (2)
-**    - METHOD_ID (2)
+**    - METHOD_ID/NOTIF_TYPE (2)
 **    - LEN (4) [not including this header]
 */
 #define PB_HDR_SIZE                8
 
 #define PB_MSG_TYPE_REQUEST        1
-#define PB_MSG_TYPE_RESPONSE    2
+#define PB_MSG_TYPE_RESPONSE       2
 #define PB_MSG_TYPE_BINBLOB        3
 #define PB_MSG_TYPE_ERROR          4
+#define PB_MSG_TYPE_NOTIFY         5
 
 #endif

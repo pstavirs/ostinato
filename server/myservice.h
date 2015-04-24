@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocol.pb.h"
 
 #include <QList>
+#include <QObject>
 #include <QReadWriteLock>
 
 #define MAX_PKT_HDR_SIZE            1536
@@ -30,8 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 class AbstractPort;
 
-class MyService: public OstProto::OstService
+class MyService: public QObject, public OstProto::OstService
 {
+    Q_OBJECT
 public:
     MyService();
     virtual ~MyService();
@@ -101,6 +103,9 @@ public:
         const ::OstProto::VersionInfo* request,
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
+
+signals:
+    void notification(int notifType, ::google::protobuf::Message *notifData);
 
 private:
     /* 

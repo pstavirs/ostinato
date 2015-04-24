@@ -49,5 +49,8 @@ bool Drone::init()
         return false;
     }
 
+    connect(service, SIGNAL(notification(int, ::google::protobuf::Message*)), 
+            rpcServer, SIGNAL(notifyClients(int, ::google::protobuf::Message*)));
+
     return true;
 }

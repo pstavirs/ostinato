@@ -110,6 +110,9 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
+    // notification needs to be on heap because signal/slot is across threads!
+    OstProto::Notification *notif = new OstProto::Notification;
+
     qDebug("In %s", __PRETTY_FUNCTION__);
 
     for (int i = 0; i < request->port_size(); i++)
@@ -124,11 +127,19 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
             portLock[id]->unlock();
+
+            notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
     }
 
     //! \todo (LOW): fill-in response "Ack"????
     done->Run();
+
+    if (notif->port_id_list().port_id_size()) {
+        notif->set_notif_type(OstProto::portConfigChanged);
+        emit notification(notif->notif_type(), notif);
+        // FIXME: who will free notif!
+    }
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,

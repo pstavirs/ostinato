@@ -61,7 +61,7 @@ void AbstractPort::init()
 
 bool AbstractPort::modify(const OstProto::Port &port)
 {
-    bool ret = false;
+    bool ret = true;
 
     //! \todo Use reflection to find out which fields are set
     if (port.has_is_exclusive_control())
@@ -78,7 +78,6 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     if (port.has_user_name()) {
         data_.set_user_name(port.user_name());
-        // TODO: notify other users
     }
 
     return ret;

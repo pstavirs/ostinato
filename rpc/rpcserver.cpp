@@ -76,5 +76,8 @@ void RpcServer::incomingConnection(int socketDescriptor)
     // setup thread to "self-destruct" when it is done
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
+    connect(this, SIGNAL(notifyClients(int, ::google::protobuf::Message*)),
+            conn, SLOT(sendNotification(int, ::google::protobuf::Message*)));
+
     thread->start();
 }

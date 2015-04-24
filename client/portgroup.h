@@ -147,6 +147,9 @@ private slots:
     void on_rpcChannel_disconnected();
     void on_rpcChannel_error(QAbstractSocket::SocketError socketError);
 
+    void on_rpcChannel_notification(int notifType, 
+            ::google::protobuf::Message *notification);
+
     void when_portListChanged(quint32 portGroupId);
 
 public slots:

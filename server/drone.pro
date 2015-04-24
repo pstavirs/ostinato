@@ -30,7 +30,8 @@ win32 {
 }
 LIBS += -lm
 LIBS += -lprotobuf
-HEADERS += drone.h 
+HEADERS += drone.h \
+    myservice.h
 SOURCES += \
     drone_main.cpp \
     drone.cpp \

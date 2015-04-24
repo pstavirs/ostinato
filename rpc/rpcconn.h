@@ -32,6 +32,7 @@ namespace google {
             class CopyingInputStreamAdaptor;
             class CopyingOutputStreamAdaptor;
         }
+        class Message;
     }
 }
 
@@ -42,6 +43,7 @@ class RpcConnection : public QObject
 public:
     RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
     virtual ~RpcConnection();
+
     static void connIdMsgHandler(QtMsgType type, const char* msg);
 
 private:
@@ -51,6 +53,9 @@ private:
 
 signals:
     void closed();
+
+public slots:
+    void sendNotification(int notifType, ::google::protobuf::Message *notifData);
 
 private slots:
     void start();
