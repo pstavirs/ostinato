@@ -57,7 +57,8 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
     connect(reconnectTimer, SIGNAL(timeout()), 
         this, SLOT(on_reconnectTimer_timeout()));
 
-    rpcChannel = new PbRpcChannel(ip, port);
+    rpcChannel = new PbRpcChannel(ip, port, 
+                                  OstProto::Notification::default_instance());
     serviceStub = new OstProto::OstService::Stub(rpcChannel);
 
     // FIXME(LOW):Can't for my life figure out why this ain't working!
