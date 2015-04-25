@@ -61,6 +61,7 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     } RpcCall;
     QList<RpcCall>        pendingCallList;
 
+    const ::google::protobuf::Message   &notifPrototype;
     ::google::protobuf::Message     *notif;
 
     QHostAddress    mServerAddress;
@@ -71,7 +72,8 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
 public:
-    PbRpcChannel(QHostAddress ip, quint16 port);
+    PbRpcChannel(QHostAddress ip, quint16 port,
+                 const ::google::protobuf::Message &notifProto);
     ~PbRpcChannel();
 
     void establish();

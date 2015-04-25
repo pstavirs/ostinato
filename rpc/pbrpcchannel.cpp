@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pbrpcchannel.h"
 #include "pbqtio.h"
 
-#include "../common/protocol.pb.h" // FIXME: temp
-
 #include <qendian.h>
 
 static uchar msgBuf[4096];
 
-PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port)
+PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port, 
+                           const ::google::protobuf::Message &notifProto)
+    : notifPrototype(notifProto)
 {
     isPending = false;
     pendingMethodId = -1;    // don't care as long as isPending is false
@@ -334,8 +334,8 @@ void PbRpcChannel::on_mpSocket_readyRead()
         {
             //qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
             //BUFDUMP(msg, msgLen);
-#if 0
-            notif = serviceStub->GetNotificationPrototype(method).New();
+#if 1
+            notif = notifPrototype.New();
 #else
             notif = new OstProto::Notification;
 #endif
