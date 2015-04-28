@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _MY_SERVICE_H
 
 #include "../common/protocol.pb.h"
+#include "../rpc/sharedprotobufmessage.h"
 
 #include <QList>
 #include <QObject>
@@ -105,7 +106,7 @@ public:
         ::google::protobuf::Closure* done);
 
 signals:
-    void notification(int notifType, ::google::protobuf::Message *notifData);
+    void notification(int notifType, SharedProtobufMessage notifData);
 
 private:
     /* 

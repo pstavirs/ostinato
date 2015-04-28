@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _RPC_CONNECTION_H
 #define _RPC_CONNECTION_H
 
+#include "sharedprotobufmessage.h"
+
 #include <QAbstractSocket>
 
 // forward declarations
@@ -55,7 +57,7 @@ signals:
     void closed();
 
 public slots:
-    void sendNotification(int notifType, ::google::protobuf::Message *notifData);
+    void sendNotification(int notifType, SharedProtobufMessage notifData);
 
 private slots:
     void start();

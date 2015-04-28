@@ -195,7 +195,7 @@ _exit:
 }
 
 void RpcConnection::sendNotification(int notifType,
-        ::google::protobuf::Message *notifData)
+        SharedProtobufMessage notifData)
 {
     char msgBuf[PB_HDR_SIZE];
     char* const msg = &msgBuf[0];

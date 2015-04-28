@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "rpcserver.h"
 #include "myservice.h"
 
+#include <QMetaType>
+
 extern int myport;
 extern const char* version;
 extern const char* revision;
@@ -43,14 +45,16 @@ bool Drone::init()
 {
     Q_ASSERT(rpcServer);
 
+    qRegisterMetaType<SharedProtobufMessage>("SharedProtobufMessage");
+
     if (!rpcServer->registerService(service, myport ? myport : 7878))
     {
         //qCritical(qPrintable(rpcServer->errorString()));
         return false;
     }
 
-    connect(service, SIGNAL(notification(int, ::google::protobuf::Message*)), 
-            rpcServer, SIGNAL(notifyClients(int, ::google::protobuf::Message*)));
+    connect(service, SIGNAL(notification(int, SharedProtobufMessage)), 
+            rpcServer, SIGNAL(notifyClients(int, SharedProtobufMessage)));
 
     return true;
 }

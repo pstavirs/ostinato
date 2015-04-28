@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _RPC_SERVER_H
 #define _RPC_SERVER_H
 
+#include "sharedprotobufmessage.h"
+
 #include <QTcpServer>
 
 // forward declaration
@@ -42,7 +44,7 @@ public:
         quint16 tcpPortNum);
 
 signals:
-    void notifyClients(int notifType, ::google::protobuf::Message *notifData);
+    void notifyClients(int notifType, SharedProtobufMessage notifData);
 
 protected:
     void incomingConnection(int socketDescriptor);
