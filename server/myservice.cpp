@@ -137,8 +137,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
 
     if (notif->port_id_list().port_id_size()) {
         notif->set_notif_type(OstProto::portConfigChanged);
-        emit notification(notif->notif_type(), notif);
-        // FIXME: who will free notif!
+        emit notification(notif->notif_type(), SharedProtobufMessage(notif));
     }
 }
 
