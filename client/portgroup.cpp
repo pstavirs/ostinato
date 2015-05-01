@@ -131,6 +131,7 @@ void PortGroup::on_rpcChannel_connected()
     reconnectAfter = kMinReconnectWaitTime;
 
     qDebug("requesting version check ...");
+    verInfo->set_client_name("ostinato");
     verInfo->set_version(version);
     
     PbRpcController *controller = new PbRpcController(verInfo, verCompat);

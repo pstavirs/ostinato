@@ -52,6 +52,7 @@ RpcConnection::RpcConnection(int socketDescriptor,
     pendingMethodId = -1; // don't care as long as isPending is false
 
     isCompatCheckDone = false;
+    isNotifEnabled = true;
 }
 
 RpcConnection::~RpcConnection()
@@ -183,8 +184,10 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
     response->SerializeToZeroCopyStream(outStream);
     outStream->Flush();
 
-    if (pendingMethodId == 15)
+    if (pendingMethodId == 15) {
         isCompatCheckDone = true;
+        isNotifEnabled = controller->NotifEnabled();
+    }
 
 _exit:
     if (controller->Disconnect())
@@ -200,6 +203,12 @@ void RpcConnection::sendNotification(int notifType,
     char msgBuf[PB_HDR_SIZE];
     char* const msg = &msgBuf[0];
     int len;
+
+    if (!isCompatCheckDone)
+        return;
+
+    if (!isNotifEnabled)
+        return;
 
     if (!notifData->IsInitialized())
     {
