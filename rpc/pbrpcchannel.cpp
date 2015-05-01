@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pbrpcchannel.h"
 #include "pbqtio.h"
 
+#include <QtGlobal>
 #include <qendian.h>
 
 static uchar msgBuf[4096];
@@ -165,42 +166,35 @@ void PbRpcChannel::CallMethod(
 
 void PbRpcChannel::on_mpSocket_readyRead()
 {
-    uchar   *msg = (uchar*) &msgBuf;
-    int        msgLen;
+    const uchar      *msg;
+    int               msgLen;
     static bool parsing = false;
     static quint16    type, method;
     static quint32    len;
 
-    /*
-     * FIXME(HI): This function has some serious bugs!
-     * # It should not read both directly from the socket and via instream;
-     *   reading via instream will consume more than the msg being parsed,
-     *   so next time we read from socket - we are in trouble!
-     * # It should ensure that it has read all the available data before
-     *   it returns, otherwise the readyRead singal will not be raised
-     *   again - so we'll never read another message even if they are all
-     *   sitting in the buffer waiting for us!
-     */
-
-    //qDebug("%s: bytesAvail = %d", __FUNCTION__, mpSocket->bytesAvailable());
+_top:
+    //qDebug("%s(entry): bytesAvail = %d", __FUNCTION__, mpSocket->bytesAvailable());
 
     if (!parsing)
     {
         // Do we have an entire header? If not, we'll wait ...
-        if (mpSocket->bytesAvailable() < PB_HDR_SIZE)
-        {
-            qDebug("client: not enough data available for a complete header");
-            return;
+        if (inStream->Next((const void**)&msg, &msgLen) == false) {
+            qDebug("No more data or stream error");
+            goto _exit;
         }
 
-        msgLen = mpSocket->read((char*)msg, PB_HDR_SIZE);
-
-        Q_ASSERT(msgLen == PB_HDR_SIZE);
-        Q_UNUSED(msgLen);
+        if (msgLen < PB_HDR_SIZE) {
+            qDebug("read less than PB_HDR_SIZE bytes; putting back");
+            inStream->BackUp(msgLen);
+            goto _exit;
+        }
 
         type = qFromBigEndian<quint16>(msg+0);
         method = qFromBigEndian<quint16>(msg+2);
         len = qFromBigEndian<quint32>(msg+4);
+
+        if (msgLen > PB_HDR_SIZE)
+            inStream->BackUp(msgLen - PB_HDR_SIZE);
 
         //BUFDUMP(msg, PB_HDR_SIZE);
         //qDebug("type = %hu, method = %hu, len = %u", type, method, len);
@@ -214,23 +208,33 @@ void PbRpcChannel::on_mpSocket_readyRead()
         {
             static quint32 cumLen = 0;
             QIODevice *blob;
+            int l;
 
             blob = static_cast<PbRpcController*>(controller)->binaryBlob();
             Q_ASSERT(blob != NULL);
 
-            while ((cumLen < len) && mpSocket->bytesAvailable())
+            while (cumLen < len)
             {
-                int l;
+                if (inStream->Next((const void**)&msg, &msgLen) == false) {
+                    //qDebug("No more data or stream error");
+                    goto _exit;
+                }
 
-                l = mpSocket->read((char*)msgBuf, sizeof(msgBuf));
-                blob->write((char*)msgBuf, l);
+                l = qMin(msgLen, int(len - cumLen));
+                blob->write((char*)msg, l);
                 cumLen += l;
+                //qDebug("%s: bin blob rcvd %d/%d/%d", __PRETTY_FUNCTION__, l, cumLen, len);
+            }
+
+            if (l < msgLen) {
+                qDebug("read extra bytes after blob; putting back");
+                inStream->BackUp(msgLen - l);
             }
 
             qDebug("%s: bin blob rcvd %d/%d", __PRETTY_FUNCTION__, cumLen, len);
 
             if (cumLen < len)
-                return;
+                goto _exit;
 
             cumLen = 0;
 
@@ -251,9 +255,6 @@ void PbRpcChannel::on_mpSocket_readyRead()
         }
 
         case PB_MSG_TYPE_RESPONSE:
-            //qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
-            //BUFDUMP(msg, msgLen);
-
             if (!isPending)
             {
                 qWarning("not waiting for response");
@@ -293,20 +294,30 @@ void PbRpcChannel::on_mpSocket_readyRead()
         {
             static quint32 cumLen = 0;
             static QByteArray error;
+            int l;
 
-            while ((cumLen < len) && mpSocket->bytesAvailable())
+            while (cumLen < len)
             {
-                int l;
+                if (inStream->Next((const void**)&msg, &msgLen) == false) {
+                    //qDebug("No more data or stream error");
+                    goto _exit;
+                }
 
-                l = mpSocket->read((char*)msgBuf, sizeof(msgBuf));
-                error.append(QByteArray((char*)msgBuf,l));
+                l = qMin(msgLen, int(len - cumLen));
+                error.append(QByteArray((char*)msg, l));
                 cumLen += l;
+                //qDebug("%s: error rcvd %d/%d/%d", __PRETTY_FUNCTION__, l, cumLen, len);
+            }
+
+            if (l < msgLen) {
+                qDebug("read extra bytes after error; putting back");
+                inStream->BackUp(msgLen - l);
             }
 
             qDebug("%s: error rcvd %d/%d", __PRETTY_FUNCTION__, cumLen, len);
 
             if (cumLen < len)
-                return;
+                goto _exit;
 
             static_cast<PbRpcController*>(controller)->SetFailed(
                     QString::fromUtf8(error, len));
@@ -332,16 +343,10 @@ void PbRpcChannel::on_mpSocket_readyRead()
 
         case PB_MSG_TYPE_NOTIFY: 
         {
-            //qDebug("client(%s) rcvd %d bytes", __FUNCTION__, msgLen);
-            //BUFDUMP(msg, msgLen);
-#if 1
             notif = notifPrototype.New();
-#else
-            notif = new OstProto::Notification;
-#endif
             if (!notif)
             {
-                qWarning("invalid notif type %d", method);
+                qWarning("failed to alloc notify");
                 goto _error_exit;
             }
 
@@ -396,8 +401,7 @@ void PbRpcChannel::on_mpSocket_readyRead()
                 call.done);
     }
 
-_exit:
-    return;
+    goto _exit;
 
 _error_exit:
     inStream->Skip(len);
@@ -405,6 +409,17 @@ _error_exit2:
     parsing = false;
     qDebug("client(%s) discarding received msg <----", __FUNCTION__);
     qDebug("method = %d\n---->", method);
+_exit:
+    // If we have some data still available continue reading/parsing
+    if (inStream->Next((const void**)&msg, &msgLen)) {
+        if (msgLen >= PB_HDR_SIZE) {
+            inStream->BackUp(msgLen);
+            qDebug("===>> MORE DATA PENDING (%d bytes)... CONTINUE", msgLen);
+            goto _top;
+        }
+    }
+    if (mpSocket->bytesAvailable())
+        qDebug("%s (exit): bytesAvail = %lld", __FUNCTION__, mpSocket->bytesAvailable());
     return;
 }
 
