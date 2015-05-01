@@ -9,14 +9,10 @@ public:
     PbQtInputStream(QIODevice *dev) 
         : dev_(dev) {};
     int Read(void *buffer, int size) {
-    _top:
         if (dev_->bytesAvailable())
             return dev_->read(static_cast<char*>(buffer), size);
         else
-            if (dev_->waitForReadyRead(-1))
-                goto _top;
-            else
-                return -1; //return dev_->atEnd() ? 0 : -1;
+            return 0;
     }
 
 private:
