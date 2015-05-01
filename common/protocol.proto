@@ -23,6 +23,7 @@ option py_generic_services = true;
 
 message VersionInfo {
     required string version = 1;
+    optional string client_name = 2;
 }
 
 message VersionCompatibility {

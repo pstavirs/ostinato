@@ -77,6 +77,7 @@ private:
     int pendingMethodId;
 
     bool isCompatCheckDone;
+    bool isNotifEnabled;
 };
 
 #endif

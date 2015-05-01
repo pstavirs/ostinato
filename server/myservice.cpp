@@ -574,6 +574,8 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
     // Compare only major and minor numbers
     if (client[0] == my[0] && client[1] == my[1]) {
         response->set_result(OstProto::VersionCompatibility::kCompatible);
+        static_cast<PbRpcController*>(controller)->EnableNotif(
+            request->client_name() == "python-ostinato" ? false : true);
     }
     else {
         response->set_result(OstProto::VersionCompatibility::kIncompatible);
