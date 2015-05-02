@@ -302,9 +302,14 @@ void PythonFileFormat::writeEpilogue(QTextStream &out)
     out << "    # wait for transmit to finish\n";
     out << "    log.info('waiting for transmit to finish ...')\n";
     out << "    while True:\n";
-    out << "        time.sleep(5)\n";
-    out << "        tx_stats = drone.getStats(tx_port)\n";
-    out << "        if tx_stats.port_stats[0].state.is_transmit_on == False:\n";
+    out << "        try:\n";
+    out << "            time.sleep(5)\n";
+    out << "            tx_stats = drone.getStats(tx_port)\n";
+    out << "            if tx_stats.port_stats[0].state.is_transmit_on"
+                                " == False:\n";
+    out << "                break\n";
+    out << "        except KeyboardInterrupt:\n";
+    out << "            log.info('transmit interrupted by user')\n";
     out << "            break\n";
     out << "\n";
     out << "    # stop transmit and capture\n";
