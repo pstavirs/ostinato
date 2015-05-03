@@ -40,7 +40,14 @@
     <addaction name="actionHelpAbout" />
     <addaction name="actionAboutQt" />
    </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>&amp;View</string>
+    </property>
+    <addaction name="actionViewShowMyReservedPortsOnly" />
+   </widget>
    <addaction name="menuFile" />
+   <addaction name="menuView" />
    <addaction name="menuHelp" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
@@ -74,6 +81,14 @@
    </property>
    <property name="text" >
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionViewShowMyReservedPortsOnly" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Show My &amp;Reserved Ports Only</string>
    </property>
   </action>
  </widget>
