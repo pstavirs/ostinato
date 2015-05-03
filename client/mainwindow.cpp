@@ -93,6 +93,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
+    connect(actionViewShowMyReservedPortsOnly, SIGNAL(toggled(bool)),
+            portsWindow, SLOT(showMyReservedPortsOnly(bool)));
+
     connect(updater, SIGNAL(newVersionAvailable(QString)), 
             this, SLOT(onNewVersion(QString)));
     updater->checkForNewVersion();
