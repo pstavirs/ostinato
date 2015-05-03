@@ -27,7 +27,7 @@
    </property>
    <widget class="QMenu" name="menuFile" >
     <property name="title" >
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="separator" />
     <addaction name="actionPreferences" />
@@ -35,7 +35,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp" >
     <property name="title" >
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionHelpAbout" />
     <addaction name="actionAboutQt" />
@@ -45,6 +45,7 @@
      <string>&amp;View</string>
     </property>
     <addaction name="actionViewShowMyReservedPortsOnly" />
+    <addaction name="actionViewRestoreDefaults" />
    </widget>
    <addaction name="menuFile" />
    <addaction name="menuView" />
@@ -80,7 +81,7 @@
     <iconset resource="ostinato.qrc" >:/icons/qt.png</iconset>
    </property>
    <property name="text" >
-    <string>About Qt</string>
+    <string>About &amp;Qt</string>
    </property>
   </action>
   <action name="actionViewShowMyReservedPortsOnly" >
@@ -88,7 +89,12 @@
     <bool>true</bool>
    </property>
    <property name="text" >
-    <string>Show My &amp;Reserved Ports Only</string>
+    <string>Show &amp;My Reserved Ports Only</string>
+   </property>
+  </action>
+  <action name="actionViewRestoreDefaults" >
+   <property name="text" >
+    <string>Restore &amp;Defaults</string>
    </property>
   </action>
  </widget>

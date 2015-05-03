@@ -82,6 +82,11 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
+    // Save the default window geometry and layout ...
+    defaultGeometry_ = geometry();
+    defaultLayout_ = saveState(0);
+
+    // ... before restoring the last used settings
     QRect geom = appSettings->value(kApplicationWindowGeometryKey).toRect();
     if (!geom.isNull())
         setGeometry(geom);
@@ -133,6 +138,17 @@ void MainWindow::on_actionPreferences_triggered()
     preferences->exec();
 
     delete preferences;
+}
+
+void MainWindow::on_actionViewRestoreDefaults_triggered()
+{
+    // Use the saved default geometry/layout, however keep the
+    // window location same
+    defaultGeometry_.moveTo(geometry().topLeft());
+    setGeometry(defaultGeometry_);
+    restoreState(defaultLayout_, 0);
+
+    actionViewShowMyReservedPortsOnly->setChecked(false);
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
