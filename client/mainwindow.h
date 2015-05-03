@@ -40,12 +40,16 @@ private:
     QDockWidget        *portsDock;
     QDockWidget        *statsDock;
 
+    QRect defaultGeometry_;
+    QByteArray defaultLayout_;
+
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 public slots:
     void on_actionPreferences_triggered();
+    void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpAbout_triggered();
 
 private slots:
