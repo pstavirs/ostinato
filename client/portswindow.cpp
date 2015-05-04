@@ -468,8 +468,6 @@ void PortsWindow::on_pbApply_clicked()
     }
 
     curPortGroup = plm->getPortModel()->parent(curPort);
-    if (proxyPortModel)
-        curPortGroup = proxyPortModel->mapToSource(curPortGroup);
     if (!curPortGroup.isValid())
     {
         qDebug("%s: curPortGroup is invalid", __FUNCTION__);
