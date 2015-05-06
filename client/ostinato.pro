@@ -42,8 +42,9 @@ HEADERS += \
     portgroup.h \
     portgrouplist.h \
     portmodel.h \
-    portstatsmodel.h \
     portstatsfilterdialog.h \
+    portstatsmodel.h \
+    portstatsproxymodel.h \
     portstatswindow.h \
     portswindow.h \
     preferences.h \

@@ -26,8 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class QTimer;
 
 typedef enum {
+    // Info
+    e_INFO_START = 0,
+
+    e_INFO_USER = e_INFO_START,
+
+    e_INFO_END = e_INFO_USER,
+
     // State
-    e_STATE_START = 0,
+    e_STATE_START,
 
     e_LINK_STATE = e_STATE_START,
     e_TRANSMIT_STATE,
@@ -65,6 +72,8 @@ typedef enum {
 } PortStat;
 
 static QStringList PortStatName = (QStringList()
+    << "User"
+
     << "Link State"
     << "Transmit State"
     << "Capture State"
@@ -127,7 +136,7 @@ class PortStatsModel : public QAbstractTableModel
 
     public slots:
         void when_portListChanged();
-        void on_portStatsUpdate(int port, void*stats);
+        //void on_portStatsUpdate(int port, void*stats);
         void when_portGroup_stats_update(quint32 portGroupId);
 
     private slots:

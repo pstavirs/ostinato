@@ -100,6 +100,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(actionViewShowMyReservedPortsOnly, SIGNAL(toggled(bool)),
             portsWindow, SLOT(showMyReservedPortsOnly(bool)));
+    connect(actionViewShowMyReservedPortsOnly, SIGNAL(toggled(bool)),
+            statsWindow, SLOT(showMyReservedPortsOnly(bool)));
 
     connect(updater, SIGNAL(newVersionAvailable(QString)), 
             this, SLOT(onNewVersion(QString)));
