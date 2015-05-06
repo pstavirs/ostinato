@@ -19,19 +19,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "portstatswindow.h"
-#include "portstatsmodel.h"
-#include "portstatsfilterdialog.h"
 
-#include "QHeaderView"
+#include "portstatsfilterdialog.h"
+#include "portstatsmodel.h"
+#include "portstatsproxymodel.h"
+#include "settings.h"
+
+#include <QHeaderView>
 
 PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent), proxyStatsModel(NULL)
 {
     setupUi(this);
 
     this->pgl = pgl;
     model = pgl->getPortStatsModel();
-    tvPortStats->setModel(model);
+
+    proxyStatsModel = new PortStatsProxyModel(this);
+    if (proxyStatsModel) {
+        proxyStatsModel->setSourceModel(model);
+        tvPortStats->setModel(proxyStatsModel);
+    }
+    else
+        tvPortStats->setModel(model);
 
     tvPortStats->verticalHeader()->setHighlightSections(false);
     tvPortStats->verticalHeader()->setDefaultSectionSize(
@@ -41,17 +51,31 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
 
 PortStatsWindow::~PortStatsWindow()
 {
+    delete proxyStatsModel;
 }
 
-/* ------------- SLOTS -------------- */
+/* ------------- SLOTS (public) -------------- */
 
+void PortStatsWindow::showMyReservedPortsOnly(bool enabled)
+{
+    if (!proxyStatsModel)
+        return;
+
+    if (enabled) {
+        QString rx(appSettings->value(kUserKey, kUserDefaultValue).toString());
+        proxyStatsModel->setFilterRegExp(QRegExp::escape(rx));
+    }
+    else
+        proxyStatsModel->setFilterRegExp(QRegExp(".*")); // match all
+}
+
+/* ------------- SLOTS (private) -------------- */
 void PortStatsWindow::on_tbStartTransmit_clicked()
 {
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               pgpl);
+    model->portListFromIndex(selectedColumns(), pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -66,8 +90,7 @@ void PortStatsWindow::on_tbStopTransmit_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               pgpl);
+    model->portListFromIndex(selectedColumns(), pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -83,8 +106,7 @@ void PortStatsWindow::on_tbStartCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               pgpl);
+    model->portListFromIndex(selectedColumns(), pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -100,8 +122,7 @@ void PortStatsWindow::on_tbStopCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               pgpl);
+    model->portListFromIndex(selectedColumns(), pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -117,8 +138,7 @@ void PortStatsWindow::on_tbViewCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               pgpl);
+    model->portListFromIndex(selectedColumns(), pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -133,8 +153,7 @@ void PortStatsWindow::on_tbClear_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    portList;
 
     // Get selected ports
-    model->portListFromIndex(tvPortStats->selectionModel()->selectedColumns(),
-               portList);
+    model->portListFromIndex(selectedColumns(), portList);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < portList.size(); i++)
@@ -146,6 +165,7 @@ void PortStatsWindow::on_tbClear_clicked()
 
 void PortStatsWindow::on_tbClearAll_clicked()
 {
+    // FIXME: we clear all, not just all ports currently displayed!!!
     for (int i = 0; i < pgl->numPortGroups(); i++)
     {
         pgl->portGroupByIndex(i).clearPortStats();
@@ -157,10 +177,14 @@ void PortStatsWindow::on_tbFilter_clicked()
     bool ok;
     QList<uint>    currentColumns, newColumns;
     PortStatsFilterDialog    dialog;
+    QAbstractItemModel *mdl = model;
+
+    if (proxyStatsModel)
+        mdl = proxyStatsModel;
 
     // create the input list for the filter dialog -
     // list of logical-indexes ordered by their current visual indexes
-    for(int vi = 0; vi < model->columnCount(); vi++) {
+    for(int vi = 0; vi < mdl->columnCount(); vi++) {
         int li = tvPortStats->horizontalHeader()->logicalIndex(vi);
         if (!tvPortStats->isColumnHidden(li)) {
             currentColumns.append(li);
@@ -169,18 +193,35 @@ void PortStatsWindow::on_tbFilter_clicked()
 
     // return list from the filter dialog -
     // list of logical-indexes ordered by their new visual indexes
-    newColumns = dialog.getItemList(&ok, model, Qt::Horizontal, currentColumns);
+    newColumns = dialog.getItemList(&ok, mdl, Qt::Horizontal, currentColumns);
 
     if (ok)
     {
         QHeaderView *hv = tvPortStats->horizontalHeader();
 
         // hide/show sections first ...
-        for(int li = 0; li < model->columnCount(); li++)
+        for(int li = 0; li < mdl->columnCount(); li++)
             tvPortStats->setColumnHidden(li, !newColumns.contains(li));
 
         // ... then for the 'shown' columns, set the visual index
         for(int vi = 0; vi < newColumns.size(); vi++)
             hv->moveSection(hv->visualIndex(newColumns.at(vi)), vi);
     }
+}
+
+/* ------------ Private Methods -------------- */
+
+QModelIndexList PortStatsWindow::selectedColumns()
+{
+    QModelIndexList indexList = 
+            tvPortStats->selectionModel()->selectedColumns();
+    QModelIndexList sourceIndexList;
+
+    if (!proxyStatsModel)
+        return indexList;
+
+    foreach(QModelIndex index, indexList)
+        sourceIndexList.append(proxyStatsModel->mapToSource(index));
+
+    return sourceIndexList;
 }
