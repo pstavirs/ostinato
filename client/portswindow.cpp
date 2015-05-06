@@ -163,9 +163,10 @@ void PortsWindow::showMyReservedPortsOnly(bool enabled)
         return;
 
     if (enabled) {
-        QString rx = "Port Group|\\[xxx\\]";
-        rx.replace("xxx", 
-                   appSettings->value(kUserKey, kUserDefaultValue).toString());
+        QString rx = "Port Group|\\["
+                    + QRegExp::escape(appSettings->value(kUserKey, 
+                                            kUserDefaultValue).toString())
+                    + "\\]";
         qDebug("%s: regexp: <%s>", __FUNCTION__, qPrintable(rx));
         proxyPortModel->setFilterRegExp(QRegExp(rx));
     }
