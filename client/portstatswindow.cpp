@@ -163,12 +163,29 @@ void PortStatsWindow::on_tbClear_clicked()
     }
 }
 
+// 'All' => all ports currently visible, not all ports in all portgroups
 void PortStatsWindow::on_tbClearAll_clicked()
 {
-    // FIXME: we clear all, not just all ports currently displayed!!!
-    for (int i = 0; i < pgl->numPortGroups(); i++)
+    QAbstractItemModel *mdl = tvPortStats->model();
+    QModelIndexList shownColumns;
+    QList<PortStatsModel::PortGroupAndPortList> portList;
+
+    // Find the 'visible' columns
+    for(int vi = 0; vi < mdl->columnCount(); vi++) {
+        int li = tvPortStats->horizontalHeader()->logicalIndex(vi);
+        if (!tvPortStats->isColumnHidden(li)) {
+            shownColumns.append(mdl->index(0, li));
+        }
+    }
+
+    // Get ports corresponding to the shown columns
+    model->portListFromIndex(shownColumns, portList);
+
+    // Clear shown ports, portgroup by portgroup
+    for (int i = 0; i < portList.size(); i++)
     {
-        pgl->portGroupByIndex(i).clearPortStats();
+        pgl->portGroupByIndex(portList.at(i).portGroupId)
+                    .clearPortStats(&portList[i].portList);
     }
 }
 
@@ -177,10 +194,7 @@ void PortStatsWindow::on_tbFilter_clicked()
     bool ok;
     QList<uint>    currentColumns, newColumns;
     PortStatsFilterDialog    dialog;
-    QAbstractItemModel *mdl = model;
-
-    if (proxyStatsModel)
-        mdl = proxyStatsModel;
+    QAbstractItemModel *mdl = tvPortStats->model();
 
     // create the input list for the filter dialog -
     // list of logical-indexes ordered by their current visual indexes
