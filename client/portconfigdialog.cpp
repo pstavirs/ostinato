@@ -68,24 +68,25 @@ PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
 
 void PortConfigDialog::accept()
 {
+    OstProto::Port pc;
+
     if (sequentialStreamsButton->isChecked())
-        portConfig_.set_transmit_mode(OstProto::kSequentialTransmit);
+        pc.set_transmit_mode(OstProto::kSequentialTransmit);
     else if (interleavedStreamsButton->isChecked())
-        portConfig_.set_transmit_mode(OstProto::kInterleavedTransmit);
+        pc.set_transmit_mode(OstProto::kInterleavedTransmit);
     else
         Q_ASSERT(false); // Unreachable!!!
 
     switch (reservedBy_) {
         case kSelf:
             if (!reserveButton->isChecked())
-                portConfig_.set_user_name(""); // unreserve
+                pc.set_user_name(""); // unreserve
             break;
 
         case kOther:
         case kNone:
             if (reserveButton->isChecked())
-                portConfig_.set_user_name(
-                        myself_.toStdString()); // (force) reserve
+                pc.set_user_name(myself_.toStdString()); // (force) reserve
             break;
 
         default:
@@ -93,7 +94,23 @@ void PortConfigDialog::accept()
             break;
     }
 
-    portConfig_.set_is_exclusive_control(exclusiveControlButton->isChecked());
+    pc.set_is_exclusive_control(exclusiveControlButton->isChecked());
+
+    // Update fields that have changed, clear the rest
+    if (pc.transmit_mode() != portConfig_.transmit_mode())
+        portConfig_.set_transmit_mode(pc.transmit_mode());
+    else
+        portConfig_.clear_transmit_mode();
+
+    if (pc.user_name() != portConfig_.user_name())
+        portConfig_.set_user_name(pc.user_name());
+    else
+        portConfig_.clear_user_name();
+
+    if (pc.is_exclusive_control() != portConfig_.is_exclusive_control())
+        portConfig_.set_is_exclusive_control(pc.is_exclusive_control());
+    else
+        portConfig_.clear_is_exclusive_control();
 
     QDialog::accept();
 }
