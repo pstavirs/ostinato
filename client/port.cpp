@@ -57,7 +57,16 @@ Port::~Port()
 
 void Port::updatePortConfig(OstProto::Port *port)
 {
+    bool recalc = false;
+
+    if (port->has_transmit_mode() 
+            && port->transmit_mode() != d.transmit_mode())
+        recalc = true;
+
     d.MergeFrom(*port);
+
+    if (recalc)
+        recalculateAverageRates();
 }
 
 void Port::updateStreamOrdinalsFromIndex()
