@@ -356,10 +356,14 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
         mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
     }
 
-    //emit portListChanged(mPortGroupId);
-
-    // FIXME: check if we need new signals since we are not changing the
-    // number of ports, just the port data
+    // FIXME: Ideally we should emit portGroupDataChanged since only 
+    // port data is changing; but writing the corresponding slot in 
+    // PortStatsModel for that signal turned out to be very bug prone 
+    // causing assert failures when portgroups are added/deleted or
+    // connected/disconnected in different orders
+    // TODO: Revisit this when we refactor the domain-objects/model/view 
+    // design
+    emit portListChanged(mPortGroupId);
 
     if (numPorts() > 0)
         getStreamIdList();
