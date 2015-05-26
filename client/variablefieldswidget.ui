@@ -1,0 +1,292 @@
+<ui version="4.0" >
+ <class>VariableFieldsWidget</class>
+ <widget class="QWidget" name="VariableFieldsWidget" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>579</width>
+    <height>384</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QSplitter" name="splitter" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="childrenCollapsible" >
+        <bool>false</bool>
+       </property>
+       <widget class="QListWidget" name="protocolList" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+       <widget class="QListWidget" name="variableFieldList" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+          <horstretch>6</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="frame" >
+       <property name="frameShape" >
+        <enum>QFrame::Panel</enum>
+       </property>
+       <property name="frameShadow" >
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <layout class="QVBoxLayout" >
+        <property name="leftMargin" >
+         <number>0</number>
+        </property>
+        <property name="topMargin" >
+         <number>0</number>
+        </property>
+        <property name="rightMargin" >
+         <number>0</number>
+        </property>
+        <property name="bottomMargin" >
+         <number>0</number>
+        </property>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="addButton" >
+          <property name="enabled" >
+           <bool>false</bool>
+          </property>
+          <property name="text" >
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="deleteButton" >
+          <property name="enabled" >
+           <bool>false</bool>
+          </property>
+          <property name="text" >
+           <string> - </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="attribGroup" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title" >
+      <string/>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_7" >
+        <property name="text" >
+         <string>Field</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QComboBox" name="field" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>3</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="insertPolicy" >
+         <enum>QComboBox::NoInsert</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_4" >
+        <property name="text" >
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QComboBox" name="type" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="insertPolicy" >
+         <enum>QComboBox::NoInsert</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QLabel" name="label_3" >
+        <property name="text" >
+         <string>Offset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5" >
+       <widget class="QSpinBox" name="offset" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Minimum" >
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="wrapping" >
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6" >
+       <widget class="QLabel" name="label_5" >
+        <property name="text" >
+         <string>Mask</string>
+        </property>
+        <property name="buddy" >
+         <cstring>bitmask</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7" >
+       <widget class="QLineEdit" name="bitmask" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_8" >
+        <property name="text" >
+         <string>Mode</string>
+        </property>
+        <property name="buddy" >
+         <cstring>mode</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QComboBox" name="mode" >
+        <property name="insertPolicy" >
+         <enum>QComboBox::NoInsert</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QLabel" name="label_6" >
+        <property name="text" >
+         <string>Value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLineEdit" name="value" />
+      </item>
+      <item row="1" column="4" >
+       <widget class="QLabel" name="label_9" >
+        <property name="text" >
+         <string>Count</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5" >
+       <widget class="QSpinBox" name="count" />
+      </item>
+      <item row="1" column="6" >
+       <widget class="QLabel" name="label_10" >
+        <property name="text" >
+         <string>Step</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="7" >
+       <widget class="QSpinBox" name="step" />
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>561</width>
+       <height>41</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>protocolList</tabstop>
+  <tabstop>variableFieldList</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>deleteButton</tabstop>
+  <tabstop>field</tabstop>
+  <tabstop>type</tabstop>
+  <tabstop>offset</tabstop>
+  <tabstop>bitmask</tabstop>
+  <tabstop>mode</tabstop>
+  <tabstop>value</tabstop>
+  <tabstop>count</tabstop>
+  <tabstop>step</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -151,6 +151,8 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
         this, SLOT(when_lvSelectedProtocols_currentChanged(const QModelIndex&,
             const QModelIndex&)));
 
+    variableFieldsWidget->setStream(mpStream);
+
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
@@ -644,15 +646,26 @@ void StreamConfigDialog::on_twTopLevel_currentChanged(int index)
             break;
         }
 
-        // Stream Control
+        // Variable Fields
         case 2:
+        {
+            StoreCurrentStream();
+
+            // Stream protocols may have changed - clear and reload
+            variableFieldsWidget->clear();
+            variableFieldsWidget->load();
+            break;
+        }
+
+        // Stream Control
+        case 3:
         {
             StoreCurrentStream();
             break;
         }
 
         // Packet View
-        case 3:
+        case 4:
         {
             StoreCurrentStream();
             mpPacketModel->setSelectedProtocols(*_iter);
@@ -964,6 +977,11 @@ void StreamConfigDialog::LoadCurrentStream()
         loadProtocolWidgets();
     }
 
+    // Variable Fields
+    {
+        variableFieldsWidget->load();
+    }
+
     // Stream Control
     {
         switch (mpStream->sendUnit())
@@ -1037,6 +1055,11 @@ void StreamConfigDialog::StoreCurrentStream()
     // Protocols
     {
         storeProtocolWidgets();
+    }
+
+    // Variable Fields
+    {
+        variableFieldsWidget->store();
     }
 
     // Stream Control

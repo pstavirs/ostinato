@@ -92,9 +92,32 @@ message ProtocolId {
     required uint32 id = 1;
 }
 
+message VariableField {
+    enum Type {
+        kCounter8 = 0;
+        kCounter16 = 1;
+        kCounter32 = 2;
+    }
+
+    enum Mode {
+        kIncrement = 0;
+        kDecrement = 1;
+        kRandom = 2;
+    }
+
+    optional Type type = 1 [default = kCounter8];
+    optional uint32 offset = 2;
+    optional fixed32 mask = 3 [default = 0xffffffff];
+    optional uint32 value = 4;
+    optional Mode mode = 5 [default = kIncrement];
+    optional uint32 count = 6 [default = 16];
+    optional uint32 step = 7 [default = 1];
+}
+
 message Protocol {
 
     required ProtocolId protocol_id = 1;
+    repeated VariableField variable_fields = 2;
 
     extensions 100 to 199;    // Reserved for Ostinato Use
     extensions 200 to 500;    // Available for use by protocols
