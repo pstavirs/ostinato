@@ -49,6 +49,7 @@ private:
     mutable int _frameFieldCount;
     mutable int protoSize;
     mutable QString protoAbbr;
+    OstProto::Protocol _data;
 
 protected:
     StreamBase          *mpStream; //!< Stream that this protocol belongs to
@@ -108,6 +109,8 @@ public:
         AbstractProtocol *parent = 0);
     virtual quint32 protocolNumber() const;
 
+    void commonProtoDataCopyInto(OstProto::Protocol &protocol) const;
+    void commonProtoDataCopyFrom(const OstProto::Protocol &protocol);
     virtual void protoDataCopyInto(OstProto::Protocol &protocol) const = 0;
     virtual void protoDataCopyFrom(const OstProto::Protocol &protocol) = 0;
 
@@ -127,6 +130,13 @@ public:
         int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
         FieldAttrib attrib = FieldValue);
+    int fieldFrameBitOffset(int index, int streamIndex = 0) const;
+
+    int variableFieldCount() const;
+    void appendVariableField(const OstProto::VariableField &vf);
+    void removeVariableField(int index);
+    const OstProto::VariableField& variableField(int index) const;
+    OstProto::VariableField* mutableVariableField(int index);
 
     QByteArray protocolFrameValue(int streamIndex = 0,
         bool forCksum = false) const;
@@ -154,6 +164,10 @@ public:
 
     static quint64 lcm(quint64 u, quint64 v);
     static quint64 gcd(quint64 u, quint64 v);
+
+private:
+    void varyProtocolFrameValue(QByteArray &buf, int frameIndex,
+                                const OstProto::VariableField &varField) const;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
 

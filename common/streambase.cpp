@@ -99,6 +99,7 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
             continue;
         }
         proto = OstProtocolManager->createProtocol(protoId, this);
+        proto->commonProtoDataCopyFrom(stream.protocol(i));
         proto->protoDataCopyFrom(stream.protocol(i));
         iter->insert(proto);
     }
@@ -118,6 +119,7 @@ void StreamBase::protoDataCopyInto(OstProto::Stream &stream) const
         OstProto::Protocol *p;
 
         p = stream.add_protocol();
+        proto->commonProtoDataCopyInto(*p);
         proto->protoDataCopyInto(*p);
     }
 }

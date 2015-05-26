@@ -783,30 +783,20 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
 {
     if (cksumType == CksumIpPseudo)
     {
-        QByteArray addr;
         quint32 sum = 0;
+        QByteArray fv = protocolFrameValue(streamIndex);
+        const char *p = fv.constData();
 
-        addr = fieldData(ip6_srcAddress, FieldFrameValue, streamIndex)
-                .toByteArray();
-        Q_ASSERT(addr.size() == 16);
-        for (int i = 0; i < addr.size(); i+=2)
-            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
-
-        addr = fieldData(ip6_dstAddress, FieldFrameValue, streamIndex)
-                .toByteArray();
-        Q_ASSERT(addr.size() == 16);
-        for (int i = 0; i < addr.size(); i+=2)
-            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
-
-        sum += fieldData(ip6_payloadLength, FieldValue, streamIndex)
-                .toUInt() & 0xFFFF;
-        sum += fieldData(ip6_nextHeader, FieldValue, streamIndex)
-                .toUInt() & 0xFF;
+        // src-ip, dst-ip
+        for (int i = 8; i < fv.size(); i+=2)
+            sum += *((quint16*)(p + i));
+        sum += *((quint16*)(p + 4)); // payload len
+        sum += *((quint8*) (p + 6)) << 8; // proto
 
         while(sum>>16)
             sum = (sum & 0xFFFF) + (sum >> 16);
 
-        return ~sum;
+        return ~qFromBigEndian((quint16)sum);
     }
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }
