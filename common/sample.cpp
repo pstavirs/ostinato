@@ -442,17 +442,6 @@ int SampleProtocol::protocolFrameSize(int streamIndex) const
 }
 
 /*!
-  TODO: If your protocol has any variable fields, return true \n
-
-  Otherwise you don't need to reimplement this method - the base class always
-  returns false
-*/
-bool SampleProtocol::isProtocolFrameValueVariable() const
-{
-    return false;
-}
-
-/*!
   TODO: If your protocol frame size can vary across pkts of the same stream,
   return true \n
 
@@ -468,10 +457,9 @@ bool SampleProtocol::isProtocolFrameSizeVariable() const
   TODO: If your protocol frame has any variable fields or has a variable
   size, return the minimum number of frames required to vary the fields \n
 
-  Otherwise you don't need to reimplement this method - the base class always
-  returns 1
+  See AbstractProtocol::protocolFrameVariableCount() for more info
 */
 int SampleProtocol::protocolFrameVariableCount() const
 {
-    return 1;
+    return AbstractProtocol::protocolFrameVariableCount();
 }

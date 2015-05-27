@@ -212,11 +212,6 @@ int UserScriptProtocol::protocolFrameSize(int streamIndex) const
     return userValue.toInt32();
 }
 
-bool UserScriptProtocol::isProtocolFrameValueVariable() const
-{
-    return userProtocol_.isProtocolFrameValueVariable();
-}
-
 bool UserScriptProtocol::isProtocolFrameSizeVariable() const
 {
     return userProtocol_.isProtocolFrameSizeVariable();
@@ -224,7 +219,9 @@ bool UserScriptProtocol::isProtocolFrameSizeVariable() const
 
 int UserScriptProtocol::protocolFrameVariableCount() const
 {
-    return userProtocol_.protocolFrameVariableCount();
+    return AbstractProtocol::lcm(
+            AbstractProtocol::protocolFrameVariableCount(),
+            userProtocol_.protocolFrameVariableCount());
 }
 
 quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
@@ -460,7 +457,6 @@ UserProtocol::UserProtocol(AbstractProtocol *parent)
 void UserProtocol::reset()
 {
     name_ = QString();
-    protocolFrameValueVariable_ = false;
     protocolFrameSizeVariable_ = false;
     protocolFrameVariableCount_ = 1;
 }
@@ -473,16 +469,6 @@ QString UserProtocol::name() const
 void UserProtocol::setName(QString &name)
 {
     name_ = name;
-}
-
-bool UserProtocol::isProtocolFrameValueVariable() const
-{
-    return protocolFrameValueVariable_;
-}
-
-void UserProtocol::setProtocolFrameValueVariable(bool variable)
-{
-    protocolFrameValueVariable_ = variable;
 }
 
 bool UserProtocol::isProtocolFrameSizeVariable() const
