@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _ABSTRACT_PROTOCOL_H
 #define _ABSTRACT_PROTOCOL_H
 
+#include <QByteArray>
+#include <QFlags>
+#include <QHash>
+#include <QLinkedList>
 #include <QString>
 #include <QVariant>
-#include <QByteArray>
-#include <QLinkedList>
-#include <QFlags>
 #include <qendian.h>
 
 //#include "../rpc/pbhelper.h"
@@ -50,6 +51,7 @@ private:
     mutable int _frameVariableCount;
     mutable int protoSize;
     mutable QString protoAbbr;
+    mutable QHash<int, int> _fieldFrameBitOffset;
     OstProto::Protocol _data;
 
 protected:
@@ -60,6 +62,13 @@ protected:
 
     //! Is protocol typically followed by payload or another protocol
     bool _hasPayload;
+
+    //! Caching Control Flags
+    enum CacheFlag {
+        FieldFrameBitOffsetCache = 0x1
+    };
+    Q_DECLARE_FLAGS(CacheFlags, CacheFlag);
+    CacheFlags _cacheFlags;
 
 public:
     //! Properties of a field, can be OR'd
@@ -170,6 +179,7 @@ private:
     void varyProtocolFrameValue(QByteArray &buf, int frameIndex,
                                 const OstProto::VariableField &varField) const;
 };
+Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::CacheFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
 
 #endif

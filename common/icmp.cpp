@@ -27,6 +27,8 @@ IcmpProtocol::IcmpProtocol(StreamBase *stream, AbstractProtocol *parent)
 
 IcmpProtocol::~IcmpProtocol()
 {
+    // field count may change based on msgType - so don't cache field offsets
+    _cacheFlags &= ~FieldFrameBitOffsetCache;
 }
 
 AbstractProtocol* IcmpProtocol::createInstance(StreamBase *stream,

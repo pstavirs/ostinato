@@ -79,6 +79,7 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     _frameVariableCount = -1;
     protoSize = -1;
     _hasPayload = true;
+    _cacheFlags |= FieldFrameBitOffsetCache;
 }
 
 /*!
@@ -363,11 +364,24 @@ int AbstractProtocol::fieldFrameBitOffset(int index, int streamIndex) const
     if ((index < 0) || (index >= frameFieldCount()))
         return -1;
 
-    // TODO: we should cache the return value
-    for (int i = 0; i < index; i++)
-        ofs += fieldData(i, FieldBitSize, streamIndex).toInt();
+    // Lookup Cache; if not available calculate and cache (if enabled)
 
-    qDebug("======> index: %d, ofs: %d", index, ofs);
+    if (_fieldFrameBitOffset.contains(index)) {
+        ofs = _fieldFrameBitOffset.value(index);
+        goto _exit;
+    }
+
+    for (int i = 0; i < index; i++) {
+        if (_cacheFlags.testFlag(FieldFrameBitOffsetCache)
+                && !_fieldFrameBitOffset.contains(i))
+            _fieldFrameBitOffset.insert(i, ofs);
+        ofs += fieldData(i, FieldBitSize, streamIndex).toInt();
+    }
+    if (_cacheFlags.testFlag(FieldFrameBitOffsetCache))
+        _fieldFrameBitOffset.insert(index, ofs);
+
+_exit:
+    qDebug("======> ffbo index: %d, ofs: %d", index, ofs);
     return ofs;
 }
 
