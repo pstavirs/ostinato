@@ -76,6 +76,7 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     prev = next = NULL;
     _metaFieldCount = -1;
     _frameFieldCount = -1;
+    _frameVariableCount = -1;
     protoSize = -1;
     _hasPayload = true;
 }
@@ -384,6 +385,9 @@ int AbstractProtocol::variableFieldCount() const
 void AbstractProtocol::appendVariableField(const OstProto::VariableField &vf)
 {
     _data.add_variable_fields()->CopyFrom(vf);
+
+    // Update the cached value
+    _frameVariableCount = lcm(_frameVariableCount, vf.count());
 }
 
 /*!
@@ -408,8 +412,12 @@ void AbstractProtocol::removeVariableField(int index)
     }
 
     _data.clear_variable_fields();
+    _frameVariableCount = 1;
     for (int i = 0; i < temp.variable_fields_size(); i++) {
         _data.add_variable_fields()->CopyFrom(temp.variable_fields(i));
+        // Recalculate the cached value
+        _frameVariableCount = lcm(_frameVariableCount,
+                                  _data.variable_fields(i).count());
     }
 }
 
@@ -432,6 +440,9 @@ OstProto::VariableField* AbstractProtocol::mutableVariableField(int index)
 {
     if ((index < 0) || (index >= _data.variable_fields_size()))
         return NULL;
+
+    // Invalidate the cached value as the caller may potentially modify it
+    _frameVariableCount = -1;
 
     return _data.mutable_variable_fields(index);
 }
@@ -710,13 +721,15 @@ bool AbstractProtocol::isProtocolFrameSizeVariable() const
 */
 int AbstractProtocol::protocolFrameVariableCount() const
 {
-    int count = 1;
+    if (_frameVariableCount > 0)
+        return _frameVariableCount;
 
+    _frameVariableCount = 1;
     for (int i = 0; i < _data.variable_fields_size(); i++)
-        count = lcm(count, _data.variable_fields(i).count());
+        _frameVariableCount = lcm(_frameVariableCount, 
+                                  _data.variable_fields(i).count());
 
-    // TODO: cache the value!
-    return count;
+    return _frameVariableCount;
 }
 
 /*!

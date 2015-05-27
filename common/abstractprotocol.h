@@ -47,6 +47,7 @@ class AbstractProtocol
 private:
     mutable int _metaFieldCount;
     mutable int _frameFieldCount;
+    mutable int _frameVariableCount;
     mutable int protoSize;
     mutable QString protoAbbr;
     OstProto::Protocol _data;
