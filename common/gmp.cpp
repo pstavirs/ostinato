@@ -25,6 +25,8 @@ QHash<int, int> GmpProtocol::frameFieldCountMap;
 GmpProtocol::GmpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
+    // field count may change based on msgType - so don't cache field offsets
+    _cacheFlags &= ~FieldFrameBitOffsetCache;
 }
 
 GmpProtocol::~GmpProtocol()
