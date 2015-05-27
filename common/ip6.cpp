@@ -756,18 +756,9 @@ _exit:
     return isOk;
 }
 
-bool Ip6Protocol::isProtocolFrameValueVariable() const
-{
-    if ((data.src_addr_mode() != OstProto::Ip6::kFixed)
-        || (data.dst_addr_mode() != OstProto::Ip6::kFixed))
-        return true;
-    else
-        return false;
-}
-
 int Ip6Protocol::protocolFrameVariableCount() const
 {
-    int count = 1;
+    int count = AbstractProtocol::protocolFrameVariableCount();
 
     if (data.src_addr_mode() != OstProto::Ip6::kFixed)
         count = AbstractProtocol::lcm(count, data.src_addr_count());

@@ -675,14 +675,9 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
 /*!
   Returns true if the protocol varies one or more of its fields at run-time,
   false otherwise
-
-  The default implementation returns false. A subclass should reimplement
-  if it has varying fields e.g. an IP protocol that increments/decrements
-  the IP address with every packet  
 */
 bool AbstractProtocol::isProtocolFrameValueVariable() const
 {
-    // TODO: change subclass to call base class function?
     return (protocolFrameVariableCount() > 1);
 }
 
@@ -715,7 +710,6 @@ bool AbstractProtocol::isProtocolFrameSizeVariable() const
 */
 int AbstractProtocol::protocolFrameVariableCount() const
 {
-    // TODO: change subclass to call base class function?
     int count = 1;
 
     for (int i = 0; i < _data.variable_fields_size(); i++)
@@ -734,6 +728,10 @@ int AbstractProtocol::protocolFrameVariableCount() const
 */
 bool AbstractProtocol::isProtocolFramePayloadValueVariable() const
 {
+    // TODO: it is simpler to do the following -
+    //     return (protocolFramePayloadVariableCount() > 1)
+    // However, it may be inefficient till the time we cache the 
+    // variable count
     AbstractProtocol *p = next;
 
     while (p)
@@ -1038,6 +1036,7 @@ void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
 {
     int x = frameIndex % varField.count();
 
+    // FIXME: use vf.step()!!!!
     // FIXME: use templates for duplicating code for quint8, quint16, quint32
     switch (varField.type()) {
     case OstProto::VariableField::kCounter8: {

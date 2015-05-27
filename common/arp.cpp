@@ -774,24 +774,9 @@ _exit:
     return isOk;
 }
 
-bool ArpProtocol::isProtocolFrameValueVariable() const
-{
-    if (fieldData(arp_senderHwAddrMode, FieldValue).toUInt() 
-                != uint(OstProto::Arp::kFixed)
-            || fieldData(arp_senderProtoAddrMode, FieldValue).toUInt() 
-                != uint(OstProto::Arp::kFixed)
-            || fieldData(arp_targetHwAddrMode, FieldValue).toUInt() 
-                != uint(OstProto::Arp::kFixed)
-            || fieldData(arp_targetProtoAddrMode, FieldValue).toUInt() 
-                != uint(OstProto::Arp::kFixed))
-        return true;
-
-    return false;
-}
-
 int ArpProtocol::protocolFrameVariableCount() const
 {
-    int count = 1;
+    int count = AbstractProtocol::protocolFrameVariableCount();
 
     if (fieldData(arp_senderHwAddrMode, FieldValue).toUInt() 
             != uint(OstProto::Arp::kFixed))

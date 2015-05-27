@@ -327,18 +327,9 @@ _exit:
     return isOk;
 }
 
-bool MacProtocol::isProtocolFrameValueVariable() const
-{
-    if ((data.dst_mac_mode() != OstProto::Mac::e_mm_fixed) ||
-        (data.src_mac_mode() != OstProto::Mac::e_mm_fixed))
-        return true;
-    else
-        return false;
-}
-
 int MacProtocol::protocolFrameVariableCount() const
 {
-    int count = 1;
+    int count = AbstractProtocol::protocolFrameVariableCount();
 
     if (data.dst_mac_mode() != OstProto::Mac::e_mm_fixed)
         count = AbstractProtocol::lcm(count, data.dst_mac_count());

@@ -588,19 +588,13 @@ _exit:
     return isOk;
 }
 
-bool TcpProtocol::isProtocolFrameValueVariable() const
-{
-    if (data.is_override_cksum())
-        return false;
-    else
-        return isProtocolFramePayloadValueVariable();
-}
-
 int TcpProtocol::protocolFrameVariableCount() const
 {
-    if (data.is_override_cksum())
-        return 1;
+    int count = AbstractProtocol::protocolFrameVariableCount();
 
-    return protocolFramePayloadVariableCount();
+    if (!data.is_override_cksum())
+        count = AbstractProtocol::lcm(count,
+                                      protocolFramePayloadVariableCount());
+    return count;
 }
 

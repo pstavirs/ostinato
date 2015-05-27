@@ -96,7 +96,6 @@ public:
 
     virtual int protocolFrameSize(int streamIndex = 0) const;
 
-    virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
 protected:

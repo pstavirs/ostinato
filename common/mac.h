@@ -63,7 +63,6 @@ public:
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
 
-    virtual bool isProtocolFrameValueVariable() const;
     virtual int protocolFrameVariableCount() const;
 
 private:

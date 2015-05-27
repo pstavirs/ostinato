@@ -414,18 +414,16 @@ _exit:
     return isOk;
 }
 
-bool UdpProtocol::isProtocolFrameValueVariable() const
-{
-    if (data.is_override_totlen() && data.is_override_cksum())
-        return false;
-    else
-        return isProtocolFramePayloadValueVariable();
-}
-
 int UdpProtocol::protocolFrameVariableCount() const
 {
-    if (data.is_override_totlen() && data.is_override_cksum())
-        return 1;
+    int count;
 
-    return protocolFramePayloadVariableCount();
+    if (data.is_override_totlen() && data.is_override_cksum())
+        count = AbstractProtocol::protocolFrameVariableCount();
+    else
+        count = AbstractProtocol::lcm(
+                        AbstractProtocol::protocolFrameVariableCount(),
+                        protocolFramePayloadVariableCount());
+
+    return count;
 }
