@@ -137,7 +137,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kIp6FieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter8
     vf.offset = 7
     vf.mask = 0xff
@@ -203,7 +203,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter8
     vf.offset = 2
     vf.mask = 0xe0
@@ -270,7 +270,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 2
     vf.mask = 0x0fff
@@ -342,7 +342,7 @@ try:
     p.Extensions[arp].sender_hw_addr = 0x001122334455
     p.Extensions[arp].sender_proto_addr = 0x01020304
     p.Extensions[arp].target_proto_addr = 0x0a0b0c01
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter32
     vf.offset = 24
     vf.mask = 0x0000ff00
@@ -411,7 +411,7 @@ try:
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
     p.Extensions[ip4].src_ip = 0x01020304
     p.Extensions[ip4].dst_ip = 0x05060708
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter8
     vf.offset = 8
     #vf.mask = 0xFF
@@ -480,7 +480,7 @@ try:
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
     p.Extensions[ip4].src_ip = 0x01020304
     p.Extensions[ip4].dst_ip = 0x05060708
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 6
     vf.mask = 0x1FFF
@@ -549,7 +549,7 @@ try:
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
     p.Extensions[ip4].src_ip = 0x01020304
     p.Extensions[ip4].dst_ip = 0x05060708
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter32
     vf.offset = 16
     vf.mask = 0x00FF0000
@@ -630,7 +630,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter32
     vf.offset = 0
     vf.mode = ost_pb.VariableField.kIncrement
@@ -700,7 +700,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kTcpFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter32
     vf.offset = 4
     vf.value = 1000
@@ -773,7 +773,7 @@ try:
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kIcmpFieldNumber
     p.Extensions[icmp].identifier = 0xabcd
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 6
     vf.value = 1
@@ -847,14 +847,14 @@ try:
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
 
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 0
     vf.value = 5000
     vf.mode = ost_pb.VariableField.kIncrement
     vf.count = 10
 
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 2
     vf.value = 6000
@@ -925,7 +925,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 2
     vf.value = 3 
@@ -939,7 +939,7 @@ try:
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
     p.Extensions[ip4].src_ip = 0x01020304
     p.Extensions[ip4].dst_ip = 0x05060708
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter32
     vf.offset = 12
     vf.mask = 0x0000ff00
@@ -950,7 +950,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kTcpFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter16
     vf.offset = 2
     vf.value = 6666
@@ -959,7 +959,7 @@ try:
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
-    vf = p.variable_fields.add()
+    vf = p.variable_field.add()
     vf.type = ost_pb.VariableField.kCounter8
     vf.offset = 0
     vf.mode = ost_pb.VariableField.kIncrement
