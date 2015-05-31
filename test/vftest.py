@@ -210,6 +210,7 @@ try:
     vf.value = 0x60
     vf.mode = ost_pb.VariableField.kIncrement
     vf.count = 8
+    vf.step = 0x10 # step by 1 and repeat each value twice!!!!!
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
@@ -243,7 +244,7 @@ try:
                         '-o', fmt.replace('XXX', 'vlan.priority')])
         print(cap_pkts)
         result = extract_column(cap_pkts, fmt_col)
-        expected =  [] #FIXME
+        expected =  ['Excellent', 'Excellent', 'Controlled', 'Controlled', 'Video,', 'Video,', 'Voice,', 'Voice,', 'Excellent', 'Excellent']
         log.info('result  : %s' % result)
         log.info('expected: %s' % expected)
         if result == expected:
@@ -332,12 +333,14 @@ try:
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
     p.Extensions[mac].dst_mac = 0x001122334455
-    p.Extensions[mac].src_mac = 0x00aabbccddee
+    p.Extensions[mac].src_mac = 0xffffffffffff
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kArpFieldNumber
+    p.Extensions[arp].sender_hw_addr = 0x001122334455
+    p.Extensions[arp].sender_proto_addr = 0x01020304
     p.Extensions[arp].target_proto_addr = 0x0a0b0c01
     vf = p.variable_fields.add()
     vf.type = ost_pb.VariableField.kCounter32
@@ -346,7 +349,7 @@ try:
     vf.value = 0x00006400
     vf.mode = ost_pb.VariableField.kDecrement
     vf.count = 7
-    vf.step = 3
+    vf.step = 0x00000300
 
     log.info('configuring tx_stream %d' % stream_id.stream_id[0].id)
     drone.modifyStream(stream_cfg)
@@ -372,10 +375,13 @@ try:
         log.info('dumping Rx capture buffer')
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
                         '-R', 'arp && frame.len==124',
-                        '-o', fmt.replace('XXX', 'arp.dst_proto_ipv4')])
+                        '-o', fmt.replace('XXX', 'arp.dst.proto_ipv4')
+                                 .replace('un', 'uh')])
         print(cap_pkts)
         result = extract_column(cap_pkts, fmt_col)
-        expected = [] # FIXME
+        expected = ['10.11.100.1', '10.11.97.1', '10.11.94.1', '10.11.91.1', 
+                    '10.11.88.1',  '10.11.85.1', '10.11.82.1', '10.11.100.1', 
+                    '10.11.97.1',  '10.11.94.1']
         log.info('result  : %s' % result)
         log.info('expected: %s' % expected)
         if result == expected:
@@ -550,7 +556,7 @@ try:
     vf.value = 0x00ab0000 
     vf.mode = ost_pb.VariableField.kIncrement
     vf.count = 3
-    vf.step = 2
+    vf.step = 0x00020000
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
@@ -940,6 +946,7 @@ try:
     vf.value = 0x00000100
     vf.mode = ost_pb.VariableField.kIncrement
     vf.count = 10
+    vf.step = 0x00000100
 
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kTcpFieldNumber
