@@ -54,7 +54,7 @@ private:
     // Native file format version
     static const uint kFileFormatVersionMajor = 0;
     static const uint kFileFormatVersionMinor = 2;
-    static const uint kFileFormatVersionRevision = 3;
+    static const uint kFileFormatVersionRevision = 4;
 };
 
 extern FileFormat fileFormat;
