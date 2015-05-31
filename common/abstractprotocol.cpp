@@ -1061,9 +1061,8 @@ quint64 AbstractProtocol::lcm(quint64 u, quint64 v)
 void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
         const OstProto::VariableField &varField) const
 {
-    int x = frameIndex % varField.count();
+    int x = (frameIndex % varField.count()) * varField.step();
 
-    // FIXME: use vf.step()!!!!
     // FIXME: use templates for duplicating code for quint8, quint16, quint32
     switch (varField.type()) {
     case OstProto::VariableField::kCounter8: {
