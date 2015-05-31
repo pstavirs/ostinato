@@ -338,7 +338,7 @@ void VariableFieldsWidget::loadProtocolFields(
     field->clear();
 
     field->addItem("Custom");
-    for (int i = 0; i < protocol->frameFieldCount(); i++) {
+    for (int i = 0; i < protocol->fieldCount(); i++) {
         if (!protocol->fieldFlags(i).testFlag(AbstractProtocol::FrameField))
             continue;
         QString name = protocol->fieldData(i, AbstractProtocol::FieldName)

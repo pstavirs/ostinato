@@ -361,7 +361,8 @@ int AbstractProtocol::fieldFrameBitOffset(int index, int streamIndex) const
 {
     int ofs = 0;
 
-    if ((index < 0) || (index >= frameFieldCount()))
+    if ((index < 0) || (index >= fieldCount()) 
+            || !fieldFlags(index).testFlag(FrameField))
         return -1;
 
     // Lookup Cache; if not available calculate and cache (if enabled)
