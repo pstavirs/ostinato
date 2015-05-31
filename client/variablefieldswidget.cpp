@@ -160,6 +160,13 @@ void VariableFieldsWidget::on_protocolList_currentItemChanged(
         variableFieldList->addItem(vfItem);
     }
 
+    // While switching protocols, we want to setup the attrib group 
+    // validation/ranges/masks for the current protocol, which is done 
+    // by the field/type signal handlers - so clear field/type index
+    // now so that signals are emitted when we add/select a VF
+    field->setCurrentIndex(-1);
+    type->setCurrentIndex(-1);
+
     lastSelectedProtocolIndex_ = protocolList->currentRow();
 
 _exit:
@@ -263,7 +270,7 @@ void VariableFieldsWidget::on_field_currentIndexChanged(int index)
 
 void VariableFieldsWidget::on_type_currentIndexChanged(int index)
 {
-    if (!protocolList->currentItem())
+    if ((index < 0) || !protocolList->currentItem())
         return;
 
     AbstractProtocol *proto = protocolList->currentItem()->data(Qt::UserRole)
