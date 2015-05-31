@@ -1058,124 +1058,76 @@ quint64 AbstractProtocol::lcm(quint64 u, quint64 v)
     return (u * v)/gcd(u, v);
 }
 
-void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
-        const OstProto::VariableField &varField) const
+/* 
+ * XXX: varyCounter() is not a member of AbstractProtocol to avoid
+ * moving it into the header file and thereby keeping the header file
+ * clean
+ */
+template <typename T>
+bool varyCounter(QString protocolName, QByteArray &buf, int frameIndex, 
+                 const OstProto::VariableField &varField)
 {
     int x = (frameIndex % varField.count()) * varField.step();
 
-    // FIXME: use templates for duplicating code for quint8, quint16, quint32
-    switch (varField.type()) {
-    case OstProto::VariableField::kCounter8: {
-        quint8 oldfv, newfv;
+    T oldfv, newfv;
 
-        if ((varField.offset() + sizeof(quint8)) > quint8(buf.size()))
-        {
-            qWarning("%s varField ofs %d beyond protocol frame %d - skipping", 
-                     qPrintable(shortName()), varField.offset(), buf.size());
-            goto _exit;
-        }
+    if ((varField.offset() + sizeof(T)) > uint(buf.size()))
+    {
+        qWarning("%s varField ofs %d beyond protocol frame %d - skipping", 
+                qPrintable(protocolName), varField.offset(), buf.size());
+        return false;
+    }
 
-        oldfv = *((uchar*)buf.constData() + varField.offset());
-        switch(varField.mode())
-        {
+    oldfv = *((T*)((uchar*)buf.constData() + varField.offset()));
+    if (sizeof(T) > sizeof(quint8))
+        oldfv = qFromBigEndian(oldfv);
+
+    switch(varField.mode())
+    {
         case OstProto::VariableField::kIncrement:
             newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + x) & varField.mask());
+                | ((varField.value() + x) & varField.mask());
             break;
         case OstProto::VariableField::kDecrement:
             newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() - x) & varField.mask());
+                | ((varField.value() - x) & varField.mask());
             break;
         case OstProto::VariableField::kRandom:
             newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + qrand()) & varField.mask());
+                | ((varField.value() + qrand()) & varField.mask());
             break;
         default:
-            qWarning("%s Unsupported varField mode %d", qPrintable(shortName()),
-                    varField.mode());
-        }
+            qWarning("%s Unsupported varField mode %d", 
+                    qPrintable(protocolName), varField.mode());
+    }
+
+    if (sizeof(T) == sizeof(quint8))
         *((uchar*)buf.constData() + varField.offset()) = newfv;
-        qDebug("%s varField ofs %d oldfv %x newfv %x", qPrintable(shortName()), 
-                varField.offset(), oldfv, newfv);
-        break;
-    }
-
-    case OstProto::VariableField::kCounter16: {
-        quint16 oldfv, newfv;
-
-        if ((varField.offset() + sizeof(quint16)) > quint16(buf.size()))
-        {
-            qWarning("%s varField ofs %d beyond protocol frame %d - skipping", 
-                     qPrintable(shortName()), varField.offset(), buf.size());
-            goto _exit;
-        }
-
-        oldfv = qFromBigEndian<quint16>((uchar*)buf.constData() 
-                                             + varField.offset());
-        switch(varField.mode())
-        {
-        case OstProto::VariableField::kIncrement:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + x) & varField.mask());
-            break;
-        case OstProto::VariableField::kDecrement:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() - x) & varField.mask());
-            break;
-        case OstProto::VariableField::kRandom:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + qrand()) & varField.mask());
-            break;
-        default:
-            qWarning("%s Unsupported varField mode %d", qPrintable(shortName()),
-                    varField.mode());
-        }
+    else
         qToBigEndian(newfv, (uchar*)buf.constData() + varField.offset());
-        qDebug("%s varField ofs %d oldfv %x newfv %x", qPrintable(shortName()), 
-                varField.offset(), oldfv, newfv);
+
+    qDebug("%s varField ofs %d oldfv %x newfv %x", 
+            qPrintable(protocolName), varField.offset(), oldfv, newfv);
+    return true;
+}
+
+void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
+        const OstProto::VariableField &varField) const
+{
+
+    switch (varField.type()) {
+    case OstProto::VariableField::kCounter8:
+        varyCounter<quint8>(shortName(), buf, frameIndex, varField);
         break;
-    }
-
-    case OstProto::VariableField::kCounter32: {
-        quint32 oldfv, newfv;
-
-        if ((varField.offset() + sizeof(quint32)) > quint32(buf.size()))
-        {
-            qWarning("%s varField ofs %d beyond protocol frame %d - skipping", 
-                     qPrintable(shortName()), varField.offset(), buf.size());
-            goto _exit;
-        }
-
-        oldfv = qFromBigEndian<quint32>((uchar*)buf.constData() 
-                                             + varField.offset());
-        switch(varField.mode())
-        {
-        case OstProto::VariableField::kIncrement:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + x) & varField.mask());
-            break;
-        case OstProto::VariableField::kDecrement:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() - x) & varField.mask());
-            break;
-        case OstProto::VariableField::kRandom:
-            newfv = (oldfv & ~varField.mask()) 
-                    | ((varField.value() + qrand()) & varField.mask());
-            break;
-        default:
-            qWarning("%s Unsupported varField mode %d", qPrintable(shortName()),
-                    varField.mode());
-        }
-        qToBigEndian(newfv, (uchar*)buf.constData() + varField.offset());
-        qDebug("%s varField ofs %d oldfv %x newfv %x", qPrintable(shortName()), 
-                varField.offset(), oldfv, newfv);
+    case OstProto::VariableField::kCounter16:
+        varyCounter<quint16>(shortName(), buf, frameIndex, varField);
         break;
-    }
-
+    case OstProto::VariableField::kCounter32:
+        varyCounter<quint32>(shortName(), buf, frameIndex, varField);
+        break;
     default:
         break;
     }
 
-_exit:
     return;
 }
