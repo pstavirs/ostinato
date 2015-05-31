@@ -117,7 +117,7 @@ message VariableField {
 message Protocol {
 
     required ProtocolId protocol_id = 1;
-    repeated VariableField variable_fields = 2;
+    repeated VariableField variable_field = 2;
 
     extensions 100 to 199;    // Reserved for Ostinato Use
     extensions 200 to 500;    // Available for use by protocols

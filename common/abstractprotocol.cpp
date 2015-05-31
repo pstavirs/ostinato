@@ -123,13 +123,13 @@ quint32 AbstractProtocol::protocolNumber() const
 */
 void AbstractProtocol::commonProtoDataCopyInto(OstProto::Protocol &protocol) const
 {
-    protocol.clear_variable_fields();
-    for (int i = 0; i < _data.variable_fields_size(); i++)
+    protocol.clear_variable_field();
+    for (int i = 0; i < _data.variable_field_size(); i++)
     {
         OstProto::VariableField *vf;
 
-        vf = protocol.add_variable_fields();
-        vf->CopyFrom(_data.variable_fields(i));
+        vf = protocol.add_variable_field();
+        vf->CopyFrom(_data.variable_field(i));
     }
 }
 
@@ -141,13 +141,13 @@ void AbstractProtocol::commonProtoDataCopyInto(OstProto::Protocol &protocol) con
 */
 void AbstractProtocol::commonProtoDataCopyFrom(const OstProto::Protocol &protocol)
 {
-    _data.clear_variable_fields();
-    for (int i = 0; i < protocol.variable_fields_size(); i++)
+    _data.clear_variable_field();
+    for (int i = 0; i < protocol.variable_field_size(); i++)
     {
         OstProto::VariableField *vf;
 
-        vf = _data.add_variable_fields();
-        vf->CopyFrom(protocol.variable_fields(i));
+        vf = _data.add_variable_field();
+        vf->CopyFrom(protocol.variable_field(i));
     }
 }
 
@@ -390,7 +390,7 @@ _exit:
  */
 int AbstractProtocol::variableFieldCount() const
 {
-    return _data.variable_fields_size();
+    return _data.variable_field_size();
 }
 
 /*!
@@ -398,7 +398,7 @@ int AbstractProtocol::variableFieldCount() const
  */
 void AbstractProtocol::appendVariableField(const OstProto::VariableField &vf)
 {
-    _data.add_variable_fields()->CopyFrom(vf);
+    _data.add_variable_field()->CopyFrom(vf);
 
     // Update the cached value
     _frameVariableCount = lcm(_frameVariableCount, vf.count());
@@ -411,27 +411,27 @@ void AbstractProtocol::removeVariableField(int index)
 {
     OstProto::Protocol temp;
 
-    if (index >= _data.variable_fields_size()) {
+    if (index >= _data.variable_field_size()) {
         qWarning("%s: %s variableField[%d] out of range; count: %d)",
                 __FUNCTION__, qPrintable(shortName()), 
-                index, _data.variable_fields_size());
+                index, _data.variable_field_size());
         return;
     }
 
     // TODO: this is inefficient - evaluate using RepeatedPtrField?
-    for (int i = 0; i < _data.variable_fields_size(); i++) {
+    for (int i = 0; i < _data.variable_field_size(); i++) {
         if (i == index)
             continue;
-        temp.add_variable_fields()->CopyFrom(_data.variable_fields(i));
+        temp.add_variable_field()->CopyFrom(_data.variable_field(i));
     }
 
-    _data.clear_variable_fields();
+    _data.clear_variable_field();
     _frameVariableCount = 1;
-    for (int i = 0; i < temp.variable_fields_size(); i++) {
-        _data.add_variable_fields()->CopyFrom(temp.variable_fields(i));
+    for (int i = 0; i < temp.variable_field_size(); i++) {
+        _data.add_variable_field()->CopyFrom(temp.variable_field(i));
         // Recalculate the cached value
         _frameVariableCount = lcm(_frameVariableCount,
-                                  _data.variable_fields(i).count());
+                                  _data.variable_field(i).count());
     }
 }
 
@@ -441,9 +441,9 @@ void AbstractProtocol::removeVariableField(int index)
  */
 const OstProto::VariableField& AbstractProtocol::variableField(int index) const
 {
-    Q_ASSERT(index < _data.variable_fields_size());
+    Q_ASSERT(index < _data.variable_field_size());
 
-    return _data.variable_fields(index);
+    return _data.variable_field(index);
 }
 
 /*!
@@ -452,13 +452,13 @@ const OstProto::VariableField& AbstractProtocol::variableField(int index) const
  */
 OstProto::VariableField* AbstractProtocol::mutableVariableField(int index)
 {
-    if ((index < 0) || (index >= _data.variable_fields_size()))
+    if ((index < 0) || (index >= _data.variable_field_size()))
         return NULL;
 
     // Invalidate the cached value as the caller may potentially modify it
     _frameVariableCount = -1;
 
-    return _data.mutable_variable_fields(index);
+    return _data.mutable_variable_field(index);
 }
 
 /*!
@@ -688,9 +688,9 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
     }
 
     // Overwrite proto with the variable fields, if any
-    for (int i = 0; i < _data.variable_fields_size(); i++)
+    for (int i = 0; i < _data.variable_field_size(); i++)
     {
-        OstProto::VariableField vf = _data.variable_fields(i);
+        OstProto::VariableField vf = _data.variable_field(i);
         varyProtocolFrameValue(proto, streamIndex, vf);
     }
 
@@ -739,9 +739,9 @@ int AbstractProtocol::protocolFrameVariableCount() const
         return _frameVariableCount;
 
     _frameVariableCount = 1;
-    for (int i = 0; i < _data.variable_fields_size(); i++)
+    for (int i = 0; i < _data.variable_field_size(); i++)
         _frameVariableCount = lcm(_frameVariableCount, 
-                                  _data.variable_fields(i).count());
+                                  _data.variable_field(i).count());
 
     return _frameVariableCount;
 }
