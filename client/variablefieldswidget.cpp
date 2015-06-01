@@ -177,18 +177,13 @@ void VariableFieldsWidget::on_variableFieldList_currentItemChanged(
         QListWidgetItem *current,
         QListWidgetItem *previous)
 {
-    AbstractProtocol *proto;
     OstProto::VariableField vf;
-    QListWidgetItem *protoItem = protocolList->currentItem();
 
-    qDebug("%s: curr = %p, prev = %p, proto = %p", 
-            __FUNCTION__, current, previous, protoItem);
+    qDebug("%s: curr = %p, prev = %p", 
+            __FUNCTION__, current, previous);
 
     if (current == NULL)
         goto _exit;
-
-    Q_ASSERT(protoItem);
-    proto = protoItem->data(Qt::UserRole).value<AbstractProtocol*>();
 
     vf = current->data(Qt::UserRole).value<OstProto::VariableField>();
 

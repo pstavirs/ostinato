@@ -373,16 +373,16 @@ int AbstractProtocol::fieldFrameBitOffset(int index, int streamIndex) const
     }
 
     for (int i = 0; i < index; i++) {
-        if (_cacheFlags.testFlag(FieldFrameBitOffsetCache)
+        if ((_cacheFlags & FieldFrameBitOffsetCache)
                 && !_fieldFrameBitOffset.contains(i))
             _fieldFrameBitOffset.insert(i, ofs);
         ofs += fieldData(i, FieldBitSize, streamIndex).toInt();
     }
-    if (_cacheFlags.testFlag(FieldFrameBitOffsetCache))
+    if ((_cacheFlags & FieldFrameBitOffsetCache))
         _fieldFrameBitOffset.insert(index, ofs);
 
-_exit:
     qDebug("======> ffbo index: %d, ofs: %d", index, ofs);
+_exit:
     return ofs;
 }
 
@@ -1100,6 +1100,7 @@ bool varyCounter(QString protocolName, QByteArray &buf, int frameIndex,
         default:
             qWarning("%s Unsupported varField mode %d", 
                     qPrintable(protocolName), varField.mode());
+            return false;
     }
 
     if (sizeof(T) == sizeof(quint8))
@@ -1132,3 +1133,4 @@ void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
 
     return;
 }
+
