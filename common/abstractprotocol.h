@@ -67,8 +67,7 @@ protected:
     enum CacheFlag {
         FieldFrameBitOffsetCache = 0x1
     };
-    Q_DECLARE_FLAGS(CacheFlags, CacheFlag);
-    CacheFlags _cacheFlags;
+    quint32  _cacheFlags;
 
 public:
     //! Properties of a field, can be OR'd
@@ -179,7 +178,5 @@ private:
     void varyProtocolFrameValue(QByteArray &buf, int frameIndex,
                                 const OstProto::VariableField &varField) const;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::CacheFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(AbstractProtocol::FieldFlags);
-
 #endif
