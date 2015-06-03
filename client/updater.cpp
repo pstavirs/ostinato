@@ -47,7 +47,7 @@ Updater::~Updater()
 
 void Updater::checkForNewVersion()
 {
-    http_ = new QHttp("wiki.ostinato.googlecode.com");
+    http_ = new QHttp("update.ostinato.org");
     file_ = new QTemporaryFile();
 
     connect(http_, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), 
@@ -60,7 +60,7 @@ void Updater::checkForNewVersion()
     file_->open();
     qDebug("Updater: PAD XML file - %s", qPrintable(file_->fileName()));
 
-    http_->get("/hg/html/pad.xml", file_);
+    http_->get("/update/pad.xml", file_);
     qDebug("Updater: %s", qPrintable(http_->currentRequest().toString()
                 .replace("\r\n", "\nUpdater: ")));
 }
