@@ -41,7 +41,7 @@ protected:
         return filterRegExp().exactMatch(user) ? true : false;
     }
     bool filterAcceptsRow(int sourceRow, 
-                          const QModelIndex &sourceParent) const
+                          const QModelIndex &/*sourceParent*/) const
     {
         // Hide row 0 - username (needed only by this filter class)
         return (sourceRow > 0) ? true : false;

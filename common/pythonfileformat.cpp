@@ -46,8 +46,8 @@ PythonFileFormat::~PythonFileFormat()
     // Nothing to do
 }
 
-bool PythonFileFormat::openStreams(const QString fileName, 
-        OstProto::StreamConfigList &streams, QString &error)
+bool PythonFileFormat::openStreams(const QString /*fileName*/, 
+        OstProto::StreamConfigList &/*streams*/, QString &/*error*/)
 {
     // NOT SUPPORTED!
     return false;
@@ -219,10 +219,13 @@ bool PythonFileFormat::saveStreams(const OstProto::StreamConfigList streams,
     return true;
 
 _open_fail:
+    error = QString(tr("Error opening %1 (Error Code = %2)"))
+        .arg(fileName)
+        .arg(file.error());
     return false;
 }
 
-bool PythonFileFormat::isMyFileFormat(const QString fileName)
+bool PythonFileFormat::isMyFileFormat(const QString /*fileName*/)
 {
     // isMyFileFormat() is used for file open case to detect
     // file format - Open not supported for Python Scripts

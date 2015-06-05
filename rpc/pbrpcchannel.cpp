@@ -208,7 +208,7 @@ _top:
         {
             static quint32 cumLen = 0;
             QIODevice *blob;
-            int l;
+            int l = 0;
 
             blob = static_cast<PbRpcController*>(controller)->binaryBlob();
             Q_ASSERT(blob != NULL);
@@ -294,7 +294,7 @@ _top:
         {
             static quint32 cumLen = 0;
             static QByteArray error;
-            int l;
+            int l = 0;
 
             while (cumLen < len)
             {
