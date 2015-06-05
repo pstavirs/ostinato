@@ -77,7 +77,7 @@ void Updater::responseReceived(QHttpResponseHeader response)
             response.statusCode(), qPrintable(response.reasonPhrase()));
 }
 
-void Updater::parseXml(int id, bool error) 
+void Updater::parseXml(int /*id*/, bool error) 
 {
     QXmlStreamReader xml;
     QString newVersion;
