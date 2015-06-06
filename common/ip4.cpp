@@ -813,14 +813,14 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
         {
             quint32 sum = 0;
             QByteArray fv = protocolFrameValue(streamIndex);
-            const char *p = fv.constData();
+            const quint8 *p = (quint8*) fv.constData();
 
             sum += *((quint16*)(p + 12)); // src-ip hi
             sum += *((quint16*)(p + 14)); // src-ip lo
             sum += *((quint16*)(p + 16)); // dst-ip hi
             sum += *((quint16*)(p + 18)); // dst-ip lo
             sum += qToBigEndian((quint16) protocolFramePayloadSize()); // len
-            sum += *((quint8*) (p + 9)) << 8; // proto
+            sum += qToBigEndian((quint16) *(p + 9)); // proto
 
             while(sum>>16)
                 sum = (sum & 0xFFFF) + (sum >> 16);
