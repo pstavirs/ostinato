@@ -776,13 +776,13 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
     {
         quint32 sum = 0;
         QByteArray fv = protocolFrameValue(streamIndex);
-        const char *p = fv.constData();
+        const quint8 *p = (quint8*) fv.constData();
 
         // src-ip, dst-ip
         for (int i = 8; i < fv.size(); i+=2)
             sum += *((quint16*)(p + i));
         sum += *((quint16*)(p + 4)); // payload len
-        sum += *((quint8*) (p + 6)) << 8; // proto
+        sum += qToBigEndian((quint16) *(p + 6)); // proto
 
         while(sum>>16)
             sum = (sum & 0xFFFF) + (sum >> 16);
