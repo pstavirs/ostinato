@@ -213,6 +213,7 @@ _top:
             blob = static_cast<PbRpcController*>(controller)->binaryBlob();
             Q_ASSERT(blob != NULL);
 
+            msgLen = 0;
             while (cumLen < len)
             {
                 if (inStream->Next((const void**)&msg, &msgLen) == false) {
@@ -296,6 +297,7 @@ _top:
             static QByteArray error;
             int l = 0;
 
+            msgLen = 0;
             while (cumLen < len)
             {
                 if (inStream->Next((const void**)&msg, &msgLen) == false) {
