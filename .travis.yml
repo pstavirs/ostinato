@@ -1,0 +1,19 @@
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    packages:
+      - libqt4-dev
+      - qt4-qmake
+      - libpcap-dev
+      - libprotobuf-dev
+      - protobuf-c-compiler
+
+script:
+  - qmake
+  - make
+
