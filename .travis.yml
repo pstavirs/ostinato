@@ -11,7 +11,7 @@ addons:
       - qt4-qmake
       - libpcap-dev
       - libprotobuf-dev
-      - protobuf-c-compiler
+      - protobuf-compiler
 
 script:
   - qmake
