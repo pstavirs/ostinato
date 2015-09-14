@@ -105,6 +105,27 @@ public:
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
 
+    // Device and Protocol Emulation
+    virtual void getDeviceIdList(::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::DeviceIdList* response,
+        ::google::protobuf::Closure* done);
+    virtual void getDeviceConfig(::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceIdList* request,
+        ::OstProto::DeviceConfigList* response,
+        ::google::protobuf::Closure* done);
+    virtual void addDevice(::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void deleteDevice(::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void modifyDevice(::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceConfigList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
 signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 

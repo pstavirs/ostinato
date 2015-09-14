@@ -273,6 +273,39 @@ message Notification {
     optional PortIdList port_id_list = 6;
 }
 
+
+/*
+ * Protocol Emulation
+ * FIXME: review/fix tag numbers
+ * FIXME: move xxxEmulation to their own .proto files?
+ * FIXME: What will be the contents of a default device created by addDevice()?
+ * FIXME: decide default values for device and protoEmulations
+ */
+message DeviceId {
+    required uint32 id = 1;
+}
+
+message DeviceCore {
+    optional string name = 1;
+}
+
+message DeviceIdList {
+    required PortId port_id = 1;
+    repeated DeviceId device_id = 2;
+}
+
+message Device {
+    required DeviceId device_id = 1;
+    optional DeviceCore core = 2;
+
+    extensions 200 to 500;  // For use by Protocol Emulations
+}
+
+message DeviceConfigList {
+    required PortId port_id = 1;
+    repeated Device device = 2;
+}
+
 service OstService {
     rpc getPortIdList(Void) returns (PortIdList);
     rpc getPortConfig(PortIdList) returns (PortConfigList);
@@ -295,5 +328,12 @@ service OstService {
     rpc clearStats(PortIdList) returns (Ack);
 
     rpc checkVersion(VersionInfo) returns (VersionCompatibility);
+
+    // Device Protocol Emulation
+    rpc getDeviceIdList(PortId) returns (DeviceIdList);
+    rpc getDeviceConfig(DeviceIdList) returns (DeviceConfigList);
+    rpc addDevice(DeviceIdList) returns (Ack);
+    rpc deleteDevice(DeviceIdList) returns (Ack);
+    rpc modifyDevice(DeviceConfigList) returns (Ack);
 }
 

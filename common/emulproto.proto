@@ -1,0 +1,66 @@
+/*
+Copyright (C) 2015 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstEmul;
+
+message MacEmulation {
+    optional uint64 addr = 10;
+}
+
+extend OstProto.Device {
+    optional MacEmulation mac = 200;
+}
+
+message VlanEmulation {
+    message Vlan {
+        optional uint32 tpid = 1 [default = 0x8100];
+        optional uint32 vlan_tag = 2; // includes prio, cfi and vlanid
+    }
+    // FIXME: rename as just stack?
+    repeated Vlan vlan_stack = 11; // outer to inner
+}
+
+extend OstProto.Device {
+    optional VlanEmulation vlan = 201;
+}
+
+message Ip4Emulation {
+    optional uint32 addr = 2;
+    optional uint32 prefix_length = 3;
+    optional uint32 gateway = 4; // FIXME: rename to default_gateway?
+}
+
+extend OstProto.Device {
+    optional Ip4Emulation ip4 = 300;
+}
+
+message Ip6Emulation {
+    optional uint64 addr_hi = 31;
+    optional uint64 addr_lo = 32;
+    optional uint32 prefix_length = 33;
+    optional uint64 gateway_hi = 34;
+    optional uint64 gateway_lo = 35;
+}
+
+extend OstProto.Device {
+    optional Ip6Emulation ip6 = 301;
+}
+

@@ -33,6 +33,8 @@ LIBS += -lprotobuf
 HEADERS += drone.h \
     myservice.h
 SOURCES += \
+    device.cpp \
+    devicemanager.cpp \
     drone_main.cpp \
     drone.cpp \
     portmanager.cpp \
@@ -43,6 +45,7 @@ SOURCES += \
     winpcapport.cpp 
 SOURCES += myservice.cpp 
 SOURCES += pcapextra.cpp 
+SOURCES += packetbuffer.cpp 
 
 QMAKE_DISTCLEAN += object_script.*
 

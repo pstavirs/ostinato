@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 
-#include "../common/streambase.h"
 #include "../common/abstractprotocol.h"
+#include "../common/streambase.h"
+#include "devicemanager.h"
 
 #include <QString>
 #include <QIODevice>
@@ -46,6 +47,8 @@ AbstractPort::AbstractPort(int id, const char *device)
     linkState_ = OstProto::LinkStateUnknown;
     minPacketSetSize_ = 1;
 
+    deviceManager_ = new DeviceManager(this);
+
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
@@ -53,6 +56,7 @@ AbstractPort::AbstractPort(int id, const char *device)
 
 AbstractPort::~AbstractPort()
 {
+    delete deviceManager_;
 }    
 
 void AbstractPort::init()
@@ -82,6 +86,11 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     return ret;
 }    
+
+DeviceManager* AbstractPort::deviceManager()
+{
+    return deviceManager_;
+}
 
 StreamBase* AbstractPort::streamAtIndex(int index)
 {

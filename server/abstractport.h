@@ -25,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocol.pb.h"
 
+class DeviceManager;
 class StreamBase;
+class PacketBuffer;
 class QIODevice;
 
 class AbstractPort
@@ -93,6 +95,11 @@ public:
     virtual bool isCaptureOn() = 0;
     virtual QIODevice* captureData() = 0;
 
+    DeviceManager* deviceManager();
+    virtual void startDeviceEmulation() = 0;
+    virtual void stopDeviceEmulation() = 0;
+    virtual int sendEmulationPacket(PacketBuffer *pktBuf) = 0;
+
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
@@ -110,6 +117,8 @@ protected:
     quint64 maxStatsValue_;
     struct PortStats    stats_;
     //! \todo Need lock for stats access/update
+
+    DeviceManager *deviceManager_;
 
 private:
     bool    isSendQueueDirty_;

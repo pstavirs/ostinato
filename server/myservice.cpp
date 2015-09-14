@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2015 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/streambase.h"
 #include "../rpc/pbrpccontroller.h"
+#include "device.h"
+#include "devicemanager.h"
 #include "portmanager.h"
 
 #include <QStringList>
@@ -589,5 +591,226 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
 
 _invalid_version:
     controller->SetFailed("invalid version information");
+    done->Run();
+}
+
+/* 
+ * ===================================================================
+ * Device Emulation
+ * FIXME: Locking for these functions is at Port level, should it be
+ *        moved to inside DeviceManager instead? In other words, are
+ *        streams/ports and devices independent?
+ * ===================================================================
+ */
+void MyService::getDeviceIdList(::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::DeviceIdList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    for (int i = 0; i < devMgr->deviceCount(); i++)
+    {
+        OstProto::DeviceId *d;
+
+        d = response->add_device_id();
+        d->set_id(devMgr->deviceAtIndex(i)->id());
+    }
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}
+
+void MyService::getDeviceConfig(::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceIdList* request,
+    ::OstProto::DeviceConfigList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    for (int i = 0; i < request->device_id_size(); i++)
+    {
+        Device *device;
+        OstProto::Device *d;
+
+        device = devMgr->device(request->device_id(i).id());
+        if (!device)
+            continue;        //! \todo(LOW): Partial status of RPC
+
+        d = response->add_device();
+        device->protoDataCopyInto(*d);
+    }
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("invalid portid");
+    done->Run();
+}
+
+void MyService::addDevice(::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceIdList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+#if 0 // FIXME: needed?
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+#endif
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_id_size(); i++)
+    {
+        quint32 id = request->device_id(i).id();
+        Device *device = devMgr->device(id);
+
+        // If device with same id as in request exists already ==> error!!
+        if (device)
+            continue;        //! \todo (LOW): Partial status of RPC
+
+        devMgr->addDevice(id);
+    }
+    portLock[portId]->unlock();
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+#if 0 // FIXME: needed?
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+#endif
+
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
+    done->Run();
+}
+
+void MyService::deleteDevice(::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceIdList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+#if 0 // FIXME: needed?
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+#endif
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_id_size(); i++)
+        devMgr->deleteDevice(request->device_id(i).id());
+    portLock[portId]->unlock();
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+#if 0 // FIXME: needed?
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+#endif
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
+    done->Run();
+}
+
+void MyService::modifyDevice(::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceConfigList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+#if 0 // FIXME: needed?
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+#endif
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_size(); i++)
+        devMgr->modifyDevice(&request->device(i));
+    portLock[portId]->unlock();
+
+    // FIXME: check for overlaps between devices?
+
+    //! \todo(LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+#if 0 // FIXME: needed?
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+#endif
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
     done->Run();
 }
