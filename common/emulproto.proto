@@ -21,46 +21,74 @@ import "protocol.proto";
 
 package OstEmul;
 
-message MacEmulation {
-    optional uint64 addr = 10;
-}
-
-extend OstProto.Device {
-    optional MacEmulation mac = 200;
-}
-
+// ======
+//  VLAN
+// ======
 message VlanEmulation {
+    enum Mode {
+        kNoRepeat = 0;
+        kRepeat = 1;
+    }
     message Vlan {
         optional uint32 tpid = 1 [default = 0x8100];
-        optional uint32 vlan_tag = 2; // includes prio, cfi and vlanid
+
+        // includes prio, cfi and vlanid
+        optional uint32 vlan_tag = 2 [default = 100];
+
+        optional uint32 count = 10 [default = 1];
+        optional uint32 step  = 11 [default = 1];
+        optional Mode   mode  = 12 [default = kRepeat];
     }
-    // FIXME: rename as just stack?
-    repeated Vlan vlan_stack = 11; // outer to inner
+
+    repeated Vlan stack = 1; // outer to inner
 }
 
-extend OstProto.Device {
-    optional VlanEmulation vlan = 201;
+extend OstProto.DeviceGroup {
+    optional VlanEmulation vlan = 200;
+}
+
+// ========
+//  Device
+// ========
+message MacEmulation {
+    optional uint64 address = 1; // FIXME: default value
+
+    optional uint64 step = 10 [default = 1];
 }
 
 message Ip4Emulation {
-    optional uint32 addr = 2;
-    optional uint32 prefix_length = 3;
-    optional uint32 gateway = 4; // FIXME: rename to default_gateway?
-}
+    optional uint32 address = 1;
+    optional uint32 prefix_length = 2;
+    optional uint32 default_gateway = 3;
 
-extend OstProto.Device {
-    optional Ip4Emulation ip4 = 300;
+    optional uint64 step = 10 [default = 1];
+    // FIXME: step for gateway?
 }
 
 message Ip6Emulation {
-    optional uint64 addr_hi = 31;
-    optional uint64 addr_lo = 32;
-    optional uint32 prefix_length = 33;
-    optional uint64 gateway_hi = 34;
-    optional uint64 gateway_lo = 35;
+    optional uint64 address_hi = 1;
+    optional uint64 address_lo = 2;
+    optional uint32 prefix_length = 3;
+    optional uint64 default_gateway_hi = 4;
+    optional uint64 default_gateway_lo = 5;
+
+    optional uint64 step_hi = 10 [default = 0];
+    optional uint64 step_lo = 11 [default = 1];
 }
 
-extend OstProto.Device {
-    optional Ip6Emulation ip6 = 301;
+message Device {
+    enum Mode {
+        kNoRepeat = 0;
+        kRepeat = 1;
+    }
+    optional MacEmulation mac = 1;
+    optional Ip4Emulation ip4 = 2;
+    optional Ip6Emulation ip6 = 3;
+
+    optional uint32 count = 10 [default = 1];
+    optional Mode   mode  = 11 [default = kRepeat]; // FIXME: per proto mode?
 }
 
+extend OstProto.DeviceGroup {
+    optional Device device = 201;
+}

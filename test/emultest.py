@@ -139,54 +139,54 @@ try:
     # configure emulated device(s) on tx/rx ports #
     #---------------------------------------------#
     # delete existing devices, if any, on tx port
-    did_list = drone.getDeviceIdList(tx_port.port_id[0])
-    drone.deleteDevice(did_list)
+    dgid_list = drone.getDeviceGroupIdList(tx_port.port_id[0])
+    drone.deleteDeviceGroup(dgid_list)
 
     # add a emulated device on tx port
-    device_id = ost_pb.DeviceIdList()
-    device_id.port_id.CopyFrom(tx_port.port_id[0])
-    device_id.device_id.add().id = 1
-    log.info('adding tx_device %d' % device_id.device_id[0].id)
-    drone.addDevice(device_id)
+    dgid_list = ost_pb.DeviceGroupIdList()
+    dgid_list.port_id.CopyFrom(tx_port.port_id[0])
+    dgid_list.device_group_id.add().id = 1
+    log.info('adding tx device_group %d' % dgid_list.device_group_id[0].id)
+    drone.addDeviceGroup(dgid_list)
 
     # configure the device
-    device_cfg = ost_pb.DeviceConfigList()
-    device_cfg.port_id.CopyFrom(tx_port.port_id[0])
-    d = device_cfg.device.add()
-    d.device_id.id = device_id.device_id[0].id
-    d.core.name = "Host1"
-    d.Extensions[emul.mac].addr = 0x000102030001
-    ip = d.Extensions[emul.ip4]
-    ip.addr = 0x0a0a0164
-    ip.prefix_length = 24
-    ip.gateway = 0x0a0a0101
+    devgrp_cfg = ost_pb.DeviceGroupConfigList()
+    devgrp_cfg.port_id.CopyFrom(tx_port.port_id[0])
+    dg = devgrp_cfg.device_group.add()
+    dg.device_group_id.id = dgid_list.device_group_id[0].id
+    dg.core.name = "Host1"
+    d = dg.Extensions[emul.device]
+    d.mac.address = 0x000102030001
+    d.ip4.address = 0x0a0a0164
+    d.ip4.prefix_length = 24
+    d.ip4.default_gateway = 0x0a0a0101
 
-    drone.modifyDevice(device_cfg)
+    drone.modifyDeviceGroup(devgrp_cfg)
 
     # delete existing devices, if any, on rx port
-    did_list = drone.getDeviceIdList(rx_port.port_id[0])
-    drone.deleteDevice(did_list)
+    dgid_list = drone.getDeviceGroupIdList(rx_port.port_id[0])
+    drone.deleteDeviceGroup(dgid_list)
 
     # add a emulated device on rx port
-    device_id = ost_pb.DeviceIdList()
-    device_id.port_id.CopyFrom(rx_port.port_id[0])
-    device_id.device_id.add().id = 1
-    log.info('adding rx_device %d' % device_id.device_id[0].id)
-    drone.addDevice(device_id)
+    dgid_list = ost_pb.DeviceGroupIdList()
+    dgid_list.port_id.CopyFrom(rx_port.port_id[0])
+    dgid_list.device_group_id.add().id = 1
+    log.info('adding rx device_group %d' % dgid_list.device_group_id[0].id)
+    drone.addDeviceGroup(dgid_list)
 
     # configure the device
-    device_cfg = ost_pb.DeviceConfigList()
-    device_cfg.port_id.CopyFrom(rx_port.port_id[0])
-    d = device_cfg.device.add()
-    d.device_id.id = device_id.device_id[0].id
-    d.core.name = "Host2"
-    d.Extensions[emul.mac].addr = 0x000102030002
-    ip = d.Extensions[emul.ip4]
-    ip.addr = 0x0a0a0264
-    ip.prefix_length = 24
-    ip.gateway = 0x0a0a0201
+    devgrp_cfg = ost_pb.DeviceGroupConfigList()
+    devgrp_cfg.port_id.CopyFrom(rx_port.port_id[0])
+    dg = devgrp_cfg.device_group.add()
+    dg.device_group_id.id = dgid_list.device_group_id[0].id
+    dg.core.name = "Host1"
+    d = dg.Extensions[emul.device]
+    d.mac.address = 0x000102030002
+    d.ip4.address = 0x0a0a0264
+    d.ip4.prefix_length = 24
+    d.ip4.default_gateway = 0x0a0a0201
 
-    drone.modifyDevice(device_cfg)
+    drone.modifyDeviceGroup(devgrp_cfg)
 
     #--------------------------------------#
     # configure traffic stream(s)
@@ -210,7 +210,7 @@ try:
     s.core.is_enabled = True
     #s.core.frame_len = 128
     s.control.packets_per_sec = 20
-    s.control.num_packets = 100
+    s.control.num_packets = 10
 
     # setup stream protocols as mac:eth2:ip4:udp:payload
     p = s.protocol.add()
@@ -280,10 +280,10 @@ try:
     drone.deleteStream(stream_id)
 
     # delete devices
-    did_list = drone.getDeviceIdList(tx_port.port_id[0])
-    drone.deleteDevice(did_list)
-    did_list = drone.getDeviceIdList(rx_port.port_id[0])
-    drone.deleteDevice(did_list)
+    dgid_list = drone.getDeviceGroupIdList(tx_port.port_id[0])
+    drone.deleteDeviceGroup(dgid_list)
+    dgid_list = drone.getDeviceGroupIdList(rx_port.port_id[0])
+    drone.deleteDeviceGroup(dgid_list)
 
     # bye for now
     drone.disconnect()

@@ -105,25 +105,30 @@ public:
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
 
-    // Device and Protocol Emulation
-    virtual void getDeviceIdList(::google::protobuf::RpcController* controller,
+    // DeviceGroup and Protocol Emulation
+    virtual void getDeviceGroupIdList(
+        ::google::protobuf::RpcController* controller,
         const ::OstProto::PortId* request,
-        ::OstProto::DeviceIdList* response,
+        ::OstProto::DeviceGroupIdList* response,
         ::google::protobuf::Closure* done);
-    virtual void getDeviceConfig(::google::protobuf::RpcController* controller,
-        const ::OstProto::DeviceIdList* request,
-        ::OstProto::DeviceConfigList* response,
+    virtual void getDeviceGroupConfig(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
+        ::OstProto::DeviceGroupConfigList* response,
         ::google::protobuf::Closure* done);
-    virtual void addDevice(::google::protobuf::RpcController* controller,
-        const ::OstProto::DeviceIdList* request,
+    virtual void addDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
-    virtual void deleteDevice(::google::protobuf::RpcController* controller,
-        const ::OstProto::DeviceIdList* request,
+    virtual void deleteDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
-    virtual void modifyDevice(::google::protobuf::RpcController* controller,
-        const ::OstProto::DeviceConfigList* request,
+    virtual void modifyDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupConfigList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
 signals:

@@ -602,9 +602,10 @@ _invalid_version:
  *        streams/ports and devices independent?
  * ===================================================================
  */
-void MyService::getDeviceIdList(::google::protobuf::RpcController* controller,
+void MyService::getDeviceGroupIdList(
+    ::google::protobuf::RpcController* controller,
     const ::OstProto::PortId* request,
-    ::OstProto::DeviceIdList* response,
+    ::OstProto::DeviceGroupIdList* response,
     ::google::protobuf::Closure* done)
 {
     DeviceManager *devMgr;
@@ -620,12 +621,12 @@ void MyService::getDeviceIdList(::google::protobuf::RpcController* controller,
 
     response->mutable_port_id()->set_id(portId);
     portLock[portId]->lockForRead();
-    for (int i = 0; i < devMgr->deviceCount(); i++)
+    for (int i = 0; i < devMgr->deviceGroupCount(); i++)
     {
-        OstProto::DeviceId *d;
+        OstProto::DeviceGroupId *dgid;
 
-        d = response->add_device_id();
-        d->set_id(devMgr->deviceAtIndex(i)->id());
+        dgid = response->add_device_group_id();
+        dgid->CopyFrom(devMgr->deviceGroupAtIndex(i)->device_group_id());
     }
     portLock[portId]->unlock();
 
@@ -637,9 +638,10 @@ _invalid_port:
     done->Run();
 }
 
-void MyService::getDeviceConfig(::google::protobuf::RpcController* controller,
-    const ::OstProto::DeviceIdList* request,
-    ::OstProto::DeviceConfigList* response,
+void MyService::getDeviceGroupConfig(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
+    ::OstProto::DeviceGroupConfigList* response,
     ::google::protobuf::Closure* done)
 {
     DeviceManager *devMgr;
@@ -655,17 +657,15 @@ void MyService::getDeviceConfig(::google::protobuf::RpcController* controller,
 
     response->mutable_port_id()->set_id(portId);
     portLock[portId]->lockForRead();
-    for (int i = 0; i < request->device_id_size(); i++)
+    for (int i = 0; i < request->device_group_id_size(); i++)
     {
-        Device *device;
-        OstProto::Device *d;
+        const OstProto::DeviceGroup *dg;
 
-        device = devMgr->device(request->device_id(i).id());
-        if (!device)
+        dg = devMgr->deviceGroup(request->device_group_id(i).id());
+        if (!dg)
             continue;        //! \todo(LOW): Partial status of RPC
 
-        d = response->add_device();
-        device->protoDataCopyInto(*d);
+        response->add_device_group()->CopyFrom(*dg);
     }
     portLock[portId]->unlock();
 
@@ -677,8 +677,9 @@ _invalid_port:
     done->Run();
 }
 
-void MyService::addDevice(::google::protobuf::RpcController* controller,
-    const ::OstProto::DeviceIdList* request,
+void MyService::addDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
@@ -699,16 +700,16 @@ void MyService::addDevice(::google::protobuf::RpcController* controller,
 #endif
 
     portLock[portId]->lockForWrite();
-    for (int i = 0; i < request->device_id_size(); i++)
+    for (int i = 0; i < request->device_group_id_size(); i++)
     {
-        quint32 id = request->device_id(i).id();
-        Device *device = devMgr->device(id);
+        quint32 id = request->device_group_id(i).id();
+        const OstProto::DeviceGroup *dg = devMgr->deviceGroup(id);
 
-        // If device with same id as in request exists already ==> error!!
-        if (device)
+        // If device group with same id as in request exists already ==> error!
+        if (dg)
             continue;        //! \todo (LOW): Partial status of RPC
 
-        devMgr->addDevice(id);
+        devMgr->addDeviceGroup(id);
     }
     portLock[portId]->unlock();
 
@@ -729,8 +730,9 @@ _exit:
     done->Run();
 }
 
-void MyService::deleteDevice(::google::protobuf::RpcController* controller,
-    const ::OstProto::DeviceIdList* request,
+void MyService::deleteDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
@@ -751,8 +753,8 @@ void MyService::deleteDevice(::google::protobuf::RpcController* controller,
 #endif
 
     portLock[portId]->lockForWrite();
-    for (int i = 0; i < request->device_id_size(); i++)
-        devMgr->deleteDevice(request->device_id(i).id());
+    for (int i = 0; i < request->device_group_id_size(); i++)
+        devMgr->deleteDeviceGroup(request->device_group_id(i).id());
     portLock[portId]->unlock();
 
     //! \todo (LOW): fill-in response "Ack"????
@@ -771,8 +773,9 @@ _exit:
     done->Run();
 }
 
-void MyService::modifyDevice(::google::protobuf::RpcController* controller,
-    const ::OstProto::DeviceConfigList* request,
+void MyService::modifyDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupConfigList* request,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
@@ -793,8 +796,8 @@ void MyService::modifyDevice(::google::protobuf::RpcController* controller,
 #endif
 
     portLock[portId]->lockForWrite();
-    for (int i = 0; i < request->device_size(); i++)
-        devMgr->modifyDevice(&request->device(i));
+    for (int i = 0; i < request->device_group_size(); i++)
+        devMgr->modifyDeviceGroup(&request->device_group(i));
     portLock[portId]->unlock();
 
     // FIXME: check for overlaps between devices?

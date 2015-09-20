@@ -23,78 +23,99 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemanager.h"
 #include "packetbuffer.h"
 
+#include <QHostAddress>
 #include <qendian.h>
 
-QHash<quint64, Device*> Device::macHash_;
-QHash<quint32, Device*> Device::ip4Hash_;
+const int kBaseHex = 16;
+const int kMaxVlan = 4;
 
-Device::Device(quint32 id, DeviceManager *deviceManager)
+/*
+ * NOTE: 
+ * 1. Device Key is (VLANS + MAC) - is assumed to be unique for a device
+ * 2. Device clients/users (viz. DeviceManager) should take care when 
+ *    setting params that change the key, if the key is used elsewhere
+ *    (e.g. in a hash)
+ */
+
+Device::Device(DeviceManager *deviceManager)
 {
     deviceManager_ = deviceManager;
-    data_.mutable_device_id()->set_id(id);
-    // FIXME: choose a better default mac address
-    data_.MutableExtension(OstEmul::mac)->set_addr(0x001122330000ULL + id);
 
-    Device::macHash_.insert(myMac(), this);
+    for (int i = 0; i < kMaxVlan; i++)
+        vlan_[i] = 0;
+    numVlanTags_ = 0;
+    mac_ = 0;
+    ip4_ = 0;
+    ip4PrefixLength_ = 0;
+
+    clearKey();
 }
 
-Device::~Device()
+void Device::setVlan(int index, quint16 vlan)
 {
-    macHash_.remove(myMac());
-    ip4Hash_.remove(myIp4());
-}
+    int ofs;
 
-quint32 Device::id()
-{
-    return data_.device_id().id();
-}
-
-void Device::protoDataCopyFrom(const OstProto::Device &device)
-{
-    quint64 oldMac, newMac;
-    quint32 oldIp4, newIp4;
-
-    // Save old mac and ip before updating the device data
-    oldMac = myMac();
-    oldIp4 = myIp4();
-
-    data_.CopyFrom(device);
-
-    // Get new mac and ip for comparison
-    newMac = myMac();
-    newIp4 = myIp4();
-
-    // Update MacHash if mac has changed
-    if (newMac != oldMac) {
-        macHash_.remove(oldMac);
-        macHash_.insert(newMac, this);
+    if ((index < 0) || (index >= kMaxVlan)) {
+        qWarning("%s: vlan index %d out of range (0 - %d)", __FUNCTION__,
+                index, kMaxVlan - 1);
+        return;
     }
 
-    // Update Ip4Hash if ip4 has changed
-    if (newIp4 != oldIp4) {
-        ip4Hash_.remove(oldIp4);
-        ip4Hash_.insert(newIp4, this);
-    }
+    vlan_[index] = vlan;
+
+    ofs = index * sizeof(quint16);
+    key_[ofs]   = vlan >> 8;
+    key_[ofs+1] = vlan & 0xff;
+
+    if (index >= numVlanTags_)
+        numVlanTags_ = index + 1;
 }
 
-void Device::protoDataCopyInto(OstProto::Device &device) const
+void Device::setMac(quint64 mac)
 {
-    device.CopyFrom(data_);
+    int ofs = kMaxVlan * sizeof(quint16);
+
+    mac_ = mac;
+    memcpy(key_.data() + ofs, (char*)&mac, sizeof(mac));
+}
+
+void Device::setIp4(quint32 address, int prefixLength)
+{
+    ip4_ = address;
+    ip4PrefixLength_ = prefixLength;
+}
+
+QString Device::config()
+{
+    return QString("<vlans=%1/%2/%3/%4 mac=%5 ip4=%6/%7>")
+        .arg(vlan_[0]).arg(vlan_[1]).arg(vlan_[2]).arg(vlan_[3])
+        .arg(mac_, 12, kBaseHex, QChar('0'))
+        .arg(QHostAddress(ip4_).toString())
+        .arg(ip4PrefixLength_);
+}
+
+DeviceKey Device::key()
+{
+    return key_;
+}
+
+void Device::clearKey()
+{ 
+    key_.fill(0, kMaxVlan * sizeof(quint16) + sizeof(quint64));
 }
 
 int Device::encapSize()
 {
-    int size = 14; // ethernet header size
-
-    if (data_.HasExtension(OstEmul::vlan))
-        size += 4 * data_.GetExtension(OstEmul::vlan).vlan_stack_size();
+    // ethernet header + vlans
+    int size = 14 + 4*numVlanTags_; 
 
     return size;
 }
 
 void Device::encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type)
 {
-    quint64 srcMac = myMac();
+    int ofs;
+    quint64 srcMac = mac_; 
     uchar *p = pktBuf->push(encapSize());
 
     if (!p) {
@@ -107,30 +128,18 @@ void Device::encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type)
     *(quint16*)(p +  4) =  qToBigEndian(quint16(dstMac & 0xffff));
     *(quint32*)(p +  6) =  qToBigEndian(quint32(srcMac >> 16));
     *(quint16*)(p + 10) =  qToBigEndian(quint16(srcMac & 0xffff));
-    // TODO: Vlan Encap
-    *(quint16*)(p + 12) =  qToBigEndian(type);
+    ofs = 12;
+    for (int i = 0; i < numVlanTags_; i++) {
+        *(quint16*)(p + ofs) =  qToBigEndian(quint32((0x8100 << 16)|vlan_[i]));
+        ofs += 4;
+    }
+    *(quint16*)(p + ofs) =  qToBigEndian(type);
+    ofs += 2;
+
+    Q_ASSERT(ofs == encapSize());
 
 _exit:
     return;
-}
-
-//
-// Private Methods
-//
-quint64 Device::myMac()
-{
-    if (data_.HasExtension(OstEmul::mac))
-        return data_.GetExtension(OstEmul::mac).addr();
-
-    return 0;
-}
-
-quint32 Device::myIp4()
-{
-    if (data_.HasExtension(OstEmul::ip4))
-        return data_.GetExtension(OstEmul::ip4).addr();
-
-    return 0; // FIXME: how to indicate that we don't have a IP?
 }
 
 void Device::transmitPacket(PacketBuffer *pktBuf)
@@ -138,59 +147,33 @@ void Device::transmitPacket(PacketBuffer *pktBuf)
     deviceManager_->transmitPacket(pktBuf);
 }
 
+// We expect pktBuf to point to EthType on entry
 void Device::receivePacket(PacketBuffer *pktBuf)
 {
-    uchar *pktData = pktBuf->data();
-    int offset = 0;
-    Device *device;
-    const quint64 bcastMac = 0xffffffffffffULL;
-    quint64 dstMac;
-    quint16 ethType;
+    quint16 ethType = qFromBigEndian<quint16>(pktBuf->data());
+    pktBuf->pull(2);
 
-    // We assume pkt is ethernet
-    // TODO: extend for other link layer types
+    qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
 
-    // Extract dstMac
-    dstMac = qFromBigEndian<quint32>(pktData + offset);
-    offset += 4;
-    dstMac = (dstMac << 16) | qFromBigEndian<quint16>(pktData + offset);
-    offset += 2;
-
-    // Skip srcMac - don't care
-    offset += 6;
-    qDebug("dstMac %llx", dstMac);
-
-    // Is it destined for us?
-    device = macHash_.value(dstMac);
-    if (!device && (dstMac != bcastMac)) {
-        qDebug("%s: dstMac %llx is not us", __FUNCTION__, dstMac);
-        goto _exit;
-    }
-
-    ethType = qFromBigEndian<quint16>(pktData + offset);
-    offset += 2;
-    qDebug("%s: ethType 0x%x", __FUNCTION__, ethType);
-    
     switch(ethType)
     {
     case 0x0806: // ARP
-        pktBuf->pull(offset);
-        receiveArp(device, pktBuf);
+        receiveArp(pktBuf);
         break;
 
-    case 0x8100: // VLAN
     case 0x0800: // IPv4
     case 0x86dd: // IPv6
     default:
         break;
     }
-
-_exit:
-    return;
 }
 
-void Device::receiveArp(Device *device, PacketBuffer *pktBuf)
+//
+// Private Methods
+//
+void Device::receiveArp(PacketBuffer *pktBuf)
 {
+    PacketBuffer *rspPkt;
     uchar *pktData = pktBuf->data();
     int offset = 0;
     quint16 hwType, protoType;
@@ -198,6 +181,15 @@ void Device::receiveArp(Device *device, PacketBuffer *pktBuf)
     quint16 opCode;
     quint64 srcMac, tgtMac;
     quint32 srcIp, tgtIp;
+
+    // Extract tgtIp first to check quickly if this packet is for us or not
+    tgtIp = qFromBigEndian<quint32>(pktData + 24);
+    if (tgtIp != ip4_) {
+        qDebug("tgtIp %s is not me %s", 
+                qPrintable(QHostAddress(tgtIp).toString()),
+                qPrintable(QHostAddress(ip4_).toString()));
+        return;
+    }
 
     // Extract annd verify ARP packet contents
     hwType = qFromBigEndian<quint16>(pktData + offset);
@@ -236,43 +228,33 @@ void Device::receiveArp(Device *device, PacketBuffer *pktBuf)
     tgtMac = (tgtMac << 16) | qFromBigEndian<quint16>(pktData + offset);
     offset += 2;
 
-    tgtIp = qFromBigEndian<quint32>(pktData + offset);
-    offset += 4;
-
     switch (opCode)
     {
-    case 1: // ARP Request
-        if (!device)
-            device = ip4Hash_.value(tgtIp);
-        if (device->myIp4() == tgtIp) {
-            PacketBuffer *pktBuf = new PacketBuffer;
-            uchar *p;
-
-            pktBuf->reserve(device->encapSize()); 
-            p = pktBuf->put(28); // FIXME: hardcoding
-            if (p) {
-                // HTYP, PTYP
-                *(quint32*)(p   ) = qToBigEndian(quint32(0x00010800));
-                // HLEN, PLEN, OPER
-                *(quint32*)(p+ 4) = qToBigEndian(quint32(0x06040002));
-                // Source H/W Addr, Proto Addr
-                *(quint32*)(p+ 8) = qToBigEndian(
-                                        quint32(device->myMac() >> 16));
-                *(quint16*)(p+12) = qToBigEndian(
-                                        quint16(device->myMac() & 0xffff));
-                *(quint32*)(p+14) = qToBigEndian(tgtIp);
-                // Target H/W Addr, Proto Addr
-                *(quint32*)(p+18) = qToBigEndian(quint32(srcMac >> 16));
-                *(quint16*)(p+22) = qToBigEndian(quint16(srcMac & 0xffff));
-                *(quint32*)(p+24) = qToBigEndian(srcIp);
-            }
-
-            device->encap(pktBuf, srcMac, 0x0806);
-            device->transmitPacket(pktBuf);
-
-            qDebug("Sent ARP Reply for srcIp/tgtIp=0x%x/0x%x",
-                    srcIp, tgtIp);
+    case 1:  // ARP Request
+        rspPkt = new PacketBuffer;
+        rspPkt->reserve(encapSize()); 
+        pktData = rspPkt->put(28);
+        if (pktData) {
+            // HTYP, PTYP
+            *(quint32*)(pktData   ) = qToBigEndian(quint32(0x00010800));
+            // HLEN, PLEN, OPER
+            *(quint32*)(pktData+ 4) = qToBigEndian(quint32(0x06040002));
+            // Source H/W Addr, Proto Addr
+            *(quint32*)(pktData+ 8) = qToBigEndian(quint32(mac_ >> 16));
+            *(quint16*)(pktData+12) = qToBigEndian(quint16(mac_ & 0xffff));
+            *(quint32*)(pktData+14) = qToBigEndian(ip4_);
+            // Target H/W Addr, Proto Addr
+            *(quint32*)(pktData+18) = qToBigEndian(quint32(srcMac >> 16));
+            *(quint16*)(pktData+22) = qToBigEndian(quint16(srcMac & 0xffff));
+            *(quint32*)(pktData+24) = qToBigEndian(srcIp);
         }
+
+        encap(rspPkt, srcMac, 0x0806);
+        transmitPacket(rspPkt);
+
+        qDebug("Sent ARP Reply for srcIp/tgtIp=%s/%s",
+                qPrintable(QHostAddress(srcIp).toString()), 
+                qPrintable(QHostAddress(tgtIp).toString()));
         break;
     case 2: // ARP Response
     default:

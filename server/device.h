@@ -22,45 +22,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocol.pb.h"
 
-#include <QHash>
+#include <QByteArray>
 
 class DeviceManager;
 class PacketBuffer;
 
+typedef QByteArray DeviceKey;
+
 class Device
 {
 public:
-    Device(quint32 id, DeviceManager *deviceManager);
-    ~Device();
+    Device(DeviceManager *deviceManager);
 
-    quint32 id();
+    void setVlan(int index, quint16 vlan);
+    void setMac(quint64 mac);
+    void setIp4(quint32 address, int prefixLength);
+    QString config();
 
-    void protoDataCopyFrom(const OstProto::Device &device);
-    void protoDataCopyInto(OstProto::Device &device) const;
+    DeviceKey key();
+    void clearKey();
 
     int encapSize();
     void encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type);
 
-    // receivePacket() is a class method 'coz we don't have the target
-    // device yet; transmitPacket() is always from a particular device
+    void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
-    static void receivePacket(PacketBuffer *pktBuf);
 
 private: // methods
-    // receiveArp() is a class method 'coz ARP request is broadcast, so
-    // we can't identify the target device till we parse the ARP header
-    static void receiveArp(Device *device, PacketBuffer *pktBuf);
-
-    quint64 myMac();
-    quint32 myIp4();
+    void receiveArp(PacketBuffer *pktBuf);
 
 private: // data
-    // Class data
-    static QHash<quint64, Device*> macHash_;
-    static QHash<quint32, Device*> ip4Hash_;
-
     DeviceManager *deviceManager_;
-    OstProto::Device data_;
+
+    int numVlanTags_;
+    quint16 vlan_[4]; // FIXME: vlan tpid
+    quint64 mac_;
+    quint32 ip4_;
+    int ip4PrefixLength_;
+
+    DeviceKey key_;
 };
 
 #endif

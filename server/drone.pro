@@ -33,8 +33,8 @@ LIBS += -lprotobuf
 HEADERS += drone.h \
     myservice.h
 SOURCES += \
-    device.cpp \
     devicemanager.cpp \
+    device.cpp \
     drone_main.cpp \
     drone.cpp \
     portmanager.cpp \

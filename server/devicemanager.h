@@ -20,14 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _DEVICE_MANAGER_H
 #define _DEVICE_MANAGER_H
 
-#include "../common/protocol.pb.h"
+#include "device.h"
 
 #include <QHash>
+#include <QMultiHash>
 #include <QtGlobal>
 
 class AbstractPort;
-class Device;
 class PacketBuffer;
+namespace OstProto {
+    class DeviceGroup;
+};
 
 class DeviceManager 
 {
@@ -35,19 +38,30 @@ public:
     DeviceManager(AbstractPort *parent = 0);
     ~DeviceManager();
 
-    int deviceCount();
-    Device* deviceAtIndex(int index);
-    Device* device(uint deviceId);
+    int deviceGroupCount();
+    const OstProto::DeviceGroup* deviceGroupAtIndex(int index);
+    const OstProto::DeviceGroup* deviceGroup(uint deviceGroupId);
 
-    bool addDevice(uint deviceId);
-    bool deleteDevice(uint deviceId);
-    bool modifyDevice(const OstProto::Device *device);
+    bool addDeviceGroup(uint deviceGroupId);
+    bool deleteDeviceGroup(uint deviceGroupId);
+    bool modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup);
+
+    int deviceCount();
 
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
+
 private:
+    enum Operation { kAdd, kDelete };
+
+    void enumerateDevices(
+            const OstProto::DeviceGroup *deviceGroup,
+            Operation oper);
+             
     AbstractPort *port_;
-    QHash<uint, Device*> deviceList_;
+    QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
+    QHash<DeviceKey, Device*> deviceList_;
+    QMultiHash<DeviceKey, Device*> bcastList_;
 };
 
 #endif
