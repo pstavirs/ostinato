@@ -227,34 +227,13 @@ void DeviceManager::enumerateDevices(
             OstEmul::VlanEmulation::Vlan vlan = pbVlan.stack(j);
             quint16 vlanAdd = i*vlan.step();
 
-            switch (vlan.mode()) {
-            case OstEmul::VlanEmulation::kNoRepeat:
-                /* Do nothing */
-                break;
-            case OstEmul::VlanEmulation::kRepeat:
-            default:
-                vlanAdd %= vlan.step() * vlan.count();
-                break;
-            }
-
             dk.setVlan(j, vlan.vlan_tag() + vlanAdd);
         }
 
         for (uint k = 0; k < pbDevice.count(); k++) {
             Device *device;
-            quint64 macAdd = (i*pbDevice.count()+k)*pbDevice.mac().step();
-            quint32 ip4Add = (i*pbDevice.count()+k)*pbDevice.ip4().step();
-
-            switch (pbDevice.mode()) {
-            case OstEmul::Device::kNoRepeat:
-                /* Do Nothing*/
-                break;
-            case OstEmul::Device::kRepeat:
-            default:
-                macAdd %= pbDevice.mac().step() * pbDevice.count();
-                ip4Add %= pbDevice.ip4().step() * pbDevice.count();
-                break;
-            }
+            quint64 macAdd = k * pbDevice.mac().step();
+            quint32 ip4Add = k * pbDevice.ip4().step();
 
             dk.setMac(pbDevice.mac().address() + macAdd);
             dk.setIp4(pbDevice.ip4().address() + ip4Add,

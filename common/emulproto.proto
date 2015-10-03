@@ -25,10 +25,6 @@ package OstEmul;
 //  VLAN
 // ======
 message VlanEmulation {
-    enum Mode {
-        kNoRepeat = 0;
-        kRepeat = 1;
-    }
     message Vlan {
         optional uint32 tpid = 1 [default = 0x8100];
 
@@ -37,7 +33,6 @@ message VlanEmulation {
 
         optional uint32 count = 10 [default = 1];
         optional uint32 step  = 11 [default = 1];
-        optional Mode   mode  = 12 [default = kRepeat];
     }
 
     repeated Vlan stack = 1; // outer to inner
@@ -74,19 +69,15 @@ message Ip6Emulation {
 
     optional uint64 step_hi = 10 [default = 0];
     optional uint64 step_lo = 11 [default = 1];
+    // FIXME: step for gateway?
 }
 
 message Device {
-    enum Mode {
-        kNoRepeat = 0;
-        kRepeat = 1;
-    }
     optional MacEmulation mac = 1;
     optional Ip4Emulation ip4 = 2;
     optional Ip6Emulation ip6 = 3;
 
     optional uint32 count = 10 [default = 1];
-    optional Mode   mode  = 11 [default = kRepeat]; // FIXME: per proto mode?
 }
 
 extend OstProto.DeviceGroup {

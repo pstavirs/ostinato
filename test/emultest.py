@@ -201,7 +201,7 @@ try:
     # ----------------------------------------------------------------- #
 
     passed = False
-    suite.test_begin('multiEmulDev')
+    suite.test_begin('multiEmulDevNoVlan')
 
     num_devs = 5
     try:
