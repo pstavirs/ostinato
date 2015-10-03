@@ -27,6 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <qendian.h>
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 const quint64 kBcastMac = 0xffffffffffffULL;
 
 // FIXME: add lock to protect deviceGroupList_ operations?
@@ -157,7 +160,7 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
     // Skip srcMac - don't care
     offset += 6;
 
-    qDebug("dstMac %llx", dstMac);
+    qDebug("dstMac %012" PRIx64, dstMac);
 
 _eth_type:
     // Extract EthType

@@ -915,7 +915,7 @@ PcapPort::PortReceiver::~PortReceiver()
 
 void PcapPort::PortReceiver::run()
 {
-    int flag = PCAP_OPENFLAG_PROMISCUOUS;
+    int flags = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
     const char *capture_filter = "arp or (vlan and arp)";
@@ -923,21 +923,40 @@ void PcapPort::PortReceiver::run()
     
     qDebug("In %s", __PRETTY_FUNCTION__);
 
+#ifdef Q_OS_WIN32
+    flags |= PCAP_OPENFLAG_NOCAPTURE_LOCAL;
+#endif
+
 _retry:
     // FIXME: use 0 timeout value?
-    handle_ = pcap_open_live(device_.toAscii().constData(), 65535, 
-                    flag, 1000 /* ms */, errbuf);
+#ifdef Q_OS_WIN32
+    // NOCAPTURE_LOCAL needs windows only pcap_open()
+    handle_ = pcap_open(qPrintable(device_), 65535, 
+                flags, 1000 /* ms */, NULL, errbuf);
+#else
+    handle_ = pcap_open_live(qPrintable(device_), 65535, 
+                    flags, 1000 /* ms */, errbuf);
+#endif
 
     if (handle_ == NULL)
     {
-        if (flag && QString(errbuf).contains("promiscuous"))
+        if (flags && QString(errbuf).contains("promiscuous"))
         {
             // FIXME: warn user that device emulation will not work
             qDebug("%s:can't set promiscuous mode, trying non-promisc", 
-                    device_.toAscii().constData());
-            flag = 0;
+                    qPrintable(device_));
+            flags &= ~PCAP_OPENFLAG_PROMISCUOUS;
             goto _retry;
         }
+#ifdef Q_OS_WIN32
+        else if ((flags & PCAP_OPENFLAG_NOCAPTURE_LOCAL) 
+                && QString(errbuf).contains("loopback"))
+        {
+            qDebug("Can't set no local capture mode %s", qPrintable(device_));
+            flags &= ~PCAP_OPENFLAG_NOCAPTURE_LOCAL;
+            goto _retry;
+        }
+#endif
         else
         {
             // FIXME: warn user that device emulation will not work
