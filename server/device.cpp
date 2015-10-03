@@ -130,7 +130,7 @@ void Device::encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type)
     *(quint16*)(p + 10) =  qToBigEndian(quint16(srcMac & 0xffff));
     ofs = 12;
     for (int i = 0; i < numVlanTags_; i++) {
-        *(quint16*)(p + ofs) =  qToBigEndian(quint32((0x8100 << 16)|vlan_[i]));
+        *(quint32*)(p + ofs) =  qToBigEndian(quint32((0x8100 << 16)|vlan_[i]));
         ofs += 4;
     }
     *(quint16*)(p + ofs) =  qToBigEndian(type);
@@ -166,6 +166,8 @@ void Device::receivePacket(PacketBuffer *pktBuf)
     default:
         break;
     }
+    // FIXME: temporary hack till DeviceManager clones pbufs
+    pktBuf->push(2);
 }
 
 //

@@ -918,6 +918,7 @@ void PcapPort::PortReceiver::run()
     int flag = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
+    const char *capture_filter = "arp or (vlan and arp)";
     const int optimize = 1;
     
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -947,7 +948,7 @@ _retry:
     }
 
     // FIXME: hardcoded filter
-    if (pcap_compile(handle_, &bpf, "arp", optimize, 0) < 0) 
+    if (pcap_compile(handle_, &bpf, capture_filter, optimize, 0) < 0) 
     {
         qWarning("%s: error compiling filter: %s", qPrintable(device_),
                 pcap_geterr(handle_));

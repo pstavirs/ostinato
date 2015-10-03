@@ -169,7 +169,7 @@ _eth_type:
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
         offset += 2;
-        qDebug("%s: idx: %d vlan 0x%x", __FUNCTION__, idx, vlan);
+        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
         goto _eth_type;
     }
 
@@ -177,6 +177,11 @@ _eth_type:
 
     if (dstMac == kBcastMac) {
         QList<Device*> list = bcastList_.values(dk.key());
+        // FIXME: We need to clone the pktBuf before passing to each
+        // device, otherwise only the first device gets the original
+        // packet - all subsequent ones get the modified packet!
+        // NOTE: modification may not be in the pkt data buffer but
+        // in the HDTE pointers - which is bad as well!
         foreach(Device *device, list)
             device->receivePacket(pktBuf);
         goto _exit;
@@ -228,7 +233,7 @@ void DeviceManager::enumerateDevices(
                 break;
             case OstEmul::VlanEmulation::kRepeat:
             default:
-                vlanAdd %= vlan.count();
+                vlanAdd %= vlan.step() * vlan.count();
                 break;
             }
 
@@ -237,8 +242,8 @@ void DeviceManager::enumerateDevices(
 
         for (uint k = 0; k < pbDevice.count(); k++) {
             Device *device;
-            quint64 macAdd = i*k*pbDevice.mac().step();
-            quint32 ip4Add = i*k*pbDevice.ip4().step();
+            quint64 macAdd = (i*pbDevice.count()+k)*pbDevice.mac().step();
+            quint32 ip4Add = (i*pbDevice.count()+k)*pbDevice.ip4().step();
 
             switch (pbDevice.mode()) {
             case OstEmul::Device::kNoRepeat:
@@ -246,8 +251,8 @@ void DeviceManager::enumerateDevices(
                 break;
             case OstEmul::Device::kRepeat:
             default:
-                macAdd %= pbDevice.count();
-                ip4Add %= pbDevice.count();
+                macAdd %= pbDevice.mac().step() * pbDevice.count();
+                ip4Add %= pbDevice.ip4().step() * pbDevice.count();
                 break;
             }
 
@@ -265,12 +270,12 @@ void DeviceManager::enumerateDevices(
 
                     dk.setMac(kBcastMac);
                     bcastList_.insert(dk.key(), device);
-                    qDebug("enumerate (add): %s", qPrintable(device->config()));
+                    qDebug("enumerate(add): %s", qPrintable(device->config()));
                     break;
 
                 case kDelete:
                     device = deviceList_.take(dk.key());
-                    qDebug("enumerate (del): %s", qPrintable(device->config()));
+                    qDebug("enumerate(del): %s", qPrintable(device->config()));
                     delete device;
 
                     dk.setMac(kBcastMac);
