@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "vlanconfig.h"
 #include "svlanconfig.h"
 #include "vlanstackconfig.h"
+#include "mplsconfig.h"
 // L2 Protocol Widgets
 #include "eth2config.h"
 #include "dot3config.h"
@@ -74,6 +75,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kVlanStackFieldNumber, 
             (void*) VlanStackConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kMplsFieldNumber,
+            (void*) MplsConfigForm::createInstance);
 
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kEth2FieldNumber, 
