@@ -791,9 +791,18 @@ _exit:
     return isOk;
 }
 
+bool Ip4Protocol::isProtocolFrameValueVariable() const
+{
+    if ((data.src_ip_mode() != OstProto::Ip4::e_im_fixed) 
+            || (data.dst_ip_mode() != OstProto::Ip4::e_im_fixed))
+        return true;
+    else
+        return false;
+}
+
 int Ip4Protocol::protocolFrameVariableCount() const
 {
-    int count = AbstractProtocol::protocolFrameVariableCount();
+    int count = 1;
 
     if (data.src_ip_mode() != OstProto::Ip4::e_im_fixed)
         count = AbstractProtocol::lcm(count, data.src_ip_count());
@@ -811,21 +820,23 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
     {
         case CksumIpPseudo:
         {
-            quint32 sum = 0;
-            QByteArray fv = protocolFrameValue(streamIndex);
-            const quint8 *p = (quint8*) fv.constData();
+            quint32 sum;
 
-            sum += *((quint16*)(p + 12)); // src-ip hi
-            sum += *((quint16*)(p + 14)); // src-ip lo
-            sum += *((quint16*)(p + 16)); // dst-ip hi
-            sum += *((quint16*)(p + 18)); // dst-ip lo
-            sum += qToBigEndian((quint16) protocolFramePayloadSize()); // len
-            sum += qToBigEndian((quint16) *(p + 9)); // proto
+            sum = fieldData(ip4_srcAddr, FieldValue, streamIndex).toUInt() >> 16;
+            sum += fieldData(ip4_srcAddr, FieldValue, streamIndex).toUInt() & 0xFFFF;
+            sum += fieldData(ip4_dstAddr, FieldValue, streamIndex).toUInt() >> 16;
+            sum += fieldData(ip4_dstAddr, FieldValue, streamIndex).toUInt() & 0xFFFF;
+
+            sum += fieldData(ip4_proto, FieldValue, streamIndex).toUInt() & 0x00FF;
+            sum += (fieldData(ip4_totLen, FieldValue, streamIndex).toUInt() & 0xFFFF) - 20;
 
             while(sum>>16)
                 sum = (sum & 0xFFFF) + (sum >> 16);
 
-            return ~qFromBigEndian((quint16)sum);
+            // Above calculation done assuming 'big endian' 
+            // - so convert to host order
+            //return qFromBigEndian(sum);
+            return ~sum;
         }
         default:
             break;

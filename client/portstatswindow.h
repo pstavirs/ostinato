@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 #include "portstatsmodel.h"
 
-class QSortFilterProxyModel;
-
 class PortStatsWindow : public QWidget, public Ui::PortStatsWindow
 {
     Q_OBJECT
@@ -36,8 +34,9 @@ public:
     PortStatsWindow(PortGroupList *pgl, QWidget *parent = 0);
     ~PortStatsWindow();
 
-public slots:
-    void showMyReservedPortsOnly(bool enabled);
+private:
+    PortGroupList        *pgl;
+    PortStatsModel        *model;
 
 private slots:
     void on_tbStartTransmit_clicked();
@@ -51,14 +50,6 @@ private slots:
     void on_tbClearAll_clicked();
 
     void on_tbFilter_clicked();
-
-private:
-    QModelIndexList selectedColumns();
-
-    PortGroupList           *pgl;
-    PortStatsModel          *model;
-    QSortFilterProxyModel   *proxyStatsModel;
-
 };
 
 #endif

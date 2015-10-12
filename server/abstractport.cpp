@@ -61,7 +61,7 @@ void AbstractPort::init()
 
 bool AbstractPort::modify(const OstProto::Port &port)
 {
-    bool ret = true;
+    bool ret = false;
 
     //! \todo Use reflection to find out which fields are set
     if (port.has_is_exclusive_control())
@@ -75,10 +75,6 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     if (port.has_transmit_mode())
         data_.set_transmit_mode(port.transmit_mode());
-
-    if (port.has_user_name()) {
-        data_.set_user_name(port.user_name());
-    }
 
     return ret;
 }    
@@ -197,8 +193,10 @@ void AbstractPort::updatePacketListSequential()
             case OstProto::StreamControl::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
                 x = AbstractProtocol::lcm(frameVariableCount, burstSize);
-                n = ulong(burstSize * streamList_[i]->numBursts()) / x;
-                y = ulong(burstSize * streamList_[i]->numBursts()) % x;
+                n = ulong(burstSize * streamList_[i]->burstRate() 
+                            * streamList_[i]->numBursts()) / x;
+                y = ulong(burstSize * streamList_[i]->burstRate() 
+                            * streamList_[i]->numBursts()) % x;
                 if (streamList_[i]->burstRate() > 0)
                 {
                     ibg = 1e9/double(streamList_[i]->burstRate());

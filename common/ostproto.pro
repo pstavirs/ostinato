@@ -18,6 +18,7 @@ PROTOS = \
     vlan.proto \
     svlan.proto \
     vlanstack.proto \
+    lacp.proto \
     arp.proto \
     ip4.proto \
     ip6.proto \
@@ -55,6 +56,7 @@ HEADERS += \
     dot2llc.h \
     snap.h \
     dot2snap.h \
+    lacp.h \
     arp.h \
     ip4.h \
     ip6.h \
@@ -90,6 +92,7 @@ SOURCES += \
     dot3.cpp \
     llc.cpp \
     snap.cpp \
+    lacp.cpp \
     arp.cpp \
     ip4.cpp \
     ip6.cpp \

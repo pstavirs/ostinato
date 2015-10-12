@@ -1,3 +1,5 @@
+syntax: glob
+
 # generated object files
 *.pyc
 *.o

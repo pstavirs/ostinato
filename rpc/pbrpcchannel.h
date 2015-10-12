@@ -61,9 +61,6 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     } RpcCall;
     QList<RpcCall>        pendingCallList;
 
-    const ::google::protobuf::Message   &notifPrototype;
-    ::google::protobuf::Message     *notif;
-
     QHostAddress    mServerAddress;
     quint16            mServerPort;
     QTcpSocket        *mpSocket;
@@ -72,8 +69,7 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
 public:
-    PbRpcChannel(QHostAddress ip, quint16 port,
-                 const ::google::protobuf::Message &notifProto);
+    PbRpcChannel(QHostAddress ip, quint16 port);
     ~PbRpcChannel();
 
     void establish();
@@ -97,8 +93,6 @@ signals:
     void disconnected();
     void error(QAbstractSocket::SocketError socketError);
     void stateChanged(QAbstractSocket::SocketState socketState);
-
-    void notification(int notifType, ::google::protobuf::Message *notifData);
 
 private slots:
     void on_mpSocket_connected();

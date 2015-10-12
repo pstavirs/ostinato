@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PORT_H
 #define _PORT_H
 
-#include <QDir>
 #include <QList>
 #include <QString>
 #include <QTemporaryFile>
@@ -74,8 +73,6 @@ public:
         { return QString().fromStdString(d.description()); }
     const QString notes() const 
         { return QString().fromStdString(d.notes()); }
-    const QString userName() const 
-        { return QString().fromStdString(d.user_name()); }
     AdminStatus adminStatus() 
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
     bool hasExclusiveControl() 
@@ -104,10 +101,7 @@ public:
     QTemporaryFile* getCaptureFile() 
     {
         delete capFile_;
-        capFile_ = new QTemporaryFile(QString(QDir::tempPath())
-                                        .append("/")
-                                        .append(name())
-                                        .append(".XXXXXX"));
+        capFile_ = new QTemporaryFile();
         return capFile_; 
     }
 
@@ -139,8 +133,6 @@ public:
     // recalculate - refactor client side domain objects and model objects
     void recalculateAverageRates();
     void updateStats(OstProto::PortStats *portStats);
-
-    void duplicateStreams(const QList<int> &list, int count);
 
     bool openStreams(QString fileName, bool append, QString &error);
     bool saveStreams(QString fileName, QString fileType, QString &error);

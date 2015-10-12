@@ -31,8 +31,6 @@ public:
     Preferences();
     ~Preferences();
 
-    static void initDefaults();
-
 public slots:
     void accept();
 

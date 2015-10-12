@@ -32,7 +32,6 @@ LOW
 */
 
 class QAbstractItemDelegate;
-class QSortFilterProxyModel;
 
 class PortsWindow : public QWidget, private Ui::PortsWindow
 {
@@ -48,21 +47,17 @@ public:
 private:
     QString        lastNewPortGroup;
     QAbstractItemDelegate *delegate;
-    QSortFilterProxyModel *proxyPortModel;
-
-public slots:
-    void showMyReservedPortsOnly(bool enabled);
 
 private slots:
-    void updatePortViewActions(const QModelIndex& currentIndex);
+    void updatePortViewActions(const QModelIndex& current);
     void updateStreamViewActions();
 
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();
     void updatePortRates();
     void on_tvStreamList_activated(const QModelIndex & index);
-    void when_portView_currentChanged(const QModelIndex& currentIndex,
-        const QModelIndex& previousIndex);
+    void when_portView_currentChanged(const QModelIndex& current,
+        const QModelIndex& previous);
     void when_portModel_dataChanged(const QModelIndex& topLeft,
         const QModelIndex& bottomRight);
     void when_portModel_reset();
@@ -79,7 +74,6 @@ private slots:
 
     void on_actionNew_Stream_triggered();
     void on_actionEdit_Stream_triggered();
-    void on_actionDuplicate_Stream_triggered();
     void on_actionDelete_Stream_triggered();
 
     void on_actionOpen_Streams_triggered();

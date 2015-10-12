@@ -35,6 +35,9 @@ class UserProtocol : public QObject
     Q_ENUMS(CksumType);
 
     Q_PROPERTY(QString name READ name WRITE setName);
+    Q_PROPERTY(bool protocolFrameValueVariable
+            READ isProtocolFrameValueVariable
+            WRITE setProtocolFrameValueVariable);
     Q_PROPERTY(bool protocolFrameSizeVariable
             READ isProtocolFrameSizeVariable
             WRITE setProtocolFrameSizeVariable);
@@ -66,6 +69,8 @@ public slots:
     QString name() const;
     void setName(QString &name);
 
+    bool isProtocolFrameValueVariable() const;
+    void setProtocolFrameValueVariable(bool variable);
     bool isProtocolFrameSizeVariable() const;
     void setProtocolFrameSizeVariable(bool variable);
     int protocolFrameVariableCount() const;
@@ -88,6 +93,7 @@ private:
     AbstractProtocol *parent_;
 
     QString name_;
+    bool protocolFrameValueVariable_;
     bool protocolFrameSizeVariable_;
     int protocolFrameVariableCount_;
 };
@@ -127,6 +133,7 @@ public:
 
     virtual int protocolFrameSize(int streamIndex = 0) const;
 
+    virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
     virtual int protocolFrameVariableCount() const;
 

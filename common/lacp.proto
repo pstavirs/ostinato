@@ -1,0 +1,79 @@
+/*
+Copyright (C) 2010 Marchuk S.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+This module is developed by PLVision <developers@plvision.eu> company
+*/
+
+import "protocol.proto";
+
+package OstProto;
+
+// Lacp Protocol
+
+message Lacp {
+    optional uint32    subtype = 1 [default = 1];
+    optional uint32    version_number = 2 [default = 1];
+    optional uint32    tlv_type_actor = 3 [default =1];
+    optional uint32    actor_info_length = 4 [default = 20];
+    optional uint32    actor_system_priority = 5;
+    optional uint64    actor_system = 6;
+    optional uint32    actor_key = 7;
+    optional uint32    actor_port_priority = 8;
+    optional uint32    actor_port = 9;
+    optional uint32    actor_state = 10;
+    optional uint32    actor_reserved = 11 [default = 0];
+
+    optional uint32    tlv_type_partner = 12 [default = 2];
+    optional uint32    partner_info_length = 13 [default = 20];
+    optional uint32    partner_system_priority = 14;
+    optional uint64    partner_system = 15;
+    optional uint32    partner_key = 16;
+    optional uint32    partner_port_priority = 17;
+    optional uint32    partner_port = 18;
+    optional uint32    partner_state = 19;
+    optional uint32    partner_reserved = 20 [default = 0];
+
+    optional uint32    tlv_type_collector = 21 [default = 3];
+    optional uint32    collector_info_length = 22 [default = 16];
+    optional uint32    collector_maxdelay = 23;
+    optional bytes     collector_reserved = 24 [default = '000000000000000000000000'];
+
+    optional uint32    tlv_type_terminator = 25 [default = 0];
+    optional uint32    terminator_length = 26 [default = 0];
+    optional bytes     terminator_reserved = 27 [default = '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'];
+
+   //Meta
+    optional bool    is_override_subtype = 36 ;
+    optional bool    is_override_version_number = 37 ;
+    optional bool    is_override_tlv_type_actor = 38 ;
+    optional bool    is_override_actor_info_length = 39 ;
+    optional bool    is_override_actor_reserved = 40 ;
+    optional bool    is_override_tlv_type_partner = 41 ;
+    optional bool    is_override_partner_info_length = 42 ;
+    optional bool    is_override_partner_reserved = 43 ;
+    optional bool    is_override_tlv_type_collector = 44 ;
+    optional bool    is_override_collector_info_length = 45 ;
+    optional bool    is_override_collector_reserved = 46 ;
+    optional bool    is_override_tlv_type_terminator = 47 ;
+    optional bool    is_override_terminator_length = 48 ;
+    optional bool    is_override_terminator_reserved = 49 ;
+}
+
+extend Protocol {
+    optional Lacp lacp = 209;
+}

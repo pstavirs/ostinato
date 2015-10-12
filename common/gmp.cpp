@@ -25,8 +25,6 @@ QHash<int, int> GmpProtocol::frameFieldCountMap;
 GmpProtocol::GmpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
-    // field count may change based on msgType - so don't cache field offsets
-    _cacheFlags &= ~FieldFrameBitOffsetCache;
 }
 
 GmpProtocol::~GmpProtocol()
@@ -737,9 +735,23 @@ int GmpProtocol::protocolFrameSize(int streamIndex) const
     return AbstractProtocol::protocolFrameValue(streamIndex, true).size();
 }
 
+bool GmpProtocol::isProtocolFrameValueVariable() const
+{
+    // No fields vary for Ssm Report
+    if (isSsmReport())
+        return false;
+
+    // For all other msg types, check the group mode
+    if (fieldData(kGroupMode, FieldValue).toUInt() 
+            != uint(OstProto::Gmp::kFixed))
+        return true;
+
+    return false;
+}
+
 int GmpProtocol::protocolFrameVariableCount() const
 {
-    int count = AbstractProtocol::protocolFrameVariableCount();
+    int count = 1;
 
     // No fields vary for Ssm Report
     if (isSsmReport())

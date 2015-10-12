@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractfileformat.h"
 #include "portconfigdialog.h"
-#include "settings.h"
 #include "streamconfigdialog.h"
 #include "streamlistdelegate.h"
 
@@ -29,16 +28,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QInputDialog>
 #include <QItemSelectionModel>
 #include <QMessageBox>
-#include <QSortFilterProxyModel>
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
-    : QWidget(parent), proxyPortModel(NULL)
+    : QWidget(parent)
 {
     QAction *sep;
 
     delegate = new StreamListDelegate;
-    proxyPortModel = new QSortFilterProxyModel(this);
-
     //slm = new StreamListModel();
     //plm = new PortGroupList();
     plm = pgl;
@@ -64,7 +60,6 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     // Populate StramList Context Menu Actions
     tvStreamList->addAction(actionNew_Stream);
     tvStreamList->addAction(actionEdit_Stream);
-    tvStreamList->addAction(actionDuplicate_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
     sep = new QAction(this);
@@ -82,23 +77,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     addActions(tvStreamList->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
-
-    // XXX: It would be ideal if we only needed to do the below to 
-    // get the proxy model to do its magic. However, the QModelIndex
-    // used by the source model and the proxy model are different
-    // i.e. the row, column, internalId/internalPtr used by both
-    // will be different. Since our domain objects - PortGroupList,
-    // PortGroup, Port etc. use these attributes, we need to map the
-    // proxy's index to the source's index before invoking any domain
-    // object methods
-    // TODO: research if we can skip the mapping when the domain 
-    // objects' design is reviewed
-    if (proxyPortModel) {
-        proxyPortModel->setSourceModel(plm->getPortModel());
-        tvPortList->setModel(proxyPortModel);
-    }
-    else
-        tvPortList->setModel(plm->getPortModel());
+    tvPortList->setModel(plm->getPortModel());
     
     connect( plm->getPortModel(), 
         SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)), 
@@ -142,75 +121,41 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
 void PortsWindow::streamModelDataChanged()
 {
-    QModelIndex current = tvPortList->currentIndex();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
-    if (plm->isPort(current))
-        plm->port(current).recalculateAverageRates();
+    if (plm->isPort(tvPortList->currentIndex()))
+        plm->port(tvPortList->currentIndex()).recalculateAverageRates();
 }
 
 PortsWindow::~PortsWindow()
 {
     delete delegate;
-    delete proxyPortModel;
-}
-
-void PortsWindow::showMyReservedPortsOnly(bool enabled)
-{
-    if (!proxyPortModel)
-        return;
-
-    if (enabled) {
-        QString rx = "Port Group|\\["
-                    + QRegExp::escape(appSettings->value(kUserKey, 
-                                            kUserDefaultValue).toString())
-                    + "\\]";
-        qDebug("%s: regexp: <%s>", __FUNCTION__, qPrintable(rx));
-        proxyPortModel->setFilterRegExp(QRegExp(rx));
-    }
-    else
-        proxyPortModel->setFilterRegExp(QRegExp(""));
 }
 
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 {
-    QModelIndex currentPort = tvPortList->currentIndex();
     StreamConfigDialog    *scd;
     int ret;
-
-    if (proxyPortModel)
-        currentPort = proxyPortModel->mapToSource(currentPort);
 
     if (!index.isValid())
     {
         qDebug("%s: invalid index", __FUNCTION__);
         return;
     }
-    scd = new StreamConfigDialog(plm->port(currentPort), index.row(), this);
+    scd = new StreamConfigDialog(plm->port(tvPortList->currentIndex()),
+        index.row(), this);
     qDebug("stream list activated\n");
     ret = scd->exec();
 
     if (ret == QDialog::Accepted)
-        plm->port(currentPort).recalculateAverageRates();
+        plm->port(tvPortList->currentIndex()).recalculateAverageRates();
 
     delete scd;
 }
 
-void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
-    const QModelIndex& previousIndex)
+void PortsWindow::when_portView_currentChanged(const QModelIndex& current,
+    const QModelIndex& previous)
 {
-    QModelIndex current = currentIndex;
-    QModelIndex previous = previousIndex;
-
-    if (proxyPortModel) {
-        current = proxyPortModel->mapToSource(current);
-        previous = proxyPortModel->mapToSource(previous);
-    }
-
     plm->getStreamModel()->setCurrentPortIndex(current);
-    updatePortViewActions(currentIndex);
+    updatePortViewActions(current);
     updateStreamViewActions();
 
     qDebug("In %s", __FUNCTION__);
@@ -271,9 +216,6 @@ void PortsWindow::on_averagePacketsPerSec_editingFinished()
 {
     QModelIndex current = tvPortList->currentIndex();
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     Q_ASSERT(plm->isPort(current));
 
     bool isOk;
@@ -286,9 +228,6 @@ void PortsWindow::on_averageBitsPerSec_editingFinished()
 {
     QModelIndex current = tvPortList->currentIndex();
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     Q_ASSERT(plm->isPort(current));
 
     bool isOk;
@@ -300,9 +239,6 @@ void PortsWindow::on_averageBitsPerSec_editingFinished()
 void PortsWindow::updatePortRates()
 {
     QModelIndex current = tvPortList->currentIndex();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
 
     if (!current.isValid())
         return;
@@ -318,11 +254,6 @@ void PortsWindow::updatePortRates()
 
 void PortsWindow::updateStreamViewActions()
 {
-    QModelIndex current = tvPortList->currentIndex();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     // For some reason hasSelection() returns true even if selection size is 0
     // so additional check for size introduced
     if (tvStreamList->selectionModel()->hasSelection() &&
@@ -349,32 +280,26 @@ void PortsWindow::updateStreamViewActions()
                 actionEdit_Stream->setEnabled(true);
         }
 
-        // Duplicate/Delete are always enabled as long as we have a selection
-        actionDuplicate_Stream->setEnabled(true);
+        // Delete is always enabled as long as we have a selection
         actionDelete_Stream->setEnabled(true);
     }
     else
     {
         qDebug("No selection");
-        if (plm->isPort(current))
+        if (plm->isPort(tvPortList->currentIndex()))
             actionNew_Stream->setEnabled(true);
         else
             actionNew_Stream->setDisabled(true);
         actionEdit_Stream->setDisabled(true);
-        actionDuplicate_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }
-    actionOpen_Streams->setEnabled(plm->isPort(current));
+    actionOpen_Streams->setEnabled(plm->isPort(
+                tvPortList->selectionModel()->currentIndex()));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
-void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
+void PortsWindow::updatePortViewActions(const QModelIndex& current)
 {
-    QModelIndex current = currentIndex;
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     if (!current.isValid())
     {
         qDebug("current is now invalid");
@@ -447,8 +372,6 @@ void PortsWindow::on_pbApply_clicked()
     QModelIndex curPortGroup;
 
     curPort = tvPortList->selectionModel()->currentIndex();
-    if (proxyPortModel)
-        curPort = proxyPortModel->mapToSource(curPort);
     if (!curPort.isValid())
     {
         qDebug("%s: curPort is invalid", __FUNCTION__);
@@ -521,9 +444,6 @@ void PortsWindow::on_actionDelete_Port_Group_triggered()
 {
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     if (current.isValid())
         plm->removePortGroup(plm->portGroup(current));
 }
@@ -531,9 +451,6 @@ void PortsWindow::on_actionDelete_Port_Group_triggered()
 void PortsWindow::on_actionConnect_Port_Group_triggered()
 {
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
 
     if (current.isValid())
         plm->portGroup(current).connectToHost();
@@ -543,9 +460,6 @@ void PortsWindow::on_actionDisconnect_Port_Group_triggered()
 {
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     if (current.isValid())
         plm->portGroup(current).disconnectFromHost();
 }
@@ -553,9 +467,6 @@ void PortsWindow::on_actionDisconnect_Port_Group_triggered()
 void PortsWindow::on_actionExclusive_Control_triggered(bool checked)
 {
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
 
     if (plm->isPort(current))
     {
@@ -570,16 +481,12 @@ void PortsWindow::on_actionPort_Configuration_triggered()
 {
     QModelIndex    current = tvPortList->selectionModel()->currentIndex();
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     if (!plm->isPort(current))
         return;
 
     OstProto::Port config;
     config.set_transmit_mode(plm->port(current).transmitMode());
     config.set_is_exclusive_control(plm->port(current).hasExclusiveControl());
-    config.set_user_name(plm->port(current).userName().toStdString());
 
     PortConfigDialog dialog(config, this);
 
@@ -618,34 +525,6 @@ void PortsWindow::on_actionEdit_Stream_triggered()
     }
 }
 
-void PortsWindow::on_actionDuplicate_Stream_triggered()
-{
-    QItemSelectionModel* model = tvStreamList->selectionModel();
-    QModelIndex current = tvPortList->selectionModel()->currentIndex();
-
-    qDebug("Duplicate Stream Action");
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
-    if (model->hasSelection())
-    {
-        bool isOk;
-        int count = QInputDialog::getInteger(this, "Duplicate Streams",
-                "Count", 1, 1, 9999, 1, &isOk);
-
-        if (!isOk)
-            return;
-
-        QList<int> list;
-        foreach(QModelIndex index, model->selectedRows())
-            list.append(index.row());
-        plm->port(current).duplicateStreams(list, count);
-    }
-    else
-        qDebug("No selection");
-}
-
 void PortsWindow::on_actionDelete_Stream_triggered()
 {
     qDebug("Delete Stream Action");
@@ -676,9 +555,6 @@ void PortsWindow::on_actionOpen_Streams_triggered()
     QString errorStr;
     bool append = true;
     bool ret;
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
 
     Q_ASSERT(plm->isPort(current));
 
@@ -741,9 +617,6 @@ void PortsWindow::on_actionSave_Streams_triggered()
     QString errorStr;
     QFileDialog::Options options;
 
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
     // On Mac OS with Native Dialog, getSaveFileName() ignores fileType 
     // which we need.On some Linux distros the native dialog can't 
     // distinguish between Ostinato(*) and PCAP(*)
@@ -763,8 +636,7 @@ _retry:
         goto _exit;
 
     fileType = fileType.remove(QRegExp("\\(.*\\)")).trimmed();
-    if (!fileType.startsWith("Ostinato") 
-            && !fileType.startsWith("Python"))
+    if (!fileType.startsWith("Ostinato"))
     {
         if (QMessageBox::warning(this, tr("Ostinato"), 
             QString("You have chosen to save in %1 format. All stream "

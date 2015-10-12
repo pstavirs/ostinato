@@ -33,7 +33,6 @@
         <file>icons/sound_none.png</file>
         <file>icons/stream_add.png</file>
         <file>icons/stream_delete.png</file>
-        <file>icons/stream_duplicate.png</file>
         <file>icons/stream_edit.png</file>
     </qresource>
 </RCC>

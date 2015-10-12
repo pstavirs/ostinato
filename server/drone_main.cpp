@@ -20,12 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "drone.h"
 
 #include "../common/protocolmanager.h"
-#include "settings.h"
 
 #include <google/protobuf/stubs/common.h>
 
 #include <QCoreApplication>
-#include <QFile>
 
 #ifdef Q_OS_UNIX
 #include <signal.h>
@@ -35,7 +33,6 @@ extern ProtocolManager *OstProtocolManager;
 extern char *version;
 extern char *revision;
 
-QSettings *appSettings;
 int myport;
 
 void cleanup(int /*signum*/)
@@ -47,7 +44,10 @@ int main(int argc, char *argv[])
 {
     int exitCode = 0;
     QCoreApplication app(argc, argv);
-    Drone *drone;
+    Drone *drone = new Drone();
+    OstProtocolManager = new ProtocolManager();
+
+    app.setApplicationName(drone->objectName());
 
     // TODO: command line options
     // -v (--version)
@@ -55,25 +55,6 @@ int main(int argc, char *argv[])
     // -p (--portnum)
     if (argc > 1)
         myport = atoi(argv[1]);
-
-    app.setApplicationName("Drone");
-    app.setOrganizationName("Ostinato");
-
-    /* (Portable Mode) If we have a .ini file in the same directory as the 
-       executable, we use that instead of the platform specific location
-       and format for the settings */
-    QString portableIni = QCoreApplication::applicationDirPath() 
-            + "/drone.ini";
-    if (QFile::exists(portableIni))
-        appSettings = new QSettings(portableIni, QSettings::IniFormat);
-    else
-        appSettings = new QSettings(QSettings::IniFormat, 
-                                    QSettings::UserScope,
-                                    app.organizationName(), 
-                                    app.applicationName().toLower());
-
-    drone = new Drone();
-    OstProtocolManager = new ProtocolManager();
 
     if (!drone->init())
     {

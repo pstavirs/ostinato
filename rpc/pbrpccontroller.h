@@ -47,7 +47,6 @@ public:
     void Reset() { 
         failed = false; 
         disconnect = false; 
-        notif = true;
         blob = NULL; 
         errStr = ""; 
     }
@@ -71,12 +70,6 @@ public:
     bool Disconnect() const {
         return disconnect;
     }
-    void EnableNotif(bool enabled) {
-        notif = enabled;
-    }
-    bool NotifEnabled() {
-        return notif;
-    }
 
     // srivatsp added
     QIODevice* binaryBlob() { return blob; };
@@ -85,7 +78,6 @@ public:
 private:
     bool failed;
     bool disconnect;
-    bool notif;
     QIODevice *blob;
     QString errStr;
     ::google::protobuf::Message *request_;

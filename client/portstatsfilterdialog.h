@@ -38,8 +38,7 @@ public:
 
 private:
     enum ItemRole {
-        kLogicalIndex = Qt::UserRole + 1,
-        kVisualIndex
+        PositionRole = Qt::UserRole + 1
     };
     QStandardItemModel    mUnselected;
     QStandardItemModel    mSelected;

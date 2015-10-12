@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "preferences.h"
 #include "settings.h"
 #include "ui_about.h"
-#include "updater.h"
 
 #include <QDockWidget>
 #include <QProcess>
@@ -43,7 +42,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow (parent)
 {
     QString serverApp = QCoreApplication::applicationDirPath();
-    Updater *updater = new Updater();
 
 #ifdef Q_OS_MAC
     // applicationDirPath() does not return bundle, but executable inside bundle
@@ -82,11 +80,6 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
-    // Save the default window geometry and layout ...
-    defaultGeometry_ = geometry();
-    defaultLayout_ = saveState(0);
-
-    // ... before restoring the last used settings
     QRect geom = appSettings->value(kApplicationWindowGeometryKey).toRect();
     if (!geom.isNull())
         setGeometry(geom);
@@ -97,15 +90,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(actionFileExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-
-    connect(actionViewShowMyReservedPortsOnly, SIGNAL(toggled(bool)),
-            portsWindow, SLOT(showMyReservedPortsOnly(bool)));
-    connect(actionViewShowMyReservedPortsOnly, SIGNAL(toggled(bool)),
-            statsWindow, SLOT(showMyReservedPortsOnly(bool)));
-
-    connect(updater, SIGNAL(newVersionAvailable(QString)), 
-            this, SLOT(onNewVersion(QString)));
-    updater->checkForNewVersion();
 #if 0
     {
         DbgThread *dbg = new DbgThread(pgl);
@@ -142,17 +126,6 @@ void MainWindow::on_actionPreferences_triggered()
     delete preferences;
 }
 
-void MainWindow::on_actionViewRestoreDefaults_triggered()
-{
-    // Use the saved default geometry/layout, however keep the
-    // window location same
-    defaultGeometry_.moveTo(geometry().topLeft());
-    setGeometry(defaultGeometry_);
-    restoreState(defaultLayout_, 0);
-
-    actionViewShowMyReservedPortsOnly->setChecked(false);
-}
-
 void MainWindow::on_actionHelpAbout_triggered()
 {
     QDialog *aboutDialog = new QDialog;
@@ -167,8 +140,3 @@ void MainWindow::on_actionHelpAbout_triggered()
     delete aboutDialog;
 }
 
-void MainWindow::onNewVersion(QString newVersion)
-{
-    statusBar()->showMessage(QString("New Ostinato version %1 available. "
-                "Visit http://ostinato.org to download").arg(newVersion));
-}
