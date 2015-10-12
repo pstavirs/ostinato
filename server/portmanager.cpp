@@ -36,11 +36,14 @@ PortManager::PortManager()
     pcap_if_t *deviceList;
     pcap_if_t *device;
     char errbuf[PCAP_ERRBUF_SIZE];
+    AbstractPort::Accuracy txRateAccuracy;
 
     qDebug("Retrieving the device list from the local machine\n"); 
 
     if (pcap_findalldevs(&deviceList, errbuf) == -1)
         qDebug("Error in pcap_findalldevs_ex: %s\n", errbuf);
+
+    txRateAccuracy = rateAccuracy();
 
     for(device = deviceList, i = 0; device != NULL; device = device->next, i++)
     {
@@ -81,6 +84,9 @@ PortManager::PortManager()
             continue;
         }
 
+        if (!port->setRateAccuracy(txRateAccuracy))
+            qWarning("failed to set rateAccuracy (%d)", txRateAccuracy);
+
         portList_.append(port);
     }
 
@@ -104,6 +110,21 @@ PortManager* PortManager::instance()
         instance_ = new PortManager;
 
     return instance_;       
+}
+
+AbstractPort::Accuracy PortManager::rateAccuracy()
+{
+    QString rateAccuracy = appSettings->value(kRateAccuracyKey, 
+                                  kRateAccuracyDefaultValue).toString();
+    if (rateAccuracy == "High")
+        return AbstractPort::kHighAccuracy;
+    else if (rateAccuracy == "Low")
+        return AbstractPort::kLowAccuracy;
+    else
+        qWarning("Unsupported RateAccuracy setting - %s", 
+                 qPrintable(rateAccuracy));
+
+    return AbstractPort::kHighAccuracy;
 }
 
 bool PortManager::filterAcceptsPort(const char *name)
