@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/ostprotolib.h"
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
-#include "preferences.h"
 #include "settings.h"
 
 #include <QApplication>
@@ -38,10 +37,22 @@ extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
+#if defined(Q_OS_WIN32)
+QString kGzipPathDefaultValue;
+QString kDiffPathDefaultValue;
+QString kAwkPathDefaultValue;
+#endif
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     int exitCode;
+
+#if defined(Q_OS_WIN32)
+    kGzipPathDefaultValue = app.applicationDirPath() + "/gzip.exe";
+    kDiffPathDefaultValue = app.applicationDirPath() + "/diff.exe";
+    kAwkPathDefaultValue = app.applicationDirPath() + "/gawk.exe";
+#endif
 
     app.setApplicationName("Ostinato");
     app.setOrganizationName("Ostinato");
@@ -66,8 +77,6 @@ int main(int argc, char* argv[])
         appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
-
-    Preferences::initDefaults();
 
     mainWindow = new MainWindow;
     mainWindow->show();

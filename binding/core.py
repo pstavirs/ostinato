@@ -43,7 +43,6 @@ class DroneProxy(object):
     def connect(self):
         self.channel.connect(self.host, self.port)
         ver = ost_pb.VersionInfo()
-        ver.client_name = 'python-ostinato'
         ver.version = __version__
         compat = self.checkVersion(ver)
         if compat.result == ost_pb.VersionCompatibility.kIncompatible:

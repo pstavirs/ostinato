@@ -110,9 +110,6 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
-    // notification needs to be on heap because signal/slot is across threads!
-    OstProto::Notification *notif = new OstProto::Notification;
-
     qDebug("In %s", __PRETTY_FUNCTION__);
 
     for (int i = 0; i < request->port_size(); i++)
@@ -127,18 +124,11 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
             portLock[id]->unlock();
-
-            notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
     }
 
     //! \todo (LOW): fill-in response "Ack"????
     done->Run();
-
-    if (notif->port_id_list().port_id_size()) {
-        notif->set_notif_type(OstProto::portConfigChanged);
-        emit notification(notif->notif_type(), SharedProtobufMessage(notif));
-    }
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,
@@ -574,8 +564,6 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
     // Compare only major and minor numbers
     if (client[0] == my[0] && client[1] == my[1]) {
         response->set_result(OstProto::VersionCompatibility::kCompatible);
-        static_cast<PbRpcController*>(controller)->EnableNotif(
-            request->client_name() == "python-ostinato" ? false : true);
     }
     else {
         response->set_result(OstProto::VersionCompatibility::kIncompatible);

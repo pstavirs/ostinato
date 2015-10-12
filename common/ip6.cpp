@@ -262,17 +262,10 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldFrameValue:
                 case FieldTextValue:
-                    if (data.is_override_next_header()) {
+                    if (data.is_override_next_header())
                         nextHdr = data.next_header();
-                    }
-                    else {
+                    else
                         nextHdr = payloadProtocolId(ProtocolIdIp);
-                        if ((nextHdr == 0) 
-                                && next 
-                                && (next->protocolIdType() == ProtocolIdNone)) {
-                            nextHdr = 0x3b; // IPv6 No-Next-Header
-                        }
-                    }
                     break;
                 default:
                     nextHdr = 0; // avoid the 'maybe used unitialized' warning
@@ -756,9 +749,18 @@ _exit:
     return isOk;
 }
 
+bool Ip6Protocol::isProtocolFrameValueVariable() const
+{
+    if ((data.src_addr_mode() != OstProto::Ip6::kFixed)
+        || (data.dst_addr_mode() != OstProto::Ip6::kFixed))
+        return true;
+    else
+        return false;
+}
+
 int Ip6Protocol::protocolFrameVariableCount() const
 {
-    int count = AbstractProtocol::protocolFrameVariableCount();
+    int count = 1;
 
     if (data.src_addr_mode() != OstProto::Ip6::kFixed)
         count = AbstractProtocol::lcm(count, data.src_addr_count());
@@ -774,20 +776,30 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
 {
     if (cksumType == CksumIpPseudo)
     {
+        QByteArray addr;
         quint32 sum = 0;
-        QByteArray fv = protocolFrameValue(streamIndex);
-        const quint8 *p = (quint8*) fv.constData();
 
-        // src-ip, dst-ip
-        for (int i = 8; i < fv.size(); i+=2)
-            sum += *((quint16*)(p + i));
-        sum += *((quint16*)(p + 4)); // payload len
-        sum += qToBigEndian((quint16) *(p + 6)); // proto
+        addr = fieldData(ip6_srcAddress, FieldFrameValue, streamIndex)
+                .toByteArray();
+        Q_ASSERT(addr.size() == 16);
+        for (int i = 0; i < addr.size(); i+=2)
+            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
+
+        addr = fieldData(ip6_dstAddress, FieldFrameValue, streamIndex)
+                .toByteArray();
+        Q_ASSERT(addr.size() == 16);
+        for (int i = 0; i < addr.size(); i+=2)
+            sum += (quint8(addr.at(i)) << 8) + quint8(addr.at(i+1));
+
+        sum += fieldData(ip6_payloadLength, FieldValue, streamIndex)
+                .toUInt() & 0xFFFF;
+        sum += fieldData(ip6_nextHeader, FieldValue, streamIndex)
+                .toUInt() & 0xFF;
 
         while(sum>>16)
             sum = (sum & 0xFFFF) + (sum >> 16);
 
-        return ~qFromBigEndian((quint16)sum);
+        return ~sum;
     }
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }

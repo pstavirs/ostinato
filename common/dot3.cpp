@@ -185,9 +185,12 @@ bool Dot3Protocol::setFieldData(int index, const QVariant &value,
     return isOk;
 }
 
+bool Dot3Protocol::isProtocolFrameValueVariable() const
+{
+    return isProtocolFramePayloadSizeVariable();
+}
+
 int Dot3Protocol::protocolFrameVariableCount() const
 {
-    return AbstractProtocol::lcm(
-                AbstractProtocol::protocolFrameVariableCount(),
-                protocolFramePayloadVariableCount());
+    return protocolFramePayloadVariableCount();
 }

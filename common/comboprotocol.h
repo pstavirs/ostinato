@@ -150,6 +150,12 @@ public:
     int protocolFramePayloadSize() const;
 #endif
 
+    virtual bool isProtocolFrameValueVariable() const
+    {
+        return (protoA->isProtocolFrameValueVariable()
+            || protoB->isProtocolFrameValueVariable());
+    }
+
     virtual bool isProtocolFrameSizeVariable() const
     {
         return (protoA->isProtocolFrameSizeVariable()
@@ -157,14 +163,9 @@ public:
     }
     virtual int protocolFrameVariableCount() const
     {
-        int count = AbstractProtocol::protocolFrameVariableCount();
-        count = AbstractProtocol::lcm(
-                        count,
-                        protoA->protocolFrameVariableCount());
-        count = AbstractProtocol::lcm(
-                        count,
-                        protoB->protocolFrameVariableCount());
-        return count;
+        return AbstractProtocol::lcm(
+                protoA->protocolFrameVariableCount(),
+                protoB->protocolFrameVariableCount());
     }
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,

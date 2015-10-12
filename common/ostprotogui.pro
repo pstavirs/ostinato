@@ -15,6 +15,7 @@ FORMS += \
     dot3.ui \
     llc.ui \
     snap.ui \
+    lacp.ui \
     arp.ui \
     ip4.ui \
     ip6.ui \
@@ -40,7 +41,6 @@ HEADERS = \
     ipv6addressdelegate.h \
     pcapfileformat.h \
     pdmlfileformat.h \
-    pythonfileformat.h \
     pdmlprotocol.h \
     pdmlprotocols.h \
     pdmlreader.h
@@ -59,6 +59,7 @@ HEADERS += \
     dot2llcconfig.h \
     snapconfig.h \
     dot2snapconfig.h \
+    lacpconfig.h \
     arpconfig.h \
     ip4config.h \
     ip6config.h \
@@ -81,7 +82,6 @@ SOURCES += \
     fileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \
-    pythonfileformat.cpp \
     pdmlprotocol.cpp \
     pdmlprotocols.cpp \
     pdmlreader.cpp \
@@ -94,6 +94,7 @@ SOURCES += \
     dot3config.cpp \
     llcconfig.cpp \
     snapconfig.cpp \
+    lacpconfig.cpp \
     arpconfig.cpp \
     ip4config.cpp \
     ip6config.cpp \
@@ -112,6 +113,7 @@ SOURCES += \
 SOURCES += \
     vlanpdml.cpp \
     svlanpdml.cpp \
+    lacppdml.cpp \
     eth2pdml.cpp \
     llcpdml.cpp \
     arppdml.cpp \

@@ -57,8 +57,7 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
     connect(reconnectTimer, SIGNAL(timeout()), 
         this, SLOT(on_reconnectTimer_timeout()));
 
-    rpcChannel = new PbRpcChannel(ip, port, 
-                                  OstProto::Notification::default_instance());
+    rpcChannel = new PbRpcChannel(ip, port);
     serviceStub = new OstProto::OstService::Stub(rpcChannel);
 
     // FIXME(LOW):Can't for my life figure out why this ain't working!
@@ -71,11 +70,6 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
         this, SLOT(on_rpcChannel_disconnected()));
     connect(rpcChannel, SIGNAL(error(QAbstractSocket::SocketError)), 
         this, SLOT(on_rpcChannel_error(QAbstractSocket::SocketError)));
-
-    connect(rpcChannel, 
-        SIGNAL(notification(int, ::google::protobuf::Message*)), 
-        this, 
-        SLOT(on_rpcChannel_notification(int, ::google::protobuf::Message*)));
 
     connect(this, SIGNAL(portListChanged(quint32)),
         this, SLOT(when_portListChanged(quint32)), Qt::QueuedConnection);
@@ -131,7 +125,6 @@ void PortGroup::on_rpcChannel_connected()
     reconnectAfter = kMinReconnectWaitTime;
 
     qDebug("requesting version check ...");
-    verInfo->set_client_name("ostinato");
     verInfo->set_version(version);
     
     PbRpcController *controller = new PbRpcController(verInfo, verCompat);
@@ -213,50 +206,6 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
     {
         qDebug("starting reconnect timer for %d ms...", reconnectAfter);
         reconnectTimer->start(reconnectAfter);
-    }
-}
-
-void PortGroup::on_rpcChannel_notification(int notifType, 
-        ::google::protobuf::Message *notification)
-{
-    OstProto::Notification *notif = 
-        dynamic_cast<OstProto::Notification*>(notification);
-
-    if (!notif) {
-        qWarning("unable to dynamic cast notif");
-        return;
-    }
-
-    if (notifType != notif->notif_type()) {
-        qWarning("notif type mismatch %d/%d msg = %s",
-                notifType, notif->notif_type(),
-                notification->DebugString().c_str());
-        return;
-    }
-
-    switch (notifType) 
-    {
-        case OstProto::portConfigChanged: {
-
-            if (!notif->port_id_list().port_id_size()) {
-                qWarning("notif(portConfigChanged) has an empty port_id_list");
-                return;
-            }
-
-            OstProto::PortIdList *portIdList = new OstProto::PortIdList;
-            OstProto::PortConfigList *portConfigList = 
-                                            new OstProto::PortConfigList;
-            PbRpcController *controller = new PbRpcController(portIdList, 
-                                                           portConfigList);
-
-            portIdList->CopyFrom(notif->port_id_list());
-            serviceStub->getPortConfig(controller, portIdList, portConfigList, 
-                NewCallback(this, &PortGroup::processUpdatedPortConfig, 
-                    controller));
-            break;
-        }
-        default:
-            break;
     }
 }
 
@@ -356,14 +305,10 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
         mPorts[id]->updatePortConfig(portConfigList->mutable_port(i));
     }
 
-    // FIXME: Ideally we should emit portGroupDataChanged since only 
-    // port data is changing; but writing the corresponding slot in 
-    // PortStatsModel for that signal turned out to be very bug prone 
-    // causing assert failures when portgroups are added/deleted or
-    // connected/disconnected in different orders
-    // TODO: Revisit this when we refactor the domain-objects/model/view 
-    // design
-    emit portListChanged(mPortGroupId);
+    //emit portListChanged(mPortGroupId);
+
+    // FIXME: check if we need new signals since we are not changing the
+    // number of ports, just the port data
 
     if (numPorts() > 0)
         getStreamIdList();
@@ -477,10 +422,24 @@ void PortGroup::processModifyPortAck(PbRpcController *controller)
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(controller->ErrorString()));
+        goto _exit;
     }
 
-    mainWindow->setEnabled(true);
-    QApplication::restoreOverrideCursor();
+    {
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::PortConfigList *portConfigList = new OstProto::PortConfigList;
+        PbRpcController *controller2 = new PbRpcController(portIdList, 
+                portConfigList);
+
+        OstProto::PortId *portId = portIdList->add_port_id();
+        portId->CopyFrom(static_cast<OstProto::PortConfigList*>
+                (controller->request())->mutable_port(0)->port_id());
+
+        serviceStub->getPortConfig(controller, portIdList, portConfigList, 
+            NewCallback(this, &PortGroup::processUpdatedPortConfig, 
+                controller2));
+    }
+_exit:
     delete controller;
 }
 
@@ -498,6 +457,9 @@ void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
         goto _exit;
     }
 
+    if (portConfigList->port_size() != 1)
+        qDebug("port size = %d (expected = 1)", portConfigList->port_size());
+
     for(int i = 0; i < portConfigList->port_size(); i++)
     {
         uint    id;
@@ -511,6 +473,8 @@ void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
 
 
 _exit:
+    mainWindow->setEnabled(true);
+    QApplication::restoreOverrideCursor();
     delete controller;
 }
 

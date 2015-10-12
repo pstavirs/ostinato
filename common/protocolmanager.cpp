@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "snap.h"    
 #include "dot2snap.h"
 #include "eth2.h"    
+#include "lacp.h"
 
 // L3 Protos
 #include "arp.h"    
@@ -89,6 +90,8 @@ ProtocolManager::ProtocolManager()
             (void*) SnapProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kDot2SnapFieldNumber,
             (void*) Dot2SnapProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kLacpFieldNumber,
+        (void*) LacpProtocol::createInstance);
 
     // Layer 3 Protocols
     registerProtocol(OstProto::Protocol::kArpFieldNumber,

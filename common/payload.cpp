@@ -215,8 +215,11 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 
 bool PayloadProtocol::isProtocolFrameValueVariable() const
 {
-    return (AbstractProtocol::isProtocolFrameSizeVariable()
-               ||  isProtocolFrameSizeVariable());
+    if (isProtocolFrameSizeVariable() 
+            || data.pattern_mode() == OstProto::Payload::e_dp_random)
+        return true;
+    else
+        return false;
 }
 
 bool PayloadProtocol::isProtocolFrameSizeVariable() const
@@ -229,7 +232,7 @@ bool PayloadProtocol::isProtocolFrameSizeVariable() const
 
 int PayloadProtocol::protocolFrameVariableCount() const
 {
-    int count = AbstractProtocol::protocolFrameVariableCount();
+    int count = 1;
 
     if (data.pattern_mode() == OstProto::Payload::e_dp_random)
     {

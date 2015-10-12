@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _RPC_CONNECTION_H
 #define _RPC_CONNECTION_H
 
-#include "sharedprotobufmessage.h"
-
 #include <QAbstractSocket>
 
 // forward declarations
@@ -34,7 +32,6 @@ namespace google {
             class CopyingInputStreamAdaptor;
             class CopyingOutputStreamAdaptor;
         }
-        class Message;
     }
 }
 
@@ -45,7 +42,6 @@ class RpcConnection : public QObject
 public:
     RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
     virtual ~RpcConnection();
-
     static void connIdMsgHandler(QtMsgType type, const char* msg);
 
 private:
@@ -55,9 +51,6 @@ private:
 
 signals:
     void closed();
-
-public slots:
-    void sendNotification(int notifType, SharedProtobufMessage notifData);
 
 private slots:
     void start();
@@ -77,7 +70,6 @@ private:
     int pendingMethodId;
 
     bool isCompatCheckDone;
-    bool isNotifEnabled;
 };
 
 #endif

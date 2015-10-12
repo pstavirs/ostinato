@@ -767,16 +767,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab" >
-      <attribute name="title" >
-       <string>Variable Fields</string>
-      </attribute>
-      <layout class="QHBoxLayout" >
-       <item>
-        <widget class="VariableFieldsWidget" native="1" name="variableFieldsWidget" />
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="streamControlTab" >
       <attribute name="title" >
        <string>Stream Control</string>
@@ -1217,12 +1207,6 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
    <class>DumpView</class>
    <extends>QWidget</extends>
    <header>dumpview.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>VariableFieldsWidget</class>
-   <extends>QWidget</extends>
-   <header>variablefieldswidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

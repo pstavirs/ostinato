@@ -20,15 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _RPC_SERVER_H
 #define _RPC_SERVER_H
 
-#include "sharedprotobufmessage.h"
-
 #include <QTcpServer>
 
 // forward declaration
 namespace google {
     namespace protobuf {
         class Service;
-        class Message;
     }
 }
 
@@ -42,9 +39,6 @@ public:
 
     bool registerService(::google::protobuf::Service *service,
         quint16 tcpPortNum);
-
-signals:
-    void notifyClients(int notifType, SharedProtobufMessage notifData);
 
 protected:
     void incomingConnection(int socketDescriptor);

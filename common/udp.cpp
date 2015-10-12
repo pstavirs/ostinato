@@ -253,11 +253,7 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
                     if (data.is_override_cksum())
                         cksum = data.cksum();
                     else
-                    {
                         cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
-                        if (cksum == 0)
-                            cksum = 0xFFFF;
-                    }
                     qDebug("UDP cksum = %hu", cksum);
                     break;
                 }
@@ -418,16 +414,18 @@ _exit:
     return isOk;
 }
 
+bool UdpProtocol::isProtocolFrameValueVariable() const
+{
+    if (data.is_override_totlen() && data.is_override_cksum())
+        return false;
+    else
+        return isProtocolFramePayloadValueVariable();
+}
+
 int UdpProtocol::protocolFrameVariableCount() const
 {
-    int count;
-
     if (data.is_override_totlen() && data.is_override_cksum())
-        count = AbstractProtocol::protocolFrameVariableCount();
-    else
-        count = AbstractProtocol::lcm(
-                        AbstractProtocol::protocolFrameVariableCount(),
-                        protocolFramePayloadVariableCount());
+        return 1;
 
-    return count;
+    return protocolFramePayloadVariableCount();
 }

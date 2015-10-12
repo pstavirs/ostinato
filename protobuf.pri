@@ -29,14 +29,14 @@ protobuf_impl.name  = protobuf implementation
 protobuf_impl.input = PROTOS
 protobuf_impl.output  = ${QMAKE_FILE_BASE}.pb.cc
 protobuf_impl.depends  = ${QMAKE_FILE_BASE}.pb.h
-protobuf_impl.commands = $$escape_expand(\\n)
+protobuf_impl.commands = $$escape_expand(\n)
 protobuf_impl.variable_out = GENERATED_SOURCES
 QMAKE_EXTRA_COMPILERS += protobuf_impl 
 
 protobuf_py.name  = protobuf python binding
 protobuf_py.input = PROTOS
 protobuf_py.output  = ../binding/protocols/${QMAKE_FILE_BASE}_pb2.py
-protobuf_py.commands = $$escape_expand(\\n)
+protobuf_py.commands = $$escape_expand(\n)
 #protobuf_py.commands = protoc --python_out="../binding/protocols" $${PROTOPATHS} ${QMAKE_FILE_NAME}
 protobuf_py.variable_out = GENERATED_FILES 
 QMAKE_EXTRA_COMPILERS += protobuf_py 

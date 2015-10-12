@@ -77,7 +77,7 @@ void PortStatsModel::getDomainIndexes(const QModelIndex &index,
     if (portGroupIdx)
     {
         if (numPorts.at(portGroupIdx -1))
-            portIdx = (portNum - 1) - numPorts.at(portGroupIdx - 1); 
+            portIdx = (portNum - 1) % numPorts.at(portGroupIdx - 1); 
         else
             portIdx = portNum - 1; 
     }
@@ -118,10 +118,6 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
         switch(row)
         {
-            // Info
-            case e_INFO_USER:
-                return pgl->mPortGroups.at(pgidx)->mPorts[pidx]->userName();
-
             // States
             case e_LINK_STATE:
                 return LinkStateName.at(stats.state().link_state());
@@ -183,10 +179,12 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
     }
     else if (role == Qt::TextAlignmentRole) 
     {
-        if (row >= e_STATISTICS_START && row <= e_STATISTICS_END)
-            return Qt::AlignRight;      // right-align numbers
+        if (row >= e_STATE_START && row <= e_STATE_END)
+            return Qt::AlignHCenter;
+        else if (row >= e_STATISTICS_START && row <= e_STATISTICS_END)
+            return Qt::AlignRight;
         else
-            return Qt::AlignHCenter;    // center-align everything else
+            return QVariant();
     }
     else
         return QVariant();
@@ -301,8 +299,6 @@ void PortStatsModel::when_portListChanged()
     reset();
 }
 
-// FIXME: unused? if used, the index calculation row/column needs to be swapped
-#if 0
 void PortStatsModel::on_portStatsUpdate(int port, void* /*stats*/)
 {
     QModelIndex topLeft = index(port, 0, QModelIndex());
@@ -310,7 +306,6 @@ void PortStatsModel::on_portStatsUpdate(int port, void* /*stats*/)
 
     emit dataChanged(topLeft, bottomRight);
 }
-#endif
 
 void PortStatsModel::updateStats()
 {
@@ -325,7 +320,7 @@ void PortStatsModel::when_portGroup_stats_update(quint32 /*portGroupId*/)
     // FIXME(MED): update only the changed ports, not all
 
     QModelIndex topLeft = index(0, 0, QModelIndex());
-    QModelIndex bottomRight = index(rowCount()-1, columnCount()-1, QModelIndex());
+    QModelIndex bottomRight = index(rowCount(), columnCount(), QModelIndex());
 
     emit dataChanged(topLeft, bottomRight);
 }

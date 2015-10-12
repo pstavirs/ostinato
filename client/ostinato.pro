@@ -42,18 +42,15 @@ HEADERS += \
     portgroup.h \
     portgrouplist.h \
     portmodel.h \
-    portstatsfilterdialog.h \
     portstatsmodel.h \
-    portstatsproxymodel.h \
+    portstatsfilterdialog.h \
     portstatswindow.h \
     portswindow.h \
     preferences.h \
     settings.h \
     streamconfigdialog.h \
     streamlistdelegate.h \
-    streammodel.h \
-    updater.h \
-    variablefieldswidget.h
+    streammodel.h 
 
 FORMS += \
     about.ui \
@@ -63,8 +60,7 @@ FORMS += \
     portstatswindow.ui \
     portswindow.ui \
     preferences.ui \
-    streamconfigdialog.ui \
-    variablefieldswidget.ui
+    streamconfigdialog.ui 
 
 SOURCES += \
     dumpview.cpp \
@@ -85,9 +81,7 @@ SOURCES += \
     preferences.cpp \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
-    streammodel.cpp \
-    updater.cpp \
-    variablefieldswidget.cpp
+    streammodel.cpp 
 
 
 QMAKE_DISTCLEAN += object_script.*

@@ -35,9 +35,6 @@ public:
     static PortManager* instance();
 
 private:
-    bool filterAcceptsPort(const char *name);
-
-private:
     QList<AbstractPort*>    portList_;
 
     static PortManager      *instance_;

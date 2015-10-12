@@ -49,7 +49,6 @@ StreamBase::StreamBase() :
     iter->insert(proto);
     qDebug("stream: payload = %p", proto);
 
-#ifndef QT_NO_DEBUG_OUTPUT
     {
         iter->toFront();
         while (iter->hasNext())
@@ -64,7 +63,6 @@ StreamBase::StreamBase() :
         //    qDebug("{{%p}: %d}", iter->peekNext(), iter->next()->protocolNumber());
         }
     }
-#endif
 
     delete iter;
 }
@@ -99,7 +97,6 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
             continue;
         }
         proto = OstProtocolManager->createProtocol(protoId, this);
-        proto->commonProtoDataCopyFrom(stream.protocol(i));
         proto->protoDataCopyFrom(stream.protocol(i));
         iter->insert(proto);
     }
@@ -119,7 +116,6 @@ void StreamBase::protoDataCopyInto(OstProto::Stream &stream) const
         OstProto::Protocol *p;
 
         p = stream.add_protocol();
-        proto->commonProtoDataCopyInto(*p);
         proto->protoDataCopyInto(*p);
     }
 }

@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "fileformat.h"
 #include "pcapfileformat.h"
 #include "pdmlfileformat.h"
-#include "pythonfileformat.h"
 
 #include <QStringList>
 
@@ -50,8 +49,7 @@ QStringList AbstractFileFormat::supportedFileTypes()
     return QStringList()
         << "Ostinato (*)"
         << "PCAP (*)"
-        << "PDML (*.pdml)"
-        << "PythonScript (*.py)";
+        << "PDML (*.pdml)";
 }
 
 void AbstractFileFormat::openStreamsOffline(const QString fileName, 
@@ -111,9 +109,6 @@ AbstractFileFormat* AbstractFileFormat::fileFormatFromType(
 
     if (pcapFileFormat.isMyFileType(fileType))
         return &pcapFileFormat;
-
-    if (pythonFileFormat.isMyFileType(fileType))
-        return &pythonFileFormat;
 
     return NULL;
 }

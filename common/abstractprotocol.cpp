@@ -53,6 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   - protocolIdType()
   - protocolId()
   - protocolFrameSize()
+  - isProtocolFrameValueVariable()
   - isProtocolFrameSizeVariable()
   - protocolFrameVariableCount()
 
@@ -76,10 +77,8 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     prev = next = NULL;
     _metaFieldCount = -1;
     _frameFieldCount = -1;
-    _frameVariableCount = -1;
     protoSize = -1;
     _hasPayload = true;
-    _cacheFlags |= FieldFrameBitOffsetCache;
 }
 
 /*!
@@ -113,42 +112,6 @@ quint32 AbstractProtocol::protocolNumber() const
 {
     qFatal("Something wrong!!!");
     return 0xFFFFFFFF;
-}
-
-/*!
- Copies the common data (not specific to individual protocols) in the 
- protocol member protobuf data into the passed in protocol parameter.
- The individual protocol specific protobuf data is copied using 
- protoDataCopyInto()
-*/
-void AbstractProtocol::commonProtoDataCopyInto(OstProto::Protocol &protocol) const
-{
-    protocol.clear_variable_field();
-    for (int i = 0; i < _data.variable_field_size(); i++)
-    {
-        OstProto::VariableField *vf;
-
-        vf = protocol.add_variable_field();
-        vf->CopyFrom(_data.variable_field(i));
-    }
-}
-
-/*!
- Copies the common data (not specific to individual protocols) from the 
- passed in param protocol protobuf into the member protobuf data.
- The individual protocol specific protobuf data is copied using 
- protoDataCopyFrom()
-*/
-void AbstractProtocol::commonProtoDataCopyFrom(const OstProto::Protocol &protocol)
-{
-    _data.clear_variable_field();
-    for (int i = 0; i < protocol.variable_field_size(); i++)
-    {
-        OstProto::VariableField *vf;
-
-        vf = _data.add_variable_field();
-        vf->CopyFrom(protocol.variable_field(i));
-    }
 }
 
 /*!
@@ -351,115 +314,6 @@ bool AbstractProtocol::setFieldData(int /*index*/, const QVariant& /*value*/,
         FieldAttrib /*attrib*/)
 {
     return false;
-}
-
-/*!
- * Returns the bit offset where the specified field starts within the 
- * protocolFrameValue()
- */
-int AbstractProtocol::fieldFrameBitOffset(int index, int streamIndex) const
-{
-    int ofs = 0;
-
-    if ((index < 0) || (index >= fieldCount()) 
-            || !fieldFlags(index).testFlag(FrameField))
-        return -1;
-
-    // Lookup Cache; if not available calculate and cache (if enabled)
-
-    if (_fieldFrameBitOffset.contains(index)) {
-        ofs = _fieldFrameBitOffset.value(index);
-        goto _exit;
-    }
-
-    for (int i = 0; i < index; i++) {
-        if ((_cacheFlags & FieldFrameBitOffsetCache)
-                && !_fieldFrameBitOffset.contains(i))
-            _fieldFrameBitOffset.insert(i, ofs);
-        ofs += fieldData(i, FieldBitSize, streamIndex).toInt();
-    }
-    if ((_cacheFlags & FieldFrameBitOffsetCache))
-        _fieldFrameBitOffset.insert(index, ofs);
-
-    qDebug("======> ffbo index: %d, ofs: %d", index, ofs);
-_exit:
-    return ofs;
-}
-
-/*!
- * Returns the count of variableFields in the protocol
- */
-int AbstractProtocol::variableFieldCount() const
-{
-    return _data.variable_field_size();
-}
-
-/*!
- * Appends a variableField to the protocol
- */
-void AbstractProtocol::appendVariableField(const OstProto::VariableField &vf)
-{
-    _data.add_variable_field()->CopyFrom(vf);
-
-    // Update the cached value
-    _frameVariableCount = lcm(_frameVariableCount, vf.count());
-}
-
-/*!
- * Removes the variableField from the protocol at the specified index
- */
-void AbstractProtocol::removeVariableField(int index)
-{
-    OstProto::Protocol temp;
-
-    if (index >= _data.variable_field_size()) {
-        qWarning("%s: %s variableField[%d] out of range; count: %d)",
-                __FUNCTION__, qPrintable(shortName()), 
-                index, _data.variable_field_size());
-        return;
-    }
-
-    // TODO: this is inefficient - evaluate using RepeatedPtrField?
-    for (int i = 0; i < _data.variable_field_size(); i++) {
-        if (i == index)
-            continue;
-        temp.add_variable_field()->CopyFrom(_data.variable_field(i));
-    }
-
-    _data.clear_variable_field();
-    _frameVariableCount = 1;
-    for (int i = 0; i < temp.variable_field_size(); i++) {
-        _data.add_variable_field()->CopyFrom(temp.variable_field(i));
-        // Recalculate the cached value
-        _frameVariableCount = lcm(_frameVariableCount,
-                                  _data.variable_field(i).count());
-    }
-}
-
-/*!
- * Returns the variableField at the specified index as a constant Reference
- * i.e. read-only
- */
-const OstProto::VariableField& AbstractProtocol::variableField(int index) const
-{
-    Q_ASSERT(index < _data.variable_field_size());
-
-    return _data.variable_field(index);
-}
-
-/*!
- * Returns the variableField at the specified index as a mutable pointer.
- * Changes made via the pointer will be reflected in the protocol
- */
-OstProto::VariableField* AbstractProtocol::mutableVariableField(int index)
-{
-    if ((index < 0) || (index >= _data.variable_field_size()))
-        return NULL;
-
-    // Invalidate the cached value as the caller may potentially modify it
-    _frameVariableCount = -1;
-
-    return _data.mutable_variable_field(index);
 }
 
 /*!
@@ -688,19 +542,16 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
         }
     }
 
-    // Overwrite proto with the variable fields, if any
-    for (int i = 0; i < _data.variable_field_size(); i++)
-    {
-        OstProto::VariableField vf = _data.variable_field(i);
-        varyProtocolFrameValue(proto, streamIndex, vf);
-    }
-
     return proto;
 }
 
 /*!
   Returns true if the protocol varies one or more of its fields at run-time,
   false otherwise
+
+  The default implementation returns false. A subclass should reimplement
+  if it has varying fields e.g. an IP protocol that increments/decrements
+  the IP address with every packet  
 */
 bool AbstractProtocol::isProtocolFrameValueVariable() const
 {
@@ -727,24 +578,14 @@ bool AbstractProtocol::isProtocolFrameSizeVariable() const
   fields in the protocol. Use the AbstractProtocol::lcm() static utility
   function to calculate the LCM.
 
-  The default implementation returns the LCM of all variableFields
-  A subclass should reimplement if it has varying fields e.g. an IP protocol 
-  that increments/decrements the IP address with every packet.\n
-  Subclasses should call the base class method to retreive the count and
-  do a LCM with the subclass' own varying fields
-
+  The default implementation returns 1 implying that the protocol has no
+  varying fields. A subclass should reimplement if it has varying fields 
+  e.g. an IP protocol that increments/decrements the IP address with 
+  every packet  
 */
 int AbstractProtocol::protocolFrameVariableCount() const
 {
-    if (_frameVariableCount > 0)
-        return _frameVariableCount;
-
-    _frameVariableCount = 1;
-    for (int i = 0; i < _data.variable_field_size(); i++)
-        _frameVariableCount = lcm(_frameVariableCount, 
-                                  _data.variable_field(i).count());
-
-    return _frameVariableCount;
+    return 1;
 }
 
 /*!
@@ -756,10 +597,6 @@ int AbstractProtocol::protocolFrameVariableCount() const
 */
 bool AbstractProtocol::isProtocolFramePayloadValueVariable() const
 {
-    // TODO: it is simpler to do the following -
-    //     return (protocolFramePayloadVariableCount() > 1)
-    // However, it may be inefficient till the time we cache the 
-    // variable count
     AbstractProtocol *p = next;
 
     while (p)
@@ -1057,80 +894,5 @@ quint64 AbstractProtocol::lcm(quint64 u, quint64 v)
 #endif
 
     return (u * v)/gcd(u, v);
-}
-
-/* 
- * XXX: varyCounter() is not a member of AbstractProtocol to avoid
- * moving it into the header file and thereby keeping the header file
- * clean
- */
-template <typename T>
-bool varyCounter(QString protocolName, QByteArray &buf, int frameIndex, 
-                 const OstProto::VariableField &varField)
-{
-    int x = (frameIndex % varField.count()) * varField.step();
-
-    T oldfv, newfv;
-
-    if ((varField.offset() + sizeof(T)) > uint(buf.size()))
-    {
-        qWarning("%s varField ofs %d beyond protocol frame %d - skipping", 
-                qPrintable(protocolName), varField.offset(), buf.size());
-        return false;
-    }
-
-    oldfv = *((T*)((uchar*)buf.constData() + varField.offset()));
-    if (sizeof(T) > sizeof(quint8))
-        oldfv = qFromBigEndian(oldfv);
-
-    switch(varField.mode())
-    {
-        case OstProto::VariableField::kIncrement:
-            newfv = (oldfv & ~varField.mask()) 
-                | ((varField.value() + x) & varField.mask());
-            break;
-        case OstProto::VariableField::kDecrement:
-            newfv = (oldfv & ~varField.mask()) 
-                | ((varField.value() - x) & varField.mask());
-            break;
-        case OstProto::VariableField::kRandom:
-            newfv = (oldfv & ~varField.mask()) 
-                | ((varField.value() + qrand()) & varField.mask());
-            break;
-        default:
-            qWarning("%s Unsupported varField mode %d", 
-                    qPrintable(protocolName), varField.mode());
-            return false;
-    }
-
-    if (sizeof(T) == sizeof(quint8))
-        *((uchar*)buf.constData() + varField.offset()) = newfv;
-    else
-        qToBigEndian(newfv, (uchar*)buf.constData() + varField.offset());
-
-    qDebug("%s varField ofs %d oldfv %x newfv %x", 
-            qPrintable(protocolName), varField.offset(), oldfv, newfv);
-    return true;
-}
-
-void AbstractProtocol::varyProtocolFrameValue(QByteArray &buf, int frameIndex,
-        const OstProto::VariableField &varField) const
-{
-
-    switch (varField.type()) {
-    case OstProto::VariableField::kCounter8:
-        varyCounter<quint8>(shortName(), buf, frameIndex, varField);
-        break;
-    case OstProto::VariableField::kCounter16:
-        varyCounter<quint16>(shortName(), buf, frameIndex, varField);
-        break;
-    case OstProto::VariableField::kCounter32:
-        varyCounter<quint32>(shortName(), buf, frameIndex, varField);
-        break;
-    default:
-        break;
-    }
-
-    return;
 }
 

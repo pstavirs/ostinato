@@ -172,15 +172,11 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
         // Non Top Level - Port
         if ((role == Qt::DisplayRole))
         {
-            QString rsvdBy;
-
-            if (!port->userName().isEmpty())
-                rsvdBy = "["+port->userName()+"] ";
-
-            return QString("Port %1: %2 %3(%4)")
+            // FIXME(LOW) - IP Address below
+            return QString("Port %1: %2 [%3] (%4)")
                 .arg(port->id())
                 .arg(port->name())
-                .arg(rsvdBy)
+                .arg(QHostAddress("0.0.0.0").toString())
                 .arg(port->description());
         }
         else if ((role == Qt::DecorationRole))

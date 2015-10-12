@@ -24,8 +24,7 @@ PortStatsFilterDialog::PortStatsFilterDialog(QWidget *parent)
 {
     setupUi(this);
 
-    mUnselected.setSortRole(kLogicalIndex);
-    mSelected.setSortRole(kVisualIndex);
+    mUnselected.setSortRole(PositionRole);
 
     lvUnselected->setModel(&mUnselected);
     lvSelected->setModel(&mSelected);
@@ -50,8 +49,7 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
         QStandardItem    *item;
         
         item = new QStandardItem(model->headerData(i, orientation).toString());
-        item->setData(i, kLogicalIndex);
-        item->setData(initial.indexOf(i), kVisualIndex);
+        item->setData(i, PositionRole);
         item->setFlags(Qt::ItemIsSelectable
                 | Qt::ItemIsDragEnabled
                 //| Qt::ItemIsDropEnabled
@@ -62,7 +60,6 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
         else
             mUnselected.appendRow(item);
     }
-    mSelected.sort(0);
 
     // No need to sort right now 'coz we have inserted items in order
 
@@ -73,7 +70,7 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
         {
             QModelIndex index = mSelected.index(i, 0, QModelIndex());
             QStandardItem *item = mSelected.itemFromIndex(index);
-            ret.append(item->data(kLogicalIndex).toInt());
+            ret.append(item->data(PositionRole).toInt());
         }
         *ok = true;
     }

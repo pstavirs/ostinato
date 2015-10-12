@@ -23,15 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "settings.h"
 
 #include <QFileDialog>
-#include <QtGlobal>
-
-#if defined(Q_OS_WIN32)
-QString kGzipPathDefaultValue;
-QString kDiffPathDefaultValue;
-QString kAwkPathDefaultValue;
-#endif
-
-QString kUserDefaultValue;
 
 Preferences::Preferences()
 {
@@ -49,30 +40,10 @@ Preferences::Preferences()
             kDiffPathDefaultValue).toString());
     awkPathEdit->setText(appSettings->value(kAwkPathKey, 
             kAwkPathDefaultValue).toString());
-
-    // TODO(only if required): kUserKey
 }
 
 Preferences::~Preferences()
 {
-}
-
-void Preferences::initDefaults()
-{
-
-#if defined(Q_OS_WIN32)
-    kGzipPathDefaultValue = QApplication::applicationDirPath() + "/gzip.exe";
-    kDiffPathDefaultValue = QApplication::applicationDirPath() + "/diff.exe";
-    kAwkPathDefaultValue = QApplication::applicationDirPath() + "/gawk.exe";
-#endif
-
-    // Read default username from the environment
-#ifdef Q_OS_WIN32
-    kUserDefaultValue = QString(qgetenv("USERNAME").constData());
-#else
-    kUserDefaultValue = QString(qgetenv("USER").constData());
-#endif
-    qDebug("current user <%s>", qPrintable(kUserDefaultValue));
 }
 
 void Preferences::accept()
