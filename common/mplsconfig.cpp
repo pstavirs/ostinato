@@ -54,11 +54,6 @@ void MplsConfigForm::loadWidget(AbstractProtocol *proto)
             MplsProtocol::mpls_bos,
             AbstractProtocol::FieldValue
         ).toString());
-    mplsOverrideBos->setChecked(
-        proto->fieldData(
-            MplsProtocol::mpls_is_override_bos,
-            AbstractProtocol::FieldValue
-        ).toBool());
 }
 
 void MplsConfigForm::storeWidget(AbstractProtocol *proto)
@@ -75,7 +70,4 @@ void MplsConfigForm::storeWidget(AbstractProtocol *proto)
     proto->setFieldData(
         MplsProtocol::mpls_bos,
         mplsBos->text());
-    proto->setFieldData(
-        MplsProtocol::mpls_is_override_bos,
-        mplsOverrideBos->isChecked());
 }

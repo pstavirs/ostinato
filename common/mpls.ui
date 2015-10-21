@@ -89,19 +89,6 @@
      </property>
     </spacer>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_27">
-     <property name="text">
-      <string>TTL</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-     <property name="buddy">
-      <cstring>mplsTtl</cstring>
-     </property>
-    </widget>
-   </item>
    <item row="2" column="1">
     <widget class="QLineEdit" name="mplsTtl">
      <property name="enabled">
@@ -128,10 +115,29 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QCheckBox" name="mplsOverrideBos">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_27">
      <property name="text">
-      <string>Override Bottom of Stack</string>
+      <string>TTL</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>mplsTtl</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_28">
+     <property name="text">
+      <string>Bottom of Stack</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>mplsTtl</cstring>
      </property>
     </widget>
    </item>
@@ -143,22 +149,5 @@
   <tabstop>mplsTtl</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>mplsOverrideBos</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>mplsBos</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>109</x>
-     <y>153</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>290</x>
-     <y>154</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

@@ -89,11 +89,6 @@ AbstractProtocol::FieldFlags MplsProtocol::fieldFlags(int index) const
         case mpls_ttl:
             break;
 
-        case mpls_is_override_bos:
-            flags &= ~FrameField;
-            flags |= MetaField;
-            break;
-
         default:
             qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
                 index);
@@ -159,11 +154,7 @@ QVariant MplsProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case mpls_bos:
         {
-            int bos;
-            if(data.is_override_bos())
-                bos = data.bos();
-            else
-                bos = !(next &&
+            int bos = !(next &&
                         next->protocolNumber() ==
                                 MplsProtocol::protocolNumber());
 
@@ -200,19 +191,6 @@ QVariant MplsProtocol::fieldData(int index, FieldAttrib attrib,
                     return QByteArray(1, (char) ttl);
                 case FieldBitSize:
                     return 8;
-                default:
-                    break;
-            }
-            break;
-        }
-
-        // Meta fields
-        case mpls_is_override_bos:
-        {
-            switch(attrib)
-            {
-                case FieldValue:
-                    return data.is_override_bos();
                 default:
                     break;
             }
@@ -264,15 +242,6 @@ bool MplsProtocol::setFieldData(int index, const QVariant &value,
             uint ttl = value.toUInt(&isOk);
             if (isOk)
                 data.set_ttl(ttl);
-            break;
-        }
-
-        // Meta-fields
-        case mpls_is_override_bos:
-        {
-            bool isOverrideBos = value.toBool();
-            data.set_is_override_bos(isOverrideBos);
-            isOk = true;
             break;
         }
 

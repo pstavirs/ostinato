@@ -45,8 +45,6 @@ public:
         mpls_ttl,
 
         // Meta Fields
-        mpls_is_override_bos,
-
         mpls_fieldCount
     };
 
