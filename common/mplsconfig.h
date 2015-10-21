@@ -31,7 +31,6 @@ class MplsConfigForm :
     Q_OBJECT
 public:
     MplsConfigForm(QWidget *parent = 0);
-    virtual ~MplsConfigForm();
 
     static MplsConfigForm* createInstance();
 

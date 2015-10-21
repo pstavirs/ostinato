@@ -25,10 +25,6 @@ MplsProtocol::MplsProtocol(StreamBase *stream, AbstractProtocol *parent)
 {
 }
 
-MplsProtocol::~MplsProtocol()
-{
-}
-
 AbstractProtocol* MplsProtocol::createInstance(StreamBase *stream,
     AbstractProtocol *parent)
 {
@@ -288,9 +284,4 @@ bool MplsProtocol::setFieldData(int index, const QVariant &value,
 
 _exit:
     return isOk;
-}
-
-int MplsProtocol::protocolFrameVariableCount() const
-{
-    return AbstractProtocol::protocolFrameVariableCount();
 }

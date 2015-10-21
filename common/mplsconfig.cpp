@@ -27,10 +27,6 @@ MplsConfigForm::MplsConfigForm(QWidget *parent)
     setupUi(this);
 }
 
-MplsConfigForm::~MplsConfigForm()
-{
-}
-
 MplsConfigForm* MplsConfigForm::createInstance()
 {
     return new MplsConfigForm;

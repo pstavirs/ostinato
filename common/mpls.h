@@ -51,7 +51,6 @@ public:
     };
 
     MplsProtocol(StreamBase *stream, AbstractProtocol *parent = 0);
-    virtual ~MplsProtocol();
 
     static AbstractProtocol* createInstance(StreamBase *stream,
         AbstractProtocol *parent = 0);
@@ -72,9 +71,6 @@ public:
                int streamIndex = 0) const;
     virtual bool setFieldData(int index, const QVariant &value, 
             FieldAttrib attrib = FieldValue);
-
-
-    virtual int protocolFrameVariableCount() const;
 
 private:
     OstProto::Mpls    data;
