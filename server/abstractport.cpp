@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/abstractprotocol.h"
 #include "../common/streambase.h"
 #include "devicemanager.h"
+#include "packetbuffer.h"
 
 #include <QString>
 #include <QIODevice>
@@ -570,6 +571,41 @@ void AbstractPort::updatePacketListInterleaved()
     qDebug("loop Delay = %" PRId64 "/%" PRId64, delaySec, delayNsec);
     setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
+}
+
+void AbstractPort::clearDeviceNeighbors()
+{
+    deviceManager_->clearDeviceNeighbors();
+}
+
+void AbstractPort::resolveDeviceNeighbors()
+{
+    // Resolve neighbor for each unique frame of each stream
+    // NOTE:
+    // 1. All the frames may have the same destination ip,but may have
+    // different source ip so may belong to a different emulated device;
+    // so we cannot optimize and send only one ARP
+    // 2. For a unidirectional stream, at egress, this will create ARP
+    // entries on the DUT for each of the source addresses
+    //
+    // TODO(optimization): Identify if stream does not vary in srcIp or dstIp
+    // - in which case resolve for only one frame of the stream
+    for (int i = 0; i < streamList_.size(); i++)
+    {
+        const StreamBase *stream = streamList_.at(i);
+        int frameCount = stream->frameVariableCount();
+
+        for (int j = 0; j < frameCount; j++) {
+            // TODO(optimization): we need the packet contents only uptil
+            // the L3 header; it would be best if protocols/streams could
+            // cache the frameValue()
+            int pktLen = stream->frameValue(pktBuf_, sizeof(pktBuf_), j);
+            if (pktLen) {
+                PacketBuffer pktBuf(pktBuf_, pktLen);
+                deviceManager_->resolveDeviceNeighbor(&pktBuf);
+            }
+        }
+    }
 }
 
 void AbstractPort::stats(PortStats *stats)

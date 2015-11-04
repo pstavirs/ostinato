@@ -38,6 +38,8 @@ message VlanEmulation {
     repeated Vlan stack = 1; // outer to inner
 }
 
+// FIXME: encapsulate VlanEmulation inside a new encapEmulation message?
+
 extend OstProto.DeviceGroup {
     optional VlanEmulation vlan = 200;
 }
@@ -60,6 +62,8 @@ message Ip4Emulation {
     // FIXME: step for gateway?
 }
 
+// FIXME: should we have a 'message Ip6Address' with 'hi', 'lo' fields
+// and use that everywhere instead of having to define _hi and _lo?
 message Ip6Emulation {
     optional uint64 address_hi = 1;
     optional uint64 address_lo = 2;
@@ -72,6 +76,7 @@ message Ip6Emulation {
     // FIXME: step for gateway?
 }
 
+// FIXME: move fields of Device directly inside 'extend OstProto.DeviceGroup'
 message Device {
     optional MacEmulation mac = 1;
     optional Ip4Emulation ip4 = 2;
@@ -82,4 +87,29 @@ message Device {
 
 extend OstProto.DeviceGroup {
     optional Device device = 201;
+}
+
+// FIXME: rename xxxEntry to something better?
+message ArpEntry {
+    optional uint32 ip4 = 1;
+    optional uint64 mac = 2;
+// FIXME: add state/status field?
+}
+
+message NdEntry {
+    optional uint64 ip6_hi = 1;
+    optional uint64 ip6_lo = 2;
+    optional uint64 mac = 3;
+// FIXME: add state/status field?
+}
+
+// FIXME: change message name
+message DeviceNeighbors {
+    optional uint32 device_index = 1;
+    repeated ArpEntry arp = 2;
+    repeated NdEntry nd = 3;
+}
+
+extend OstProto.DeviceNeighborList {
+    repeated DeviceNeighbors devices = 100;
 }

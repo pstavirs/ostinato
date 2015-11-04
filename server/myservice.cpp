@@ -817,3 +817,85 @@ _invalid_port:
 _exit:
     done->Run();
 }
+
+void MyService::resolveDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortIdList* request,
+    ::OstProto::Ack* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo (LOW): partial RPC?
+
+        portLock[portId]->lockForWrite();
+        portInfo[portId]->resolveDeviceNeighbors();
+        portLock[portId]->unlock();
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+}
+
+void MyService::clearDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortIdList* request,
+    ::OstProto::Ack* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo (LOW): partial RPC?
+
+        portLock[portId]->lockForWrite();
+        portInfo[portId]->clearDeviceNeighbors();
+        portLock[portId]->unlock();
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+}
+
+void MyService::getDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::DeviceNeighborList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    devMgr->getDeviceNeighbors(response);
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}

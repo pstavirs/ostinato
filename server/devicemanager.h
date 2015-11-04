@@ -51,6 +51,10 @@ public:
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
 
+    void clearDeviceNeighbors();
+    void resolveDeviceNeighbor(PacketBuffer *pktBuf);
+    void getDeviceNeighbors(OstProto::DeviceNeighborList *neighborList);
+
 private:
     enum Operation { kAdd, kDelete };
 

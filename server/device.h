@@ -20,9 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _DEVICE_H
 #define _DEVICE_H
 
+#include "../common/emulproto.pb.h"
 #include "../common/protocol.pb.h"
 
 #include <QByteArray>
+#include <QHash>
 
 class DeviceManager;
 class PacketBuffer;
@@ -36,7 +38,7 @@ public:
 
     void setVlan(int index, quint16 vlan);
     void setMac(quint64 mac);
-    void setIp4(quint32 address, int prefixLength);
+    void setIp4(quint32 address, int prefixLength, quint32 gateway);
     QString config();
 
     DeviceKey key();
@@ -48,8 +50,13 @@ public:
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
 
+    void clearNeighbors();
+    void resolveNeighbor(PacketBuffer *pktBuf);
+    void getNeighbors(OstEmul::DeviceNeighbors *neighbors);
+
 private: // methods
     void receiveArp(PacketBuffer *pktBuf);
+    void sendArpRequest(PacketBuffer *pktBuf);
 
 private: // data
     DeviceManager *deviceManager_;
@@ -59,8 +66,11 @@ private: // data
     quint64 mac_;
     quint32 ip4_;
     int ip4PrefixLength_;
+    quint32 ip4Gateway_;
 
     DeviceKey key_;
+
+    QHash<quint32, quint64> arpTable;
 };
 
 #endif

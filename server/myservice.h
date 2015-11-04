@@ -131,6 +131,22 @@ public:
         const ::OstProto::DeviceGroupConfigList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
+
+    virtual void resolveDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void clearDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void getDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::DeviceNeighborList* response,
+        ::google::protobuf::Closure* done);
 signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 

@@ -208,6 +208,94 @@ void DeviceManager::transmitPacket(PacketBuffer *pktBuf)
     port_->sendEmulationPacket(pktBuf);
 }
 
+void DeviceManager::clearDeviceNeighbors()
+{
+    foreach(Device *device, deviceList_)
+        device->clearNeighbors();
+}
+
+void DeviceManager::getDeviceNeighbors(
+        OstProto::DeviceNeighborList *neighborList)
+{
+    int count = 0;
+
+    foreach(Device *device, deviceList_) {
+        OstEmul::DeviceNeighbors *neighList =
+            neighborList->AddExtension(OstEmul::devices);
+        neighList->set_device_index(count++);
+        device->getNeighbors(neighList);
+    }
+}
+
+// FIXME: This function is mostly a duplicate of receivePacket;
+// can we have a single combined one?
+void DeviceManager::resolveDeviceNeighbor(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    int offset = 0;
+    Device dk(this);
+    Device *device;
+    quint64 dstMac = kBcastMac;
+    quint16 ethType;
+    quint16 vlan;
+    int idx = 0;
+
+    // NOTE:
+    // 1. Since resolution hasn't happened yet, dstMac will not be valid;
+    //    so we use the Bcast address instead
+    // 2. We assume pkt is ethernet; TODO: extend for other link layer types
+
+    // FIXME: validate before extracting if the offset is within pktLen
+
+    dk.setMac(dstMac);
+    offset += 6;
+
+    // Skip srcMac - don't care
+    offset += 6;
+
+    qDebug("dstMac %012" PRIx64, dstMac);
+
+_eth_type:
+    // Extract EthType
+    ethType = qFromBigEndian<quint16>(pktData + offset);
+    qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
+
+    if (ethType == 0x8100) {
+        offset += 2;
+        vlan = qFromBigEndian<quint16>(pktData + offset);
+        dk.setVlan(idx++, vlan);
+        offset += 2;
+        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
+        goto _eth_type;
+    }
+
+    pktBuf->pull(offset);
+
+    if (dstMac == kBcastMac) {
+        QList<Device*> list = bcastList_.values(dk.key());
+        // FIXME: We need to clone the pktBuf before passing to each
+        // device, otherwise only the first device gets the original
+        // packet - all subsequent ones get the modified packet!
+        // NOTE: modification may not be in the pkt data buffer but
+        // in the HDTE pointers - which is bad as well!
+        foreach(Device *device, list)
+            device->resolveNeighbor(pktBuf);
+        goto _exit;
+    }
+
+    // Is it destined for us?
+    device = deviceList_.value(dk.key());
+    if (!device) {
+        qDebug("%s: dstMac %012llx is not us", __FUNCTION__, dstMac);
+        goto _exit;
+    }
+
+    device->receivePacket(pktBuf);
+
+_exit:
+    return;
+}
+
 void DeviceManager::enumerateDevices(
     const OstProto::DeviceGroup *deviceGroup,
     Operation oper)
@@ -240,7 +328,8 @@ void DeviceManager::enumerateDevices(
 
             dk.setMac(pbDevice.mac().address() + macAdd);
             dk.setIp4(pbDevice.ip4().address() + ip4Add,
-                    pbDevice.ip4().prefix_length());
+                    pbDevice.ip4().prefix_length(),
+                    pbDevice.ip4().default_gateway());
 
             // TODO: fill in other pbDevice data
 

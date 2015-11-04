@@ -100,6 +100,9 @@ public:
     virtual void stopDeviceEmulation() = 0;
     virtual int sendEmulationPacket(PacketBuffer *pktBuf) = 0;
 
+    void clearDeviceNeighbors();
+    void resolveDeviceNeighbors();
+
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 

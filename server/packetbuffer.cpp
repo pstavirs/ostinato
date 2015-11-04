@@ -51,7 +51,7 @@ PacketBuffer::~PacketBuffer()
 
 int PacketBuffer::length()
 {
-    return tail_ - head_;
+    return tail_ - data_;
 }
 
 uchar* PacketBuffer::head()

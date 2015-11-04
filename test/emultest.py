@@ -37,7 +37,9 @@ env.password = 'tc'
 env.host_string = 'localhost:50022'
 dut_rx_port = 'eth1'
 dut_tx_port = 'eth2'
-    
+
+dut_dst_mac = 0x0800278df2b4 #FIXME: hardcoding
+
 # setup logging
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -71,6 +73,8 @@ suite = TestSuite()
 if not use_defaults:
     s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
     host_name = s or host_name
+    s = raw_input('DUT\'s Hostname/IP [%s]: ' % (env.host_string))
+    env.host_string = s or env.host_string
 
 drone = DroneProxy(host_name)
 
@@ -117,6 +121,10 @@ try:
                 tx_port_number = port.port_id.id
             elif rx_port_number < 0:
                 rx_port_number = port.port_id.id
+        if ('eth1' in port.name):
+            tx_port_number = port.port_id.id
+        if ('eth2' in port.name):
+            rx_port_number = port.port_id.id
 
     if not use_defaults:
         p = raw_input('Tx Port Id [%d]: ' % (tx_port_number))
@@ -144,6 +152,10 @@ try:
     # create emulated device(s) on tx/rx ports - each test case will
     # modify and reuse these devices as per its needs
     # ----------------------------------------------------------------- #
+
+    emul_ports = ost_pb.PortIdList()
+    emul_ports.port_id.add().id = tx_port_number;
+    emul_ports.port_id.add().id = rx_port_number;
 
     # delete existing devices, if any, on tx port
     tx_dgid_list = drone.getDeviceGroupIdList(tx_port.port_id[0])
@@ -251,7 +263,7 @@ try:
         # setup stream protocols as mac:eth2:ip4:udp:payload
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
-        p.Extensions[mac].dst_mac = 0x0800278df2b4 #FIXME: hardcoding
+        p.Extensions[mac].dst_mac = dut_dst_mac
         p.Extensions[mac].src_mac = 0x00aabbccddee
 
         p = s.protocol.add()
@@ -284,6 +296,74 @@ try:
         if re.search('10.10.2.10[1-5].*lladdr', arp_cache):
             raise TestPreRequisiteError('ARP cache not cleared')
 
+        # resolve ARP on tx/rx ports
+        log.info('resolving Neighbors on tx/rx ports ...')
+        drone.startCapture(emul_ports)
+        drone.clearDeviceNeighbors(emul_ports)
+        drone.resolveDeviceNeighbors(emul_ports)
+        time.sleep(10)
+        drone.stopCapture(emul_ports)
+
+        fail = 0
+
+        # verify ARP Requests sent out from tx port
+        buff = drone.getCaptureBuffer(emul_ports.port_id[0])
+        drone.saveCaptureBuffer(buff, 'capture.pcap')
+        log.info('dumping Tx capture buffer (all)')
+        cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
+        print(cap_pkts)
+        log.info('dumping Tx capture buffer (filtered)')
+        for i in range(num_devs):
+            cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-R', '(arp.opcode == 1)'
+                          ' && (arp.src.proto_ipv4 == 10.10.1.'+str(101+i)+')'
+                          ' && (arp.dst.proto_ipv4 == 10.10.1.1)'])
+            print(cap_pkts)
+            if cap_pkts.count('\n') != 1:
+                fail = fail + 1
+
+        # verify *no* ARP Requests sent out from rx port
+        buff = drone.getCaptureBuffer(emul_ports.port_id[1])
+        drone.saveCaptureBuffer(buff, 'capture.pcap')
+        log.info('dumping Rx capture buffer (all)')
+        cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
+        print(cap_pkts)
+        log.info('dumping Rx capture buffer (filtered)')
+        for i in range(num_devs):
+            cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-R', '(arp.opcode == 1)'
+                          ' && (arp.src.proto_ipv4 == 10.10.2.'+str(101+i)+')'
+                          ' && (arp.dst.proto_ipv4 == 10.10.2.1)'])
+            print(cap_pkts)
+            if cap_pkts.count('\n') != 0:
+                fail = fail + 1
+
+        # retrieve and verify ARP Table on tx/rx ports
+        log.info('retrieving ARP entries on tx port')
+        neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
+        devices = neigh_list.Extensions[emul.devices]
+        # TODO: verify gateway IP is resolved for each device
+        # FIXME: needs device ip as part of neigh_list
+        log.info('ARP Table on tx port')
+        for device in devices:
+            for arp in device.arp:
+                # TODO: pretty print ip and mac
+                print('%d: %08x %012x' %
+                        (device.device_index, arp.ip4, arp.mac))
+
+        log.info('retrieving ARP entries on rx port')
+        neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
+        devices = neigh_list.Extensions[emul.devices]
+        log.info('ARP Table on rx port')
+        for device in devices:
+            # verify *no* ARPs learnt on rx port
+            if len(device.arp):
+                fail = fail + 1
+            for arp in device.arp:
+                # TODO: pretty print ip and mac
+                print('%d: %08x %012x' %
+                        (device.device_index, arp.ip4, arp.mac))
+
         drone.startCapture(rx_port)
         drone.startTransmit(tx_port)
         log.info('waiting for transmit to finish ...')
@@ -297,7 +377,6 @@ try:
         cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
         print(cap_pkts)
         log.info('dumping Rx capture buffer (filtered)')
-        fail = 0
         for i in range(num_devs):
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                         '-R', '(ip.src == 10.10.1.' + str(101+i) + ') '
@@ -309,6 +388,8 @@ try:
                 fail = fail + 1
         if fail == 0:
             passed = True
+        else:
+            log.info('failed checks: %d' % fail)
         os.remove('capture.pcap')
     except RpcError as e:
             raise
@@ -319,6 +400,9 @@ try:
         sudo('ip address delete 10.10.1.1/24 dev ' + dut_rx_port)
         sudo('ip address delete 10.10.2.1/24 dev ' + dut_tx_port)
         suite.test_end(passed)
+
+    # FIXME: update the below test cases to resolve Neighbors and streams
+    # to derive src/dst mac from device
 
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 device per multiple single-tag VLANs
@@ -438,7 +522,7 @@ try:
             # setup stream protocols as mac:vlan:eth2:ip4:udp:payload
             p = s.protocol.add()
             p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
-            p.Extensions[mac].dst_mac = 0x0800278df2b4 #FIXME: hardcoding
+            p.Extensions[mac].dst_mac = dut_dst_mac
             p.Extensions[mac].src_mac = 0x00aabbccddee
 
             p = s.protocol.add()

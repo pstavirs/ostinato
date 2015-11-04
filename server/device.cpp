@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const int kBaseHex = 16;
 const int kMaxVlan = 4;
+const quint64 kBcastMac = 0xffffffffffffULL;
 
 /*
  * NOTE: 
@@ -79,10 +80,11 @@ void Device::setMac(quint64 mac)
     memcpy(key_.data() + ofs, (char*)&mac, sizeof(mac));
 }
 
-void Device::setIp4(quint32 address, int prefixLength)
+void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
 {
     ip4_ = address;
     ip4PrefixLength_ = prefixLength;
+    ip4Gateway_ = gateway;
 }
 
 QString Device::config()
@@ -142,11 +144,6 @@ _exit:
     return;
 }
 
-void Device::transmitPacket(PacketBuffer *pktBuf)
-{
-    deviceManager_->transmitPacket(pktBuf);
-}
-
 // We expect pktBuf to point to EthType on entry
 void Device::receivePacket(PacketBuffer *pktBuf)
 {
@@ -168,6 +165,54 @@ void Device::receivePacket(PacketBuffer *pktBuf)
     }
     // FIXME: temporary hack till DeviceManager clones pbufs
     pktBuf->push(2);
+}
+
+void Device::transmitPacket(PacketBuffer *pktBuf)
+{
+    deviceManager_->transmitPacket(pktBuf);
+}
+
+void Device::clearNeighbors()
+{
+    arpTable.clear();
+}
+
+// Resolve the Neighbor IP address for this to-be-transmitted pktBuf
+// We expect pktBuf to point to EthType on entry
+void Device::resolveNeighbor(PacketBuffer *pktBuf)
+{
+    quint16 ethType = qFromBigEndian<quint16>(pktBuf->data());
+    pktBuf->pull(2);
+
+    qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
+
+    switch(ethType)
+    {
+    case 0x0800: // IPv4
+        sendArpRequest(pktBuf);
+        break;
+
+    case 0x86dd: // IPv6
+    default:
+        break;
+    }
+    // FIXME: temporary hack till DeviceManager clones pbufs
+    pktBuf->push(2);
+}
+
+// Append this device's neighbors to the list
+void Device::getNeighbors(OstEmul::DeviceNeighbors *neighbors)
+{
+    QList<quint32> ipList = arpTable.keys();
+    QList<quint64> macList = arpTable.values();
+
+    Q_ASSERT(ipList.size() == macList.size());
+
+    for (int i = 0; i < ipList.size(); i++) {
+        OstEmul::ArpEntry *arp = neighbors->add_arp();
+        arp->set_ip4(ipList.at(i));
+        arp->set_mac(macList.at(i));
+    }
 }
 
 //
@@ -233,6 +278,8 @@ void Device::receiveArp(PacketBuffer *pktBuf)
     switch (opCode)
     {
     case 1:  // ARP Request
+        arpTable.insert(srcIp, srcMac);
+
         rspPkt = new PacketBuffer;
         rspPkt->reserve(encapSize()); 
         pktData = rspPkt->put(28);
@@ -259,6 +306,9 @@ void Device::receiveArp(PacketBuffer *pktBuf)
                 qPrintable(QHostAddress(tgtIp).toString()));
         break;
     case 2: // ARP Response
+        arpTable.insert(srcIp, srcMac);
+        break;
+
     default:
         break;
     }
@@ -268,4 +318,65 @@ void Device::receiveArp(PacketBuffer *pktBuf)
 _invalid_exit:
     qWarning("Invalid ARP content");
     return;
+}
+
+// Send ARP request for the IPv4 packet in pktBuf
+// pktBuf points to start of IP header
+void Device::sendArpRequest(PacketBuffer *pktBuf)
+{
+    PacketBuffer *reqPkt;
+    uchar *pktData = pktBuf->data();
+    int offset = 0;
+    int ipHdrLen = (pktData[offset] & 0x0F) << 2;
+    quint32 srcIp, dstIp, mask, tgtIp;
+
+    if (pktBuf->length() < ipHdrLen) {
+        qDebug("incomplete IPv4 header: expected %d, actual %d",
+                ipHdrLen, pktBuf->length());
+        return;
+    }
+
+    // Extract srcIp first to check quickly that this packet originates
+    // from this device
+    srcIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 8);
+    if (srcIp != ip4_) {
+        qDebug("%s: srcIp %s is not me %s", __FUNCTION__,
+                qPrintable(QHostAddress(srcIp).toString()),
+                qPrintable(QHostAddress(ip4_).toString()));
+        return;
+    }
+
+    dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
+
+    // TODO: if we have already sent a ARP request for the dst IP, do not
+    // resend - requires some sort of state per entry (timeout also?)
+
+    mask =  ~0 << (32 - ip4PrefixLength_);
+    qDebug("dst %x src %x mask %x", dstIp, srcIp, mask);
+    tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip4Gateway_;
+
+    reqPkt = new PacketBuffer;
+    reqPkt->reserve(encapSize());
+    pktData = reqPkt->put(28);
+    if (pktData) {
+        // HTYP, PTYP
+        *(quint32*)(pktData   ) = qToBigEndian(quint32(0x00010800));
+        // HLEN, PLEN, OPER
+        *(quint32*)(pktData+ 4) = qToBigEndian(quint32(0x06040001));
+        // Source H/W Addr, Proto Addr
+        *(quint32*)(pktData+ 8) = qToBigEndian(quint32(mac_ >> 16));
+        *(quint16*)(pktData+12) = qToBigEndian(quint16(mac_ & 0xffff));
+        *(quint32*)(pktData+14) = qToBigEndian(srcIp);
+        // Target H/W Addr, Proto Addr
+        *(quint32*)(pktData+18) = qToBigEndian(quint32(0));
+        *(quint16*)(pktData+22) = qToBigEndian(quint16(0));
+        *(quint32*)(pktData+24) = qToBigEndian(tgtIp);
+    }
+
+    encap(reqPkt, kBcastMac, 0x0806);
+    transmitPacket(reqPkt);
+
+    qDebug("Sent ARP Request for srcIp/tgtIp=%s/%s",
+            qPrintable(QHostAddress(srcIp).toString()),
+            qPrintable(QHostAddress(tgtIp).toString()));
 }
