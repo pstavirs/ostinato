@@ -31,6 +31,6 @@ pkg_info.json
 *.swp
 .DS_Store
 
-# ctags
+# ctags/cscope
 tags
-
+cscope.out
