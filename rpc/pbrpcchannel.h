@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PB_RPC_CHANNEL_H
 #define _PB_RPC_CHANNEL_H
 
+#include <QString>
 #include <QTcpServer>
 #include <QTcpSocket>
 
@@ -64,7 +65,7 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     const ::google::protobuf::Message   &notifPrototype;
     ::google::protobuf::Message     *notif;
 
-    QHostAddress    mServerAddress;
+    QString            mServerHost;
     quint16            mServerPort;
     QTcpSocket        *mpSocket;
 
@@ -72,15 +73,18 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
 public:
-    PbRpcChannel(QHostAddress ip, quint16 port,
+    PbRpcChannel(QString serverName, quint16 port,
                  const ::google::protobuf::Message &notifProto);
     ~PbRpcChannel();
 
     void establish();
-    void establish(QHostAddress ip, quint16 port);
+    void establish(QString serverName, quint16 port);
     void tearDown();
 
-    const QHostAddress& serverAddress() const { return mServerAddress; } 
+    const QString serverName() const
+    {
+        return mpSocket->peerName();
+    }
     quint16 serverPort() const { return mServerPort; } 
 
     QAbstractSocket::SocketState state() const

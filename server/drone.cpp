@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "drone.h"
 
-#include "rpcserver.h"
 #include "myservice.h"
+#include "rpcserver.h"
+#include "settings.h"
 
 #include <QMetaType>
 
@@ -43,11 +44,21 @@ Drone::~Drone()
 
 bool Drone::init()
 {
+    QString addr = appSettings->value(kRpcServerAddress).toString();
+    QHostAddress address = addr.isEmpty() ?
+        QHostAddress::Any : QHostAddress(addr);
+
     Q_ASSERT(rpcServer);
 
     qRegisterMetaType<SharedProtobufMessage>("SharedProtobufMessage");
 
-    if (!rpcServer->registerService(service, myport ? myport : 7878))
+    if (address.isNull()) {
+        qWarning("Invalid RpcServer Address <%s> specified. Using 'Any'",
+                qPrintable(addr));
+        address = QHostAddress::Any;
+    }
+
+    if (!rpcServer->registerService(service, address, myport ? myport : 7878))
     {
         //qCritical(qPrintable(rpcServer->errorString()));
         return false;

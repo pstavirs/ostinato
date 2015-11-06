@@ -32,6 +32,11 @@ const QString kRateAccuracyKey("RateAccuracy");
 const QString kRateAccuracyDefaultValue("High");
 
 //
+// RpcServer Section Keys
+//
+const QString kRpcServerAddress("RpcServer/Address");
+
+//
 // PortList Section Keys
 //
 const QString kPortListIncludeKey("PortList/Include");

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 static uchar msgBuf[4096];
 
-PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port, 
+PbRpcChannel::PbRpcChannel(QString serverName, quint16 port,
                            const ::google::protobuf::Message &notifProto)
     : notifPrototype(notifProto)
 {
@@ -36,7 +36,7 @@ PbRpcChannel::PbRpcChannel(QHostAddress ip, quint16 port,
     done = NULL;
     response = NULL;
 
-    mServerAddress = ip;
+    mServerHost = serverName;
     mServerPort = port;
     mpSocket = new QTcpSocket(this);
 
@@ -75,12 +75,12 @@ void PbRpcChannel::establish()
 {
     qDebug("In %s", __FUNCTION__);
 
-    mpSocket->connectToHost(mServerAddress, mServerPort);
+    mpSocket->connectToHost(mServerHost, mServerPort);
 }
 
-void PbRpcChannel::establish(QHostAddress ip, quint16 port)
+void PbRpcChannel::establish(QString serverName, quint16 port)
 {
-    mServerAddress = ip;
+    mServerHost = serverName;
     mServerPort = port;
     establish();
 }
