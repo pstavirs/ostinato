@@ -328,7 +328,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
 #ifdef Q_OS_WIN32
     LARGE_INTEGER   freq;
     if (QueryPerformanceFrequency(&freq))
-        gTicksFreq = ticksFreq_ = freq.QuadPart;
+        gTicksFreq = freq.QuadPart;
     else
         Q_ASSERT_X(false, "PortTransmitter::PortTransmitter",
                 "This Win32 platform does not support performance counter");
@@ -721,7 +721,7 @@ void PcapPort::PortTransmitter::udelay(unsigned long usec)
     LARGE_INTEGER curTicks;
 
     QueryPerformanceCounter(&curTicks);
-    tgtTicks.QuadPart = curTicks.QuadPart + (usec*ticksFreq_)/1000000;
+    tgtTicks.QuadPart = curTicks.QuadPart + (usec*gTicksFreq)/1000000;
 
     while (curTicks.QuadPart < tgtTicks.QuadPart)
         QueryPerformanceCounter(&curTicks);

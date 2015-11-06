@@ -181,7 +181,6 @@ protected:
         int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
                     int sync);
 
-        quint64 ticksFreq_;
         QList<PacketSequence*> packetSequenceList_;
         PacketSequence *currentPacketSequence_;
         int repeatSequenceStart_;
