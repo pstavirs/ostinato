@@ -6,7 +6,7 @@ Ostinato is an open-source, cross-platform network packet crafter/traffic genera
 
 Ostinato aims to be "Wireshark in Reverse" and become complementary to Wireshark.
 
-License: GPLv3+ (see COPYING)
+License: GPLv3+ (see [COPYING](https://raw.githubusercontent.com/pstavirs/ostinato/master/COPYING))
 
 For more information visit http://ostinato.org.
 
