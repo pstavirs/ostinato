@@ -95,6 +95,9 @@ public:
     virtual bool isCaptureOn() = 0;
     virtual QIODevice* captureData() = 0;
 
+    void stats(PortStats *stats);
+    void resetStats() { epochStats_ = stats_; }
+
     DeviceManager* deviceManager();
     virtual void startDeviceEmulation() = 0;
     virtual void stopDeviceEmulation() = 0;
@@ -103,8 +106,8 @@ public:
     void clearDeviceNeighbors();
     void resolveDeviceNeighbors();
 
-    void stats(PortStats *stats);
-    void resetStats() { epochStats_ = stats_; }
+    quint64 deviceMacAddress(int streamId, int frameIndex);
+    quint64 neighborMacAddress(int streamId, int frameIndex);
 
 protected:
     void addNote(QString note);
@@ -128,6 +131,12 @@ private:
 
     static const int kMaxPktSize = 16384;
     uchar   pktBuf_[kMaxPktSize];
+
+    // When finding a corresponding device for a packet, we need to inspect
+    // only uptil the L3 header; in the worst case this would be -
+    // mac (12) + 4 x vlan (16) + ethType (2) + ipv6 (40) = 74 bytes
+    // let's round it up to 80 bytes
+    static const int kMaxL3PktSize = 80;
 
     /*! \note StreamBase::id() and index into streamList[] are NOT same! */
     QList<StreamBase*>  streamList_;

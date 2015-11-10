@@ -55,9 +55,12 @@ public:
     void resolveDeviceNeighbor(PacketBuffer *pktBuf);
     void getDeviceNeighbors(OstProto::DeviceNeighborList *neighborList);
 
+    quint64 deviceMacAddress(PacketBuffer *pktBuf);
+    quint64 neighborMacAddress(PacketBuffer *pktBuf);
 private:
     enum Operation { kAdd, kDelete };
 
+    Device* originDevice(PacketBuffer *pktBuf);
     void enumerateDevices(
             const OstProto::DeviceGroup *deviceGroup,
             Operation oper);

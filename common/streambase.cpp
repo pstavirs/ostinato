@@ -24,8 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocolmanager.h"
 
 extern ProtocolManager *OstProtocolManager;
+extern quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex);
+extern quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex);
 
-StreamBase::StreamBase() :
+StreamBase::StreamBase(int portId) :
+    portId_(portId),
     mStreamId(new OstProto::StreamId),
     mCore(new OstProto::StreamCore),
     mControl(new OstProto::StreamControl)
@@ -535,6 +538,16 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
         memset(buf+len, 0, pktLen-len);
 
     return pktLen;
+}
+
+quint64 StreamBase::deviceMacAddress(int frameIndex) const
+{
+    return getDeviceMacAddress(portId_, int(mStreamId->id()), frameIndex);
+}
+
+quint64 StreamBase::neighborMacAddress(int frameIndex) const
+{
+    return getNeighborMacAddress(portId_, int(mStreamId->id()), frameIndex);
 }
 
 bool StreamBase::preflightCheck(QString &result) const

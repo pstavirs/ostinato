@@ -29,12 +29,12 @@ public:
     PacketBuffer(const uchar *buffer, int size);
     ~PacketBuffer();
 
-    int length();
+    int length() const;
 
-    uchar* head();
-    uchar* data();
-    uchar* tail();
-    uchar* end();
+    uchar* head() const;
+    uchar* data() const;
+    uchar* tail() const;
+    uchar* end() const;
 
     void reserve(int len);
     uchar* pull(int len);

@@ -32,6 +32,7 @@ public:
     Drone(QObject *parent = 0);
     ~Drone();
     bool init();
+    MyService* rpcService();
 
 private:
     RpcServer               *rpcServer;

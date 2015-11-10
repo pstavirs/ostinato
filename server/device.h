@@ -37,6 +37,7 @@ public:
     Device(DeviceManager *deviceManager);
 
     void setVlan(int index, quint16 vlan);
+    quint64 mac();
     void setMac(quint64 mac);
     void setIp4(quint32 address, int prefixLength, quint32 gateway);
     QString config();
@@ -53,6 +54,9 @@ public:
     void clearNeighbors();
     void resolveNeighbor(PacketBuffer *pktBuf);
     void getNeighbors(OstEmul::DeviceNeighbors *neighbors);
+
+    bool isOrigin(const PacketBuffer *pktBuf);
+    quint64 neighborMac(const PacketBuffer *pktBuf);
 
 private: // methods
     void receiveArp(PacketBuffer *pktBuf);

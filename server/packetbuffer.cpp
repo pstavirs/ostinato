@@ -49,27 +49,27 @@ PacketBuffer::~PacketBuffer()
         delete[] buffer_;
 }
 
-int PacketBuffer::length()
+int PacketBuffer::length() const
 {
     return tail_ - data_;
 }
 
-uchar* PacketBuffer::head()
+uchar* PacketBuffer::head() const
 {
     return head_;
 }
 
-uchar* PacketBuffer::data()
+uchar* PacketBuffer::data() const
 {
     return data_;
 }
 
-uchar* PacketBuffer::tail()
+uchar* PacketBuffer::tail() const
 {
     return tail_;
 }
 
-uchar* PacketBuffer::end()
+uchar* PacketBuffer::end() const
 {
     return end_;
 }

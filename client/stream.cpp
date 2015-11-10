@@ -49,3 +49,13 @@ void Stream::storeProtocolWidgets()
     qWarning("%s: DOES NOTHING", __PRETTY_FUNCTION__);
     return;
 }
+
+quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
+{
+    return 0;
+}
+
+quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
+{
+    return 0;
+}

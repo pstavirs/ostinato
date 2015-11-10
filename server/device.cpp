@@ -72,6 +72,11 @@ void Device::setVlan(int index, quint16 vlan)
         numVlanTags_ = index + 1;
 }
 
+quint64 Device::mac()
+{
+    return mac_;
+}
+
 void Device::setMac(quint64 mac)
 {
     int ofs = kMaxVlan * sizeof(quint16);
@@ -215,6 +220,65 @@ void Device::getNeighbors(OstEmul::DeviceNeighbors *neighbors)
     }
 }
 
+// We expect pktBuf to point to EthType on entry
+bool Device::isOrigin(const PacketBuffer *pktBuf)
+{
+    const uchar *pktData = pktBuf->data();
+    quint16 ethType = qFromBigEndian<quint16>(pktData);
+
+    qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
+    pktData += 2;
+
+    // We know only about IP packets
+    if (ethType == 0x0800) { // IPv4
+        int ipHdrLen = (pktData[0] & 0x0F) << 2;
+        quint32 srcIp;
+
+        if (pktBuf->length() < ipHdrLen) {
+            qDebug("incomplete IPv4 header: expected %d, actual %d",
+                    ipHdrLen, pktBuf->length());
+            return false;
+        }
+
+        srcIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 8);
+        qDebug("%s: pktSrcIp/selfIp = 0x%x/0x%x", __FUNCTION__, srcIp, ip4_);
+        return (srcIp == ip4_);
+    }
+
+    return false;
+}
+
+// We expect pktBuf to point to EthType on entry
+quint64 Device::neighborMac(const PacketBuffer *pktBuf)
+{
+    const uchar *pktData = pktBuf->data();
+    quint16 ethType = qFromBigEndian<quint16>(pktData);
+
+    qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
+    pktData += 2;
+
+    // We know only about IP packets
+    if (ethType == 0x0800) { // IPv4
+        int ipHdrLen = (pktData[0] & 0x0F) << 2;
+        quint32 dstIp, tgtIp, mask;
+
+        if (pktBuf->length() < ipHdrLen) {
+            qDebug("incomplete IPv4 header: expected %d, actual %d",
+                    ipHdrLen, pktBuf->length());
+            return false;
+        }
+
+        dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
+        mask =  ~0 << (32 - ip4PrefixLength_);
+        qDebug("dst %x self %x mask %x", dstIp, ip4_, mask);
+        tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
+
+        return arpTable.value(tgtIp);
+    }
+
+    return false;
+}
+
 //
 // Private Methods
 //
@@ -348,12 +412,14 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
 
-    // TODO: if we have already sent a ARP request for the dst IP, do not
-    // resend - requires some sort of state per entry (timeout also?)
-
     mask =  ~0 << (32 - ip4PrefixLength_);
     qDebug("dst %x src %x mask %x", dstIp, srcIp, mask);
     tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip4Gateway_;
+
+    // Do we already have a ARP entry (resolved or unresolved)?
+    // FIXME: do we need a timer to resend ARP for unresolved entries?
+    if (arpTable.contains(tgtIp))
+        return;
 
     reqPkt = new PacketBuffer;
     reqPkt->reserve(encapSize());
@@ -375,6 +441,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     encap(reqPkt, kBcastMac, 0x0806);
     transmitPacket(reqPkt);
+    arpTable.insert(tgtIp, 0);
 
     qDebug("Sent ARP Request for srcIp/tgtIp=%s/%s",
             qPrintable(QHostAddress(srcIp).toString()),

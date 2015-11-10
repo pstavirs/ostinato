@@ -14,7 +14,7 @@ from harness import Test, TestSuite, TestPreRequisiteError
 sys.path.insert(1, '../binding')
 from core import ost_pb, emul, DroneProxy
 from rpc import RpcError
-from protocols.mac_pb2 import mac
+from protocols.mac_pb2 import mac, Mac
 from protocols.ip4_pb2 import ip4, Ip4
 from protocols.vlan_pb2 import vlan
 
@@ -263,8 +263,8 @@ try:
         # setup stream protocols as mac:eth2:ip4:udp:payload
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
-        p.Extensions[mac].dst_mac = dut_dst_mac
-        p.Extensions[mac].src_mac = 0x00aabbccddee
+        p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
+        p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
 
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
@@ -401,6 +401,7 @@ try:
         sudo('ip address delete 10.10.2.1/24 dev ' + dut_tx_port)
         suite.test_end(passed)
 
+    sys.exit(1)
     # FIXME: update the below test cases to resolve Neighbors and streams
     # to derive src/dst mac from device
 

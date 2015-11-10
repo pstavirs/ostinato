@@ -147,6 +147,11 @@ public:
         const ::OstProto::PortId* request,
         ::OstProto::DeviceNeighborList* response,
         ::google::protobuf::Closure* done);
+
+    friend quint64 getDeviceMacAddress(
+            int portId, int streamId, int frameIndex);
+    friend quint64 getNeighborMacAddress(
+            int portId, int streamId, int frameIndex);
 signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 

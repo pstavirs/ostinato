@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mac.h"
 
+#include "../common/streambase.h"
+
 #include <QRegExp>
 
 #define uintToMacStr(num)    \
@@ -28,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 MacProtocol::MacProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
+    forResolve_ = false;
 }
 
 MacProtocol::~MacProtocol()
@@ -124,6 +127,15 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
                         data.dst_mac_step(); 
                     dstMac = data.dst_mac() - u;
                     break;
+                case OstProto::Mac::e_mm_resolve:
+                    if (forResolve_)
+                        dstMac = 0;
+                    else {
+                        forResolve_ = true;
+                        dstMac = mpStream->neighborMacAddress(streamIndex);
+                        forResolve_ = false;
+                    }
+                    break;
                 default:
                     qWarning("Unhandled dstMac_mode %d", data.dst_mac_mode());
             }
@@ -168,6 +180,15 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
                     u = (streamIndex % data.src_mac_count()) * 
                         data.src_mac_step(); 
                     srcMac = data.src_mac() - u;
+                    break;
+                case OstProto::Mac::e_mm_resolve:
+                    if (forResolve_)
+                        srcMac = 0;
+                    else {
+                        forResolve_ = true;
+                        srcMac = mpStream->deviceMacAddress(streamIndex);
+                        forResolve_ = false;
+                    }
                     break;
                 default:
                     qWarning("Unhandled srcMac_mode %d", data.src_mac_mode());
@@ -331,11 +352,23 @@ int MacProtocol::protocolFrameVariableCount() const
 {
     int count = AbstractProtocol::protocolFrameVariableCount();
 
-    if (data.dst_mac_mode() != OstProto::Mac::e_mm_fixed)
-        count = AbstractProtocol::lcm(count, data.dst_mac_count());
+    switch (data.dst_mac_mode()) {
+        case OstProto::Mac::e_mm_inc:
+        case OstProto::Mac::e_mm_dec:
+            count = AbstractProtocol::lcm(count, data.dst_mac_count());
+            break;
+        default:
+            break;
+    }
 
-    if (data.src_mac_mode() != OstProto::Mac::e_mm_fixed)
-        count = AbstractProtocol::lcm(count, data.src_mac_count());
+    switch (data.src_mac_mode()) {
+        case OstProto::Mac::e_mm_inc:
+        case OstProto::Mac::e_mm_dec:
+            count = AbstractProtocol::lcm(count, data.src_mac_count());
+            break;
+        default:
+            break;
+    }
 
     return count;
 }

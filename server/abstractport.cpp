@@ -573,9 +573,44 @@ void AbstractPort::updatePacketListInterleaved()
     isSendQueueDirty_ = false;
 }
 
+void AbstractPort::stats(PortStats *stats)
+{
+    stats->rxPkts = (stats_.rxPkts >= epochStats_.rxPkts) ?
+                        stats_.rxPkts - epochStats_.rxPkts :
+                        stats_.rxPkts + (maxStatsValue_ - epochStats_.rxPkts);
+    stats->rxBytes = (stats_.rxBytes >= epochStats_.rxBytes) ?
+                        stats_.rxBytes - epochStats_.rxBytes :
+                        stats_.rxBytes + (maxStatsValue_ - epochStats_.rxBytes);
+    stats->rxPps = stats_.rxPps;
+    stats->rxBps = stats_.rxBps;
+
+    stats->txPkts = (stats_.txPkts >= epochStats_.txPkts) ?
+                        stats_.txPkts - epochStats_.txPkts :
+                        stats_.txPkts + (maxStatsValue_ - epochStats_.txPkts);
+    stats->txBytes = (stats_.txBytes >= epochStats_.txBytes) ?
+                        stats_.txBytes - epochStats_.txBytes :
+                        stats_.txBytes + (maxStatsValue_ - epochStats_.txBytes);
+    stats->txPps = stats_.txPps;
+    stats->txBps = stats_.txBps;
+
+    stats->rxDrops = (stats_.rxDrops >= epochStats_.rxDrops) ?
+                        stats_.rxDrops - epochStats_.rxDrops :
+                        stats_.rxDrops + (maxStatsValue_ - epochStats_.rxDrops);
+    stats->rxErrors = (stats_.rxErrors >= epochStats_.rxErrors) ?
+                        stats_.rxErrors - epochStats_.rxErrors :
+                        stats_.rxErrors + (maxStatsValue_ - epochStats_.rxErrors);
+    stats->rxFifoErrors = (stats_.rxFifoErrors >= epochStats_.rxFifoErrors) ?
+                        stats_.rxFifoErrors - epochStats_.rxFifoErrors :
+                        stats_.rxFifoErrors + (maxStatsValue_ - epochStats_.rxFifoErrors);
+    stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
+                        stats_.rxFrameErrors - epochStats_.rxFrameErrors :
+                        stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+}
+
 void AbstractPort::clearDeviceNeighbors()
 {
     deviceManager_->clearDeviceNeighbors();
+    isSendQueueDirty_ = true;
 }
 
 void AbstractPort::resolveDeviceNeighbors()
@@ -596,48 +631,41 @@ void AbstractPort::resolveDeviceNeighbors()
         int frameCount = stream->frameVariableCount();
 
         for (int j = 0; j < frameCount; j++) {
-            // TODO(optimization): we need the packet contents only uptil
-            // the L3 header; it would be best if protocols/streams could
-            // cache the frameValue()
-            int pktLen = stream->frameValue(pktBuf_, sizeof(pktBuf_), j);
+            // we need the packet contents only uptil the L3 header
+            int pktLen = stream->frameValue(pktBuf_, kMaxL3PktSize, j);
             if (pktLen) {
                 PacketBuffer pktBuf(pktBuf_, pktLen);
                 deviceManager_->resolveDeviceNeighbor(&pktBuf);
             }
         }
     }
+    isSendQueueDirty_ = true;
 }
 
-void AbstractPort::stats(PortStats *stats)
+quint64 AbstractPort::deviceMacAddress(int streamId, int frameIndex)
 {
-    stats->rxPkts = (stats_.rxPkts >= epochStats_.rxPkts) ?
-                        stats_.rxPkts - epochStats_.rxPkts :
-                        stats_.rxPkts + (maxStatsValue_ - epochStats_.rxPkts);
-    stats->rxBytes = (stats_.rxBytes >= epochStats_.rxBytes) ?
-                        stats_.rxBytes - epochStats_.rxBytes :
-                        stats_.rxBytes + (maxStatsValue_ - epochStats_.rxBytes);
-    stats->rxPps = stats_.rxPps; 
-    stats->rxBps = stats_.rxBps; 
+    // we need the packet contents only uptil the L3 header
+    StreamBase *s = stream(streamId);
+    int pktLen = s->frameValue(pktBuf_, kMaxL3PktSize, frameIndex);
 
-    stats->txPkts = (stats_.txPkts >= epochStats_.txPkts) ?
-                        stats_.txPkts - epochStats_.txPkts :
-                        stats_.txPkts + (maxStatsValue_ - epochStats_.txPkts);
-    stats->txBytes = (stats_.txBytes >= epochStats_.txBytes) ?
-                        stats_.txBytes - epochStats_.txBytes :
-                        stats_.txBytes + (maxStatsValue_ - epochStats_.txBytes);
-    stats->txPps = stats_.txPps; 
-    stats->txBps = stats_.txBps; 
+    if (pktLen) {
+        PacketBuffer pktBuf(pktBuf_, pktLen);
+        return deviceManager_->deviceMacAddress(&pktBuf);
+    }
 
-    stats->rxDrops = (stats_.rxDrops >= epochStats_.rxDrops) ?
-                        stats_.rxDrops - epochStats_.rxDrops :
-                        stats_.rxDrops + (maxStatsValue_ - epochStats_.rxDrops);
-    stats->rxErrors = (stats_.rxErrors >= epochStats_.rxErrors) ?
-                        stats_.rxErrors - epochStats_.rxErrors :
-                        stats_.rxErrors + (maxStatsValue_ - epochStats_.rxErrors);
-    stats->rxFifoErrors = (stats_.rxFifoErrors >= epochStats_.rxFifoErrors) ?
-                        stats_.rxFifoErrors - epochStats_.rxFifoErrors :
-                        stats_.rxFifoErrors + (maxStatsValue_ - epochStats_.rxFifoErrors);
-    stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
-                        stats_.rxFrameErrors - epochStats_.rxFrameErrors :
-                        stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+    return 0;
+}
+
+quint64 AbstractPort::neighborMacAddress(int streamId, int frameIndex)
+{
+    // we need the packet contents only uptil the L3 header
+    StreamBase *s = stream(streamId);
+    int pktLen = s->frameValue(pktBuf_, kMaxL3PktSize, frameIndex);
+
+    if (pktLen) {
+        PacketBuffer pktBuf(pktBuf_, pktLen);
+        return deviceManager_->neighborMacAddress(&pktBuf);
+    }
+
+    return 0;
 }

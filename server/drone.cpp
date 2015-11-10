@@ -58,3 +58,8 @@ bool Drone::init()
 
     return true;
 }
+
+MyService* Drone::rpcService()
+{
+    return service;
+}

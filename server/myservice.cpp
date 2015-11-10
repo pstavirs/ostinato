@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "myservice.h"
 
+#include "drone.h"
+
 #if 0
 #include <qglobal.h>
 #include <qendian.h>
@@ -38,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QStringList>
 
 
+extern Drone *drone;
 extern char *version;
 
 MyService::MyService()
@@ -241,7 +244,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
         // Append a new "default" stream - actual contents of the new stream is
         // expected in a subsequent "modifyStream" request - set the stream id
         // now itself however!!!
-        stream = new StreamBase;
+        stream = new StreamBase(portId);
         stream->setId(request->stream_id(i).id());
         portInfo[portId]->addStream(stream);
     }
@@ -360,6 +363,8 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
             continue;     //! \todo (LOW): partial RPC?
 
         portLock[portId]->lockForWrite();
+        if (portInfo[portId]->isDirty())
+            portInfo[portId]->updatePacketList();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
     }
@@ -898,4 +903,34 @@ void MyService::getDeviceNeighbors(
 _invalid_port:
     controller->SetFailed("Invalid Port Id");
     done->Run();
+}
+
+quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
+{
+    MyService *service = drone->rpcService();
+    quint64 mac;
+
+    if (!service)
+        return 0;
+
+    service->portLock[portId]->lockForWrite();
+    mac = service->portInfo[portId]->deviceMacAddress(streamId, frameIndex);
+    service->portLock[portId]->unlock();
+
+    return mac;
+}
+
+quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
+{
+    MyService *service = drone->rpcService();
+    quint64 mac;
+
+    if (!service)
+        return 0;
+
+    service->portLock[portId]->lockForWrite();
+    mac = service->portInfo[portId]->neighborMacAddress(streamId, frameIndex);
+    service->portLock[portId]->unlock();
+
+    return mac;
 }
