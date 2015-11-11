@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <qendian.h>
 
 const int kBaseHex = 16;
-const int kMaxVlan = 4;
 const quint64 kBcastMac = 0xffffffffffffULL;
 
 /*
@@ -90,6 +89,17 @@ void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
     ip4_ = address;
     ip4PrefixLength_ = prefixLength;
     ip4Gateway_ = gateway;
+}
+
+void Device::getConfig(OstEmul::Device *deviceConfig)
+{
+    for (int i = 0; i < numVlanTags_; i++)
+        deviceConfig->add_vlan(vlan_[i]);
+
+    deviceConfig->set_mac(mac_);
+    deviceConfig->set_ip4(ip4_);
+    deviceConfig->set_ip4_prefix_length(ip4PrefixLength_);
+    deviceConfig->set_ip4_default_gateway(ip4Gateway_);
 }
 
 QString Device::config()

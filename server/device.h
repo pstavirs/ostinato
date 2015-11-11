@@ -40,6 +40,7 @@ public:
     quint64 mac();
     void setMac(quint64 mac);
     void setIp4(quint32 address, int prefixLength, quint32 gateway);
+    void getConfig(OstEmul::Device *deviceConfig);
     QString config();
 
     DeviceKey key();
@@ -63,10 +64,12 @@ private: // methods
     void sendArpRequest(PacketBuffer *pktBuf);
 
 private: // data
+    static const int kMaxVlan = 4;
+
     DeviceManager *deviceManager_;
 
     int numVlanTags_;
-    quint16 vlan_[4]; // FIXME: vlan tpid
+    quint16 vlan_[kMaxVlan]; // FIXME: vlan tpid
     quint64 mac_;
     quint32 ip4_;
     int ip4PrefixLength_;

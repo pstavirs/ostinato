@@ -47,6 +47,7 @@ public:
     bool modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup);
 
     int deviceCount();
+    void getDeviceList(OstProto::PortDeviceList *deviceList);
 
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
@@ -57,6 +58,7 @@ public:
 
     quint64 deviceMacAddress(PacketBuffer *pktBuf);
     quint64 neighborMacAddress(PacketBuffer *pktBuf);
+
 private:
     enum Operation { kAdd, kDelete };
 

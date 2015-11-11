@@ -134,6 +134,18 @@ int DeviceManager::deviceCount()
     return deviceList_.size();
 }
 
+void DeviceManager::getDeviceList(
+        OstProto::PortDeviceList *deviceList)
+{
+    int count = 0;
+
+    foreach(Device *device, deviceList_) {
+        OstEmul::Device *dev =
+            deviceList->AddExtension(OstEmul::port_device);
+        device->getConfig(dev);
+    }
+}
+
 void DeviceManager::receivePacket(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();

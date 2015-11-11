@@ -257,8 +257,6 @@ try:
 
         drone.modifyDeviceGroup(devgrp_cfg)
 
-        s = raw_input('Press [Enter] to continue')
-
         # configure the tx stream
         stream_cfg = ost_pb.StreamConfigList()
         stream_cfg.port_id.CopyFrom(tx_port.port_id[0])
@@ -348,29 +346,36 @@ try:
 
         # retrieve and verify ARP Table on tx/rx ports
         log.info('retrieving ARP entries on tx port')
+        device_list = drone.getDeviceList(emul_ports.port_id[0])
+        device_config = device_list.Extensions[emul.port_device]
         neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
         devices = neigh_list.Extensions[emul.devices]
-        # TODO: verify gateway IP is resolved for each device
-        # FIXME: needs device ip as part of neigh_list
         log.info('ARP Table on tx port')
-        for device in devices:
+        for dev_cfg, device in zip(device_config, devices):
+            resolved = False
             for arp in device.arp:
                 # TODO: pretty print ip and mac
-                print('%d: %08x %012x' %
-                        (device.device_index, arp.ip4, arp.mac))
+                print('%08x: %08x %012x' %
+                        (dev_cfg.ip4, arp.ip4, arp.mac))
+                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                    resolved = True
+            if not resolved:
+                fail = fail + 1
 
         log.info('retrieving ARP entries on rx port')
+        device_list = drone.getDeviceList(emul_ports.port_id[0])
+        device_config = device_list.Extensions[emul.port_device]
         neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
         devices = neigh_list.Extensions[emul.devices]
         log.info('ARP Table on rx port')
-        for device in devices:
+        for dev_cfg, device in zip(device_config, devices):
             # verify *no* ARPs learnt on rx port
             if len(device.arp):
                 fail = fail + 1
             for arp in device.arp:
                 # TODO: pretty print ip and mac
-                print('%d: %08x %012x' %
-                        (device.device_index, arp.ip4, arp.mac))
+                print('%08x: %08x %012x' %
+                        (dev_cfg.ip4, arp.ip4, arp.mac))
 
         drone.startCapture(rx_port)
         drone.startTransmit(tx_port)

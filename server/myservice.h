@@ -132,6 +132,12 @@ public:
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
 
+    virtual void getDeviceList(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::PortDeviceList* response,
+        ::google::protobuf::Closure* done);
+
     virtual void resolveDeviceNeighbors(
         ::google::protobuf::RpcController* controller,
         const ::OstProto::PortIdList* request,

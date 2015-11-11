@@ -83,24 +83,21 @@ extend OstProto.DeviceGroup {
     optional Ip6Emulation ip6 = 3001;
 }
 
-/* TODO
 message Device {
     optional uint64 mac = 1;
 
-    // FIXME: move vlan into encapInfo?
     repeated uint32 vlan = 2; // includes tpid 'n vlan tag
 
-    optional uint32 ip4 = 3;
-    optional uint32 ip4_prefix_length = 4;
-    optional uint32 ip4_default_gateway = 5;
+    optional uint32 ip4 = 10;
+    optional uint32 ip4_prefix_length = 11;
+    optional uint32 ip4_default_gateway = 12;
 
     // TODO:  IPv6 fields
 }
 
-message DeviceList {
-    repeated Device devices = 1;
+extend OstProto.PortDeviceList {
+    repeated Device port_device = 100;
 }
-*/
 
 message ArpEntry {
     optional uint32 ip4 = 1;
@@ -120,5 +117,6 @@ message DeviceNeighborList {
 }
 
 extend OstProto.PortNeighborList {
+    // FIXME: rename to device (singular) to be consistent with naming convention for other repeated fields
     repeated DeviceNeighborList devices = 100;
 }

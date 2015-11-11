@@ -823,6 +823,36 @@ _exit:
     done->Run();
 }
 
+void MyService::getDeviceList(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::PortDeviceList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    devMgr->getDeviceList(response);
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}
+
 void MyService::resolveDeviceNeighbors(
     ::google::protobuf::RpcController* controller,
     const ::OstProto::PortIdList* request,
@@ -905,6 +935,12 @@ _invalid_port:
     done->Run();
 }
 
+/*
+ * ===================================================================
+ * Friends
+ * TODO: Encap these global functions into a DeviceBroker singleton?
+ * ===================================================================
+ */
 quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
 {
     MyService *service = drone->rpcService();
