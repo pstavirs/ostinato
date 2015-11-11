@@ -215,12 +215,12 @@ void DeviceManager::clearDeviceNeighbors()
 }
 
 void DeviceManager::getDeviceNeighbors(
-        OstProto::DeviceNeighborList *neighborList)
+        OstProto::PortNeighborList *neighborList)
 {
     int count = 0;
 
     foreach(Device *device, deviceList_) {
-        OstEmul::DeviceNeighbors *neighList =
+        OstEmul::DeviceNeighborList *neighList =
             neighborList->AddExtension(OstEmul::devices);
         neighList->set_device_index(count++);
         device->getNeighbors(neighList);
@@ -296,10 +296,13 @@ void DeviceManager::enumerateDevices(
     Operation oper)
 {
     Device dk(this);
-    OstEmul::VlanEmulation pbVlan = deviceGroup->GetExtension(OstEmul::vlan);
-    OstEmul::Device pbDevice = deviceGroup->GetExtension(OstEmul::device);
+    OstEmul::VlanEmulation pbVlan = deviceGroup->GetExtension(OstEmul::encap)
+                                        .vlan();
     int numTags = pbVlan.stack_size();
     int vlanCount = 1;
+
+    OstEmul::MacEmulation mac = deviceGroup->GetExtension(OstEmul::mac);
+    OstEmul::Ip4Emulation ip4 = deviceGroup->GetExtension(OstEmul::ip4);
 
     for (int i = 0; i < numTags; i++)
         vlanCount *= pbVlan.stack(i).count();
@@ -316,15 +319,15 @@ void DeviceManager::enumerateDevices(
             dk.setVlan(j, vlan.vlan_tag() + vlanAdd);
         }
 
-        for (uint k = 0; k < pbDevice.count(); k++) {
+        for (uint k = 0; k < deviceGroup->device_count(); k++) {
             Device *device;
-            quint64 macAdd = k * pbDevice.mac().step();
-            quint32 ip4Add = k * pbDevice.ip4().step();
+            quint64 macAdd = k * mac.step();
+            quint32 ip4Add = k * ip4.step();
 
-            dk.setMac(pbDevice.mac().address() + macAdd);
-            dk.setIp4(pbDevice.ip4().address() + ip4Add,
-                    pbDevice.ip4().prefix_length(),
-                    pbDevice.ip4().default_gateway());
+            dk.setMac(mac.address() + macAdd);
+            dk.setIp4(ip4.address() + ip4Add,
+                      ip4.prefix_length(),
+                      ip4.default_gateway());
 
             // TODO: fill in other pbDevice data
 

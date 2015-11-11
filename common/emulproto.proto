@@ -21,9 +21,9 @@ import "protocol.proto";
 
 package OstEmul;
 
-// ======
-//  VLAN
-// ======
+// =======
+//  Encap
+// =======
 message VlanEmulation {
     message Vlan {
         optional uint32 tpid = 1 [default = 0x8100];
@@ -38,15 +38,13 @@ message VlanEmulation {
     repeated Vlan stack = 1; // outer to inner
 }
 
-// FIXME: encapsulate VlanEmulation inside a new encapEmulation message?
-
-extend OstProto.DeviceGroup {
-    optional VlanEmulation vlan = 200;
+message EncapEmulation {
+    optional VlanEmulation vlan = 1;
 }
 
-// ========
-//  Device
-// ========
+// ===========
+//  Protocols
+// ===========
 message MacEmulation {
     optional uint64 address = 1; // FIXME: default value
 
@@ -76,40 +74,51 @@ message Ip6Emulation {
     // FIXME: step for gateway?
 }
 
-// FIXME: move fields of Device directly inside 'extend OstProto.DeviceGroup'
-message Device {
-    optional MacEmulation mac = 1;
-    optional Ip4Emulation ip4 = 2;
-    optional Ip6Emulation ip6 = 3;
-
-    optional uint32 count = 10 [default = 1];
-}
-
 extend OstProto.DeviceGroup {
-    optional Device device = 201;
+    optional EncapEmulation encap = 2000;
+
+    optional MacEmulation mac = 2001;
+
+    optional Ip4Emulation ip4 = 3000;
+    optional Ip6Emulation ip6 = 3001;
 }
 
-// FIXME: rename xxxEntry to something better?
+/* TODO
+message Device {
+    optional uint64 mac = 1;
+
+    // FIXME: move vlan into encapInfo?
+    repeated uint32 vlan = 2; // includes tpid 'n vlan tag
+
+    optional uint32 ip4 = 3;
+    optional uint32 ip4_prefix_length = 4;
+    optional uint32 ip4_default_gateway = 5;
+
+    // TODO:  IPv6 fields
+}
+
+message DeviceList {
+    repeated Device devices = 1;
+}
+*/
+
 message ArpEntry {
     optional uint32 ip4 = 1;
     optional uint64 mac = 2;
-// FIXME: add state/status field?
 }
 
 message NdEntry {
     optional uint64 ip6_hi = 1;
     optional uint64 ip6_lo = 2;
     optional uint64 mac = 3;
-// FIXME: add state/status field?
 }
 
-// FIXME: change message name
-message DeviceNeighbors {
+message DeviceNeighborList {
     optional uint32 device_index = 1;
     repeated ArpEntry arp = 2;
     repeated NdEntry nd = 3;
 }
 
-extend OstProto.DeviceNeighborList {
-    repeated DeviceNeighbors devices = 100;
+extend OstProto.PortNeighborList {
+    repeated DeviceNeighborList devices = 100;
 }

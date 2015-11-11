@@ -53,7 +53,7 @@ public:
 
     void clearDeviceNeighbors();
     void resolveDeviceNeighbor(PacketBuffer *pktBuf);
-    void getDeviceNeighbors(OstProto::DeviceNeighborList *neighborList);
+    void getDeviceNeighbors(OstProto::PortNeighborList *neighborList);
 
     quint64 deviceMacAddress(PacketBuffer *pktBuf);
     quint64 neighborMacAddress(PacketBuffer *pktBuf);

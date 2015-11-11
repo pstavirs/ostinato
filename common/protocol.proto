@@ -281,7 +281,6 @@ message Notification {
  * FIXME: What will be the contents of a default device created by addDeviceGroup()?
  * FIXME: decide default values for device and protoEmulations
  * FIXME: rename 'DeviceGroup'?
- * FIXME: review RPC abstractions - esp. Neighbor related
  */
 message DeviceGroupId {
     required uint32 id = 1;
@@ -299,8 +298,9 @@ message DeviceGroupIdList {
 message DeviceGroup {
     required DeviceGroupId device_group_id = 1;
     optional DeviceGroupCore core = 2;
+    optional uint32 device_count = 3 [default = 1];
 
-    extensions 200 to 500;  // For use by Protocol Emulations
+    extensions 2000 to 5999;  // For use by Protocol Emulations
 }
 
 message DeviceGroupConfigList {
@@ -308,7 +308,7 @@ message DeviceGroupConfigList {
     repeated DeviceGroup device_group = 2;
 }
 
-message DeviceNeighborList {
+message PortNeighborList {
     required PortId port_id = 1;
 
     extensions 100 to 199;
@@ -337,16 +337,17 @@ service OstService {
 
     rpc checkVersion(VersionInfo) returns (VersionCompatibility);
 
-    // Device/Protocol Emulation
+    // Device Emulation
     rpc getDeviceGroupIdList(PortId) returns (DeviceGroupIdList);
     rpc getDeviceGroupConfig(DeviceGroupIdList) returns (DeviceGroupConfigList);
     rpc addDeviceGroup(DeviceGroupIdList) returns (Ack);
     rpc deleteDeviceGroup(DeviceGroupIdList) returns (Ack);
     rpc modifyDeviceGroup(DeviceGroupConfigList) returns (Ack);
 
+    // TODO: rpc getDeviceList(PortId) returns (DeviceList);
+
     rpc resolveDeviceNeighbors(PortIdList) returns (Ack);
     rpc clearDeviceNeighbors(PortIdList) returns (Ack);
-    // FIXME: take PortIdList instead of PortId?
-    rpc getDeviceNeighbors(PortId) returns (DeviceNeighborList);
+    rpc getDeviceNeighbors(PortId) returns (PortNeighborList);
 }
 

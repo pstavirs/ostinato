@@ -878,7 +878,7 @@ void MyService::clearDeviceNeighbors(
 void MyService::getDeviceNeighbors(
     ::google::protobuf::RpcController* controller,
     const ::OstProto::PortId* request,
-    ::OstProto::DeviceNeighborList* response,
+    ::OstProto::PortNeighborList* response,
     ::google::protobuf::Closure* done)
 {
     DeviceManager *devMgr;

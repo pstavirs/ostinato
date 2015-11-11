@@ -206,7 +206,7 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
 }
 
 // Append this device's neighbors to the list
-void Device::getNeighbors(OstEmul::DeviceNeighbors *neighbors)
+void Device::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
 {
     QList<quint32> ipList = arpTable.keys();
     QList<quint64> macList = arpTable.values();

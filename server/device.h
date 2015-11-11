@@ -53,7 +53,7 @@ public:
 
     void clearNeighbors();
     void resolveNeighbor(PacketBuffer *pktBuf);
-    void getNeighbors(OstEmul::DeviceNeighbors *neighbors);
+    void getNeighbors(OstEmul::DeviceNeighborList *neighbors);
 
     bool isOrigin(const PacketBuffer *pktBuf);
     quint64 neighborMac(const PacketBuffer *pktBuf);

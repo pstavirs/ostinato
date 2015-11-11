@@ -195,6 +195,12 @@ try:
     log.info('adding tx_stream %d' % stream_id.stream_id[0].id)
     drone.addStream(stream_id)
 
+    # ----------------------------------------------------------------- #
+    # delete all configuration on the DUT interfaces
+    # ----------------------------------------------------------------- #
+    sudo('ip address flush dev ' + dut_rx_port)
+    sudo('ip address flush dev ' + dut_tx_port)
+
     # ================================================================= #
     # ----------------------------------------------------------------- #
     #                            TEST CASES 
@@ -227,12 +233,12 @@ try:
         dg = devgrp_cfg.device_group.add()
         dg.device_group_id.id = tx_dgid_list.device_group_id[0].id
         dg.core.name = "Host1"
-        d = dg.Extensions[emul.device]
-        d.count = num_devs
-        d.mac.address = 0x000102030a01
-        d.ip4.address = 0x0a0a0165
-        d.ip4.prefix_length = 24
-        d.ip4.default_gateway = 0x0a0a0101
+        dg.device_count = num_devs
+        dg.Extensions[emul.mac].address = 0x000102030a01
+        ip = dg.Extensions[emul.ip4]
+        ip.address = 0x0a0a0165
+        ip.prefix_length = 24
+        ip.default_gateway = 0x0a0a0101
 
         drone.modifyDeviceGroup(devgrp_cfg)
 
@@ -242,14 +248,16 @@ try:
         dg = devgrp_cfg.device_group.add()
         dg.device_group_id.id = rx_dgid_list.device_group_id[0].id
         dg.core.name = "Host1"
-        d = dg.Extensions[emul.device]
-        d.count = num_devs
-        d.mac.address = 0x000102030b01
-        d.ip4.address = 0x0a0a0265
-        d.ip4.prefix_length = 24
-        d.ip4.default_gateway = 0x0a0a0201
+        dg.device_count = num_devs
+        dg.Extensions[emul.mac].address = 0x000102030b01
+        ip = dg.Extensions[emul.ip4]
+        ip.address = 0x0a0a0265
+        ip.prefix_length = 24
+        ip.default_gateway = 0x0a0a0201
 
         drone.modifyDeviceGroup(devgrp_cfg)
+
+        s = raw_input('Press [Enter] to continue')
 
         # configure the tx stream
         stream_cfg = ost_pb.StreamConfigList()

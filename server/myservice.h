@@ -145,7 +145,7 @@ public:
     virtual void getDeviceNeighbors(
         ::google::protobuf::RpcController* controller,
         const ::OstProto::PortId* request,
-        ::OstProto::DeviceNeighborList* response,
+        ::OstProto::PortNeighborList* response,
         ::google::protobuf::Closure* done);
 
     friend quint64 getDeviceMacAddress(
