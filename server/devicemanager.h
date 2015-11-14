@@ -32,7 +32,7 @@ namespace OstProto {
     class DeviceGroup;
 };
 
-class DeviceManager 
+class DeviceManager
 {
 public:
     DeviceManager(AbstractPort *parent = 0);
@@ -66,7 +66,7 @@ private:
     void enumerateDevices(
             const OstProto::DeviceGroup *deviceGroup,
             Operation oper);
-             
+
     AbstractPort *port_;
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_;

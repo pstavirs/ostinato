@@ -32,7 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const quint64 kBcastMac = 0xffffffffffffULL;
 
-// FIXME: add lock to protect deviceGroupList_ operations?
+// XXX: Port owning DeviceManager already uses locks, so we don't use any
+// locks within DeviceManager to protect deviceGroupList_ et.al.
 
 DeviceManager::DeviceManager(AbstractPort *parent)
 {
@@ -75,7 +76,7 @@ bool DeviceManager::addDeviceGroup(uint deviceGroupId)
     OstProto::DeviceGroup *deviceGroup;
 
     if (deviceGroupList_.contains(deviceGroupId)) {
-        qWarning("%s: deviceGroup id %u already exists", __FUNCTION__, 
+        qWarning("%s: deviceGroup id %u already exists", __FUNCTION__,
                 deviceGroupId);
         return false;
     }
@@ -97,7 +98,7 @@ bool DeviceManager::deleteDeviceGroup(uint deviceGroupId)
 {
     OstProto::DeviceGroup *deviceGroup;
     if (!deviceGroupList_.contains(deviceGroupId)) {
-        qWarning("%s: deviceGroup id %u does not exist", __FUNCTION__, 
+        qWarning("%s: deviceGroup id %u does not exist", __FUNCTION__,
                 deviceGroupId);
         return false;
     }
@@ -137,8 +138,6 @@ int DeviceManager::deviceCount()
 void DeviceManager::getDeviceList(
         OstProto::PortDeviceList *deviceList)
 {
-    int count = 0;
-
     foreach(Device *device, deviceList_) {
         OstEmul::Device *dev =
             deviceList->AddExtension(OstEmul::port_device);
@@ -160,7 +159,11 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
     // We assume pkt is ethernet
     // TODO: extend for other link layer types
 
-    // FIXME: validate before extracting if the offset is within pktLen
+    // All frames we are interested in should be at least 32 bytes
+    if (pktBuf->length() < 32) {
+        qWarning("short frame of %d bytes, skipping ...", pktBuf->length());
+        return;
+    }
 
     // Extract dstMac
     dstMac = qFromBigEndian<quint32>(pktData + offset);

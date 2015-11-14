@@ -84,7 +84,7 @@ PcapPort::PcapPort(int id, const char *device)
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
     transmitter_ = new PortTransmitter(device);
     capturer_ = new PortCapturer(device);
-    receiver_ = new PortReceiver(device, deviceManager_);
+    emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
         isUsable_ = false;
@@ -137,7 +137,7 @@ PcapPort::~PcapPort()
     if (monitorTx_)
         monitorTx_->stop();
 
-    delete receiver_;
+    delete emulXcvr_;
     delete capturer_;
     delete transmitter_;
 
@@ -174,17 +174,17 @@ void PcapPort::updateNotes()
 
 void PcapPort::startDeviceEmulation()
 {
-    receiver_->start();
+    emulXcvr_->start();
 }
 
 void PcapPort::stopDeviceEmulation()
 {
-    receiver_->stop();
+    emulXcvr_->stop();
 }
 
 int PcapPort::sendEmulationPacket(PacketBuffer *pktBuf)
 {
-    return receiver_->transmitPacket(pktBuf);
+    return emulXcvr_->transmitPacket(pktBuf);
 }
 
 
@@ -895,10 +895,10 @@ QFile* PcapPort::PortCapturer::captureFile()
 
 /*
  * ------------------------------------------------------------------- *
- * Port Receiver
+ * Transmit+Receiver for Device/ProtocolEmulation
  * ------------------------------------------------------------------- *
  */
-PcapPort::PortReceiver::PortReceiver(const char *device, 
+PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
         DeviceManager *deviceManager)
 {
     device_ = QString::fromAscii(device);
@@ -908,19 +908,19 @@ PcapPort::PortReceiver::PortReceiver(const char *device,
     handle_ = NULL;
 }
 
-PcapPort::PortReceiver::~PortReceiver()
+PcapPort::EmulationTransceiver::~EmulationTransceiver()
 {
     stop();
 }
 
-void PcapPort::PortReceiver::run()
+void PcapPort::EmulationTransceiver::run()
 {
     int flags = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
     const char *capture_filter = "arp or (vlan and arp)";
     const int optimize = 1;
-    
+
     qDebug("In %s", __PRETTY_FUNCTION__);
 
 #ifdef Q_OS_WIN32
@@ -931,10 +931,10 @@ _retry:
     // FIXME: use 0 timeout value?
 #ifdef Q_OS_WIN32
     // NOCAPTURE_LOCAL needs windows only pcap_open()
-    handle_ = pcap_open(qPrintable(device_), 65535, 
+    handle_ = pcap_open(qPrintable(device_), 65535,
                 flags, 1000 /* ms */, NULL, errbuf);
 #else
-    handle_ = pcap_open_live(qPrintable(device_), 65535, 
+    handle_ = pcap_open_live(qPrintable(device_), 65535,
                     flags, 1000 /* ms */, errbuf);
 #endif
 
@@ -942,14 +942,12 @@ _retry:
     {
         if (flags && QString(errbuf).contains("promiscuous"))
         {
-            // FIXME: warn user that device emulation will not work
-            qDebug("%s:can't set promiscuous mode, trying non-promisc", 
-                    qPrintable(device_));
-            flags &= ~PCAP_OPENFLAG_PROMISCUOUS;
-            goto _retry;
+            notify("Unable to set promiscuous mode on <%s> - "
+                    "device emulation will not work", qPrintable(device_));
+            goto _exit;
         }
 #ifdef Q_OS_WIN32
-        else if ((flags & PCAP_OPENFLAG_NOCAPTURE_LOCAL) 
+        else if ((flags & PCAP_OPENFLAG_NOCAPTURE_LOCAL)
                 && QString(errbuf).contains("loopback"))
         {
             qDebug("Can't set no local capture mode %s", qPrintable(device_));
@@ -959,22 +957,21 @@ _retry:
 #endif
         else
         {
-            // FIXME: warn user that device emulation will not work
-            qDebug("%s: Error opening port %s: %s\n", __FUNCTION__,
-                    device_.toAscii().constData(), errbuf);
+            notify("Unable to open <%s> [%s] - device emulation will not work",
+                    qPrintable(device_), errbuf);
             goto _exit;
         }
     }
 
     // FIXME: hardcoded filter
-    if (pcap_compile(handle_, &bpf, capture_filter, optimize, 0) < 0) 
+    if (pcap_compile(handle_, &bpf, capture_filter, optimize, 0) < 0)
     {
         qWarning("%s: error compiling filter: %s", qPrintable(device_),
                 pcap_geterr(handle_));
         goto _skip_filter;
     }
 
-    if (pcap_setfilter(handle_, &bpf) < 0) 
+    if (pcap_setfilter(handle_, &bpf) < 0)
     {
         qWarning("%s: error setting filter: %s", qPrintable(device_),
                 pcap_geterr(handle_));
@@ -992,32 +989,32 @@ _skip_filter:
         ret = pcap_next_ex(handle_, &hdr, &data);
         switch (ret)
         {
-            case 1: 
+            case 1:
             {
                 PacketBuffer *pktBuf = new PacketBuffer(data, hdr->caplen);
 
                 // XXX: deviceManager should free pktBuf before returning
                 // from this call; if it needs to process the pkt async
                 // it should make a copy as the pktBuf's data buffer is
-                // owned by libpcap which does not guarantee data will 
+                // owned by libpcap which does not guarantee data will
                 // persist across calls to pcap_next_ex()
-                deviceManager_->receivePacket(pktBuf); 
+                deviceManager_->receivePacket(pktBuf);
                 break;
             }
             case 0:
                 // timeout: just go back to the loop
                 break;
             case -1:
-                qWarning("%s: error reading packet (%d): %s", 
+                qWarning("%s: error reading packet (%d): %s",
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, 
+                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
                         ret);
         }
 
-        if (stop_) 
+        if (stop_)
         {
             qDebug("user requested receiver stop\n");
             break;
@@ -1031,9 +1028,8 @@ _exit:
     state_ = kFinished;
 }
 
-void PcapPort::PortReceiver::start()
+void PcapPort::EmulationTransceiver::start()
 {
-    // FIXME: return error
     if (state_ == kRunning) {
         qWarning("Receive start requested but is already running!");
         return;
@@ -1046,7 +1042,7 @@ void PcapPort::PortReceiver::start()
         QThread::msleep(10);
 }
 
-void PcapPort::PortReceiver::stop()
+void PcapPort::EmulationTransceiver::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
@@ -1054,18 +1050,17 @@ void PcapPort::PortReceiver::stop()
             QThread::msleep(10);
     }
     else {
-        // FIXME: return error
         qWarning("Receive stop requested but is not running!");
         return;
     }
 }
 
-bool PcapPort::PortReceiver::isRunning()
+bool PcapPort::EmulationTransceiver::isRunning()
 {
     return (state_ == kRunning);
 }
 
-int PcapPort::PortReceiver::transmitPacket(PacketBuffer *pktBuf)
+int PcapPort::EmulationTransceiver::transmitPacket(PacketBuffer *pktBuf)
 {
     return pcap_sendpacket(handle_, pktBuf->data(), pktBuf->length());
 }

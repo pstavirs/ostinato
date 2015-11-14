@@ -30,9 +30,9 @@ const int kBaseHex = 16;
 const quint64 kBcastMac = 0xffffffffffffULL;
 
 /*
- * NOTE: 
+ * NOTE:
  * 1. Device Key is (VLANS + MAC) - is assumed to be unique for a device
- * 2. Device clients/users (viz. DeviceManager) should take care when 
+ * 2. Device clients/users (viz. DeviceManager) should take care when
  *    setting params that change the key, if the key is used elsewhere
  *    (e.g. in a hash)
  */
@@ -117,14 +117,14 @@ DeviceKey Device::key()
 }
 
 void Device::clearKey()
-{ 
+{
     key_.fill(0, kMaxVlan * sizeof(quint16) + sizeof(quint64));
 }
 
 int Device::encapSize()
 {
     // ethernet header + vlans
-    int size = 14 + 4*numVlanTags_; 
+    int size = 14 + 4*numVlanTags_;
 
     return size;
 }
@@ -132,7 +132,7 @@ int Device::encapSize()
 void Device::encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type)
 {
     int ofs;
-    quint64 srcMac = mac_; 
+    quint64 srcMac = mac_;
     uchar *p = pktBuf->push(encapSize());
 
     if (!p) {
@@ -306,7 +306,7 @@ void Device::receiveArp(PacketBuffer *pktBuf)
     // Extract tgtIp first to check quickly if this packet is for us or not
     tgtIp = qFromBigEndian<quint32>(pktData + 24);
     if (tgtIp != ip4_) {
-        qDebug("tgtIp %s is not me %s", 
+        qDebug("tgtIp %s is not me %s",
                 qPrintable(QHostAddress(tgtIp).toString()),
                 qPrintable(QHostAddress(ip4_).toString()));
         return;
@@ -355,7 +355,7 @@ void Device::receiveArp(PacketBuffer *pktBuf)
         arpTable.insert(srcIp, srcMac);
 
         rspPkt = new PacketBuffer;
-        rspPkt->reserve(encapSize()); 
+        rspPkt->reserve(encapSize());
         pktData = rspPkt->put(28);
         if (pktData) {
             // HTYP, PTYP
@@ -376,7 +376,7 @@ void Device::receiveArp(PacketBuffer *pktBuf)
         transmitPacket(rspPkt);
 
         qDebug("Sent ARP Reply for srcIp/tgtIp=%s/%s",
-                qPrintable(QHostAddress(srcIp).toString()), 
+                qPrintable(QHostAddress(srcIp).toString()),
                 qPrintable(QHostAddress(tgtIp).toString()));
         break;
     case 2: // ARP Response

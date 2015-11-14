@@ -599,12 +599,15 @@ _invalid_version:
     done->Run();
 }
 
-/* 
+/*
  * ===================================================================
  * Device Emulation
- * FIXME: Locking for these functions is at Port level, should it be
- *        moved to inside DeviceManager instead? In other words, are
- *        streams/ports and devices independent?
+ * ===================================================================
+ * XXX: Streams and Devices are largely non-overlapping from a RPC
+ * point of view but they *do* intersect e.g. when a stream is trying to
+ * find its associated device and info from that device such as src/dst
+ * mac addresses. For this reason, both set of RPCs share the common
+ * port level locking
  * ===================================================================
  */
 void MyService::getDeviceGroupIdList(
@@ -699,10 +702,8 @@ void MyService::addDeviceGroup(
 
     devMgr = portInfo[portId]->deviceManager();
 
-#if 0 // FIXME: needed?
     if (portInfo[portId]->isTransmitOn())
         goto _port_busy;
-#endif
 
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->device_group_id_size(); i++)
@@ -723,11 +724,9 @@ void MyService::addDeviceGroup(
     done->Run();
     return;
 
-#if 0 // FIXME: needed?
 _port_busy:
     controller->SetFailed("Port Busy");
     goto _exit;
-#endif
 
 _invalid_port:
     controller->SetFailed("invalid portid");
@@ -752,10 +751,8 @@ void MyService::deleteDeviceGroup(
 
     devMgr = portInfo[portId]->deviceManager();
 
-#if 0 // FIXME: needed?
     if (portInfo[portId]->isTransmitOn())
         goto _port_busy;
-#endif
 
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->device_group_id_size(); i++)
@@ -767,11 +764,9 @@ void MyService::deleteDeviceGroup(
     done->Run();
     return;
 
-#if 0 // FIXME: needed?
 _port_busy:
     controller->SetFailed("Port Busy");
     goto _exit;
-#endif
 _invalid_port:
     controller->SetFailed("invalid portid");
 _exit:
@@ -795,28 +790,22 @@ void MyService::modifyDeviceGroup(
 
     devMgr = portInfo[portId]->deviceManager();
 
-#if 0 // FIXME: needed?
     if (portInfo[portId]->isTransmitOn())
         goto _port_busy;
-#endif
 
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->device_group_size(); i++)
         devMgr->modifyDeviceGroup(&request->device_group(i));
     portLock[portId]->unlock();
 
-    // FIXME: check for overlaps between devices?
-
     //! \todo(LOW): fill-in response "Ack"????
 
     done->Run();
     return;
 
-#if 0 // FIXME: needed?
 _port_busy:
     controller->SetFailed("Port Busy");
     goto _exit;
-#endif
 _invalid_port:
     controller->SetFailed("invalid portid");
 _exit:

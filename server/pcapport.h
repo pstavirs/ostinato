@@ -225,12 +225,11 @@ protected:
         volatile State  state_;
     };
 
-    // FIXME: rename? not just a 'receiver' but also 'transmitter'!
-    class PortReceiver: public QThread
+    class EmulationTransceiver: public QThread
     {
     public:
-        PortReceiver(const char *device, DeviceManager *deviceManager);
-        ~PortReceiver();
+        EmulationTransceiver(const char *device, DeviceManager *deviceManager);
+        ~EmulationTransceiver();
         void run();
         void start();
         void stop();
@@ -238,7 +237,7 @@ protected:
         int transmitPacket(PacketBuffer *pktBuf);
 
     private:
-        enum State 
+        enum State
         {
             kNotStarted,
             kRunning,
@@ -260,7 +259,7 @@ protected:
 private:
     PortTransmitter *transmitter_;
     PortCapturer    *capturer_;
-    PortReceiver    *receiver_;
+    EmulationTransceiver *emulXcvr_;
 
     static pcap_if_t *deviceList_;
 };

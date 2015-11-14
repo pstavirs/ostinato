@@ -23,7 +23,7 @@ use_defaults = False
 # initialize defaults - drone
 host_name = '127.0.0.1'
 tx_port_number = -1
-rx_port_number = -1 
+rx_port_number = -1
 
 if sys.platform == 'win32':
     tshark = r'C:\Program Files\Wireshark\tshark.exe'
@@ -94,7 +94,7 @@ try:
     sudo('sysctl -w net.ipv4.ip_forward=1')
 
     # connect to drone
-    log.info('connecting to drone(%s:%d)' 
+    log.info('connecting to drone(%s:%d)'
             % (drone.hostName(), drone.portNumber()))
     drone.connect()
 
@@ -115,7 +115,7 @@ try:
     print('---------')
     for port in port_config_list.port:
         print('%d.%s (%s)' % (port.port_id.id, port.name, port.description))
-        # use a vhost port as default tx/rx port 
+        # use a vhost port as default tx/rx port
         if ('vhost' in port.name or 'sun' in port.description.lower()):
             if tx_port_number < 0:
                 tx_port_number = port.port_id.id
@@ -180,7 +180,7 @@ try:
     drone.addDeviceGroup(rx_dgid_list)
 
     # ----------------------------------------------------------------- #
-    # create stream on tx port - each test case will modify and reuse 
+    # create stream on tx port - each test case will modify and reuse
     # this stream as per its needs
     # ----------------------------------------------------------------- #
 
@@ -203,7 +203,7 @@ try:
 
     # ================================================================= #
     # ----------------------------------------------------------------- #
-    #                            TEST CASES 
+    #                            TEST CASES
     # ----------------------------------------------------------------- #
     # ================================================================= #
 
@@ -280,10 +280,10 @@ try:
         ip = p.Extensions[ip4]
         ip.src_ip = 0x0a0a0165
         ip.src_ip_mode = Ip4.e_im_inc_host
-        ip.src_ip_count = num_devs 
+        ip.src_ip_count = num_devs
         ip.dst_ip = 0x0a0a0265
         ip.dst_ip_mode = Ip4.e_im_inc_host
-        ip.dst_ip_count = num_devs 
+        ip.dst_ip_count = num_devs
 
         s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
         s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
@@ -443,31 +443,31 @@ try:
         for i in range(num_vlans):
             vlan_id = vlan_base+i
             vrf = 'v' + str(vlan_id)
-            vlan_rx_dev = dut_rx_port + '.' + str(vlan_id) 
-            vlan_tx_dev = dut_tx_port + '.' + str(vlan_id) 
+            vlan_rx_dev = dut_rx_port + '.' + str(vlan_id)
+            vlan_tx_dev = dut_tx_port + '.' + str(vlan_id)
 
-            sudo('ip netns add ' + vrf) 
+            sudo('ip netns add ' + vrf)
 
-            sudo('ip link add link ' + dut_rx_port 
+            sudo('ip link add link ' + dut_rx_port
                  + ' name ' + vlan_rx_dev
                  + ' type vlan id ' + str(vlan_id))
-            sudo('ip link set ' + vlan_rx_dev 
-                    + ' netns ' + vrf) 
-            sudo('ip netns exec ' + vrf 
+            sudo('ip link set ' + vlan_rx_dev
+                    + ' netns ' + vrf)
+            sudo('ip netns exec ' + vrf
                     + ' ip addr add 10.1.1.1/24'
                     + ' dev ' + vlan_rx_dev)
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip link set ' + vlan_rx_dev + ' up')
 
-            sudo('ip link add link ' + dut_tx_port 
+            sudo('ip link add link ' + dut_tx_port
                  + ' name ' + vlan_tx_dev
                  + ' type vlan id ' + str(vlan_id))
-            sudo('ip link set ' + vlan_tx_dev 
-                    + ' netns ' + vrf) 
-            sudo('ip netns exec ' + vrf 
+            sudo('ip link set ' + vlan_tx_dev
+                    + ' netns ' + vrf)
+            sudo('ip netns exec ' + vrf
                     + ' ip addr add 10.1.2.1/24'
                     + ' dev ' + vlan_tx_dev)
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip link set ' + vlan_tx_dev + ' up')
 
 
@@ -510,7 +510,7 @@ try:
 
         # configure the tx stream(s)
         # we need more than one stream, so delete old one
-        # and create as many as we need 
+        # and create as many as we need
         # FIXME: restore the single stream at end?
         log.info('deleting tx_stream %d' % stream_id.stream_id[0].id)
         drone.deleteStream(stream_id)
@@ -529,7 +529,7 @@ try:
             s = stream_cfg.stream.add()
             s.stream_id.id = stream_id.stream_id[i].id
             s.core.is_enabled = True
-            s.core.ordinal = i 
+            s.core.ordinal = i
             s.control.packets_per_sec = 10
             s.control.num_packets = num_devs
 
@@ -572,14 +572,14 @@ try:
         for i in range(num_vlans):
             vlan_id = vlan_base + i
             vrf = 'v' + str(vlan_id)
-            vlan_rx_dev = dut_rx_port + '.' + str(vlan_id) 
-            vlan_tx_dev = dut_tx_port + '.' + str(vlan_id) 
+            vlan_rx_dev = dut_rx_port + '.' + str(vlan_id)
+            vlan_tx_dev = dut_tx_port + '.' + str(vlan_id)
 
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip neigh flush dev ' + vlan_rx_dev)
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip neigh flush dev ' + vlan_tx_dev)
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip neigh show')
 
         drone.startCapture(rx_port)
@@ -618,13 +618,13 @@ try:
         # show arp on DUT
         for i in range(num_vlans):
             vrf = 'v' + str(vlan_base + i)
-            sudo('ip netns exec ' + vrf 
+            sudo('ip netns exec ' + vrf
                     + ' ip neigh show')
         # un-configure the DUT
         for i in range(num_vlans):
             vlan_id = vlan_base + i
             vrf = 'v' + str(vlan_id)
-            sudo('ip netns delete ' + vrf) 
+            sudo('ip netns delete ' + vrf)
         suite.test_end(passed)
 
     # TODO:

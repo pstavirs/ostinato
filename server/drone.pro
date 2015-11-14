@@ -45,7 +45,7 @@ SOURCES += \
     winpcapport.cpp 
 SOURCES += myservice.cpp 
 SOURCES += pcapextra.cpp 
-SOURCES += packetbuffer.cpp 
+SOURCES += packetbuffer.cpp
 
 QMAKE_DISTCLEAN += object_script.*
 
