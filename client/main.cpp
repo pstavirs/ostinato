@@ -38,10 +38,22 @@ extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
+#if defined(Q_OS_WIN32)
+QString kGzipPathDefaultValue;
+QString kDiffPathDefaultValue;
+QString kAwkPathDefaultValue;
+#endif
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     int exitCode;
+
+#if defined(Q_OS_WIN32)
+    kGzipPathDefaultValue = app.applicationDirPath() + "/gzip.exe";
+    kDiffPathDefaultValue = app.applicationDirPath() + "/diff.exe";
+    kAwkPathDefaultValue = app.applicationDirPath() + "/gawk.exe";
+#endif
 
     app.setApplicationName("Ostinato");
     app.setOrganizationName("Ostinato");
