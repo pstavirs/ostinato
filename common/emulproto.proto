@@ -75,6 +75,7 @@ message Ip6Emulation {
 }
 
 extend OstProto.DeviceGroup {
+    // FIXME: add directly to DeviceGroup in protocol.proto
     optional EncapEmulation encap = 2000;
 
     optional MacEmulation mac = 2001;

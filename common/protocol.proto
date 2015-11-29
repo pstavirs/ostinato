@@ -300,7 +300,8 @@ message DeviceGroupIdList {
 message DeviceGroup {
     required DeviceGroupId device_group_id = 1;
     optional DeviceGroupCore core = 2;
-    optional uint32 device_count = 3 [default = 1];
+    // FIXME: add Encap here
+    optional uint32 device_count = 3 [default = 1]; // per-encap
 
     extensions 2000 to 5999;  // For use by Protocol Emulations
 }
