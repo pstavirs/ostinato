@@ -457,3 +457,18 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
             qPrintable(QHostAddress(srcIp).toString()),
             qPrintable(QHostAddress(tgtIp).toString()));
 }
+
+bool operator<(const DeviceKey &a1, const DeviceKey &a2)
+{
+    int i = 0;
+
+    while (i < a1.size()) {
+        if (uchar(a1.at(i)) < uchar(a2.at(i)))
+            return true;
+        if (uchar(a1.at(i)) > uchar(a2.at(i)))
+            return false;
+        i++;
+    }
+
+    return false;
+}

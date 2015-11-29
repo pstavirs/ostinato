@@ -29,7 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class DeviceManager;
 class PacketBuffer;
 
-typedef QByteArray DeviceKey;
+class DeviceKey: public QByteArray
+{
+};
 
 class Device
 {
@@ -80,5 +82,6 @@ private: // data
     QHash<quint32, quint64> arpTable;
 };
 
+bool operator<(const DeviceKey &a1, const DeviceKey &a2);
 #endif
 
