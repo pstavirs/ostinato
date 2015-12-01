@@ -121,10 +121,10 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
         if ((role == Qt::DisplayRole))
         {
             DBG0("Exit PortModel data 1\n");
-            return QString("Port Group %1: %2 [%3:%4] (%5)").
+            return QString("Port Group %1: %2 [%3]:%4 (%5)").
                 arg(pgl->mPortGroups.at(index.row())->id()).
                 arg(pgl->mPortGroups.at(index.row())->userAlias()).
-                arg(pgl->mPortGroups.at(index.row())->serverAddress().toString()).
+                arg(pgl->mPortGroups.at(index.row())->serverName()).
                 arg(pgl->mPortGroups.at(index.row())->serverPort()).
                 arg(pgl->mPortGroups.value(index.row())->numPorts()); 
         }

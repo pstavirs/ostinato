@@ -41,7 +41,7 @@ public:
     virtual ~RpcServer();
 
     bool registerService(::google::protobuf::Service *service,
-        quint16 tcpPortNum);
+        QHostAddress address, quint16 tcpPortNum);
 
 signals:
     void notifyClients(int notifType, SharedProtobufMessage notifData);

@@ -503,15 +503,29 @@ void PortsWindow::on_actionNew_Port_Group_triggered()
 {
     bool ok;
     QString text = QInputDialog::getText(this, 
-        "Add Port Group", "Port Group Address (IP[:Port])",
+        "Add Port Group", "Port Group Address (HostName[:Port])",
         QLineEdit::Normal, lastNewPortGroup, &ok);
     
     if (ok)
     {
         QStringList addr = text.split(":");
-        if (addr.size() == 1) // Port unspecified
-            addr.append(QString().setNum(DEFAULT_SERVER_PORT));
-        PortGroup *pg = new PortGroup(QHostAddress(addr[0]),addr[1].toUShort());    
+        quint16 port = DEFAULT_SERVER_PORT;
+
+        if (addr.size() > 2) { // IPv6 Address
+            // IPv6 addresses with port number SHOULD be specified as
+            // [2001:db8::1]:80 (RFC5952 Sec6) to avoid ambiguity due to ':'
+            addr = text.split("]:");
+            if (addr.size() > 1)
+                port = addr[1].toUShort();
+        }
+        else if (addr.size() == 2) // Hostname/IPv4 + Port specified
+            port = addr[1].toUShort();
+
+        // Play nice and remove square brackets irrespective of addr type
+        addr[0].remove(QChar('['));
+        addr[0].remove(QChar(']'));
+
+        PortGroup *pg = new PortGroup(addr[0], port);
         plm->addPortGroup(*pg);
         lastNewPortGroup = text;
     }

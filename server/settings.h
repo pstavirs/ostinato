@@ -26,6 +26,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 extern QSettings *appSettings;
 
 //
+// General Section Keys
+//
+const QString kRateAccuracyKey("RateAccuracy");
+const QString kRateAccuracyDefaultValue("High");
+
+//
+// RpcServer Section Keys
+//
+const QString kRpcServerAddress("RpcServer/Address");
+
+//
 // PortList Section Keys
 //
 const QString kPortListIncludeKey("PortList/Include");

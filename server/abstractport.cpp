@@ -45,6 +45,7 @@ AbstractPort::AbstractPort(int id, const char *device)
     data_.set_is_exclusive_control(false);
 
     isSendQueueDirty_ = false;
+    rateAccuracy_ = kHighAccuracy;
     linkState_ = OstProto::LinkStateUnknown;
     minPacketSetSize_ = 1;
 
@@ -152,6 +153,17 @@ void AbstractPort::addNote(QString note)
     notes.append("</ul>");
 
     data_.set_notes(notes.toStdString());
+}
+
+AbstractPort::Accuracy AbstractPort::rateAccuracy()
+{
+    return rateAccuracy_;
+}
+
+bool AbstractPort::setRateAccuracy(Accuracy accuracy)
+{
+    rateAccuracy_ = accuracy;
+    return true;
 }
 
 void AbstractPort::updatePacketList()

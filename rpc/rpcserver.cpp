@@ -42,14 +42,15 @@ RpcServer::~RpcServer()
 { 
 }
 
-bool RpcServer::registerService(::google::protobuf::Service *service, 
-    quint16 tcpPortNum)
+bool RpcServer::registerService(::google::protobuf::Service *service,
+    QHostAddress address, quint16 tcpPortNum)
 {
     this->service = service;
 
-    if (!listen(QHostAddress::Any, tcpPortNum)) 
+    if (!listen(address, tcpPortNum))
     {
-        qDebug("Unable to start the server: %s", 
+        qDebug("Unable to start the server on <%s>: %s",
+                qPrintable(address.toString()),
                 errorString().toAscii().constData());
         return false;
     }

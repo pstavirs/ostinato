@@ -37,7 +37,7 @@ extern char *version;
 
 quint32 PortGroup::mPortGroupAllocId = 0;
 
-PortGroup::PortGroup(QHostAddress ip, quint16 port)
+PortGroup::PortGroup(QString serverName, quint16 port)
 {
     // Allocate an id for self
     mPortGroupId = PortGroup::mPortGroupAllocId++;
@@ -57,7 +57,7 @@ PortGroup::PortGroup(QHostAddress ip, quint16 port)
     connect(reconnectTimer, SIGNAL(timeout()), 
         this, SLOT(on_reconnectTimer_timeout()));
 
-    rpcChannel = new PbRpcChannel(ip, port, 
+    rpcChannel = new PbRpcChannel(serverName, port,
                                   OstProto::Notification::default_instance());
     serviceStub = new OstProto::OstService::Stub(rpcChannel);
 
@@ -272,7 +272,7 @@ void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
                "For more information see "
                "http://code.google.com/p/ostinato/wiki/FAQ#"
                    "Q._Port_group_has_no_interfaces")
-                .arg(serverAddress().toString())
+                .arg(serverName())
                 .arg(int(serverPort())));
     }
 }

@@ -54,6 +54,13 @@ public:
         quint64    txBps;
     };
 
+    enum Accuracy
+    {
+        kHighAccuracy,
+        kMediumAccuracy,
+        kLowAccuracy,
+    };
+
     AbstractPort(int id, const char *device);
     virtual ~AbstractPort();
 
@@ -79,6 +86,9 @@ public:
 
     bool isDirty() { return isSendQueueDirty_; }
     void setDirty() { isSendQueueDirty_ = true; }
+
+    Accuracy rateAccuracy();
+    virtual bool setRateAccuracy(Accuracy accuracy);
 
     virtual void clearPacketList() = 0;
     virtual void loopNextPacketSet(qint64 size, qint64 repeats,
@@ -122,6 +132,7 @@ protected:
     OstProto::Port          data_;
     OstProto::LinkState     linkState_;
     ulong minPacketSetSize_;
+    Accuracy rateAccuracy_;
 
     quint64 maxStatsValue_;
     struct PortStats    stats_;

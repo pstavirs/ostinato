@@ -35,6 +35,7 @@ public:
     static PortManager* instance();
 
 private:
+    AbstractPort::Accuracy rateAccuracy();
     bool filterAcceptsPort(const char *name);
 
 private:

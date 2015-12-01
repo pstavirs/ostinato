@@ -66,7 +66,7 @@ public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;
 
 public:
-    PortGroup(QHostAddress ip = QHostAddress::LocalHost, 
+    PortGroup(QString serverName = "127.0.0.1",
         quint16 port = DEFAULT_SERVER_PORT); 
     ~PortGroup();
 
@@ -75,10 +75,10 @@ public:
         compat = kUnknown;
         rpcChannel->establish(); 
     }
-    void connectToHost(QHostAddress ip, quint16 port) { 
+    void connectToHost(QString serverName, quint16 port) {
         reconnect = true;
         compat = kUnknown;
-        rpcChannel->establish(ip, port);
+        rpcChannel->establish(serverName, port);
     }
     void disconnectFromHost() { reconnect = false; rpcChannel->tearDown(); }
 
@@ -88,8 +88,8 @@ public:
     const QString& userAlias() const { return mUserAlias; } 
     void setUserAlias(QString alias) { mUserAlias = alias; };
 
-    const QHostAddress& serverAddress() const 
-        { return rpcChannel->serverAddress(); } 
+    const QString serverName() const
+        { return rpcChannel->serverName(); }
     quint16 serverPort() const 
         { return rpcChannel->serverPort(); } 
     QAbstractSocket::SocketState state() const {

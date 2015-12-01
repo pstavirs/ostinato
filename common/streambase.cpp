@@ -447,6 +447,27 @@ _exit:
     return true;
 }
 
+int StreamBase::frameSizeVariableCount() const
+{
+    int count = 1;
+
+    switch(lenMode())
+    {
+        case OstProto::StreamCore::e_fl_fixed:
+            break;
+        case OstProto::StreamCore::e_fl_inc:
+        case OstProto::StreamCore::e_fl_dec:
+        case OstProto::StreamCore::e_fl_random:
+            count = frameLenMax() - frameLenMin() + 1;
+            break;
+        default:
+            qWarning("%s: Unhandled len mode %d",  __FUNCTION__, lenMode());
+            break;
+    }
+
+    return count;
+}
+
 int StreamBase::frameVariableCount() const
 {
     ProtocolListIterator    *iter;
@@ -469,7 +490,7 @@ int StreamBase::frameVariableCount() const
     }
     delete iter;
 
-    return frameCount;
+    return AbstractProtocol::lcm(frameCount, frameSizeVariableCount());
 }
 
 // frameProtocolLength() returns the sum of all the individual protocol sizes

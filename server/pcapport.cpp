@@ -172,6 +172,15 @@ void PcapPort::updateNotes()
             arg(notes).toStdString());
 }
 
+bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
+{
+    if (transmitter_->setRateAccuracy(accuracy)) {
+        AbstractPort::setRateAccuracy(accuracy);
+        return true;
+    }
+    return false;
+}
+
 void PcapPort::startDeviceEmulation()
 {
     emulXcvr_->start();
@@ -186,7 +195,6 @@ int PcapPort::sendEmulationPacket(PacketBuffer *pktBuf)
 {
     return emulXcvr_->transmitPacket(pktBuf);
 }
-
 
 /*
  * ------------------------------------------------------------------- *
@@ -350,7 +358,7 @@ PcapPort::PortTransmitter::PortTransmitter(const char *device)
 #ifdef Q_OS_WIN32
     LARGE_INTEGER   freq;
     if (QueryPerformanceFrequency(&freq))
-        gTicksFreq = ticksFreq_ = freq.QuadPart;
+        gTicksFreq = freq.QuadPart;
     else
         Q_ASSERT_X(false, "PortTransmitter::PortTransmitter",
                 "This Win32 platform does not support performance counter");
@@ -381,6 +389,26 @@ PcapPort::PortTransmitter::~PortTransmitter()
         delete stats_;
     if (usingInternalHandle_)
         pcap_close(handle_);
+}
+
+bool PcapPort::PortTransmitter::setRateAccuracy(
+        AbstractPort::Accuracy accuracy)
+{
+    switch (accuracy) {
+    case kHighAccuracy:
+        udelayFn_ = udelay;
+        qWarning("%s: rate accuracy set to High - busy wait", __FUNCTION__);
+        break;
+    case kLowAccuracy:
+        udelayFn_ = QThread::usleep;
+        qWarning("%s: rate accuracy set to Low - usleep", __FUNCTION__);
+        break;
+    default:
+        qWarning("%s: unsupported rate accuracy value %d", __FUNCTION__, 
+                accuracy);
+        return false;
+    }
+    return true;
 }
 
 void PcapPort::PortTransmitter::clearPacketList()
@@ -585,7 +613,7 @@ _restart:
                     long usecs = seq->usecDelay_ + overHead; 
                     if (usecs > 0) 
                     {
-                        udelay(usecs);
+                        (*udelayFn_)(usecs);
                         overHead = 0;
                     }
                     else
@@ -611,7 +639,7 @@ _restart:
 
         if (usecs > 0)
         {
-            udelay(usecs);
+            (*udelayFn_)(usecs);
             overHead = 0;
         }
         else
@@ -687,7 +715,7 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
             usec += overHead;
             if (usec > 0)
             {
-                udelay(usec);
+                (*udelayFn_)(usec);
                 overHead = 0;
             }
             else
@@ -716,14 +744,14 @@ int PcapPort::PortTransmitter::sendQueueTransmit(pcap_t *p,
     return 0;
 }
 
-void PcapPort::PortTransmitter::udelay(long usec)
+void PcapPort::PortTransmitter::udelay(unsigned long usec)
 {
 #if defined(Q_OS_WIN32)
     LARGE_INTEGER tgtTicks;
     LARGE_INTEGER curTicks;
 
     QueryPerformanceCounter(&curTicks);
-    tgtTicks.QuadPart = curTicks.QuadPart + (usec*ticksFreq_)/1000000;
+    tgtTicks.QuadPart = curTicks.QuadPart + (usec*gTicksFreq)/1000000;
 
     while (curTicks.QuadPart < tgtTicks.QuadPart)
         QueryPerformanceCounter(&curTicks);

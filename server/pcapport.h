@@ -38,6 +38,8 @@ public:
     virtual bool hasExclusiveControl() { return false; }
     virtual bool setExclusiveControl(bool /*exclusive*/) { return false; }
 
+    virtual bool setRateAccuracy(AbstractPort::Accuracy accuracy); 
+
     virtual void clearPacketList() { 
         transmitter_->clearPacketList();
         setPacketListLoopMode(false, 0, 0);
@@ -106,6 +108,9 @@ protected:
     public:
         PortTransmitter(const char *device);
         ~PortTransmitter();
+
+        bool setRateAccuracy(AbstractPort::Accuracy accuracy); 
+
         void clearPacketList();
         void loopNextPacketSet(qint64 size, qint64 repeats, 
             long repeatDelaySec, long repeatDelayNsec);
@@ -176,11 +181,10 @@ protected:
             long usecDelay_;
         };
 
-        void udelay(long usec);
+        static void udelay(unsigned long usec);
         int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
                     int sync);
 
-        quint64 ticksFreq_;
         QList<PacketSequence*> packetSequenceList_;
         PacketSequence *currentPacketSequence_;
         int repeatSequenceStart_;
@@ -189,6 +193,8 @@ protected:
 
         int returnToQIdx_;
         quint64 loopDelay_;
+
+        void (*udelayFn_)(unsigned long);
 
         bool usingInternalStats_;
         AbstractPort::PortStats *stats_;
