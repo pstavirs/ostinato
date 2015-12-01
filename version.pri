@@ -1,5 +1,5 @@
 APP_VERSION = 0.7.1
-APP_REVISION = $(shell hg identify -i)
+APP_REVISION = $(shell git rev-parse --short=12 --verify HEAD)
 #uncomment the below line in a source package and fill-in the correct revision
 #APP_REVISION = <rev-hash>@
 

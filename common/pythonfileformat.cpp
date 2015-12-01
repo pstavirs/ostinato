@@ -80,9 +80,8 @@ bool PythonFileFormat::saveStreams(const OstProto::StreamConfigList streams,
 
             refl->ListFields(protocol, &fields);
             for (uint k = 0; k < fields.size(); k++) {
-                // skip protocol_id field
-                if (fields.at(k)->number() == 
-                        OstProto::Protocol::kProtocolIdFieldNumber)
+                // skip non extension fields
+                if (!fields.at(k)->is_extension())
                     continue;
 
                 if (fields.at(k)->file()->name() !=
@@ -199,7 +198,8 @@ bool PythonFileFormat::saveStreams(const OstProto::StreamConfigList streams,
                         OstProto::Protocol::kProtocolIdFieldNumber)
                     continue;
                 QString pfx("    p.Extensions[X]");
-                pfx.replace("X", fields.at(k)->name().c_str());
+                pfx.replace(fields.at(k)->is_extension()? "X": "Extensions[X]",
+                        fields.at(k)->name().c_str());
                 writeFieldAssignment(out, pfx, protocol,
                         refl, fields.at(k));
             }

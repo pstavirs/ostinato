@@ -207,10 +207,8 @@ void AbstractPort::updatePacketListSequential()
             case OstProto::StreamControl::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
                 x = AbstractProtocol::lcm(frameVariableCount, burstSize);
-                n = ulong(burstSize * streamList_[i]->burstRate() 
-                            * streamList_[i]->numBursts()) / x;
-                y = ulong(burstSize * streamList_[i]->burstRate() 
-                            * streamList_[i]->numBursts()) % x;
+                n = ulong(burstSize * streamList_[i]->numBursts()) / x;
+                y = ulong(burstSize * streamList_[i]->numBursts()) % x;
                 if (streamList_[i]->burstRate() > 0)
                 {
                     ibg = 1e9/double(streamList_[i]->burstRate());

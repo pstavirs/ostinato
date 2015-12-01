@@ -253,7 +253,11 @@ QVariant UdpProtocol::fieldData(int index, FieldAttrib attrib,
                     if (data.is_override_cksum())
                         cksum = data.cksum();
                     else
+                    {
                         cksum = protocolFrameCksum(streamIndex, CksumTcpUdp);
+                        if (cksum == 0)
+                            cksum = 0xFFFF;
+                    }
                     qDebug("UDP cksum = %hu", cksum);
                     break;
                 }
