@@ -9,8 +9,9 @@ compiler:
   - clang
 
 before_install:
-  - "if [ $TRAVIS_OS_NAME = 'osx' ] && [ $CC = 'gcc' ]; then export CC=gcc-4.8; fi"
+  - "if [ $TRAVIS_OS_NAME = 'osx' ] && [ $CC = 'gcc' ]; then export CC=gcc-4.8 && export CXX=gcc-4.8; fi"
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew install qt && brew install protobuf; fi"
+  - echo $CC; echo $CXX
 
 addons:
   apt:
