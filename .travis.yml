@@ -1,8 +1,20 @@
 language: cpp
 
+os:
+  - linux
+  - osx
+
 compiler:
   - gcc
   - clang
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+before_install:
+  - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew install qt && brew install protobuf; fi"
 
 addons:
   apt:
@@ -16,4 +28,8 @@ addons:
 script:
   - qmake
   - make
+
+notifications:
+  email:
+    - secure: "LUIBAz/phzOdxlnFuoC6hfNfl3HAGYTkacVfLu0GsrOgNBhqPqsRszhdFuX/kEdGb18GIcqCQn4tLfFVD9YyjZKFCTjjfTEaUlbHYrear4VU6HihBvhu4I+F8nffJ9y77kyZhUfC9RdgTwWEVdwYMi3rjIK8UggPVV1s/FyE2t+UAjmzdGPAb6uxu9znYpldKtY9FosqccPe7tB5uLLcdbX6ojvsOH7lyQPLclFFS7F2yM9nNNxnRwl1v4KlN6vYwBF2scKB8altEMEGnLJKB41S6piVWyQlXc8FotGJf4fg/6lwmKWBzT/aIw8UH8cxJW2q3sHmdcf/nBhSKojLN5HNIQOJ45Xfw0MKQy2uXGHG15DzYRKjsw6zdb7oVJJCVDiwh1wDvfExgJwpIZJuNsMaGEbSo/TxN+6iPaCf2iyFaCW/KkBt5gmcgck2dA0Xc8qd0z3Zjii7cvuM8awrsmtE7UuX7M/lV9M8w5EaYjhr0R2NwgqvRa0hQv+1Ycec/1eVVfMCMFWNsxmVSkQFFbFP2db195axMzeU13G8RIbPY3JsIUEGw1ykj4nXiH77CLYRfZuKvomjhBkzE+P+EyIxRMH65M4zO9lO7SW01hrHty60jKajt5ljPI5AfuKAFHQvoLOwEMwLwbtEy/ggI/SRAXjsKJbueTHaI4719Gg="
 
