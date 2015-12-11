@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/route.h>
+#include <unistd.h>
 
 #ifdef Q_OS_MAC
 #define ifr_flagshigh ifr_flags
