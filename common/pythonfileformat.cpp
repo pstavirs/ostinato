@@ -450,7 +450,7 @@ void PythonFileFormat::writeFieldAssignment(
             std::string val = fieldDesc->is_repeated() ?
                 refl->GetRepeatedStringReference(msg, fieldDesc, index, &val) :
                 refl->GetStringReference(msg, fieldDesc, &val);
-            QString escVal = escapeString(val.c_str());
+            QString escVal = escapeString(QString::fromStdString(val));
             if (val != fieldDesc->default_value_string())
                 out << fieldName << " = '" << escVal << "'\n";
             break;
