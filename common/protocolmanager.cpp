@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "vlan.h"
 #include "svlan.h"
 #include "vlanstack.h"
+#include "mpls.h"
 
 // L2 Protos
 #include "dot3.h"    
@@ -76,6 +77,8 @@ ProtocolManager::ProtocolManager()
             (void*) SVlanProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kVlanStackFieldNumber,
             (void*) VlanStackProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kMplsFieldNumber,
+            (void*) MplsProtocol::createInstance);
 
     registerProtocol(OstProto::Protocol::kEth2FieldNumber,
             (void*) Eth2Protocol::createInstance);

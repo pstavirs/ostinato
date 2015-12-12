@@ -15,6 +15,7 @@ FORMS += \
     dot3.ui \
     llc.ui \
     snap.ui \
+    mpls.ui \
     arp.ui \
     ip4.ui \
     ip6.ui \
@@ -59,6 +60,7 @@ HEADERS += \
     dot2llcconfig.h \
     snapconfig.h \
     dot2snapconfig.h \
+    mplsconfig.h \
     arpconfig.h \
     ip4config.h \
     ip6config.h \
@@ -94,6 +96,7 @@ SOURCES += \
     dot3config.cpp \
     llcconfig.cpp \
     snapconfig.cpp \
+    mplsconfig.cpp \
     arpconfig.cpp \
     ip4config.cpp \
     ip6config.cpp \
@@ -114,6 +117,7 @@ SOURCES += \
     svlanpdml.cpp \
     eth2pdml.cpp \
     llcpdml.cpp \
+    mplspdml.cpp \
     arppdml.cpp \
     ip4pdml.cpp \
     ip6pdml.cpp \
