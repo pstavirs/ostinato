@@ -223,44 +223,95 @@ def stream_id(request, drone, ports):
 
 @pytest.fixture
 def dut_vlans(request, dut_ports):
-    num_vlans = getattr(request.function, 'num_vlans')
-    vlan_base = getattr(request.function, 'vlan_base')
-    for i in range(num_vlans):
-        vlan_id = vlan_base+i
-        vrf = 'v' + str(vlan_id)
-        vlan_rx_dev = dut_ports.rx + '.' + str(vlan_id)
-        vlan_tx_dev = dut_ports.tx + '.' + str(vlan_id)
+    class Devices(object):
+        pass
 
-        sudo('ip netns add ' + vrf)
+    def create_vdev(devices, vlancfgs):
+        # device(s) with ALL vlan tags are what we configure and add to netns;
+        # those with intermediate no of vlans are created but not configured
+        if len(vlancfgs) == 0:
+            assert len(devices.rx) == len(devices.tx)
+            dut_vlans.vlans = []
+            for i in range(len(devices.rx)):
+                vrf = 'vrf' + str(i+1)
+                sudo('ip netns add ' + vrf)
 
-        sudo('ip link add link ' + dut_ports.rx
-             + ' name ' + vlan_rx_dev
-             + ' type vlan id ' + str(vlan_id))
-        sudo('ip link set ' + vlan_rx_dev
-                + ' netns ' + vrf)
-        sudo('ip netns exec ' + vrf
-                + ' ip addr add 10.1.1.1/24'
-                + ' dev ' + vlan_rx_dev)
-        sudo('ip netns exec ' + vrf
-                + ' ip link set ' + vlan_rx_dev + ' up')
+                dev = devices.rx[i]
+                sudo('ip link set ' + dev
+                        + ' netns ' + vrf)
+                sudo('ip netns exec ' + vrf
+                        + ' ip addr add 10.1.1.1/24'
+                        + ' dev ' + dev)
+                sudo('ip netns exec ' + vrf
+                        + ' ip link set ' + dev + ' up')
 
-        sudo('ip link add link ' + dut_ports.tx
-             + ' name ' + vlan_tx_dev
-             + ' type vlan id ' + str(vlan_id))
-        sudo('ip link set ' + vlan_tx_dev
-                + ' netns ' + vrf)
-        sudo('ip netns exec ' + vrf
-                + ' ip addr add 10.1.2.1/24'
-                + ' dev ' + vlan_tx_dev)
-        sudo('ip netns exec ' + vrf
-                + ' ip link set ' + vlan_tx_dev + ' up')
+                dev = devices.tx[i]
+                sudo('ip link set ' + dev
+                        + ' netns ' + vrf)
+                sudo('ip netns exec ' + vrf
+                        + ' ip addr add 10.1.2.1/24'
+                        + ' dev ' + dev)
+                sudo('ip netns exec ' + vrf
+                        + ' ip link set ' + dev + ' up')
 
-    def fin():
-        for i in range(num_vlans):
-            vlan_id = vlan_base + i
-            vrf = 'v' + str(vlan_id)
+                dut_vlans.vlans.append(dev[dev.find('.')+1:])
+            return dut_vlans.vlans
+        vcfg  = vlancfgs[0]
+        new_devs = Devices()
+        new_devs.tx = []
+        new_devs.rx = []
+        for dev in devices.rx+devices.tx:
+            for k in range(vcfg['count']):
+                vlan_id = vcfg['base'] + k
+                dev_name = dev + '.' + str(vlan_id)
+                sudo('ip link add link ' + dev
+                     + ' name ' + dev_name
+                     + ' type vlan id ' + str(vlan_id))
+                sudo('ip link set ' + dev_name + ' up')
+                if dev in devices.rx:
+                    new_devs.rx.append(dev_name)
+                else:
+                    new_devs.tx.append(dev_name)
+        print (str(len(devices.rx)*2*vcfg['count'])+' devices created')
+
+        create_vdev(new_devs, vlancfgs[1:])
+
+    def delete_vdev():
+        if len(vlancfgs) == 0:
+            return
+
+        vrf_count = 1
+        for vcfg in vlancfgs:
+            vrf_count = vrf_count * vcfg['count']
+
+        # deleting netns will also delete the devices inside it
+        for i in range(vrf_count):
+            vrf = 'vrf' + str(i+1)
             sudo('ip netns delete ' + vrf)
-    request.addfinalizer(fin)
+
+        # if we have only single tagged vlans, then we are done
+        if len(vlancfgs) == 1:
+            return
+
+        # if we have 2 or more stacked vlan tags, we need to delete the
+        # intermediate stacked vlan devices which are in the root namespace;
+        # deleting first level tag vlan devices will delete vlan devices
+        # stacked on top of it also
+        vcfg  = vlancfgs[0]
+        for dev in devices.tx+devices.rx:
+            for k in range(vcfg['count']):
+                vdev = dev + '.' + str(vcfg['base']+k)
+                sudo('ip link delete ' + vdev)
+
+
+    vlancfgs = getattr(request.function, 'vlan_cfg')
+    devices = Devices()
+    devices.tx = [dut_ports.tx]
+    devices.rx = [dut_ports.rx]
+    create_vdev(devices, vlancfgs)
+
+    request.addfinalizer(delete_vdev)
+
 
 # ================================================================= #
 # ----------------------------------------------------------------- #
@@ -461,8 +512,23 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     sudo('ip address delete 10.10.1.1/24 dev ' + dut_ports.rx)
     sudo('ip address delete 10.10.2.1/24 dev ' + dut_ports.tx)
 
+@pytest.mark.parametrize('vlan_cfg', [
+    [{'base': 11, 'count': 5}],
+
+    [{'base': 11, 'count': 2},
+     {'base': 21, 'count': 3}],
+
+    [{'base': 11, 'count': 2},
+     {'base': 21, 'count': 3},
+     {'base': 31, 'count': 2}],
+
+    [{'base': 11, 'count': 2},
+     {'base': 21, 'count': 3},
+     {'base': 31, 'count': 2},
+     {'base':  1, 'count': 3}],
+])
 def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id, 
-        emul_ports, dgid_list):
+        emul_ports, dgid_list, vlan_cfg):
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 device per multiple single-tag VLANs
     #
@@ -470,14 +536,16 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     #       .1/         \.1
     #        /           \
     # 10.1.1/24        10.1.2/24
-    #  v[201-205]      v[201-205]
+    #  [vlans]          [vlans]
     #     /                  \
     #    /.101-103            \.101-103
     # Host1(s)              Host2(s)
     # ----------------------------------------------------------------- #
 
-    test_multiEmulDevPerVlan.num_vlans = num_vlans = 5
-    test_multiEmulDevPerVlan.vlan_base = vlan_base = 201
+    num_vlans = 1
+    for vcfg in vlan_cfg:
+        num_vlans = num_vlans * vcfg['count']
+    test_multiEmulDevPerVlan.vlan_cfg = vlan_cfg
     num_devs_per_vlan = 3
     tx_ip_base = 0x0a010165
     rx_ip_base = 0x0a010265
@@ -485,15 +553,29 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     # configure vlans on the DUT
     dut_vlans(request, dut_ports)
 
+    assert len(dut_vlans.vlans) == num_vlans
+    vlan_filter = []
+    for i in range(len(dut_vlans.vlans)):
+        vlan_filter.append('')
+        ids = dut_vlans.vlans[i].split('.')
+        for j in range(len(ids)):
+            filter = '(frame[<ofs>:4]==8100:<id>)' \
+                        .replace('<ofs>', str(12+j*4)) \
+                        .replace('<id>', '{:04x}'.format(int(ids[j])))
+            if len(vlan_filter[i]) > 0:
+                vlan_filter[i] += ' && '
+            vlan_filter[i] += filter
+
     # configure the tx device(s)
     devgrp_cfg = ost_pb.DeviceGroupConfigList()
     devgrp_cfg.port_id.CopyFrom(ports.tx.port_id[0])
     dg = devgrp_cfg.device_group.add()
     dg.device_group_id.id = dgid_list.tx.device_group_id[0].id
     dg.core.name = "Host1"
-    v = dg.Extensions[emul.encap].vlan.stack.add()
-    v.vlan_tag = vlan_base
-    v.count = num_vlans
+    for vcfg in vlan_cfg:
+        v = dg.Extensions[emul.encap].vlan.stack.add()
+        v.vlan_tag = vcfg['base']
+        v.count = vcfg['count']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030a01
     ip = dg.Extensions[emul.ip4]
@@ -509,9 +591,10 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     dg = devgrp_cfg.device_group.add()
     dg.device_group_id.id = dgid_list.rx.device_group_id[0].id
     dg.core.name = "Host1"
-    v = dg.Extensions[emul.encap].vlan.stack.add()
-    v.vlan_tag = vlan_base
-    v.count = num_vlans
+    for vcfg in vlan_cfg:
+        v = dg.Extensions[emul.encap].vlan.stack.add()
+        v.vlan_tag = vcfg['base']
+        v.count = vcfg['count']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030b01
     ip = dg.Extensions[emul.ip4]
@@ -552,9 +635,10 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
         p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
 
-        p = s.protocol.add()
-        p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
-        p.Extensions[vlan].vlan_tag = vlan_base+i
+        for vcfg in vlan_cfg:
+            p = s.protocol.add()
+            p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
+            p.Extensions[vlan].vlan_tag = vcfg['base']+(i % vcfg['count'])
 
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
@@ -580,10 +664,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
 
     # clear arp on DUT
     for i in range(num_vlans):
-        vlan_id = vlan_base + i
-        vrf = 'v' + str(vlan_id)
-        vlan_rx_dev = dut_ports.rx + '.' + str(vlan_id)
-        vlan_tx_dev = dut_ports.tx + '.' + str(vlan_id)
+        vrf = 'vrf' + str(i+1)
 
         sudo('ip netns exec ' + vrf
                 + ' ip neigh flush all')
@@ -605,11 +686,15 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     log.info('dumping Tx capture buffer (all)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
     print(cap_pkts)
+    log.info('dumping Tx capture buffer (all pkts - vlans only)')
+    cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-Tfields', '-eframe.number', '-evlan.id'])
+    print(cap_pkts)
     log.info('dumping Tx capture buffer (filtered)')
     for i in range(num_vlans):
         for j in range(num_devs_per_vlan):
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-R', '(vlan.id == '+str(vlan_base+i)+')'
+                        '-R', vlan_filter[i] +
                           ' && (arp.opcode == 1)'
                           ' && (arp.src.proto_ipv4 == 10.1.1.'
                                                  +str(101+j)+')'
@@ -623,15 +708,19 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     log.info('dumping Rx capture buffer (all)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
     print(cap_pkts)
+    log.info('dumping Tx capture buffer (all pkts - vlans only)')
+    cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-Tfields', '-eframe.number', '-evlan.id'])
+    print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_vlans):
         for j in range(num_devs_per_vlan):
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-R', '(vlan.id == '+str(vlan_base+i)+')'
+                        '-R', vlan_filter[i] +
                           ' && (arp.opcode == 1)'
-                          ' && (arp.src.proto_ipv4 == 10.10.2.'
+                          ' && (arp.src.proto_ipv4 == 10.1.2.'
                                                  +str(101+j)+')'
-                          ' && (arp.dst.proto_ipv4 == 10.10.2.1)'])
+                          ' && (arp.dst.proto_ipv4 == 10.1.2.1)'])
             print(cap_pkts)
             assert cap_pkts.count('\n') == 0
 
@@ -673,17 +762,22 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     drone.stopTransmit(ports.tx)
     drone.stopCapture(ports.rx)
 
+    # verify data packets received on rx port
     buff = drone.getCaptureBuffer(ports.rx.port_id[0])
     drone.saveCaptureBuffer(buff, 'capture.pcap')
     log.info('dumping Rx capture buffer (all)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
+    print(cap_pkts)
+    log.info('dumping Tx capture buffer (all pkts - vlans only)')
+    cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-Tfields', '-eframe.number', '-evlan.id'])
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_vlans):
         for j in range(num_devs_per_vlan):
             cap_pkts = subprocess.check_output(
                     [tshark, '-nr', 'capture.pcap',
-                    '-R', '(vlan.id == ' + str(vlan_base+i) + ')'
+                    '-R', vlan_filter[i] +
                     ' && (ip.src == 10.1.1.' + str(101+j) + ') '
                     ' && (ip.dst == 10.1.2.' + str(101+j) + ')'
                     ' && (eth.dst == 00:01:02:03:0b:'
