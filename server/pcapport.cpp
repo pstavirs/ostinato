@@ -946,7 +946,40 @@ void PcapPort::EmulationTransceiver::run()
     int flags = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
-    const char *capture_filter = "arp or (vlan and arp)";
+#if 0
+/*
+    Ideally we should use the below filter, but the 'vlan' capture filter
+    in libpcap is implemented as a kludge. From the pcap-filter man page -
+
+    vlan [vlan_id]
+       Note that the first vlan keyword encountered in expression changes
+       the decoding offsets for the remainder of expression on the
+       assumption that the packet is a VLAN packet.
+
+       The  vlan [vlan_id] expression may be used more than once, to filter on
+       VLAN hierarchies. Each use of that expression increments the filter
+       offsets by 4.
+
+    See https://ask.wireshark.org/questions/31953/unusual-behavior-with-stacked-vlan-tags-and-capture-filter
+
+    So we use the modified filter expression that works as we intend. If ever
+    libpcap changes their implementation, this will need to change as well.
+*/
+    const char *capture_filter =
+        "arp or "
+        "(vlan and arp) or "
+        "(vlan and vlan and arp) or "
+        "(vlan and vlan and vlan and arp) or "
+        "(vlan and vlan and vlan and vlan and arp)";
+#else
+    const char *capture_filter =
+        "arp or "
+        "(vlan and arp) or "
+        "(vlan and arp) or "
+        "(vlan and arp) or "
+        "(vlan and arp)";
+#endif
+
     const int optimize = 1;
 
     qDebug("In %s", __PRETTY_FUNCTION__);

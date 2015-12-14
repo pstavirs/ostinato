@@ -324,22 +324,62 @@ void DeviceManager::enumerateDevices(
     OstEmul::VlanEmulation pbVlan = deviceGroup->GetExtension(OstEmul::encap)
                                         .vlan();
     int numTags = pbVlan.stack_size();
-    int vlanCount = 1;
+    int n = 1;
+    QList<int> vlanCount;
 
     OstEmul::MacEmulation mac = deviceGroup->GetExtension(OstEmul::mac);
     OstEmul::Ip4Emulation ip4 = deviceGroup->GetExtension(OstEmul::ip4);
 
-    for (int i = 0; i < numTags; i++)
-        vlanCount *= pbVlan.stack(i).count();
+    /*
+     * vlanCount[] stores the number of unique vlans at each tag level
+     * e.g. for a 3-tag config with 2, 3, 4 vlans at each level respectively
+     * vlanCount = [24, 12, 4]
+     *      0 - 0, 0, 0
+     *      1 - 0, 0, 1
+     *      2 - 0, 0, 2
+     *      3 - 0, 0, 3
+     *      4 - 0, 1, 0
+     *      5 - 0, 1, 1
+     *      6 - 0, 1, 2
+     *      7 - 0, 1, 3
+     *      8 - 0, 2, 0
+     *      9 - 0, 2, 1
+     *     10 - 0, 2, 2
+     *     11 - 0, 2, 3
+     *     12 - 1, 0, 0
+     *     13 - 1, 0, 1
+     *     14 - 1, 0, 2
+     *     15 - 1, 0, 3
+     *     16 - 1, 1, 0
+     *     17 - 1, 1, 1
+     *     18 - 1, 1, 2
+     *     19 - 1, 1, 3
+     *     21 - 1, 2, 0
+     *     21 - 1, 2, 1
+     *     22 - 1, 2, 2
+     *     23 - 1, 2, 3
+     *
+     * Note that vlanCount[0] repesents total-number-of-vlans
+     *
+     * Another way to think about this is that at a particular vlan tag
+     * level, we need to repeat a particular vlan-id as many times as the
+     * next level's count before we can increment the vlan-id at that level
+     *
+     * We use this list to calculate the vlan ids for each tag level for
+     * all the vlans.
+     *
+     * For implementation convenience we append a '1' as the last element
+     */
+    vlanCount.append(n);
+    for (int i = numTags - 1; i >= 0 ; i--) {
+        n *= pbVlan.stack(i).count();
+        vlanCount.prepend(n);
+    }
 
-    // If we have no vlans, we still have the non-vlan-segmented LAN
-    if (vlanCount == 0)
-        vlanCount = 1;
-
-    for (int i = 0; i < vlanCount; i++) {
+    for (int i = 0; i < vlanCount.at(0); i++) {
         for (int j = 0; j < numTags; j++) {
             OstEmul::VlanEmulation::Vlan vlan = pbVlan.stack(j);
-            quint16 vlanAdd = i*vlan.step();
+            quint16 vlanAdd = (i/vlanCount.at(j+1) % vlan.count())*vlan.step();
 
             dk.setVlan(j, vlan.vlan_tag() + vlanAdd);
         }

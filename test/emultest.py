@@ -624,6 +624,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     for i in range(num_vlans):
         s = stream_cfg.stream.add()
         s.stream_id.id = stream_id.stream_id[i].id
+        s.core.name = 'stream ' + str(s.stream_id.id)
         s.core.is_enabled = True
         s.core.ordinal = i
         s.control.packets_per_sec = 100
@@ -635,10 +636,11 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
         p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
 
-        for vcfg in vlan_cfg:
+        ids = dut_vlans.vlans[i].split('.')
+        for id in ids:
             p = s.protocol.add()
             p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
-            p.Extensions[vlan].vlan_tag = vcfg['base']+(i % vcfg['count'])
+            p.Extensions[vlan].vlan_tag = int(id)
 
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
@@ -658,7 +660,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
 
-        log.info('configuring tx_stream %d' % stream_id.stream_id[0].id)
+        log.info('configuring tx_stream %d' % stream_id.stream_id[i].id)
 
     drone.modifyStream(stream_cfg)
 
@@ -708,7 +710,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     log.info('dumping Rx capture buffer (all)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
     print(cap_pkts)
-    log.info('dumping Tx capture buffer (all pkts - vlans only)')
+    log.info('dumping Rx capture buffer (all pkts - vlans only)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                         '-Tfields', '-eframe.number', '-evlan.id'])
     print(cap_pkts)
@@ -734,6 +736,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     for dev_cfg, device in zip(device_config, devices):
         resolved = False
         for arp in device.arp:
+            # TODO: print all configured vlans, not just the first
             # TODO: pretty print ip and mac
             print('v%d|%08x: %08x %012x' %
                     (dev_cfg.vlan[0] & 0xffff, dev_cfg.ip4, arp.ip4, arp.mac))
