@@ -573,7 +573,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     dg.device_group_id.id = dgid_list.tx.device_group_id[0].id
     dg.core.name = "Host1"
     for vcfg in vlan_cfg:
-        v = dg.Extensions[emul.encap].vlan.stack.add()
+        v = dg.encap.Extensions[emul.vlan].stack.add()
         v.vlan_tag = vcfg['base']
         v.count = vcfg['count']
     dg.device_count = num_devs_per_vlan
@@ -592,7 +592,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     dg.device_group_id.id = dgid_list.rx.device_group_id[0].id
     dg.core.name = "Host1"
     for vcfg in vlan_cfg:
-        v = dg.Extensions[emul.encap].vlan.stack.add()
+        v = dg.encap.Extensions[emul.vlan].stack.add()
         v.vlan_tag = vcfg['base']
         v.count = vcfg['count']
     dg.device_count = num_devs_per_vlan

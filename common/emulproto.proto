@@ -38,8 +38,8 @@ message VlanEmulation {
     repeated Vlan stack = 1; // outer to inner
 }
 
-message EncapEmulation {
-    optional VlanEmulation vlan = 1;
+extend OstProto.EncapEmulation {
+    optional VlanEmulation vlan = 1000;
 }
 
 // ===========
@@ -75,9 +75,6 @@ message Ip6Emulation {
 }
 
 extend OstProto.DeviceGroup {
-    // FIXME: add directly to DeviceGroup in protocol.proto
-    optional EncapEmulation encap = 2000;
-
     optional MacEmulation mac = 2001;
 
     optional Ip4Emulation ip4 = 3000;

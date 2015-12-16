@@ -321,8 +321,8 @@ void DeviceManager::enumerateDevices(
     Operation oper)
 {
     Device dk(this);
-    OstEmul::VlanEmulation pbVlan = deviceGroup->GetExtension(OstEmul::encap)
-                                        .vlan();
+    OstEmul::VlanEmulation pbVlan = deviceGroup->encap()
+                                        .GetExtension(OstEmul::vlan);
     int numTags = pbVlan.stack_size();
     int n = 1;
     QList<int> vlanCount;

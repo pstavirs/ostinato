@@ -297,13 +297,19 @@ message DeviceGroupIdList {
     repeated DeviceGroupId device_group_id = 2;
 }
 
+message EncapEmulation {
+    // Encap Protocols implemented as extensions
+    extensions 1000 to 1999;
+}
+
 message DeviceGroup {
     required DeviceGroupId device_group_id = 1;
     optional DeviceGroupCore core = 2;
-    // FIXME: add Encap here
-    optional uint32 device_count = 3 [default = 1]; // per-encap
+    optional EncapEmulation encap = 3;
+    optional uint32 device_count = 4 [default = 1]; // per-encap
 
-    extensions 2000 to 5999;  // For use by Protocol Emulations
+    // Device Protocols implemented as extensions
+    extensions 2000 to 5999;
 }
 
 message DeviceGroupConfigList {
