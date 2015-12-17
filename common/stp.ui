@@ -107,9 +107,6 @@
        </item>
        <item row="3" column="2">
         <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
-         </property>
          <item>
           <widget class="QCheckBox" name="ui_flags_tc_check">
            <property name="sizePolicy">

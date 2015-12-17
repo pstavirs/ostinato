@@ -75,11 +75,6 @@ QString StpProtocol::shortName() const
     return QString("STP");
 }
 
-AbstractProtocol::ProtocolIdType StpProtocol::protocolIdType() const
-{
-    return ProtocolIdLlc;
-}
-
 quint32 StpProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
@@ -234,17 +229,17 @@ QVariant StpProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:
                     return QString("Root Identifier");
                 case FieldValue:
-                    return (qulonglong) data_.root_id();
+                    return (quint64) data_.root_id();
                 case FieldTextValue:
                 {
                     // Root ID contain two value:
                     // Root ID Priority(first 2 bytes)
                     // and Root ID MAC (last 6 bytes). (IEEE802.1D-2008)
                     quint16 priority = (
-                        data_.root_id() & 0xFFFF000000000000) >> (BYTES_TO_BITS(6));
-                    quint64 mac = data_.root_id() & 0x0000FFFFFFFFFFFF;
+                        data_.root_id() & 0xFFFF000000000000ULL) >> (BYTES_TO_BITS(6));
+                    quint64 mac = data_.root_id() & 0x0000FFFFFFFFFFFFULL;
                     return QString("Priority: %1 / MAC: %2")
-                            .arg(QString::number(priority), 
+                            .arg(QString::number(priority),
                         uintToMacStr(mac));
                 }
                 case FieldFrameValue:
@@ -292,15 +287,15 @@ QVariant StpProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:
                     return QString("Bridge Identifier");
                 case FieldValue:
-                    return (qulonglong) data_.bridge_id();
+                    return (quint64) data_.bridge_id();
                 case FieldTextValue:
                 {
                     // Bridge ID contain two value:
                     // Bridge ID Priority(first 2 bytes)
                     // and Bridge ID MAC (last 6 bytes). (IEEE802.1D-2008)
-                    quint16 priority = (data_.bridge_id() & 0xFFFF000000000000
+                    quint16 priority = (data_.bridge_id() & 0xFFFF000000000000ULL
                                         ) >> (BYTES_TO_BITS(6));
-                    quint64 mac = data_.bridge_id() & 0x0000FFFFFFFFFFFF;
+                    quint64 mac = data_.bridge_id() & 0x0000FFFFFFFFFFFFULL;
                     return QString("Priority: %1 / MAC: %2").arg(QString::number(priority),
                                                   uintToMacStr(mac));
                 }

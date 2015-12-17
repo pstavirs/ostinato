@@ -27,7 +27,7 @@ This module is developed by PLVision  <developers@plvision.eu>
 
 #define ONE_BYTE_MAX 255
 #define TWO_BYTE_MAX 65535
-#define FOUR_BYTE_MAX 4294967295
+#define FOUR_BYTE_MAX 4294967295U
 #define BIT_0 0
 #define BIT_7 7
 #define ONE_BIT(pos) ((unsigned int)(1 << (pos)))
@@ -39,7 +39,7 @@ class UNumberValidator : public QValidator
 private:
     quint64 min_;
     quint64 max_;
-    
+
 public:
     UNumberValidator(quint64 min, quint64 max, QObject * parent = 0)
         : QValidator(parent), min_(min), max_(max){}
@@ -62,13 +62,13 @@ StpConfigForm::StpConfigForm(QWidget *parent)
     QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
     setupUi(this);
 
-    QRegExpValidator *validateMACAddress = 
+    QRegExpValidator *validateMACAddress =
         new QRegExpValidator(reMac, this);
-    UNumberValidator *validateByte = 
+    UNumberValidator *validateByte =
         new UNumberValidator(0, ONE_BYTE_MAX, this);
-    UNumberValidator *validate2Byte = 
+    UNumberValidator *validate2Byte =
         new UNumberValidator(0, TWO_BYTE_MAX, this);
-    UNumberValidator *validate4Byte = 
+    UNumberValidator *validate4Byte =
         new UNumberValidator(0, FOUR_BYTE_MAX, this);
 
     ui_protocol_id->setValidator(validate2Byte);
@@ -129,24 +129,24 @@ void StpConfigForm::loadWidget(AbstractProtocol *proto)
     ui_flags_tc_check->setChecked(flags & ONE_BIT(BIT_0));
     ui_flags_tca_check->setChecked(flags & ONE_BIT(BIT_7));
 
-    // root priority value stored as the first two bytes of stp_root_id 
+    // root priority value stored as the first two bytes of stp_root_id
     // and the last 6 bytes are root MAC address (IEEE802.1D-2008)
     quint64 rootId = proto->fieldData(
         StpProtocol::stp_root_id,
         AbstractProtocol::FieldValue
         ).toULongLong(&isOk);
-    
+
     ui_root_id->setText(
-        QString::number(rootId & 0x0000FFFFFFFFFFFF, BASE_HEX));
+        QString::number(rootId & 0x0000FFFFFFFFFFFFULL, BASE_HEX));
     ui_root_id_priority->setText(QString::number(rootId >> 48));
-    
+
     ui_root_path_cost->setText(
         proto->fieldData(
             StpProtocol::stp_root_path_cost,
             AbstractProtocol::FieldValue
         ).toString());
 
-    // bridge priority value stored as the first two bytes of stp_bridge_id 
+    // bridge priority value stored as the first two bytes of stp_bridge_id
     // and the last 6 bytes are bridge MAC address (IEEE802.1D-2008)
     quint64 bridgeId = proto->fieldData(
         StpProtocol::stp_bridge_id,
@@ -154,7 +154,7 @@ void StpConfigForm::loadWidget(AbstractProtocol *proto)
         ).toULongLong(&isOk);
 
     ui_bridge_id->setText(
-        QString::number(bridgeId & 0x0000FFFFFFFFFFFF, BASE_HEX));
+        QString::number(bridgeId & 0x0000FFFFFFFFFFFFULL, BASE_HEX));
     ui_bridge_id_priority->setText(QString::number(bridgeId >> 48));
 
     // port priority is a first byte of stp_port_id field
@@ -163,7 +163,7 @@ void StpConfigForm::loadWidget(AbstractProtocol *proto)
         StpProtocol::stp_port_id,
         AbstractProtocol::FieldValue
         ).toUInt(&isOk);
-    
+
     ui_port_id_priority->setText(QString::number(portId >> 8));
     ui_port_id_number->setText(QString::number(portId & ONE_BYTE_MAX));
 
@@ -210,31 +210,31 @@ void StpConfigForm::storeWidget(AbstractProtocol *proto)
     if (ui_flags_tca_check->isChecked()) flags = flags | ONE_BIT(BIT_7);
     proto->setFieldData(StpProtocol::stp_flags, flags);
 
-    // root priority value stored as the first two bytes of stp_root_id 
+    // root priority value stored as the first two bytes of stp_root_id
     // and the last 6 bytes are root MAC address (IEEE802.1D-2008)
     quint64 rootIdPrio = ui_root_id_priority->text()
         .toULongLong(&isOk) & TWO_BYTE_MAX;
     quint64 rootId = hexStrToUInt64(
         ui_root_id->text()) | rootIdPrio << 48;
     proto->setFieldData(StpProtocol::stp_root_id, rootId);
-    
+
     proto->setFieldData(
         StpProtocol::stp_root_path_cost,
         ui_root_path_cost->text());
 
-    // bridge priority value stored as the first two bytes of stp_bridge_id 
+    // bridge priority value stored as the first two bytes of stp_bridge_id
     // and the last 6 bytes are bridge MAC address (IEEE802.1D-2008)
-    quint64 bridgeIdPrio = 
-        ui_bridge_id_priority->text().toULongLong(&isOk) & TWO_BYTE_MAX;    
-    quint64 bridgeId = 
+    quint64 bridgeIdPrio =
+        ui_bridge_id_priority->text().toULongLong(&isOk) & TWO_BYTE_MAX;
+    quint64 bridgeId =
         hexStrToUInt64(ui_bridge_id->text()) | bridgeIdPrio << 48;
     proto->setFieldData(StpProtocol::stp_bridge_id, bridgeId);
 
     // port priority is a first byte of stp_port_id field
     // and port ID is a second byte (IEEE802.1D-2008)
-    ushort portIdPrio = 
+    ushort portIdPrio =
         ui_port_id_priority->text().toUInt(&isOk, BASE_DEC) & ONE_BYTE_MAX;
-    ushort portId = 
+    ushort portId =
         ui_port_id_number->text().toUInt(&isOk, BASE_DEC) & ONE_BYTE_MAX;
     proto->setFieldData(StpProtocol::stp_port_id, portIdPrio << 8 | portId);
     // timers

@@ -74,11 +74,11 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("sdp", PdmlTextProtocol::createInstance);
     factory_.insert("sip", PdmlTextProtocol::createInstance);
     factory_.insert("smtp", PdmlTextProtocol::createInstance);
+    factory_.insert("stp", PdmlStpProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("udp", PdmlUdpProtocol::createInstance);
     factory_.insert("udplite", PdmlUdpProtocol::createInstance);
     factory_.insert("vlan", PdmlVlanProtocol::createInstance);
-    factory_.insert("stp", PdmlStpProtocol::createInstance);
 }
 
 PdmlReader::~PdmlReader()

@@ -95,9 +95,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             OstProto::Protocol::kDot2SnapFieldNumber, 
             (void*) Dot2SnapConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
-            OstProto::Protocol::kStpFieldNumber, 
+            OstProto::Protocol::kStpFieldNumber,
             (void*) StpConfigForm::createInstance);
-    
+
     // Layer 3 Protocols
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kArpFieldNumber, 

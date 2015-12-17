@@ -62,7 +62,7 @@ void PdmlStpProtocol::unknownFieldHandler(
 {
     bool isOk;
     OstProto::Stp *stp = pbProto->MutableExtension(OstProto::stp);
-    
+
     if ((name == "") && (pos == ROOT_IDENTIFIER_POS))
     {
         stp->set_root_id(attributes.value("value").toString().
