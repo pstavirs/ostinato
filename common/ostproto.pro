@@ -18,6 +18,7 @@ PROTOS = \
     vlan.proto \
     svlan.proto \
     vlanstack.proto \
+    stp.proto \
     arp.proto \
     ip4.proto \
     ip6.proto \
@@ -90,6 +91,7 @@ SOURCES += \
     dot3.cpp \
     llc.cpp \
     snap.cpp \
+    stp.cpp \
     arp.cpp \
     ip4.cpp \
     ip6.cpp \

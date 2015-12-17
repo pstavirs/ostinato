@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dot2llcconfig.h"
 #include "snapconfig.h"
 #include "dot2snapconfig.h"
+#include "stpconfig.h"
 // L3 Protocol Widgets
 #include "arpconfig.h"
 #include "ip4config.h"
@@ -93,7 +94,10 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kDot2SnapFieldNumber, 
             (void*) Dot2SnapConfigForm::createInstance);
-
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kStpFieldNumber, 
+            (void*) StpConfigForm::createInstance);
+    
     // Layer 3 Protocols
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kArpFieldNumber, 
