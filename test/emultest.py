@@ -36,8 +36,6 @@ env.user = 'tc'
 env.password = 'tc'
 env.host_string = 'localhost:50022'
 
-dut_dst_mac = 0x0800278df2b4 #FIXME: hardcoding
-
 # setup logging
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -319,8 +317,12 @@ def dut_vlans(request, dut_ports):
 # ----------------------------------------------------------------- #
 # ================================================================= #
 
-def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id, 
-        emul_ports, dgid_list):
+@pytest.mark.parametrize('dev_cfg', [
+    {'step': 1},
+    {'step': 5},
+])
+def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
+        emul_ports, dgid_list, dev_cfg):
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 devices (no vlans)
     #          DUT
@@ -333,6 +335,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     # ----------------------------------------------------------------- #
 
     num_devs = 5
+    ip_step = dev_cfg['step']
 
     # configure the DUT
     sudo('ip address add 10.10.1.1/24 dev ' + dut_ports.rx)
@@ -349,6 +352,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     ip = dg.Extensions[emul.ip4]
     ip.address = 0x0a0a0165
     ip.prefix_length = 24
+    if (ip_step != 1):
+        ip.step = ip_step
     ip.default_gateway = 0x0a0a0101
 
     drone.modifyDeviceGroup(devgrp_cfg)
@@ -364,6 +369,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     ip = dg.Extensions[emul.ip4]
     ip.address = 0x0a0a0265
     ip.prefix_length = 24
+    if (ip_step != 1):
+        ip.step = ip_step
     ip.default_gateway = 0x0a0a0201
 
     drone.modifyDeviceGroup(devgrp_cfg)
@@ -390,11 +397,33 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
     ip = p.Extensions[ip4]
     ip.src_ip = 0x0a0a0165
-    ip.src_ip_mode = Ip4.e_im_inc_host
-    ip.src_ip_count = num_devs
+    if ip_step == 1:
+        ip.src_ip_mode = Ip4.e_im_inc_host
+        ip.src_ip_count = num_devs
+    else:
+        vf = p.variable_field.add()
+        vf.type = ost_pb.VariableField.kCounter32
+        vf.offset = 12
+        vf.mask  = 0x000000FF
+        vf.value = 0x00000065
+        vf.step  = ip_step
+        vf.mode = ost_pb.VariableField.kIncrement
+        vf.count = num_devs
     ip.dst_ip = 0x0a0a0265
-    ip.dst_ip_mode = Ip4.e_im_inc_host
-    ip.dst_ip_count = num_devs
+    if ip_step == 1:
+        ip.dst_ip_mode = Ip4.e_im_inc_host
+        ip.dst_ip_count = num_devs
+    else:
+        vf = p.variable_field.add()
+        vf.type = ost_pb.VariableField.kCounter32
+        vf.offset = 16
+        vf.mask  = 0x000000FF
+        vf.value = 0x00000065
+        vf.step  = ip_step
+        vf.mode = ost_pb.VariableField.kIncrement
+        vf.count = num_devs
+
+
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
@@ -410,7 +439,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     # clear arp on DUT
     sudo('ip neigh flush all')
     arp_cache = run('ip neigh show')
-    assert re.search('10.10.2.10[1-5].*lladdr', arp_cache) == None
+    assert re.search('10.10.[1-2].1\d\d.*lladdr', arp_cache) == None
 
     # resolve ARP on tx/rx ports
     log.info('resolving Neighbors on tx/rx ports ...')
@@ -430,7 +459,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     for i in range(num_devs):
         cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                     '-R', '(arp.opcode == 1)'
-                      ' && (arp.src.proto_ipv4 == 10.10.1.'+str(101+i)+')'
+                      ' && (arp.src.proto_ipv4 == 10.10.1.'
+                                                     +str(101+i*ip_step)+')'
                       ' && (arp.dst.proto_ipv4 == 10.10.1.1)'])
         print(cap_pkts)
         assert cap_pkts.count('\n') == 1
@@ -445,7 +475,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     for i in range(num_devs):
         cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                     '-R', '(arp.opcode == 1)'
-                      ' && (arp.src.proto_ipv4 == 10.10.2.'+str(101+i)+')'
+                      ' && (arp.src.proto_ipv4 == 10.10.2.'
+                                                     +str(101+i*ip_step)+')'
                       ' && (arp.dst.proto_ipv4 == 10.10.2.1)'])
         print(cap_pkts)
         assert cap_pkts.count('\n') == 0
@@ -497,12 +528,12 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_devs):
         cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                    '-R', '(ip.src == 10.10.1.' + str(101+i) + ') '
-                      ' && (ip.dst == 10.10.2.' + str(101+i) + ')'
+                    '-R', '(ip.src == 10.10.1.' + str(101+i*ip_step) + ') '
+                      ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')'
                       ' && (eth.dst == 00:01:02:03:0b:'
                                 + format(1+i, '02x')+')'])
         print(cap_pkts)
-        assert cap_pkts.count('\n') == s.control.num_packets/ip.src_ip_count
+        assert cap_pkts.count('\n') == s.control.num_packets/num_devs
     os.remove('capture.pcap')
 
     drone.stopTransmit(ports.tx)
@@ -527,7 +558,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
      {'base': 31, 'count': 2},
      {'base':  1, 'count': 3}],
 ])
-def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id, 
+def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         emul_ports, dgid_list, vlan_cfg):
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 device per multiple single-tag VLANs
