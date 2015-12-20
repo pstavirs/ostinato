@@ -261,10 +261,15 @@ def dut_vlans(request, dut_ports):
         for dev in devices.rx+devices.tx:
             for k in range(vcfg['count']):
                 vlan_id = vcfg['base'] + k
+                if 'tpid' in vcfg and vcfg['tpid'] == 0x88a8:
+                    tpid = '802.1ad'
+                else:
+                    tpid = '802.1q'
                 dev_name = dev + '.' + str(vlan_id)
                 sudo('ip link add link ' + dev
                      + ' name ' + dev_name
-                     + ' type vlan id ' + str(vlan_id))
+                     + ' type vlan id ' + str(vlan_id)
+                     + ' proto ' + tpid)
                 sudo('ip link set ' + dev_name + ' up')
                 if dev in devices.rx:
                     new_devs.rx.append(dev_name)
@@ -549,6 +554,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     [{'base': 11, 'count': 2},
      {'base': 21, 'count': 3}],
 
+    [{'base': 11, 'count': 2, 'tpid': 0x88a8},
+     {'base': 21, 'count': 3}],
+
     [{'base': 11, 'count': 2},
      {'base': 21, 'count': 3},
      {'base': 31, 'count': 2}],
@@ -590,12 +598,15 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         vlan_filter.append('')
         ids = dut_vlans.vlans[i].split('.')
         for j in range(len(ids)):
-            filter = '(frame[<ofs>:4]==8100:<id>)' \
+            filter = '(frame[<ofs>:4]==<tpid>:<id>)' \
                         .replace('<ofs>', str(12+j*4)) \
+                        .replace('<tpid>', '{:04x}'.format(
+                            vlan_cfg[j].get('tpid', 0x8100))) \
                         .replace('<id>', '{:04x}'.format(int(ids[j])))
             if len(vlan_filter[i]) > 0:
                 vlan_filter[i] += ' && '
             vlan_filter[i] += filter
+        print i, vlan_filter[i]
 
     # configure the tx device(s)
     devgrp_cfg = ost_pb.DeviceGroupConfigList()
@@ -607,6 +618,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         v = dg.encap.Extensions[emul.vlan].stack.add()
         v.vlan_tag = vcfg['base']
         v.count = vcfg['count']
+        if 'tpid' in vcfg:
+            v.tpid = vcfg['tpid']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030a01
     ip = dg.Extensions[emul.ip4]
@@ -626,6 +639,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         v = dg.encap.Extensions[emul.vlan].stack.add()
         v.vlan_tag = vcfg['base']
         v.count = vcfg['count']
+        if 'tpid' in vcfg:
+            v.tpid = vcfg['tpid']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030b01
     ip = dg.Extensions[emul.ip4]
@@ -668,10 +683,13 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
 
         ids = dut_vlans.vlans[i].split('.')
-        for id in ids:
+        for id, j in zip(ids, range(len(ids))):
             p = s.protocol.add()
             p.protocol_id.id = ost_pb.Protocol.kVlanFieldNumber
             p.Extensions[vlan].vlan_tag = int(id)
+            if 'tpid' in vlan_cfg[j]:
+                p.Extensions[vlan].tpid = vlan_cfg[j]['tpid']
+                p.Extensions[vlan].is_override_tpid = True
 
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
@@ -721,7 +739,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     print(cap_pkts)
     log.info('dumping Tx capture buffer (all pkts - vlans only)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-Tfields', '-eframe.number', '-evlan.id'])
+                '-Tfields', '-eframe.number', '-eieee8021ad.id', '-evlan.id'])
     print(cap_pkts)
     log.info('dumping Tx capture buffer (filtered)')
     for i in range(num_vlans):
@@ -743,7 +761,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     print(cap_pkts)
     log.info('dumping Rx capture buffer (all pkts - vlans only)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-Tfields', '-eframe.number', '-evlan.id'])
+                '-Tfields', '-eframe.number', '-eieee8021ad.id', '-evlan.id'])
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_vlans):
@@ -804,7 +822,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
     print(cap_pkts)
     log.info('dumping Tx capture buffer (all pkts - vlans only)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-Tfields', '-eframe.number', '-evlan.id'])
+                '-Tfields', '-eframe.number', '-eieee8021ad.id', '-evlan.id'])
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_vlans):

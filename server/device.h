@@ -36,9 +36,12 @@ class DeviceKey: public QByteArray
 class Device
 {
 public:
+    static const quint16 kVlanTpid = 0x8100;
+
+public:
     Device(DeviceManager *deviceManager);
 
-    void setVlan(int index, quint16 vlan);
+    void setVlan(int index, quint16 vlan, quint16 tpid = kVlanTpid);
     quint64 mac();
     void setMac(quint64 mac);
     void setIp4(quint32 address, int prefixLength, quint32 gateway);
@@ -71,7 +74,7 @@ private: // data
     DeviceManager *deviceManager_;
 
     int numVlanTags_;
-    quint16 vlan_[kMaxVlan]; // FIXME: vlan tpid
+    quint32 vlan_[kMaxVlan];
     quint64 mac_;
     quint32 ip4_;
     int ip4PrefixLength_;

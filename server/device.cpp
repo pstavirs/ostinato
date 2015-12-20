@@ -51,7 +51,7 @@ Device::Device(DeviceManager *deviceManager)
     clearKey();
 }
 
-void Device::setVlan(int index, quint16 vlan)
+void Device::setVlan(int index, quint16 vlan, quint16 tpid)
 {
     int ofs;
 
@@ -61,7 +61,7 @@ void Device::setVlan(int index, quint16 vlan)
         return;
     }
 
-    vlan_[index] = vlan;
+    vlan_[index] = (tpid << 16) | vlan;
 
     ofs = index * sizeof(quint16);
     key_[ofs]   = vlan >> 8;
@@ -105,7 +105,30 @@ void Device::getConfig(OstEmul::Device *deviceConfig)
 QString Device::config()
 {
     return QString("<vlans=%1/%2/%3/%4 mac=%5 ip4=%6/%7>")
-        .arg(vlan_[0]).arg(vlan_[1]).arg(vlan_[2]).arg(vlan_[3])
+        .arg((vlan_[0] >> 16) != kVlanTpid ?
+                QString("0x%1-%2")
+                    .arg(vlan_[0] >> 16, 4, kBaseHex, QChar('0'))
+                    .arg(vlan_[0] & 0xFFFF) :
+                QString("%1")
+                    .arg(vlan_[0] & 0xFFFF))
+        .arg((vlan_[1] >> 16) != kVlanTpid ?
+                QString("0x%1-%2")
+                    .arg(vlan_[1] >> 16, 4, kBaseHex, QChar('0'))
+                    .arg(vlan_[1] & 0xFFFF) :
+                QString("%1")
+                    .arg(vlan_[1] & 0xFFFF))
+        .arg((vlan_[2] >> 16) != kVlanTpid ?
+                QString("0x%1-%2")
+                    .arg(vlan_[2] >> 16, 4, kBaseHex, QChar('0'))
+                    .arg(vlan_[2] & 0xFFFF) :
+                QString("%1")
+                    .arg(vlan_[2] & 0xFFFF))
+        .arg((vlan_[3] >> 16) != kVlanTpid ?
+                QString("0x%1-%2")
+                    .arg(vlan_[3] >> 16, 4, kBaseHex, QChar('0'))
+                    .arg(vlan_[3] & 0xFFFF) :
+                QString("%1")
+                    .arg(vlan_[3] & 0xFFFF))
         .arg(mac_, 12, kBaseHex, QChar('0'))
         .arg(QHostAddress(ip4_).toString())
         .arg(ip4PrefixLength_);
@@ -147,7 +170,7 @@ void Device::encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type)
     *(quint16*)(p + 10) =  qToBigEndian(quint16(srcMac & 0xffff));
     ofs = 12;
     for (int i = 0; i < numVlanTags_; i++) {
-        *(quint32*)(p + ofs) =  qToBigEndian(quint32((0x8100 << 16)|vlan_[i]));
+        *(quint32*)(p + ofs) =  qToBigEndian(vlan_[i]);
         ofs += 4;
     }
     *(quint16*)(p + ofs) =  qToBigEndian(type);

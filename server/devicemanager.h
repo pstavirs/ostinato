@@ -71,6 +71,7 @@ private:
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_;
     QMultiHash<DeviceKey, Device*> bcastList_;
+    QHash<quint16, uint> tpidList_; // Key: TPID, Value: RefCount
 };
 
 #endif

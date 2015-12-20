@@ -192,7 +192,7 @@ _eth_type:
     ethType = qFromBigEndian<quint16>(pktData + offset);
     qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
 
-    if (ethType == 0x8100) {
+    if (tpidList_.contains(ethType)) {
         offset += 2;
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
@@ -296,7 +296,7 @@ _eth_type:
     ethType = qFromBigEndian<quint16>(pktData + offset);
     qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
 
-    if (ethType == 0x8100) {
+    if (tpidList_.contains(ethType)) {
         offset += 2;
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
@@ -372,8 +372,30 @@ void DeviceManager::enumerateDevices(
      */
     vlanCount.append(n);
     for (int i = numTags - 1; i >= 0 ; i--) {
-        n *= pbVlan.stack(i).count();
+        OstEmul::VlanEmulation::Vlan vlan = pbVlan.stack(i);
+        n *= vlan.count();
         vlanCount.prepend(n);
+
+        // Update TPID list
+        switch (oper) {
+            case kAdd:
+                tpidList_[vlan.tpid()]++;
+                break;
+            case kDelete:
+                tpidList_[vlan.tpid()]--;
+                if (tpidList_[vlan.tpid()] == 0)
+                    tpidList_.remove(vlan.tpid());
+                break;
+            default:
+                Q_ASSERT(0); // Unreachable
+        }
+    }
+
+    QHash<quint16, uint>::const_iterator iter = tpidList_.constBegin();
+    qDebug("Port %s TPID List:", port_->name());
+    while (iter != tpidList_.constEnd()) {
+        qDebug("tpid: %x (%d)", iter.key(), iter.value());
+        iter++;
     }
 
     for (int i = 0; i < vlanCount.at(0); i++) {
@@ -381,7 +403,7 @@ void DeviceManager::enumerateDevices(
             OstEmul::VlanEmulation::Vlan vlan = pbVlan.stack(j);
             quint16 vlanAdd = (i/vlanCount.at(j+1) % vlan.count())*vlan.step();
 
-            dk.setVlan(j, vlan.vlan_tag() + vlanAdd);
+            dk.setVlan(j, vlan.vlan_tag() + vlanAdd, vlan.tpid());
         }
 
         for (uint k = 0; k < deviceGroup->device_count(); k++) {
