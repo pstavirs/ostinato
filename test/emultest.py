@@ -323,8 +323,8 @@ def dut_vlans(request, dut_ports):
 # ================================================================= #
 
 @pytest.mark.parametrize('dev_cfg', [
-    {'step': 1},
-    {'step': 5},
+    {'mac_step': 1, 'ip_step': 1},
+    {'mac_step': 2, 'ip_step': 5},
 ])
 def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
         emul_ports, dgid_list, dev_cfg):
@@ -340,7 +340,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     # ----------------------------------------------------------------- #
 
     num_devs = 5
-    ip_step = dev_cfg['step']
+    mac_step = dev_cfg['mac_step']
+    ip_step = dev_cfg['ip_step']
 
     # configure the DUT
     sudo('ip address add 10.10.1.1/24 dev ' + dut_ports.rx)
@@ -354,6 +355,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     dg.core.name = "Host1"
     dg.device_count = num_devs
     dg.Extensions[emul.mac].address = 0x000102030a01
+    if (mac_step != 1):
+        dg.Extensions[emul.mac].step = mac_step
     ip = dg.Extensions[emul.ip4]
     ip.address = 0x0a0a0165
     ip.prefix_length = 24
@@ -371,6 +374,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     dg.core.name = "Host1"
     dg.device_count = num_devs
     dg.Extensions[emul.mac].address = 0x000102030b01
+    if (mac_step != 1):
+        dg.Extensions[emul.mac].step = mac_step
     ip = dg.Extensions[emul.ip4]
     ip.address = 0x0a0a0265
     ip.prefix_length = 24
@@ -427,8 +432,6 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
         vf.step  = ip_step
         vf.mode = ost_pb.VariableField.kIncrement
         vf.count = num_devs
-
-
 
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
@@ -536,7 +539,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
                     '-R', '(ip.src == 10.10.1.' + str(101+i*ip_step) + ') '
                       ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')'
                       ' && (eth.dst == 00:01:02:03:0b:'
-                                + format(1+i, '02x')+')'])
+                                + format(1+i*mac_step, '02x')+')'])
         print(cap_pkts)
         assert cap_pkts.count('\n') == s.control.num_packets/num_devs
     os.remove('capture.pcap')
