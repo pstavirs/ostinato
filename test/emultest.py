@@ -260,7 +260,7 @@ def dut_vlans(request, dut_ports):
         new_devs.rx = []
         for dev in devices.rx+devices.tx:
             for k in range(vcfg['count']):
-                vlan_id = vcfg['base'] + k
+                vlan_id = vcfg['base'] + k*vcfg.get('step', 1)
                 if 'tpid' in vcfg and vcfg['tpid'] == 0x88a8:
                     tpid = '802.1ad'
                 else:
@@ -561,8 +561,8 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
      {'base': 21, 'count': 3}],
 
     [{'base': 11, 'count': 2},
-     {'base': 21, 'count': 3},
-     {'base': 31, 'count': 2}],
+     {'base': 21, 'count': 3, 'step': 2},
+     {'base': 31, 'count': 2, 'step': 3}],
 
     [{'base': 11, 'count': 2},
      {'base': 21, 'count': 3},
@@ -623,6 +623,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         v.count = vcfg['count']
         if 'tpid' in vcfg:
             v.tpid = vcfg['tpid']
+        if 'step' in vcfg:
+            v.step = vcfg['step']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030a01
     ip = dg.Extensions[emul.ip4]
@@ -644,6 +646,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
         v.count = vcfg['count']
         if 'tpid' in vcfg:
             v.tpid = vcfg['tpid']
+        if 'step' in vcfg:
+            v.step = vcfg['step']
     dg.device_count = num_devs_per_vlan
     dg.Extensions[emul.mac].address = 0x000102030b01
     ip = dg.Extensions[emul.ip4]
