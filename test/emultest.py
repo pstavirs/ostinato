@@ -220,6 +220,16 @@ def stream_id(request, drone, ports):
     return stream_id
 
 @pytest.fixture
+def dut_ip(request, dut_ports):
+    sudo('ip address add 10.10.1.1/24 dev ' + dut_ports.rx)
+    sudo('ip address add 10.10.2.1/24 dev ' + dut_ports.tx)
+
+    def fin():
+        sudo('ip address delete 10.10.1.1/24 dev ' + dut_ports.rx)
+        sudo('ip address delete 10.10.2.1/24 dev ' + dut_ports.tx)
+    request.addfinalizer(fin)
+
+@pytest.fixture
 def dut_vlans(request, dut_ports):
     class Devices(object):
         pass
@@ -326,8 +336,8 @@ def dut_vlans(request, dut_ports):
     {'mac_step': 1, 'ip_step': 1},
     {'mac_step': 2, 'ip_step': 5},
 ])
-def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
-        emul_ports, dgid_list, dev_cfg):
+def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
+        stream_id, emul_ports, dgid_list, dev_cfg):
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 devices (no vlans)
     #          DUT
@@ -342,10 +352,6 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
     num_devs = 5
     mac_step = dev_cfg['mac_step']
     ip_step = dev_cfg['ip_step']
-
-    # configure the DUT
-    sudo('ip address add 10.10.1.1/24 dev ' + dut_ports.rx)
-    sudo('ip address add 10.10.2.1/24 dev ' + dut_ports.tx)
 
     # configure the tx device(s)
     devgrp_cfg = ost_pb.DeviceGroupConfigList()
@@ -520,6 +526,16 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
             print('%08x: %08x %012x' %
                     (dev_cfg.ip4, arp.ip4, arp.mac))
 
+    # ping the tx devices from the DUT
+    for i in range(num_devs):
+        out = run('ping -c3 10.10.1.'+str(101+i*ip_step), warn_only=True)
+        assert '100% packet loss' not in out
+
+    # ping the tx devices from the DUT
+    for i in range(num_devs):
+        out = run('ping -c3 10.10.2.'+str(101+i*ip_step), warn_only=True)
+        assert '100% packet loss' not in out
+
     # We are all set now - so transmit the stream now
     drone.startCapture(ports.rx)
     drone.startTransmit(ports.tx)
@@ -546,10 +562,6 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, stream_id,
 
     drone.stopTransmit(ports.tx)
     run('ip neigh show')
-
-    # unconfigure DUT
-    sudo('ip address delete 10.10.1.1/24 dev ' + dut_ports.rx)
-    sudo('ip address delete 10.10.2.1/24 dev ' + dut_ports.tx)
 
 @pytest.mark.parametrize('vlan_cfg', [
     [{'base': 11, 'count': 5}],
@@ -814,6 +826,23 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
             print('v%d|%08x: %08x %012x' %
                     (dev_cfg.vlan[0] & 0xffff, dev_cfg.ip4, arp.ip4, arp.mac))
 
+    # ping the tx devices from the DUT
+    for i in range(num_vlans):
+        vrf = 'vrf' + str(i+1)
+        for j in range(num_devs_per_vlan):
+            out = sudo('ip netns exec ' + vrf
+                            + ' ping -c3 10.1.1.'+str(101+j), warn_only=True)
+            assert '100% packet loss' not in out
+
+    # ping the tx devices from the DUT
+    for i in range(num_vlans):
+        vrf = 'vrf' + str(i+1)
+        for j in range(num_devs_per_vlan):
+            out = sudo('ip netns exec ' + vrf
+                            + ' ping -c3 10.1.2.'+str(101+j), warn_only=True)
+            assert '100% packet loss' not in out
+
+    # we are all set - send data stream(s)
     drone.startCapture(ports.rx)
     drone.startTransmit(ports.tx)
     log.info('waiting for transmit to finish ...')
@@ -857,4 +886,6 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
 #           vlanMode: no-repeat; ip4Mode: no-repeat
 # ----------------------------------------------------------------- #
 
+import pytest
+pytest.main(__file__)
 

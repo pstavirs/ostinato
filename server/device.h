@@ -68,6 +68,11 @@ private: // methods
     void receiveArp(PacketBuffer *pktBuf);
     void sendArpRequest(PacketBuffer *pktBuf);
 
+    void receiveIp4(PacketBuffer *pktBuf);
+    void sendIp4Reply(PacketBuffer *pktBuf);
+
+    void receiveIcmp4(PacketBuffer *pktBuf);
+
 private: // data
     static const int kMaxVlan = 4;
 

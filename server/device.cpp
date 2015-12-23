@@ -197,6 +197,9 @@ void Device::receivePacket(PacketBuffer *pktBuf)
         break;
 
     case 0x0800: // IPv4
+        receiveIp4(pktBuf);
+        break;
+
     case 0x86dd: // IPv6
     default:
         break;
@@ -479,6 +482,113 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
     qDebug("Sent ARP Request for srcIp/tgtIp=%s/%s",
             qPrintable(QHostAddress(srcIp).toString()),
             qPrintable(QHostAddress(tgtIp).toString()));
+}
+
+void Device::receiveIp4(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    uchar ipProto;
+    quint32 dstIp;
+
+    if (pktData[0] != 0x45) {
+        qDebug("%s: Unsupported IP version or options (%02x) ", __FUNCTION__,
+                pktData[0]);
+        goto _invalid_exit;
+    }
+
+    if (pktBuf->length() < 20) {
+        qDebug("incomplete IPv4 header: expected 20, actual %d",
+                pktBuf->length());
+        goto _invalid_exit;
+    }
+
+    // XXX: We don't verify IP Header checksum
+
+    dstIp = qFromBigEndian<quint32>(pktData + 16);
+    if (dstIp != ip4_) {
+        qDebug("%s: dstIp %x is not me (%x)", __FUNCTION__, dstIp, ip4_);
+        goto _invalid_exit;
+    }
+
+    ipProto = pktData[9];
+    switch (ipProto) {
+    case 1: // ICMP
+        pktBuf->pull(20);
+        receiveIcmp4(pktBuf);
+        break;
+    default:
+        break;
+    }
+
+_invalid_exit:
+    return;
+}
+
+// This function assumes we are replying back to the same IP
+// that originally sent us the packet and therefore we can reuse the
+// ingress packet for egress; in other words, it assumes the
+// original IP header is intact and will just reuse it after
+// minimal modifications
+void Device::sendIp4Reply(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->push(20);
+    uchar origTtl = pktData[8];
+    uchar ipProto = pktData[9];
+    quint32 srcIp, dstIp;
+    quint32 sum;
+
+    // Swap src/dst IP addresses
+    dstIp = qFromBigEndian<quint32>(pktData + 12); // srcIp in original pkt
+    srcIp = qFromBigEndian<quint32>(pktData + 16); // dstIp in original pkt
+
+    if (!arpTable.contains(dstIp))
+        return;
+
+    *(quint32*)(pktData + 12) = qToBigEndian(srcIp);
+    *(quint32*)(pktData + 16) = qToBigEndian(dstIp);
+
+    // Reset TTL
+    pktData[8] = 64;
+
+    // Incremental checksum update (RFC 1624 [Eqn.3])
+    // HC' = ~(~HC + ~m + m')
+    sum =  quint16(~qFromBigEndian<quint16>(pktData + 10)); // old cksum
+    sum += quint16(~quint16(origTtl << 8 | ipProto)); // old value
+    sum += quint16(pktData[8] << 8 | ipProto); // new value
+    while(sum >> 16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    *(quint16*)(pktData + 10) = qToBigEndian(quint16(~sum));
+
+    encap(pktBuf, arpTable.value(dstIp), 0x0800);
+    transmitPacket(pktBuf);
+}
+
+void Device::receiveIcmp4(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    quint32 sum;
+
+    // XXX: We don't verify icmp checksum
+
+    // We handle only ping request
+    if (pktData[0] != 8) { // Echo Request
+        qDebug("%s: Ignoring non echo request (%d)", __FUNCTION__, pktData[0]);
+        return;
+    }
+
+    pktData[0] = 0; // Echo Reply
+
+    // Incremental checksum update (RFC 1624 [Eqn.3])
+    // HC' = ~(~HC + ~m + m')
+    sum =  quint16(~qFromBigEndian<quint16>(pktData + 2)); // old cksum
+    sum += quint16(~quint16(8 << 8 | pktData[1])); // old value
+    sum += quint16(0 << 8 | pktData[1]); // new value
+    while(sum >> 16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    *(quint16*)(pktData + 2) = qToBigEndian(quint16(~sum));
+
+    sendIp4Reply(pktBuf);
+    qDebug("Sent ICMP Echo Reply");
 }
 
 bool operator<(const DeviceKey &a1, const DeviceKey &a2)
