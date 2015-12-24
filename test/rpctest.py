@@ -116,6 +116,7 @@ try:
     passed = False
     suite.test_begin('connectFailsForIncompatibleVersion')
     try:
+        orig_version = core.__version__
         core.__version__ = '0.1.1'
         drone.connect()
     except RpcError as e:
@@ -125,7 +126,7 @@ try:
         else:
             raise
     finally:
-        core.__version__ = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -134,6 +135,7 @@ try:
     passed = False
     suite.test_begin('checkVersionFailsForInvalidClientVersion')
     try:
+        orig_version = core.__version__
         core.__version__ = '0-1-1'
         drone.connect()
     except RpcError as e:
@@ -142,7 +144,7 @@ try:
         else:
             raise
     finally:
-        core.__version__ = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -154,6 +156,7 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsIncompatForDifferentMajorVersion')
     try:
+        orig_version = core.__version__
         core.__version__ = (str(int(drone_version[0])+1)
                                 + '.' + drone_version[1])
         drone.connect()
@@ -164,7 +167,7 @@ try:
         else:
             raise
     finally:
-        core.__version__ = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -176,6 +179,7 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsIncompatForDifferentMinorVersion')
     try:
+        orig_version = core.__version__
         core.__version__ = (drone_version[0]
                                 + '.' + str(int(drone_version[1])+1))
         drone.connect()
@@ -186,7 +190,7 @@ try:
         else:
             raise
     finally:
-        core.__version__ = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -197,6 +201,7 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsCompatForDifferentRevisionVersion')
     try:
+        orig_version = core.__version__
         core.__version__ = (drone_version[0]
                                 + '.' + drone_version[1]
                                 + '.' + '999')
@@ -205,7 +210,8 @@ try:
     except RpcError as e:
         raise
     finally:
-        core.__versrion__ = None
+        drone.disconnect()
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -295,7 +301,6 @@ try:
     drone.clearStats(rx_port)
 
     # ----------------------------------------------------------------- #
-    # TODO:
     # TESTCASE: Verify a RPC with missing required fields in request fails
     #           and subsequently passes when the fields are initialized
     # ----------------------------------------------------------------- #
@@ -303,10 +308,9 @@ try:
     suite.test_begin('rpcWithMissingRequiredFieldsFails')
     pid = ost_pb.PortId()
     try:
-        drone.getStreamIdList(pid)
-    except:
-        e = sys.exc_info()[0]
-        if ('EncodeError' in str(e)):
+        sid_list = drone.getStreamIdList(pid)
+    except RpcError as e:
+        if ('missing required fields in request' in str(e)):
             passed = True
             log.info("Retrying RPC after adding the missing fields")
             pid.id = tx_port_number
