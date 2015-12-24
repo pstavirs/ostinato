@@ -834,7 +834,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
                             + ' ping -c3 10.1.1.'+str(101+j), warn_only=True)
             assert '100% packet loss' not in out
 
-    # ping the tx devices from the DUT
+    # ping the rx devices from the DUT
     for i in range(num_vlans):
         vrf = 'vrf' + str(i+1)
         for j in range(num_devs_per_vlan):
@@ -873,18 +873,6 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports, stream_id,
             print(cap_pkts)
             assert cap_pkts.count('\n') == 1
     os.remove('capture.pcap')
-
-# TODO:
-# ----------------------------------------------------------------- #
-# TESTCASE: Emulate one IPv4 device per multiple double-tag VLANs
-#           vlanMode: repeat (default)
-# TESTCASE: Emulate multiple IPv4 devices per multiple double-tag VLANs
-#           vlanMode: no-repeat; ip4Mode: repeat (default)
-# TESTCASE: Emulate multiple IPv4 devices per multiple quad-tag VLANs
-#           vlanMode: repeat (default); ip4Mode: repeat (default)
-# TESTCASE: Emulate multiple IPv4 devices per multiple quad-tag VLANs
-#           vlanMode: no-repeat; ip4Mode: no-repeat
-# ----------------------------------------------------------------- #
 
 import pytest
 pytest.main(__file__)
