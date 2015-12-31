@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/emulproto.pb.h"
 #include "../common/protocol.pb.h"
+#include "../common/uint128.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -45,6 +46,7 @@ public:
     quint64 mac();
     void setMac(quint64 mac);
     void setIp4(quint32 address, int prefixLength, quint32 gateway);
+    void setIp6(UInt128 address, int prefixLength, UInt128 gateway);
     void getConfig(OstEmul::Device *deviceConfig);
     QString config();
 
@@ -73,6 +75,9 @@ private: // methods
 
     void receiveIcmp4(PacketBuffer *pktBuf);
 
+    void sendNeighborSolicit(PacketBuffer *pktBuf);
+    void sendIp6(PacketBuffer *pktBuf);
+
 private: // data
     static const int kMaxVlan = 4;
 
@@ -81,9 +86,14 @@ private: // data
     int numVlanTags_;
     quint32 vlan_[kMaxVlan];
     quint64 mac_;
+
     quint32 ip4_;
     int ip4PrefixLength_;
     quint32 ip4Gateway_;
+
+    UInt128 ip6_;
+    int ip6PrefixLength_;
+    UInt128 ip6Gateway_;
 
     DeviceKey key_;
 

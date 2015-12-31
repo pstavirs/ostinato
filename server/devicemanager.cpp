@@ -31,6 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+inline UInt128 UINT128(OstEmul::Ip6Address x)
+{
+    return UInt128(x.hi(), x.lo());
+}
+
 const quint64 kBcastMac = 0xffffffffffffULL;
 
 // XXX: Port owning DeviceManager already uses locks, so we don't use any
@@ -125,7 +130,18 @@ bool DeviceManager::modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup)
     }
 
     enumerateDevices(myDeviceGroup, kDelete);
+
     myDeviceGroup->CopyFrom(*deviceGroup);
+    // If mac step is 0, silently override to 1 - otherwise we won't have
+    // unique DeviceKeys
+    if (myDeviceGroup->GetExtension(OstEmul::mac).step() == 0)
+        myDeviceGroup->MutableExtension(OstEmul::mac)->set_step(1);
+    // Default value for ip6 step should be 1 (not 0)
+    if (myDeviceGroup->HasExtension(OstEmul::ip6)
+           && !myDeviceGroup->GetExtension(OstEmul::ip6).has_step())
+        myDeviceGroup->MutableExtension(OstEmul::ip6)
+            ->mutable_step()->set_lo(1);
+
     enumerateDevices(myDeviceGroup, kAdd);
 
     return true;
@@ -329,6 +345,7 @@ void DeviceManager::enumerateDevices(
 
     OstEmul::MacEmulation mac = deviceGroup->GetExtension(OstEmul::mac);
     OstEmul::Ip4Emulation ip4 = deviceGroup->GetExtension(OstEmul::ip4);
+    OstEmul::Ip6Emulation ip6 = deviceGroup->GetExtension(OstEmul::ip6);
 
     /*
      * vlanCount[] stores the number of unique vlans at each tag level
@@ -410,11 +427,15 @@ void DeviceManager::enumerateDevices(
             Device *device;
             quint64 macAdd = k * mac.step();
             quint32 ip4Add = k * ip4.step();
+            UInt128 ip6Add = UINT128(ip6.step()) * k;
 
             dk.setMac(mac.address() + macAdd);
             dk.setIp4(ip4.address() + ip4Add,
                       ip4.prefix_length(),
                       ip4.default_gateway());
+            dk.setIp6(UINT128(ip6.address()) + ip6Add,
+                      ip6.prefix_length(),
+                      UINT128(ip6.default_gateway()));
 
             // TODO: fill in other pbDevice data
 

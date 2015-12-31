@@ -45,8 +45,12 @@ Device::Device(DeviceManager *deviceManager)
         vlan_[i] = 0;
     numVlanTags_ = 0;
     mac_ = 0;
-    ip4_ = 0;
+
+    ip4_ = ip4Gateway_ = 0;
     ip4PrefixLength_ = 0;
+
+    ip6_ = ip6Gateway_ = UInt128(0, 0);
+    ip6PrefixLength_ = 0;
 
     clearKey();
 }
@@ -91,20 +95,33 @@ void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
     ip4Gateway_ = gateway;
 }
 
+void Device::setIp6(UInt128 address, int prefixLength, UInt128 gateway)
+{
+    ip6_ = address;
+    ip6PrefixLength_ = prefixLength;
+    ip6Gateway_ = gateway;
+}
+
 void Device::getConfig(OstEmul::Device *deviceConfig)
 {
     for (int i = 0; i < numVlanTags_; i++)
         deviceConfig->add_vlan(vlan_[i]);
-
     deviceConfig->set_mac(mac_);
+
     deviceConfig->set_ip4(ip4_);
     deviceConfig->set_ip4_prefix_length(ip4PrefixLength_);
     deviceConfig->set_ip4_default_gateway(ip4Gateway_);
+
+#if 0 // FIXME
+    deviceConfig->set_ip6(ip6_);
+    deviceConfig->set_ip6_prefix_length(ip6PrefixLength_);
+    deviceConfig->set_ip6_default_gateway(ip6Gateway_);
+#endif
 }
 
 QString Device::config()
 {
-    return QString("<vlans=%1/%2/%3/%4 mac=%5 ip4=%6/%7>")
+    return QString("<vlans=%1/%2/%3/%4 mac=%5 ip4=%6/%7 ip6=%8/%9>")
         .arg((vlan_[0] >> 16) != kVlanTpid ?
                 QString("0x%1-%2")
                     .arg(vlan_[0] >> 16, 4, kBaseHex, QChar('0'))
@@ -131,7 +148,9 @@ QString Device::config()
                     .arg(vlan_[3] & 0xFFFF))
         .arg(mac_, 12, kBaseHex, QChar('0'))
         .arg(QHostAddress(ip4_).toString())
-        .arg(ip4PrefixLength_);
+        .arg(ip4PrefixLength_)
+        .arg(QHostAddress(ip6_.toArray()).toString())
+        .arg(ip6PrefixLength_);
 }
 
 DeviceKey Device::key()
@@ -234,6 +253,9 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
         break;
 
     case 0x86dd: // IPv6
+        sendNeighborSolicit(pktBuf);
+        break;
+
     default:
         break;
     }
@@ -589,6 +611,13 @@ void Device::receiveIcmp4(PacketBuffer *pktBuf)
 
     sendIp4Reply(pktBuf);
     qDebug("Sent ICMP Echo Reply");
+}
+
+// Send NS for the IPv6 packet in pktBuf
+// pktBuf points to start of IP header
+void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
+{
+    // TODO
 }
 
 bool operator<(const DeviceKey &a1, const DeviceKey &a2)

@@ -88,8 +88,8 @@ class ip6_address(ipaddress.IPv6Interface):
         # we assume gateway is the lowest IP host address in the network
         gateway = self.network.network_address + 1
         self.gateway = emul.Ip6Address()
-        self.ip6.hi = int(gateway) >> 64
-        self.ip6.lo = int(gateway) & 0xffffffffffffffff
+        self.gateway.hi = int(gateway) >> 64
+        self.gateway.lo = int(gateway) & 0xffffffffffffffff
 
 # ================================================================= #
 # ----------------------------------------------------------------- #
