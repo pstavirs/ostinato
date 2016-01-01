@@ -87,10 +87,12 @@ private: // data
     quint32 vlan_[kMaxVlan];
     quint64 mac_;
 
+    bool hasIp4_;
     quint32 ip4_;
     int ip4PrefixLength_;
     quint32 ip4Gateway_;
 
+    bool hasIp6_;
     UInt128 ip6_;
     int ip6PrefixLength_;
     UInt128 ip6Gateway_;

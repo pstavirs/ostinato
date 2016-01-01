@@ -188,7 +188,7 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
     // All frames we are interested in should be at least 32 bytes
     if (pktBuf->length() < 32) {
         qWarning("short frame of %d bytes, skipping ...", pktBuf->length());
-        return;
+        goto _exit;
     }
 
     // Extract dstMac
@@ -241,7 +241,7 @@ _eth_type:
     device->receivePacket(pktBuf);
 
 _exit:
-    return;
+    delete pktBuf;
 }
 
 void DeviceManager::transmitPacket(PacketBuffer *pktBuf)
@@ -343,6 +343,8 @@ void DeviceManager::enumerateDevices(
     int n = 1;
     QList<int> vlanCount;
 
+    bool hasIp4 = deviceGroup->HasExtension(OstEmul::ip4);
+    bool hasIp6 = deviceGroup->HasExtension(OstEmul::ip6);
     OstEmul::MacEmulation mac = deviceGroup->GetExtension(OstEmul::mac);
     OstEmul::Ip4Emulation ip4 = deviceGroup->GetExtension(OstEmul::ip4);
     OstEmul::Ip6Emulation ip6 = deviceGroup->GetExtension(OstEmul::ip6);
@@ -430,12 +432,14 @@ void DeviceManager::enumerateDevices(
             UInt128 ip6Add = UINT128(ip6.step()) * k;
 
             dk.setMac(mac.address() + macAdd);
-            dk.setIp4(ip4.address() + ip4Add,
-                      ip4.prefix_length(),
-                      ip4.default_gateway());
-            dk.setIp6(UINT128(ip6.address()) + ip6Add,
-                      ip6.prefix_length(),
-                      UINT128(ip6.default_gateway()));
+            if (hasIp4)
+                dk.setIp4(ip4.address() + ip4Add,
+                          ip4.prefix_length(),
+                          ip4.default_gateway());
+            if (hasIp6)
+                dk.setIp6(UINT128(ip6.address()) + ip6Add,
+                          ip6.prefix_length(),
+                          UINT128(ip6.default_gateway()));
 
             // TODO: fill in other pbDevice data
 

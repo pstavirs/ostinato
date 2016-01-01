@@ -29,6 +29,8 @@ public:
     UInt128();
     UInt128(quint64 hi, quint64 lo);
 
+    quint64 hi64() const;
+    quint64 lo64() const;
     quint8* toArray() const;
 
     UInt128 operator+(const UInt128 &other);
@@ -49,6 +51,16 @@ inline UInt128::UInt128(quint64 hi, quint64 lo)
 {
     hi_ = hi;
     lo_ = lo;
+}
+
+inline quint64 UInt128::hi64() const
+{
+    return hi_;
+}
+
+inline quint64 UInt128::lo64() const
+{
+    return lo_;
 }
 
 inline quint8* UInt128::toArray() const

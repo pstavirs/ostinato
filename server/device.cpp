@@ -46,11 +46,8 @@ Device::Device(DeviceManager *deviceManager)
     numVlanTags_ = 0;
     mac_ = 0;
 
-    ip4_ = ip4Gateway_ = 0;
-    ip4PrefixLength_ = 0;
-
-    ip6_ = ip6Gateway_ = UInt128(0, 0);
-    ip6PrefixLength_ = 0;
+    hasIp4_ = false;
+    hasIp6_ = false;
 
     clearKey();
 }
@@ -93,6 +90,7 @@ void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
     ip4_ = address;
     ip4PrefixLength_ = prefixLength;
     ip4Gateway_ = gateway;
+    hasIp4_ = true;
 }
 
 void Device::setIp6(UInt128 address, int prefixLength, UInt128 gateway)
@@ -100,6 +98,7 @@ void Device::setIp6(UInt128 address, int prefixLength, UInt128 gateway)
     ip6_ = address;
     ip6PrefixLength_ = prefixLength;
     ip6Gateway_ = gateway;
+    hasIp6_ = true;
 }
 
 void Device::getConfig(OstEmul::Device *deviceConfig)
@@ -108,49 +107,48 @@ void Device::getConfig(OstEmul::Device *deviceConfig)
         deviceConfig->add_vlan(vlan_[i]);
     deviceConfig->set_mac(mac_);
 
-    deviceConfig->set_ip4(ip4_);
-    deviceConfig->set_ip4_prefix_length(ip4PrefixLength_);
-    deviceConfig->set_ip4_default_gateway(ip4Gateway_);
+    if (hasIp4_) {
+        deviceConfig->set_ip4(ip4_);
+        deviceConfig->set_ip4_prefix_length(ip4PrefixLength_);
+        deviceConfig->set_ip4_default_gateway(ip4Gateway_);
+    }
 
-#if 0 // FIXME
-    deviceConfig->set_ip6(ip6_);
-    deviceConfig->set_ip6_prefix_length(ip6PrefixLength_);
-    deviceConfig->set_ip6_default_gateway(ip6Gateway_);
-#endif
+    if (hasIp6_) {
+        deviceConfig->mutable_ip6()->set_hi(ip6_.hi64());
+        deviceConfig->mutable_ip6()->set_lo(ip6_.lo64());
+        deviceConfig->set_ip6_prefix_length(ip6PrefixLength_);
+        deviceConfig->mutable_ip6_default_gateway()->set_hi(ip6Gateway_.hi64());
+        deviceConfig->mutable_ip6_default_gateway()->set_lo(ip6Gateway_.lo64());
+    }
 }
 
 QString Device::config()
 {
-    return QString("<vlans=%1/%2/%3/%4 mac=%5 ip4=%6/%7 ip6=%8/%9>")
-        .arg((vlan_[0] >> 16) != kVlanTpid ?
+    QString config;
+
+    for (int i = 0; i < numVlanTags_; i++) {
+        config.append(i == 0 ? "vlans=" : "|");
+        config.append(
+                (vlan_[i] >> 16) != kVlanTpid ?
                 QString("0x%1-%2")
-                    .arg(vlan_[0] >> 16, 4, kBaseHex, QChar('0'))
-                    .arg(vlan_[0] & 0xFFFF) :
+                    .arg(vlan_[i] >> 16, 4, kBaseHex, QChar('0'))
+                    .arg(vlan_[i] & 0xFFFF) :
                 QString("%1")
-                    .arg(vlan_[0] & 0xFFFF))
-        .arg((vlan_[1] >> 16) != kVlanTpid ?
-                QString("0x%1-%2")
-                    .arg(vlan_[1] >> 16, 4, kBaseHex, QChar('0'))
-                    .arg(vlan_[1] & 0xFFFF) :
-                QString("%1")
-                    .arg(vlan_[1] & 0xFFFF))
-        .arg((vlan_[2] >> 16) != kVlanTpid ?
-                QString("0x%1-%2")
-                    .arg(vlan_[2] >> 16, 4, kBaseHex, QChar('0'))
-                    .arg(vlan_[2] & 0xFFFF) :
-                QString("%1")
-                    .arg(vlan_[2] & 0xFFFF))
-        .arg((vlan_[3] >> 16) != kVlanTpid ?
-                QString("0x%1-%2")
-                    .arg(vlan_[3] >> 16, 4, kBaseHex, QChar('0'))
-                    .arg(vlan_[3] & 0xFFFF) :
-                QString("%1")
-                    .arg(vlan_[3] & 0xFFFF))
-        .arg(mac_, 12, kBaseHex, QChar('0'))
-        .arg(QHostAddress(ip4_).toString())
-        .arg(ip4PrefixLength_)
-        .arg(QHostAddress(ip6_.toArray()).toString())
-        .arg(ip6PrefixLength_);
+                    .arg(vlan_[i] & 0xFFFF));
+    }
+
+    config.append(QString(" mac=%1")
+            .arg(mac_, 12, kBaseHex, QChar('0')));
+    if (hasIp4_)
+        config.append(QString(" ip4=%1/%2")
+                .arg(QHostAddress(ip4_).toString())
+                .arg(ip4PrefixLength_));
+    if (hasIp6_)
+        config.append(QString(" ip6=%1/%2")
+                .arg(QHostAddress(ip6_.toArray()).toString())
+                .arg(ip6PrefixLength_));
+
+    return config;
 }
 
 DeviceKey Device::key()
@@ -212,11 +210,13 @@ void Device::receivePacket(PacketBuffer *pktBuf)
     switch(ethType)
     {
     case 0x0806: // ARP
-        receiveArp(pktBuf);
+        if (hasIp4_)
+            receiveArp(pktBuf);
         break;
 
     case 0x0800: // IPv4
-        receiveIp4(pktBuf);
+        if (hasIp4_)
+            receiveIp4(pktBuf);
         break;
 
     case 0x86dd: // IPv6
@@ -249,11 +249,13 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
     switch(ethType)
     {
     case 0x0800: // IPv4
-        sendArpRequest(pktBuf);
+        if (hasIp4_)
+            sendArpRequest(pktBuf);
         break;
 
     case 0x86dd: // IPv6
-        sendNeighborSolicit(pktBuf);
+        if (hasIp6_)
+            sendNeighborSolicit(pktBuf);
         break;
 
     default:
@@ -278,6 +280,7 @@ void Device::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
     }
 }
 
+// Are we the source of the given packet?
 // We expect pktBuf to point to EthType on entry
 bool Device::isOrigin(const PacketBuffer *pktBuf)
 {
@@ -288,7 +291,7 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
     pktData += 2;
 
     // We know only about IP packets
-    if (ethType == 0x0800) { // IPv4
+    if ((ethType == 0x0800) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
         quint32 srcIp;
 
@@ -306,6 +309,7 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
     return false;
 }
 
+// Return the mac address corresponding to the dstIp of the given packet
 // We expect pktBuf to point to EthType on entry
 quint64 Device::neighborMac(const PacketBuffer *pktBuf)
 {
@@ -316,7 +320,7 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
     pktData += 2;
 
     // We know only about IP packets
-    if (ethType == 0x0800) { // IPv4
+    if ((ethType == 0x0800) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
         quint32 dstIp, tgtIp, mask;
 
