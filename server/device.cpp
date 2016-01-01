@@ -28,6 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const int kBaseHex = 16;
 const quint64 kBcastMac = 0xffffffffffffULL;
+const quint16 kEthTypeIp4 = 0x0800;
+const quint16 kEthTypeIp6 = 0x86dd;
+const int kIp6HdrLen = 40;
+const quint8 kIpProtoIcmp6 = 58;
 
 /*
  * NOTE:
@@ -36,6 +40,17 @@ const quint64 kBcastMac = 0xffffffffffffULL;
  *    setting params that change the key, if the key is used elsewhere
  *    (e.g. in a hash)
  */
+
+inline quint32 sumUInt128(UInt128 value)
+{
+    quint8 *arr = value.toArray();
+    quint32 sum = 0;
+
+    for (int i = 0; i < 16; i += 2)
+        sum += qToBigEndian(*((quint16*)(arr + i)));
+
+    return sum;
+}
 
 Device::Device(DeviceManager *deviceManager)
 {
@@ -81,8 +96,8 @@ void Device::setMac(quint64 mac)
 {
     int ofs = kMaxVlan * sizeof(quint16);
 
-    mac_ = mac;
-    memcpy(key_.data() + ofs, (char*)&mac, sizeof(mac));
+    mac_ = mac & ~(0xffffULL << 48);
+    memcpy(key_.data() + ofs, (char*)&mac_, sizeof(mac_));
 }
 
 void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
@@ -234,7 +249,7 @@ void Device::transmitPacket(PacketBuffer *pktBuf)
 
 void Device::clearNeighbors()
 {
-    arpTable.clear();
+    arpTable_.clear();
 }
 
 // Resolve the Neighbor IP address for this to-be-transmitted pktBuf
@@ -268,8 +283,8 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
 // Append this device's neighbors to the list
 void Device::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
 {
-    QList<quint32> ipList = arpTable.keys();
-    QList<quint64> macList = arpTable.values();
+    QList<quint32> ipList = arpTable_.keys();
+    QList<quint64> macList = arpTable_.values();
 
     Q_ASSERT(ipList.size() == macList.size());
 
@@ -290,12 +305,13 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
     qDebug("%s: ethType 0x%x", __PRETTY_FUNCTION__, ethType);
     pktData += 2;
 
-    // We know only about IP packets
+    // We know only about IP packets - adjust for ethType length (2 bytes)
+    // when checking that we have a complete IP header
     if ((ethType == 0x0800) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
         quint32 srcIp;
 
-        if (pktBuf->length() < ipHdrLen) {
+        if (pktBuf->length() < (ipHdrLen+2)) {
             qDebug("incomplete IPv4 header: expected %d, actual %d",
                     ipHdrLen, pktBuf->length());
             return false;
@@ -304,6 +320,19 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
         srcIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 8);
         qDebug("%s: pktSrcIp/selfIp = 0x%x/0x%x", __FUNCTION__, srcIp, ip4_);
         return (srcIp == ip4_);
+    }
+    else if ((ethType == kEthTypeIp6) && hasIp6_) { // IPv6
+        UInt128 srcIp;
+        if (pktBuf->length() < (kIp6HdrLen+2)) {
+            qDebug("incomplete IPv6 header: expected %d, actual %d",
+                    kIp6HdrLen, pktBuf->length()-2);
+            return false;
+        }
+
+        srcIp = qFromBigEndian<UInt128>(pktData + 8);
+        qDebug("%s: pktSrcIp6/selfIp6 = %llx-%llx/%llx-%llx", __FUNCTION__,
+                srcIp.hi64(), srcIp.lo64(), ip6_.hi64(), ip6_.lo64());
+        return (srcIp == ip6_);
     }
 
     return false;
@@ -335,7 +364,7 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
         qDebug("dst %x self %x mask %x", dstIp, ip4_, mask);
         tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
 
-        return arpTable.value(tgtIp);
+        return arpTable_.value(tgtIp);
     }
 
     return false;
@@ -344,6 +373,11 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
 //
 // Private Methods
 //
+/*
+ * ---------------------------------------------------------
+ * IPv4 related private methods
+ * ---------------------------------------------------------
+ */
 void Device::receiveArp(PacketBuffer *pktBuf)
 {
     PacketBuffer *rspPkt;
@@ -404,7 +438,7 @@ void Device::receiveArp(PacketBuffer *pktBuf)
     switch (opCode)
     {
     case 1:  // ARP Request
-        arpTable.insert(srcIp, srcMac);
+        arpTable_.insert(srcIp, srcMac);
 
         rspPkt = new PacketBuffer;
         rspPkt->reserve(encapSize());
@@ -432,7 +466,7 @@ void Device::receiveArp(PacketBuffer *pktBuf)
                 qPrintable(QHostAddress(tgtIp).toString()));
         break;
     case 2: // ARP Response
-        arpTable.insert(srcIp, srcMac);
+        arpTable_.insert(srcIp, srcMac);
         break;
 
     default:
@@ -462,6 +496,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
         return;
     }
 
+    // FIXME: not required - caller is checking for origin anyway
     // Extract srcIp first to check quickly that this packet originates
     // from this device
     srcIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 8);
@@ -480,7 +515,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     // Do we already have a ARP entry (resolved or unresolved)?
     // FIXME: do we need a timer to resend ARP for unresolved entries?
-    if (arpTable.contains(tgtIp))
+    if (arpTable_.contains(tgtIp))
         return;
 
     reqPkt = new PacketBuffer;
@@ -503,7 +538,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     encap(reqPkt, kBcastMac, 0x0806);
     transmitPacket(reqPkt);
-    arpTable.insert(tgtIp, 0);
+    arpTable_.insert(tgtIp, 0);
 
     qDebug("Sent ARP Request for srcIp/tgtIp=%s/%s",
             qPrintable(QHostAddress(srcIp).toString()),
@@ -567,7 +602,7 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
     dstIp = qFromBigEndian<quint32>(pktData + 12); // srcIp in original pkt
     srcIp = qFromBigEndian<quint32>(pktData + 16); // dstIp in original pkt
 
-    if (!arpTable.contains(dstIp))
+    if (!arpTable_.contains(dstIp))
         return;
 
     *(quint32*)(pktData + 12) = qToBigEndian(srcIp);
@@ -585,7 +620,7 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
         sum = (sum & 0xFFFF) + (sum >> 16);
     *(quint16*)(pktData + 10) = qToBigEndian(quint16(~sum));
 
-    encap(pktBuf, arpTable.value(dstIp), 0x0800);
+    encap(pktBuf, arpTable_.value(dstIp), 0x0800);
     transmitPacket(pktBuf);
 }
 
@@ -617,11 +652,123 @@ void Device::receiveIcmp4(PacketBuffer *pktBuf)
     qDebug("Sent ICMP Echo Reply");
 }
 
+/*
+ * ---------------------------------------------------------
+ * IPV6 related private methods
+ * ---------------------------------------------------------
+ */
+
+// pktBuf should point to start of IP payload
+bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
+{
+    int payloadLen = pktBuf->length();
+    uchar *p = pktBuf->push(kIp6HdrLen);
+    quint64 dstMac = kBcastMac;
+
+    if (!p) {
+        qWarning("%s: failed to push %d bytes [0x%p, 0x%p]", __FUNCTION__,
+                kIp6HdrLen, pktBuf->head(), pktBuf->data());
+        goto _error_exit;
+    }
+
+    // Ver(4), TrfClass(8), FlowLabel(8)
+    *(quint32*)(p   ) = qToBigEndian(quint32(0x60000000));
+    *(quint16*)(p+ 4) = qToBigEndian(quint16(payloadLen));
+    p[6] = protocol;
+    p[7] = 255; // HopLimit
+    memcpy(p+ 8,  ip6_.toArray(), 16); // Source IP
+    memcpy(p+24, dstIp.toArray(), 16); // Destination IP
+
+    // In case of mcast, derive dstMac
+    if ((dstIp.hi64() >> 56) == 0xff)
+        dstMac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xffffffff);
+
+    // FIXME: both these functions should return success/failure
+    encap(pktBuf, dstMac, kEthTypeIp6);
+    transmitPacket(pktBuf);
+
+    return true;
+
+_error_exit:
+    return false;
+}
+
 // Send NS for the IPv6 packet in pktBuf
-// pktBuf points to start of IP header
+// caller is responsible to check that pktBuf originates from this device
+// pktBuf should point to start of IP header
 void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
 {
-    // TODO
+    PacketBuffer *reqPkt;
+    uchar *pktData = pktBuf->data();
+    UInt128 srcIp, dstIp, mask, tgtIp;
+
+    if (pktBuf->length() < kIp6HdrLen) {
+        qDebug("incomplete IPv6 header: expected %d, actual %d",
+                kIp6HdrLen, pktBuf->length());
+        return;
+    }
+
+    srcIp = qFromBigEndian<UInt128>(pktData +  8);
+    dstIp = qFromBigEndian<UInt128>(pktData + 24);
+
+    mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
+    qDebug("%s: dst %s src %s mask %s", __FUNCTION__,
+            qPrintable(QHostAddress(dstIp.toArray()).toString()),
+            qPrintable(QHostAddress(srcIp.toArray()).toString()),
+            qPrintable(QHostAddress(mask.toArray()).toString()));
+    tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip6Gateway_;
+
+    // Do we already have a NDP entry (resolved or unresolved)?
+    // FIXME: do we need a timer to resend NS for unresolved entries?
+    if (ndpTable_.contains(tgtIp))
+        return;
+
+    // Form the solicited node address to be used as dstIp
+    // ff02::1:ffXX:XXXX/104
+    dstIp = UInt128((quint64(0xff02) << 48),
+                    (quint64(0x01ff) << 24) | (tgtIp.lo64() & 0xFFFFFF));
+
+    reqPkt = new PacketBuffer;
+    reqPkt->reserve(encapSize() + kIp6HdrLen);
+    pktData = reqPkt->put(32);
+    if (pktData) {
+        // Calculate checksum first -
+        // start with fixed fields in ICMP Header and IPv6 Pseudo Header ...
+        quint32 sum = 0x8700 + 0x0101 + 32 + kIpProtoIcmp6;
+
+        // then variable fields from ICMP header ...
+        sum += sumUInt128(tgtIp);
+        sum += (mac_ >> 32) + ((mac_ >> 16) & 0xffff) + (mac_ & 0xffff);
+
+        // and variable fields from IPv6 pseudo header
+        sum += sumUInt128(ip6_);
+        sum += sumUInt128(dstIp);
+
+        while(sum >> 16)
+            sum = (sum & 0xFFFF) + (sum >> 16);
+
+        // Type, Code
+        *(quint16*)(pktData   ) = qToBigEndian(quint16(0x8700));
+        // Checksum
+        *(quint16*)(pktData+ 2) = qToBigEndian(quint16(~sum));
+        // Reserved
+        *(quint32*)(pktData+ 4) = qToBigEndian(quint32(0));
+        // Target IP
+        memcpy(pktData+ 8, tgtIp.toArray(), 16);
+        // Source Addr TLV + MacAddr
+        *(quint16*)(pktData+24) = qToBigEndian(quint16(0x0101));
+        *(quint32*)(pktData+26) = qToBigEndian(quint32(mac_ >> 16));
+        *(quint16*)(pktData+30) = qToBigEndian(quint16(mac_ & 0xffff));
+    }
+
+    if (!sendIp6(reqPkt, dstIp , kIpProtoIcmp6))
+        return;
+
+    ndpTable_.insert(tgtIp, 0);
+
+    qDebug("Sent NDP Request for srcIp/tgtIp=%s/%s",
+            qPrintable(QHostAddress(srcIp.toArray()).toString()),
+            qPrintable(QHostAddress(tgtIp.toArray()).toString()));
 }
 
 bool operator<(const DeviceKey &a1, const DeviceKey &a2)

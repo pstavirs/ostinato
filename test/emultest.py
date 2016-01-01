@@ -159,6 +159,7 @@ def ports(request, drone):
 def dut(request):
     # Enable IP forwarding on the DUT (aka make it a router)
     sudo('sysctl -w net.ipv4.ip_forward=1')
+    sudo('sysctl -w net.ipv6.conf.all.forwarding=1')
 
 @pytest.fixture(scope='module')
 def dut_ports(request):
@@ -559,20 +560,22 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     print(cap_pkts)
     log.info('dumping Tx capture buffer (filtered)')
     for i in range(len(ip_versions)):
+        if ip_versions[i] == 'ip4':
+            filter = '(arp.opcode == 1)' \
+                ' && (arp.src.proto_ipv4 == 10.10.1.<x>)' \
+                ' && (arp.dst.proto_ipv4 == 10.10.1.1)' \
+                ' && !expert.severity'
+        elif ip_versions[i] == 'ip6':
+            filter = '(icmpv6.type == 135)' \
+                ' && (ipv6.src == 1234:1::<x>)' \
+                ' && (icmpv6.nd.ns.target_address == 1234:1::1)' \
+                ' && !expert.severity'
         for j in range(num_devs):
             if ip_versions[i] == 'ip4':
-                filter = '(arp.opcode == 1)' \
-                    ' && (arp.src.proto_ipv4 == 10.10.1.' \
-                            + str(101+j*ip_step) + ')' \
-                    ' && (arp.dst.proto_ipv4 == 10.10.1.1)'
+                filter = filter.replace('<x>', str(101+j*ip_step))
             elif ip_versions[i] == 'ip6':
-                filter = '(icmpv6.type == 135)' \
-                    ' && (icmpv6.nd.ns.target_address == 1234:1::1)' \
-                    ' && (icmpv6.nd.ns.target_address == 1234:1::' \
-                        + format(0x65+i*ip_step, 'x')+')'
-                print filter
-            else:
-                assert False # unreachable
+                filter = filter.replace('<x>', format(0x65+j*ip_step, 'x'))
+            #print filter
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                         '-Y', filter])
             print(cap_pkts)
@@ -586,19 +589,21 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(len(ip_versions)):
+        if ip_versions[i] == 'ip4':
+            filter = '(arp.opcode == 1)' \
+                ' && (arp.src.proto_ipv4 == 10.10.2.<x>)' \
+                ' && (arp.dst.proto_ipv4 == 10.10.2.1)' \
+                ' && !expert.severity'
+        elif ip_versions[i] == 'ip6':
+            filter = '(icmpv6.type == 135)' \
+                ' && (ipv6.src == 1234:2::<x>)' \
+                ' && (icmpv6.nd.ns.target_address == 1234:2::1)' \
+                ' && !expert.severity'
         for j in range(num_devs):
             if ip_versions[i] == 'ip4':
-                filter = '(arp.opcode == 1)' \
-                    ' && (arp.src.proto_ipv4 == 10.10.2.' \
-                        + str(101+j*ip_step) + ')' \
-                    ' && (arp.dst.proto_ipv4 == 10.10.2.1)'
+                filter = filter.replace('<x>', str(101+j*ip_step))
             elif ip_versions[i] == 'ip6':
-                filter = '(icmpv6.type == 135)' \
-                    ' && (icmpv6.nd.ns.target_address == 1234:2::1)' \
-                    ' && (icmpv6.nd.ns.target_address == 1234:2::' \
-                        + format(0x65+i*ip_step, 'x')+')'
-            else:
-                assert False # unreachable
+                filter = filter.replace('<x>', format(0x65+j*ip_step, 'x'))
             print filter
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                         '-Y', filter])

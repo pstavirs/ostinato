@@ -75,8 +75,9 @@ private: // methods
 
     void receiveIcmp4(PacketBuffer *pktBuf);
 
+    bool sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol);
+
     void sendNeighborSolicit(PacketBuffer *pktBuf);
-    void sendIp6(PacketBuffer *pktBuf);
 
 private: // data
     static const int kMaxVlan = 4;
@@ -99,7 +100,8 @@ private: // data
 
     DeviceKey key_;
 
-    QHash<quint32, quint64> arpTable;
+    QHash<quint32, quint64> arpTable_;
+    QHash<UInt128, quint64> ndpTable_;
 };
 
 bool operator<(const DeviceKey &a1, const DeviceKey &a2);

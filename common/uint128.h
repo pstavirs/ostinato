@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _UINT128_H
 #define _UINT128_H
 
+#include <QHash>
+
 #include <QtGlobal>
 #include <qendian.h>
 
@@ -33,8 +35,12 @@ public:
     quint64 lo64() const;
     quint8* toArray() const;
 
-    UInt128 operator+(const UInt128 &other);
-    UInt128 operator*(const uint &other);
+    bool operator==(const UInt128 &other) const;
+    UInt128 operator+(const UInt128 &other) const;
+    UInt128 operator*(const uint &other) const;
+    UInt128 operator<<(const int &shift) const;
+    UInt128 operator~() const;
+    UInt128 operator&(const UInt128 &other) const;
 
 private:
     quint64 hi_;
@@ -71,7 +77,12 @@ inline quint8* UInt128::toArray() const
     return (quint8*)array_;
 }
 
-inline UInt128 UInt128::operator+(const UInt128 &other)
+inline bool UInt128::operator==(const UInt128 &other) const
+{
+    return ((hi_ == other.hi_) && (lo_ == other.lo_));
+}
+
+inline UInt128 UInt128::operator+(const UInt128 &other) const
 {
     UInt128 sum;
 
@@ -81,7 +92,7 @@ inline UInt128 UInt128::operator+(const UInt128 &other)
     return sum;
 }
 
-inline UInt128 UInt128::operator*(const uint &other)
+inline UInt128 UInt128::operator*(const uint &other) const
 {
     UInt128 product;
   
@@ -90,6 +101,51 @@ inline UInt128 UInt128::operator*(const uint &other)
     product.lo_ = lo_ * other;
 
     return product;
+}
+
+inline UInt128 UInt128::operator<<(const int &shift) const
+{
+    UInt128 shifted;
+
+    if (shift < 64)
+        return UInt128((hi_<<shift) | (lo_>>(64-shift)), lo_ << shift);
+
+    return UInt128(hi_<<(shift-64), 0);
+}
+
+inline UInt128 UInt128::operator~() const
+{
+    return UInt128(~hi_, ~lo_);
+}
+
+inline UInt128 UInt128::operator&(const UInt128 &other) const
+{
+    return UInt128(hi_ & other.hi_, lo_ & other.lo_);
+}
+
+template <> inline UInt128 qFromBigEndian<UInt128>(const uchar *src)
+{
+    quint64 hi, lo;
+
+    hi = qFromBigEndian<quint64>(src);
+    lo = qFromBigEndian<quint64>(src+8);
+
+    return UInt128(hi, lo);
+}
+
+template <> inline UInt128 qToBigEndian<UInt128>(const UInt128 src)
+{
+    quint64 hi, lo;
+
+    hi = qToBigEndian<quint64>(src.hi64());
+    lo = qToBigEndian<quint64>(src.lo64());
+
+    return UInt128(hi, lo);
+}
+
+inline uint qHash(const UInt128 &key)
+{
+    return qHash(key.hi64()) ^ qHash(key.lo64());
 }
 
 #endif
