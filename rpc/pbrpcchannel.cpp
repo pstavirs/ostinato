@@ -256,6 +256,11 @@ _top:
         }
 
         case PB_MSG_TYPE_RESPONSE:
+        {
+            static quint32 cumLen = 0;
+            static QByteArray buffer;
+            int l = 0;
+
             if (!isPending)
             {
                 qWarning("not waiting for response");
@@ -269,8 +274,35 @@ _top:
                 goto _error_exit;
             }
 
+            msgLen = 0;
+            while (cumLen < len)
+            {
+                if (inStream->Next((const void**)&msg, &msgLen) == false) {
+                    //qDebug("No more data or stream error");
+                    goto _exit;
+                }
+
+                l = qMin(msgLen, int(len - cumLen));
+                buffer.append(QByteArray((char*)msg, l));
+                cumLen += l;
+                //qDebug("%s: buffer rcvd %d/%d/%d", __PRETTY_FUNCTION__, l, cumLen, len);
+            }
+
+            if (l < msgLen) {
+                qDebug("read extra bytes after response; putting back");
+                inStream->BackUp(msgLen - l);
+            }
+
+#if 0 // not needed?
+            if (cumLen < len)
+                goto _exit;
+#endif
+
             if (len)
-                response->ParseFromBoundedZeroCopyStream(inStream, len);
+                response->ParseFromArray((const void*)buffer, len);
+
+            cumLen = 0;
+            buffer.resize(0);
 
             // Avoid printing stats
             if (method != 13)
@@ -290,7 +322,7 @@ _top:
                 controller->SetFailed("Required fields missing");
             }
             break;
-
+        }
         case PB_MSG_TYPE_ERROR:
         {
             static quint32 cumLen = 0;
