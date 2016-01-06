@@ -75,8 +75,12 @@ private: // methods
 
     void receiveIcmp4(PacketBuffer *pktBuf);
 
+    void receiveIp6(PacketBuffer *pktBuf);
     bool sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol);
 
+    void receiveIcmp6(PacketBuffer *pktBuf);
+
+    void receiveNdp(PacketBuffer *pktBuf);
     void sendNeighborSolicit(PacketBuffer *pktBuf);
 
 private: // data

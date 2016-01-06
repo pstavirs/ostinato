@@ -36,6 +36,7 @@ public:
     quint8* toArray() const;
 
     bool operator==(const UInt128 &other) const;
+    bool operator!=(const UInt128 &other) const;
     UInt128 operator+(const UInt128 &other) const;
     UInt128 operator*(const uint &other) const;
     UInt128 operator<<(const int &shift) const;
@@ -80,6 +81,11 @@ inline quint8* UInt128::toArray() const
 inline bool UInt128::operator==(const UInt128 &other) const
 {
     return ((hi_ == other.hi_) && (lo_ == other.lo_));
+}
+
+inline bool UInt128::operator!=(const UInt128 &other) const
+{
+    return ((hi_ != other.hi_) || (lo_ != other.lo_));
 }
 
 inline UInt128 UInt128::operator+(const UInt128 &other) const

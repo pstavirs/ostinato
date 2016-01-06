@@ -966,18 +966,18 @@ void PcapPort::EmulationTransceiver::run()
     libpcap changes their implementation, this will need to change as well.
 */
     const char *capture_filter =
-        "arp or icmp or "
-        "(vlan and (arp or icmp)) or "
-        "(vlan and vlan and (arp or icmp)) or "
-        "(vlan and vlan and vlan and (arp or icmp)) or "
-        "(vlan and vlan and vlan and vlan and (arp or icmp))";
+        "arp or icmp or icmp6"
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and vlan and (arp or icmp or icmp6))";
 #else
     const char *capture_filter =
-        "arp or icmp or "
-        "(vlan and (arp or icmp)) or "
-        "(vlan and (arp or icmp)) or "
-        "(vlan and (arp or icmp)) or "
-        "(vlan and (arp or icmp))";
+        "arp or icmp or icmp6 "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6))";
 #endif
 
     const int optimize = 1;

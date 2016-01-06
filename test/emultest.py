@@ -78,7 +78,10 @@ if not use_defaults:
 # the python ipaddress module
 class ip6_address(ipaddress.IPv6Interface):
     def __init__(self, addr):
-        super(ip6_address, self).__init__(unicode(addr))
+        if type(addr) is str:
+            super(ip6_address, self).__init__(unicode(addr))
+        else:
+            super(ip6_address, self).__init__(addr.hi << 64 | addr.lo)
         self.ip6 = emul.Ip6Address()
         self.ip6.hi = int(self) >> 64
         self.ip6.lo = int(self) & 0xffffffffffffffff
@@ -544,6 +547,10 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     assert re.search('10.10.[1-2].1\d\d.*lladdr', arp_cache) == None
     assert re.search('1234:[1-2]::\[\da-f]+.*lladdr', arp_cache) == None
 
+    # wait for interface to do DAD? Otherwise we don't get replies for NS
+    # FIXME: find alternative to sleep
+    time.sleep(5)
+
     # resolve ARP on tx/rx ports
     log.info('resolving Neighbors on tx/rx ports ...')
     drone.startCapture(emul_ports)
@@ -610,39 +617,56 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             print(cap_pkts)
             assert cap_pkts.count('\n') == 0
 
-    # retrieve and verify ARP Table on tx/rx ports
-    log.info('retrieving ARP entries on tx port')
+    # retrieve and verify ARP/NDP Table on tx/rx ports
+    log.info('retrieving ARP/NDP entries on tx port')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
     device_config = device_list.Extensions[emul.port_device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
     devices = neigh_list.Extensions[emul.devices]
-    log.info('ARP Table on tx port')
+    log.info('ARP/NDP Table on tx port')
     for dev_cfg, device in zip(device_config, devices):
         resolved = False
-        for arp in device.arp:
-            print('%s: %s %012x' %
-                    (str(ipaddress.ip_address(dev_cfg.ip4)),
-                     str(ipaddress.ip_address(arp.ip4)),
-                     arp.mac))
-            if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
-                resolved = True
-        # TODO: ip6/ndp
-        assert resolved
+        if has_ip4:
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(dev_cfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)),
+                         arp.mac))
+                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                    resolved = True
+            assert resolved
+        if has_ip6:
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(dev_cfg.ip6)),
+                         str(ip6_address(ndp.ip6)),
+                         ndp.mac))
+                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                    resolved = True
+            assert resolved
 
-    log.info('retrieving ARP entries on rx port')
+    log.info('retrieving ARP/NDP entries on rx port')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
     device_config = device_list.Extensions[emul.port_device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
     devices = neigh_list.Extensions[emul.devices]
-    log.info('ARP Table on rx port')
+    log.info('ARP/NDP Table on rx port')
     for dev_cfg, device in zip(device_config, devices):
-        # verify *no* ARPs learnt on rx port
-        assert len(device.arp) == 0
-        for arp in device.arp:
-            # TODO: pretty print ip and mac
-            print('%08x: %08x %012x' %
-                    (dev_cfg.ip4, arp.ip4, arp.mac))
-        # TODO: ip6/ndp
+        # verify *no* ARPs/NDPs learnt on rx port
+        if has_ip4:
+            assert len(device.arp) == 0
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(dev_cfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)),
+                         arp.mac))
+        if has_ip6:
+            assert len(device.ndp) == 0
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(dev_cfg.ip6)),
+                         str(ip6_address(ndp.ip6)),
+                         ndp.mac))
 
     # ping the tx devices from the DUT
     for i in range(num_devs):

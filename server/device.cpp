@@ -235,6 +235,10 @@ void Device::receivePacket(PacketBuffer *pktBuf)
         break;
 
     case 0x86dd: // IPv6
+        if (hasIp6_)
+            receiveIp6(pktBuf);
+        break;
+
     default:
         break;
     }
@@ -283,15 +287,27 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
 // Append this device's neighbors to the list
 void Device::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
 {
-    QList<quint32> ipList = arpTable_.keys();
-    QList<quint64> macList = arpTable_.values();
+    QList<quint32> ip4List = arpTable_.keys();
+    QList<UInt128> ip6List = ndpTable_.keys();
+    QList<quint64> macList;
 
-    Q_ASSERT(ipList.size() == macList.size());
+    macList = arpTable_.values();
+    Q_ASSERT(ip4List.size() == macList.size());
 
-    for (int i = 0; i < ipList.size(); i++) {
+    for (int i = 0; i < ip4List.size(); i++) {
         OstEmul::ArpEntry *arp = neighbors->add_arp();
-        arp->set_ip4(ipList.at(i));
+        arp->set_ip4(ip4List.at(i));
         arp->set_mac(macList.at(i));
+    }
+
+    macList = ndpTable_.values();
+    Q_ASSERT(ip6List.size() == macList.size());
+
+    for (int i = 0; i < ip6List.size(); i++) {
+        OstEmul::NdpEntry *ndp = neighbors->add_ndp();
+        ndp->mutable_ip6()->set_hi(ip6List.at(i).hi64());
+        ndp->mutable_ip6()->set_lo(ip6List.at(i).lo64());
+        ndp->set_mac(macList.at(i));
     }
 }
 
@@ -658,6 +674,46 @@ void Device::receiveIcmp4(PacketBuffer *pktBuf)
  * ---------------------------------------------------------
  */
 
+void Device::receiveIp6(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    uchar ipProto;
+    UInt128 dstIp;
+
+    if ((pktData[0] & 0xF0) != 0x60) {
+        qDebug("%s: Unsupported IP version (%02x) ", __FUNCTION__,
+                pktData[0]);
+        goto _invalid_exit;
+    }
+
+    if (pktBuf->length() < kIp6HdrLen) {
+        qDebug("incomplete IPv6 header: expected %d, actual %d",
+                kIp6HdrLen, pktBuf->length());
+        goto _invalid_exit;
+    }
+
+    dstIp = qFromBigEndian<UInt128>(pktData + 24);
+    if (dstIp != ip6_) {
+        qDebug("%s: dstIp %s is not me (%s)", __FUNCTION__,
+                qPrintable(QHostAddress(dstIp.toArray()).toString()),
+                qPrintable(QHostAddress(ip6_.toArray()).toString()));
+        goto _invalid_exit;
+    }
+
+    ipProto = pktData[6];
+    switch (ipProto) {
+    case kIpProtoIcmp6:
+        pktBuf->pull(kIp6HdrLen);
+        receiveIcmp6(pktBuf);
+        break;
+    default:
+        break;
+    }
+
+_invalid_exit:
+    return;
+}
+
 // pktBuf should point to start of IP payload
 bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
 {
@@ -691,6 +747,81 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
 
 _error_exit:
     return false;
+}
+
+void Device::receiveIcmp6(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    quint8 type = pktData[0];
+
+    // XXX: We don't verify icmp checksum
+
+    switch (type) {
+        case 135: // Neigh Solicit
+        case 136: // Neigh Advt
+            receiveNdp(pktBuf);
+            break;
+        default:
+            break;
+    }
+}
+
+void Device::receiveNdp(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->data();
+    quint8 type  = pktData[0];
+
+    if (pktBuf->length() < 32) {
+        qDebug("%s: incomplete NA header: expected 32, actual %d",
+                __FUNCTION__, pktBuf->length());
+        goto _invalid_exit;
+    }
+
+    switch (type)
+    {
+        case 135: { // Neigh Solicit
+#if 0
+            quint32 sum;
+            pktData[0] = 0; // Echo Reply
+
+            // Incremental checksum update (RFC 1624 [Eqn.3])
+            // HC' = ~(~HC + ~m + m')
+            sum =  quint16(~qFromBigEndian<quint16>(pktData + 2)); // old cksum
+            sum += quint16(~quint16(8 << 8 | pktData[1])); // old value
+            sum += quint16(0 << 8 | pktData[1]); // new value
+            while(sum >> 16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+            *(quint16*)(pktData + 2) = qToBigEndian(quint16(~sum));
+
+            sendIp4Reply(pktBuf);
+            qDebug("Sent ICMP Echo Reply");
+#endif
+            break;
+        }
+        case 136: { // Neigh Advt
+            quint8 flags = pktData[4];
+            const quint8 kSFlag = 0x40;
+            const quint8 kOFlag = 0x20;
+            UInt128 tgtIp = qFromBigEndian<UInt128>(pktData + 8);
+            quint64 mac = ndpTable_.value(tgtIp);
+
+            // Update NDP table only for solicited responses
+            if (!(flags & kSFlag))
+                break;
+
+            if ((flags & kOFlag) || (mac == 0)) {
+                // Check if we have a Target Link-Layer TLV
+                if ((pktData[24] != 2) || (pktData[25] != 1))
+                    goto _invalid_exit;
+                mac = qFromBigEndian<quint32>(pktData + 26);
+                mac = (mac << 16) | qFromBigEndian<quint16>(pktData + 30);
+                ndpTable_.insert(tgtIp, mac);
+            }
+            break;
+        }
+    }
+_invalid_exit:
+    return;
 }
 
 // Send NS for the IPv6 packet in pktBuf

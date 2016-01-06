@@ -104,7 +104,7 @@ message ArpEntry {
     optional uint64 mac = 2;
 }
 
-message NdEntry {
+message NdpEntry {
     optional Ip6Address ip6 = 1;
     optional uint64 mac = 2;
 }
@@ -112,7 +112,7 @@ message NdEntry {
 message DeviceNeighborList {
     optional uint32 device_index = 1;
     repeated ArpEntry arp = 2;
-    repeated NdEntry nd = 3;
+    repeated NdpEntry ndp = 3;
 }
 
 extend OstProto.PortNeighborList {
