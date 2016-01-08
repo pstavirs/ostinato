@@ -82,6 +82,7 @@ private: // methods
 
     void receiveNdp(PacketBuffer *pktBuf);
     void sendNeighborSolicit(PacketBuffer *pktBuf);
+    void sendNeighborAdvertisement(PacketBuffer *pktBuf);
 
 private: // data
     static const int kMaxVlan = 4;

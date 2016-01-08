@@ -52,6 +52,11 @@ inline quint32 sumUInt128(UInt128 value)
     return sum;
 }
 
+inline bool isIp6Mcast(UInt128 ip)
+{
+    return (ip.hi64() >> 56) == 0xff;
+}
+
 Device::Device(DeviceManager *deviceManager)
 {
     deviceManager_ = deviceManager;
@@ -588,12 +593,14 @@ void Device::receiveIp4(PacketBuffer *pktBuf)
     }
 
     ipProto = pktData[9];
+    qDebug("%s: ipProto = %d", __FUNCTION__, ipProto);
     switch (ipProto) {
     case 1: // ICMP
         pktBuf->pull(20);
         receiveIcmp4(pktBuf);
         break;
     default:
+        qWarning("%s: Unsupported ipProto %d", __FUNCTION__, ipProto);
         break;
     }
 
@@ -692,8 +699,9 @@ void Device::receiveIp6(PacketBuffer *pktBuf)
         goto _invalid_exit;
     }
 
+    // FIXME: check for specific mcast address(es) instead of any mcast?
     dstIp = qFromBigEndian<UInt128>(pktData + 24);
-    if (dstIp != ip6_) {
+    if (!isIp6Mcast(dstIp) && (dstIp != ip6_)) {
         qDebug("%s: dstIp %s is not me (%s)", __FUNCTION__,
                 qPrintable(QHostAddress(dstIp.toArray()).toString()),
                 qPrintable(QHostAddress(ip6_.toArray()).toString()));
@@ -770,32 +778,20 @@ void Device::receiveNdp(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     quint8 type  = pktData[0];
+    int len = pktBuf->length();
+    int minLen = 24 + (type == 136 ? 8 : 0); // NA should have the Target TLV
 
-    if (pktBuf->length() < 32) {
-        qDebug("%s: incomplete NA header: expected 32, actual %d",
-                __FUNCTION__, pktBuf->length());
+    if (len < minLen) {
+        qDebug("%s: incomplete NS/NA header: expected %d, actual %d",
+                __FUNCTION__, minLen, pktBuf->length());
         goto _invalid_exit;
     }
 
     switch (type)
     {
         case 135: { // Neigh Solicit
-#if 0
-            quint32 sum;
-            pktData[0] = 0; // Echo Reply
-
-            // Incremental checksum update (RFC 1624 [Eqn.3])
-            // HC' = ~(~HC + ~m + m')
-            sum =  quint16(~qFromBigEndian<quint16>(pktData + 2)); // old cksum
-            sum += quint16(~quint16(8 << 8 | pktData[1])); // old value
-            sum += quint16(0 << 8 | pktData[1]); // new value
-            while(sum >> 16)
-                sum = (sum & 0xFFFF) + (sum >> 16);
-            *(quint16*)(pktData + 2) = qToBigEndian(quint16(~sum));
-
-            sendIp4Reply(pktBuf);
-            qDebug("Sent ICMP Echo Reply");
-#endif
+            // TODO: Validation as per RFC 4861
+            sendNeighborAdvertisement(pktBuf);
             break;
         }
         case 136: { // Neigh Advt
@@ -898,6 +894,76 @@ void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
     ndpTable_.insert(tgtIp, 0);
 
     qDebug("Sent NDP Request for srcIp/tgtIp=%s/%s",
+            qPrintable(QHostAddress(srcIp.toArray()).toString()),
+            qPrintable(QHostAddress(tgtIp.toArray()).toString()));
+}
+
+// Send NA for the NS packet in pktBuf
+// pktBuf should point to start of ICMPv6 header
+void Device::sendNeighborAdvertisement(PacketBuffer *pktBuf)
+{
+    PacketBuffer *naPkt;
+    uchar *pktData = pktBuf->data();
+    quint16 flags = 0x6000; // solicit = 1; overide = 1
+    uchar *ip6Hdr;
+    UInt128 tgtIp, srcIp;
+
+    tgtIp = qFromBigEndian<UInt128>(pktData + 8);
+    if (tgtIp != ip6_) {
+        qDebug("%s: NS tgtIp %s is not us %s", __FUNCTION__,
+                qPrintable(QHostAddress(tgtIp.toArray()).toString()),
+                qPrintable(QHostAddress(ip6_.toArray()).toString()));
+        ip6Hdr = pktBuf->push(kIp6HdrLen);
+        return;
+    }
+
+    ip6Hdr = pktBuf->push(kIp6HdrLen);
+    srcIp = qFromBigEndian<UInt128>(ip6Hdr + 8);
+
+    if (srcIp == UInt128(0, 0)) {
+        // reset solicit flag
+        flags &= ~0x4000;
+        // NA should be sent to All nodes address
+        srcIp = UInt128(quint64(0xff02) << 48, quint64(1));
+    }
+
+    naPkt = new PacketBuffer;
+    naPkt->reserve(encapSize() + kIp6HdrLen);
+    pktData = naPkt->put(32);
+    if (pktData) {
+        // Calculate checksum first -
+        // start with fixed fields in ICMP Header and IPv6 Pseudo Header ...
+        quint32 sum = (0x8800 + flags + 0x0201) + (32 + kIpProtoIcmp6);
+
+        // then variable fields from ICMP header ...
+        sum += sumUInt128(tgtIp);
+        sum += (mac_ >> 32) + ((mac_ >> 16) & 0xffff) + (mac_ & 0xffff);
+
+        // and variable fields from IPv6 pseudo header
+        sum += sumUInt128(ip6_);
+        sum += sumUInt128(srcIp);
+
+        while(sum >> 16)
+            sum = (sum & 0xFFFF) + (sum >> 16);
+
+        // Type, Code
+        *(quint16*)(pktData   ) = qToBigEndian(quint16(0x8800));
+        // Checksum
+        *(quint16*)(pktData+ 2) = qToBigEndian(quint16(~sum));
+        // Flags-Reserved
+        *(quint32*)(pktData+ 4) = qToBigEndian(quint32(flags << 16));
+        // Target IP
+        memcpy(pktData+ 8, tgtIp.toArray(), 16);
+        // Target Addr TLV + MacAddr
+        *(quint16*)(pktData+24) = qToBigEndian(quint16(0x0201));
+        *(quint32*)(pktData+26) = qToBigEndian(quint32(mac_ >> 16));
+        *(quint16*)(pktData+30) = qToBigEndian(quint16(mac_ & 0xffff));
+    }
+
+    if (!sendIp6(naPkt, srcIp , kIpProtoIcmp6))
+        return;
+
+    qDebug("Sent Neigh Advt to dstIp for tgtIp=%s/%s",
             qPrintable(QHostAddress(srcIp.toArray()).toString()),
             qPrintable(QHostAddress(tgtIp.toArray()).toString()));
 }

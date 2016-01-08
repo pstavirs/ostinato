@@ -670,15 +670,23 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
 
     # ping the tx devices from the DUT
     for i in range(num_devs):
-        out = run('ping -c3 10.10.1.'+str(101+i*ip_step), warn_only=True)
-        assert '100% packet loss' not in out
-        # TODO: ip6/ndp
+        if has_ip4:
+            out = run('ping -c3 10.10.1.'+str(101+i*ip_step), warn_only=True)
+            assert '100% packet loss' not in out
+        if has_ip6:
+            out = run('ping -6 -c3 1234:1::'+format(101+i*ip_step, 'x'),
+                    warn_only=True)
+            assert '100% packet loss' not in out
 
-    # ping the tx devices from the DUT
+    # ping the rx devices from the DUT
     for i in range(num_devs):
-        out = run('ping -c3 10.10.2.'+str(101+i*ip_step), warn_only=True)
-        assert '100% packet loss' not in out
-        # TODO: ip6/ndp
+        if has_ip4:
+            out = run('ping -c3 10.10.2.'+str(101+i*ip_step), warn_only=True)
+            assert '100% packet loss' not in out
+        if has_ip6:
+            out = run('ping -6 -c3 1234:2::'+format(101+i*ip_step, 'x'),
+                    warn_only=True)
+            assert '100% packet loss' not in out
 
     # We are all set now - so transmit the stream now
     drone.startCapture(ports.rx)

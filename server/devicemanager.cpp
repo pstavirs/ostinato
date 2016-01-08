@@ -31,12 +31,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+const quint64 kBcastMac = 0xffffffffffffULL;
+
 inline UInt128 UINT128(OstEmul::Ip6Address x)
 {
     return UInt128(x.hi(), x.lo());
 }
 
-const quint64 kBcastMac = 0xffffffffffffULL;
+inline bool isMacMcast(quint64 mac)
+{
+    return (mac >> 40) & 0x01 == 0x01;
+}
+
 
 // XXX: Port owning DeviceManager already uses locks, so we don't use any
 // locks within DeviceManager to protect deviceGroupList_ et.al.
@@ -195,13 +201,18 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
     dstMac = qFromBigEndian<quint32>(pktData + offset);
     offset += 4;
     dstMac = (dstMac << 16) | qFromBigEndian<quint16>(pktData + offset);
+
+    qDebug("dstMac %012" PRIx64, dstMac);
+
+    // XXX: Treat multicast as bcast
+    if (isMacMcast(dstMac))
+        dstMac = kBcastMac;
+
     dk.setMac(dstMac);
     offset += 2;
 
     // Skip srcMac - don't care
     offset += 6;
-
-    qDebug("dstMac %012" PRIx64, dstMac);
 
 _eth_type:
     // Extract EthType
