@@ -966,14 +966,14 @@ void PcapPort::EmulationTransceiver::run()
     libpcap changes their implementation, this will need to change as well.
 */
     const char *capture_filter =
-        "arp or icmp or icmp6"
+        "arp or icmp or icmp6 or "
         "(vlan and (arp or icmp or icmp6)) or "
         "(vlan and vlan and (arp or icmp or icmp6)) or "
         "(vlan and vlan and vlan and (arp or icmp or icmp6)) or "
         "(vlan and vlan and vlan and vlan and (arp or icmp or icmp6))";
 #else
     const char *capture_filter =
-        "arp or icmp or icmp6 "
+        "arp or icmp or icmp6 or "
         "(vlan and (arp or icmp or icmp6)) or "
         "(vlan and (arp or icmp or icmp6)) or "
         "(vlan and (arp or icmp or icmp6)) or "
@@ -1053,7 +1053,14 @@ _skip_filter:
             case 1:
             {
                 PacketBuffer *pktBuf = new PacketBuffer(data, hdr->caplen);
-
+#if 0
+                for (int i = 0; i < 64; i++) {
+                    printf("%02x ", data[i]);
+                    if (i % 16 == 0)
+                        printf("\n");
+                }
+                printf("\n");
+#endif
                 // XXX: deviceManager should free pktBuf before returning
                 // from this call; if it needs to process the pkt async
                 // it should make a copy as the pktBuf's data buffer is
