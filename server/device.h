@@ -77,6 +77,7 @@ private: // methods
 
     void receiveIp6(PacketBuffer *pktBuf);
     bool sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol);
+    void sendIp6Reply(PacketBuffer *pktBuf);
 
     void receiveIcmp6(PacketBuffer *pktBuf);
 

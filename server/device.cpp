@@ -757,14 +757,58 @@ _error_exit:
     return false;
 }
 
+// This function assumes we are replying back to the same IP
+// that originally sent us the packet and therefore we can reuse the
+// ingress packet for egress; in other words, it assumes the
+// original IP header is intact and will just reuse it after
+// minimal modifications
+void Device::sendIp6Reply(PacketBuffer *pktBuf)
+{
+    uchar *pktData = pktBuf->push(kIp6HdrLen);
+    UInt128 srcIp, dstIp;
+
+    // Swap src/dst IP addresses
+    dstIp = qFromBigEndian<UInt128>(pktData +  8); // srcIp in original pkt
+    srcIp = qFromBigEndian<UInt128>(pktData + 24); // dstIp in original pkt
+
+    if (!ndpTable_.contains(dstIp))
+        return;
+
+    memcpy(pktData +  8, srcIp.toArray(), 16); // Source IP
+    memcpy(pktData + 24, dstIp.toArray(), 16); // Destination IP
+
+    // Reset TTL
+    pktData[7] = 64;
+
+    encap(pktBuf, ndpTable_.value(dstIp), 0x86dd);
+    transmitPacket(pktBuf);
+}
+
 void Device::receiveIcmp6(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     quint8 type = pktData[0];
+    quint32 sum;
 
     // XXX: We don't verify icmp checksum
 
     switch (type) {
+        case 128: // ICMPv6 Echo Request
+            pktData[0] = 129; // Echo Reply
+
+            // Incremental checksum update (RFC 1624 [Eqn.3])
+            // HC' = ~(~HC + ~m + m')
+            sum =  quint16(~qFromBigEndian<quint16>(pktData + 2)); // old cksum
+            sum += quint16(~quint16(128 << 8 | pktData[1])); // old value
+            sum += quint16(129 << 8 | pktData[1]); // new value
+            while(sum >> 16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+            *(quint16*)(pktData + 2) = qToBigEndian(quint16(~sum));
+
+            sendIp6Reply(pktBuf);
+            qDebug("Sent ICMPv6 Echo Reply");
+            break;
+
         case 135: // Neigh Solicit
         case 136: // Neigh Advt
             receiveNdp(pktBuf);
