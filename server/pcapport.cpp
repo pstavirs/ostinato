@@ -993,10 +993,10 @@ _retry:
 #ifdef Q_OS_WIN32
     // NOCAPTURE_LOCAL needs windows only pcap_open()
     handle_ = pcap_open(qPrintable(device_), 65535,
-                flags, 1000 /* ms */, NULL, errbuf);
+                flags, 100 /* ms */, NULL, errbuf);
 #else
     handle_ = pcap_open_live(qPrintable(device_), 65535,
-                    flags, 1000 /* ms */, errbuf);
+                    flags, 100 /* ms */, errbuf);
 #endif
 
     if (handle_ == NULL)
