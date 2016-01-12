@@ -625,8 +625,11 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
     dstIp = qFromBigEndian<quint32>(pktData + 12); // srcIp in original pkt
     srcIp = qFromBigEndian<quint32>(pktData + 16); // dstIp in original pkt
 
-    if (!arpTable_.contains(dstIp))
+    if (!arpTable_.contains(dstIp)) {
+        qWarning("%s: mac not found for %s; unable to send IPv4 packet",
+                __FUNCTION__, qPrintable(QHostAddress(dstIp).toString()));
         return;
+    }
 
     *(quint32*)(pktData + 12) = qToBigEndian(srcIp);
     *(quint32*)(pktData + 16) = qToBigEndian(dstIp);
@@ -727,11 +730,22 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
 {
     int payloadLen = pktBuf->length();
     uchar *p = pktBuf->push(kIp6HdrLen);
-    quint64 dstMac = kBcastMac;
+    quint64 dstMac = ndpTable_.value(dstIp);
 
     if (!p) {
         qWarning("%s: failed to push %d bytes [0x%p, 0x%p]", __FUNCTION__,
                 kIp6HdrLen, pktBuf->head(), pktBuf->data());
+        goto _error_exit;
+    }
+
+    // In case of mcast, derive dstMac
+    if ((dstIp.hi64() >> 56) == 0xff)
+        dstMac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xffffffff);
+
+    if (!dstMac) {
+        qWarning("%s: mac not found for %s; unable to send IPv6 packet",
+                __FUNCTION__,
+                qPrintable(QHostAddress(dstIp.toArray()).toString()));
         goto _error_exit;
     }
 
@@ -742,10 +756,6 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
     p[7] = 255; // HopLimit
     memcpy(p+ 8,  ip6_.toArray(), 16); // Source IP
     memcpy(p+24, dstIp.toArray(), 16); // Destination IP
-
-    // In case of mcast, derive dstMac
-    if ((dstIp.hi64() >> 56) == 0xff)
-        dstMac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xffffffff);
 
     // FIXME: both these functions should return success/failure
     encap(pktBuf, dstMac, kEthTypeIp6);
@@ -771,8 +781,12 @@ void Device::sendIp6Reply(PacketBuffer *pktBuf)
     dstIp = qFromBigEndian<UInt128>(pktData +  8); // srcIp in original pkt
     srcIp = qFromBigEndian<UInt128>(pktData + 24); // dstIp in original pkt
 
-    if (!ndpTable_.contains(dstIp))
+    if (!ndpTable_.contains(dstIp)) {
+        qWarning("%s: mac not found for %s; unable to send IPv6 packet",
+                __FUNCTION__,
+                qPrintable(QHostAddress(dstIp.toArray()).toString()));
         return;
+    }
 
     memcpy(pktData +  8, srcIp.toArray(), 16); // Source IP
     memcpy(pktData + 24, dstIp.toArray(), 16); // Destination IP
@@ -969,6 +983,14 @@ void Device::sendNeighborAdvertisement(PacketBuffer *pktBuf)
         flags &= ~0x4000;
         // NA should be sent to All nodes address
         srcIp = UInt128(quint64(0xff02) << 48, quint64(1));
+    }
+    else if (pktBuf->length() >= 32) { // have TLVs?
+        if ((pktData[24] == 0x01) && (pktData[25] == 0x01)) { // Source TLV
+            quint64 mac;
+            mac = qFromBigEndian<quint32>(pktData + 26);
+            mac = (mac << 16) | qFromBigEndian<quint16>(pktData + 30);
+            ndpTable_.insert(srcIp, mac);
+        }
     }
 
     naPkt = new PacketBuffer;
