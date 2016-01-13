@@ -447,6 +447,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
         s = stream_cfg.stream.add()
         s.stream_id.id = stream_id.stream_id[i].id
         s.core.is_enabled = True
+        s.core.frame_len = 80 # FIXME: change to 128
         s.control.packets_per_sec = 100
         s.control.num_packets = 10
 
@@ -703,13 +704,24 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_devs):
-        cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                    '-Y', '(ip.src == 10.10.1.' + str(101+i*ip_step) + ') '
-                      ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')'
-                      ' && (eth.dst == 00:01:02:03:0b:'
-                                + format(1+i*mac_step, '02x')+')'])
-        print(cap_pkts)
-        assert cap_pkts.count('\n') == s.control.num_packets/num_devs
+        if has_ip4:
+            cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-Y', '(ip.src == 10.10.1.' + str(101+i*ip_step) + ') '
+                          ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')'
+                          ' && (eth.dst == 00:01:02:03:0b:'
+                                    + format(1+i*mac_step, '02x')+')'])
+            print(cap_pkts)
+            assert cap_pkts.count('\n') == s.control.num_packets/num_devs
+        if has_ip6:
+            cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                        '-Y', '(ipv6.src == 1234:1::'
+                                    + format(101+i*ip_step, 'x') + ') '
+                          ' && (ipv6.dst == 1234:2::'
+                                    + format(101+i*ip_step, 'x') + ')'
+                          ' && (eth.dst == 00:01:02:03:0b:'
+                                    + format(1+i*mac_step, '02x')+')'])
+            print(cap_pkts)
+            assert cap_pkts.count('\n') == s.control.num_packets/num_devs
     os.remove('capture.pcap')
 
     drone.stopTransmit(ports.tx)

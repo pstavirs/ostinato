@@ -382,10 +382,29 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
 
         dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
         mask =  ~0 << (32 - ip4PrefixLength_);
-        qDebug("dst %x self %x mask %x", dstIp, ip4_, mask);
+        qDebug("dst %x mask %x self %x", dstIp, mask, ip4_);
         tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
 
         return arpTable_.value(tgtIp);
+    }
+    else if ((ethType == kEthTypeIp6) && hasIp6_) { // IPv6
+        UInt128 dstIp, tgtIp, mask;
+
+        if (pktBuf->length() < (kIp6HdrLen+2)) {
+            qDebug("incomplete IPv6 header: expected %d, actual %d",
+                    kIp6HdrLen, pktBuf->length()-2);
+            return false;
+        }
+
+        dstIp = qFromBigEndian<UInt128>(pktData + 24);
+        mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
+        qDebug("dst %s mask %s self %s",
+                qPrintable(QHostAddress(dstIp.toArray()).toString()),
+                qPrintable(QHostAddress(mask.toArray()).toString()),
+                qPrintable(QHostAddress(ip6_.toArray()).toString()));
+        tgtIp = ((dstIp & mask) == (ip6_ & mask)) ? dstIp : ip6Gateway_;
+
+        return ndpTable_.value(tgtIp);
     }
 
     return false;
