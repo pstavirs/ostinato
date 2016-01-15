@@ -447,7 +447,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
         s = stream_cfg.stream.add()
         s.stream_id.id = stream_id.stream_id[i].id
         s.core.is_enabled = True
-        s.core.frame_len = 80 # FIXME: change to 128
+        s.core.frame_len = 1024
         s.control.packets_per_sec = 100
         s.control.num_packets = 10
 

@@ -525,16 +525,18 @@ int StreamBase::frameCount() const
     return count;
 }
 
+// Returns packet length - if bufMaxSize < frameLen(), returns truncated
+// length i.e. bufMaxSize
 int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 {
-    int        pktLen, len = 0;
+    int size, pktLen, len = 0;
 
     pktLen = frameLen(frameIndex);
 
     // pktLen is adjusted for CRC/FCS which will be added by the NIC
     pktLen -= kFcsSize;
 
-    if ((pktLen < 0) || (pktLen > bufMaxSize))
+    if (pktLen <= 0)
         return 0;
 
     ProtocolListIterator    *iter;
@@ -548,17 +550,23 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
         proto = iter->next();
         ba = proto->protocolFrameValue(frameIndex);
 
-        if (len + ba.size() < bufMaxSize)
-            memcpy(buf+len, ba.constData(), ba.size());
-        len += ba.size();
+        size = qMin(ba.size(), bufMaxSize-len);
+        memcpy(buf+len, ba.constData(), size);
+        len += size;
+
+        if (len == bufMaxSize)
+            break;
     }
     delete iter;
 
-    // Pad with zero, if required
-    if (len < pktLen)
-        memset(buf+len, 0, pktLen-len);
+    // Pad with zero, if required and if we have space
+    if ((len < pktLen) && (len < bufMaxSize)) {
+        size = qMin(pktLen-len, bufMaxSize-len);
+        memset(buf+len, 0, size);
+        len += size;
+    }
 
-    return pktLen;
+    return len;
 }
 
 quint64 StreamBase::deviceMacAddress(int frameIndex) const
