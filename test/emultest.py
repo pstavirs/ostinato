@@ -80,6 +80,8 @@ class ip6_address(ipaddress.IPv6Interface):
     def __init__(self, addr):
         if type(addr) is str:
             super(ip6_address, self).__init__(unicode(addr))
+        elif type(addr) is int:
+            super(ip6_address, self).__init__(addr)
         else:
             super(ip6_address, self).__init__(addr.hi << 64 | addr.lo)
         self.ip6 = emul.Ip6Address()
@@ -345,6 +347,7 @@ def dut_vlans(request, dut_ports):
 # ================================================================= #
 
 @pytest.mark.parametrize('dev_cfg', [
+    {'ip_ver': [4], 'mac_step': 1, 'ip_step': 1},
     {'ip_ver': [6], 'mac_step': 1, 'ip_step': 1},
     {'ip_ver': [4, 6], 'mac_step': 2, 'ip_step': 5},
 ])
@@ -521,7 +524,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             else:
                 vf = p.variable_field.add()
                 vf.type = ost_pb.VariableField.kCounter32
-                vf.offset = 20
+                vf.offset = 36
                 vf.mask  = 0xFFFFFFFF
                 vf.value = 0x00000065
                 vf.step  = ip_step
@@ -705,21 +708,25 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     log.info('dumping Rx capture buffer (filtered)')
     for i in range(num_devs):
         if has_ip4:
+            filter = '(ip.src == 10.10.1.' + str(101+i*ip_step) + ')' \
+                  ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')' \
+                  ' && (eth.dst == 00:01:02:03:0b:' \
+                            + format(1+i*mac_step, '02x')+')'
+            print('filter: %s' % filter)
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-Y', '(ip.src == 10.10.1.' + str(101+i*ip_step) + ') '
-                          ' && (ip.dst == 10.10.2.' + str(101+i*ip_step) + ')'
-                          ' && (eth.dst == 00:01:02:03:0b:'
-                                    + format(1+i*mac_step, '02x')+')'])
+                        '-Y', filter])
             print(cap_pkts)
             assert cap_pkts.count('\n') == s.control.num_packets/num_devs
         if has_ip6:
+            filter = '(ipv6.src == 1234:1::' \
+                            + format(101+i*ip_step, 'x') + ')' \
+                + ' && (ipv6.dst == 1234:2::'  \
+                            + format(101+i*ip_step, 'x') + ')' \
+                + ' && (eth.dst == 00:01:02:03:0b:'  \
+                            + format(1+i*mac_step, '02x') + ')'
+            print('filter: %s' % filter)
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
-                        '-Y', '(ipv6.src == 1234:1::'
-                                    + format(101+i*ip_step, 'x') + ') '
-                          ' && (ipv6.dst == 1234:2::'
-                                    + format(101+i*ip_step, 'x') + ')'
-                          ' && (eth.dst == 00:01:02:03:0b:'
-                                    + format(1+i*mac_step, '02x')+')'])
+                        '-Y', filter])
             print(cap_pkts)
             assert cap_pkts.count('\n') == s.control.num_packets/num_devs
     os.remove('capture.pcap')
