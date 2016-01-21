@@ -25,9 +25,12 @@ from protocols.vlan_pb2 import vlan
 use_defaults = True
 
 if sys.platform == 'win32':
+    # FIXME: remove path
     tshark = r'C:\PortableTools\WiresharkPortable\App\Wireshark\tshark.exe'
 else:
     tshark = 'tshark'
+
+#FIXME: check wireshark version supports ipv6/NA/NS filters
 
 # initialize defaults - drone
 host_name = '127.0.0.1'
@@ -427,17 +430,10 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
 
     drone.modifyDeviceGroup(devgrp_cfg)
 
-    # TODO: reuse dev_cfg['ip_ver']
-    ip_versions = []
-    if has_ip4:
-        ip_versions.append('ip4')
-    if has_ip6:
-        ip_versions.append('ip6')
-
     # add the tx stream(s) - we may need more than one
     stream_id = ost_pb.StreamIdList()
     stream_id.port_id.CopyFrom(ports.tx.port_id[0])
-    for i in range(len(ip_versions)):
+    for i in range(len(dev_cfg['ip_ver'])):
         stream_id.stream_id.add().id = i
         log.info('adding tx_stream %d' % stream_id.stream_id[i].id)
 
@@ -446,7 +442,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     # configure the tx stream(s)
     stream_cfg = ost_pb.StreamConfigList()
     stream_cfg.port_id.CopyFrom(ports.tx.port_id[0])
-    for i in range(len(ip_versions)):
+    for i in range(len(dev_cfg['ip_ver'])):
         s = stream_cfg.stream.add()
         s.stream_id.id = stream_id.stream_id[i].id
         s.core.is_enabled = True
@@ -463,7 +459,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
         p = s.protocol.add()
         p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
 
-        if ip_versions[i] == 'ip4':
+        if dev_cfg['ip_ver'][i] == 4:
             p = s.protocol.add()
             p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
             ip = None
@@ -494,7 +490,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
                 vf.step  = ip_step
                 vf.mode = ost_pb.VariableField.kIncrement
                 vf.count = num_devs
-        elif ip_versions[i] == 'ip6':
+        elif dev_cfg['ip_ver'][i] == 6:
             p = s.protocol.add()
             p.protocol_id.id = ost_pb.Protocol.kIp6FieldNumber
             ip = p.Extensions[ip6]
@@ -570,21 +566,21 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
     print(cap_pkts)
     log.info('dumping Tx capture buffer (filtered)')
-    for i in range(len(ip_versions)):
-        if ip_versions[i] == 'ip4':
+    for i in range(len(dev_cfg['ip_ver'])):
+        if dev_cfg['ip_ver'][i] == 4:
             filter = '(arp.opcode == 1)' \
                 ' && (arp.src.proto_ipv4 == 10.10.1.<x>)' \
                 ' && (arp.dst.proto_ipv4 == 10.10.1.1)' \
                 ' && !expert.severity'
-        elif ip_versions[i] == 'ip6':
+        elif dev_cfg['ip_ver'][i] == 6:
             filter = '(icmpv6.type == 135)' \
                 ' && (ipv6.src == 1234:1::<x>)' \
                 ' && (icmpv6.nd.ns.target_address == 1234:1::1)' \
                 ' && !expert.severity'
         for j in range(num_devs):
-            if ip_versions[i] == 'ip4':
+            if dev_cfg['ip_ver'][i] == 4:
                 filter = filter.replace('<x>', str(101+j*ip_step))
-            elif ip_versions[i] == 'ip6':
+            elif dev_cfg['ip_ver'][i] == 6:
                 filter = filter.replace('<x>', format(0x65+j*ip_step, 'x'))
             #print filter
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
@@ -599,21 +595,21 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
     print(cap_pkts)
     log.info('dumping Rx capture buffer (filtered)')
-    for i in range(len(ip_versions)):
-        if ip_versions[i] == 'ip4':
+    for i in range(len(dev_cfg['ip_ver'])):
+        if dev_cfg['ip_ver'][i] == 4:
             filter = '(arp.opcode == 1)' \
                 ' && (arp.src.proto_ipv4 == 10.10.2.<x>)' \
                 ' && (arp.dst.proto_ipv4 == 10.10.2.1)' \
                 ' && !expert.severity'
-        elif ip_versions[i] == 'ip6':
+        elif dev_cfg['ip_ver'][i] == 6:
             filter = '(icmpv6.type == 135)' \
                 ' && (ipv6.src == 1234:2::<x>)' \
                 ' && (icmpv6.nd.ns.target_address == 1234:2::1)' \
                 ' && !expert.severity'
         for j in range(num_devs):
-            if ip_versions[i] == 'ip4':
+            if dev_cfg['ip_ver'][i] == 4:
                 filter = filter.replace('<x>', str(101+j*ip_step))
-            elif ip_versions[i] == 'ip6':
+            elif dev_cfg['ip_ver'][i] == 6:
                 filter = filter.replace('<x>', format(0x65+j*ip_step, 'x'))
             print filter
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
