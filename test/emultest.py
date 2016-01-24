@@ -24,13 +24,8 @@ from protocols.vlan_pb2 import vlan
 
 use_defaults = True
 
-if sys.platform == 'win32':
-    # FIXME: remove path
-    tshark = r'C:\PortableTools\WiresharkPortable\App\Wireshark\tshark.exe'
-else:
-    tshark = 'tshark'
-
-#FIXME: check wireshark version supports ipv6/NA/NS filters
+tshark = 'tshark'
+# FIXME: ensure minimum tshark version 1.4 => supports ICMPV6 NS/NA filters
 
 # initialize defaults - drone
 host_name = '127.0.0.1'
