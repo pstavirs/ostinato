@@ -12,7 +12,8 @@ import time
 import pytest
 
 from fabric.api import run, env, sudo
-#from harness import Test, TestSuite, TestPreRequisiteError
+
+from utils import get_tshark
 
 sys.path.insert(1, '../binding')
 from core import ost_pb, emul, DroneProxy
@@ -24,8 +25,10 @@ from protocols.vlan_pb2 import vlan
 
 use_defaults = True
 
-tshark = 'tshark'
-# FIXME: ensure minimum tshark version 1.4 => supports ICMPV6 NS/NA filters
+tshark = get_tshark(minversion = '1.6')
+if tshark is None:
+    print 'tshark >= 1.6 not found'
+    sys.exit(1)
 
 # initialize defaults - drone
 host_name = '127.0.0.1'
