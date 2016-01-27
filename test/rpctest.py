@@ -8,6 +8,7 @@ import sys
 import time
 
 sys.path.insert(1, '../binding')
+import core
 from core import ost_pb, DroneProxy
 from rpc import RpcError
 from protocols.mac_pb2 import mac
@@ -115,7 +116,8 @@ try:
     passed = False
     suite.test_begin('connectFailsForIncompatibleVersion')
     try:
-        drone.proxy_version = '0.1.1'
+        orig_version = core.__version__
+        core.__version__ = '0.1.1'
         drone.connect()
     except RpcError as e:
         if ('needs client version' in str(e)):
@@ -124,7 +126,7 @@ try:
         else:
             raise
     finally:
-        drone.proxy_version = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -133,7 +135,8 @@ try:
     passed = False
     suite.test_begin('checkVersionFailsForInvalidClientVersion')
     try:
-        drone.proxy_version = '0-1-1'
+        orig_version = core.__version__
+        core.__version__ = '0-1-1'
         drone.connect()
     except RpcError as e:
         if ('invalid version' in str(e)):
@@ -141,7 +144,7 @@ try:
         else:
             raise
     finally:
-        drone.proxy_version = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -153,7 +156,8 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsIncompatForDifferentMajorVersion')
     try:
-        drone.proxy_version = (str(int(drone_version[0])+1)
+        orig_version = core.__version__
+        core.__version__ = (str(int(drone_version[0])+1)
                                 + '.' + drone_version[1])
         drone.connect()
     except RpcError as e:
@@ -163,7 +167,7 @@ try:
         else:
             raise
     finally:
-        drone.proxy_version = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -175,7 +179,8 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsIncompatForDifferentMinorVersion')
     try:
-        drone.proxy_version = (drone_version[0]
+        orig_version = core.__version__
+        core.__version__ = (drone_version[0]
                                 + '.' + str(int(drone_version[1])+1))
         drone.connect()
     except RpcError as e:
@@ -185,7 +190,7 @@ try:
         else:
             raise
     finally:
-        drone.proxy_version = None
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -196,7 +201,8 @@ try:
     passed = False
     suite.test_begin('checkVersionReturnsCompatForDifferentRevisionVersion')
     try:
-        drone.proxy_version = (drone_version[0]
+        orig_version = core.__version__
+        core.__version__ = (drone_version[0]
                                 + '.' + drone_version[1]
                                 + '.' + '999')
         drone.connect()
@@ -204,7 +210,8 @@ try:
     except RpcError as e:
         raise
     finally:
-        drone.proxy_version = None
+        drone.disconnect()
+        core.__version__ = orig_version
         suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
@@ -294,29 +301,28 @@ try:
     drone.clearStats(rx_port)
 
     # ----------------------------------------------------------------- #
-    # TODO:
     # TESTCASE: Verify a RPC with missing required fields in request fails
     #           and subsequently passes when the fields are initialized
     # ----------------------------------------------------------------- #
-#    passed = False
-#    suite.test_begin('rpcWithMissingRequiredFieldsFails')
-#    pid = ost_pb.PortId()
-#    try:
-#        sid_list = drone.getStreamIdList(pid)
-#    except RpcError as e:
-#        if ('missing required fields in request' in str(e)):
-#            passed = True
-#        else:
-#            raise
-#
-#    try:
-#        pid.id = tx_port_number
-#        sid_list = drone.getStreamIdList(pid)
-#    except RpcError as e:
-#        passed = False
-#        raise
-#    finally:
-#        suite.test_end(passed)
+    passed = False
+    suite.test_begin('rpcWithMissingRequiredFieldsFails')
+    pid = ost_pb.PortId()
+    try:
+        sid_list = drone.getStreamIdList(pid)
+    except RpcError as e:
+        if ('missing required fields in request' in str(e)):
+            passed = True
+            log.info("Retrying RPC after adding the missing fields")
+            pid.id = tx_port_number
+            try:
+                sid_list = drone.getStreamIdList(pid)
+            except:
+                passed = False
+                raise
+        else:
+            raise
+    finally:
+        suite.test_end(passed)
 
     # ----------------------------------------------------------------- #
     # TESTCASE: Verify invoking addStream() during transmit fails
@@ -379,7 +385,6 @@ try:
         drone.stopTransmit(tx_port)
         suite.test_end(passed)
 
-
     # ----------------------------------------------------------------- #
     # TESTCASE: Verify invoking startTransmit() during transmit is a NOP, 
     #           not a restart
@@ -416,7 +421,6 @@ try:
     finally:
         drone.stopTransmit(tx_port)
         suite.test_end(passed)
-
 
     # ----------------------------------------------------------------- #
     # TESTCASE: Verify invoking startCapture() during capture is a NOP, 

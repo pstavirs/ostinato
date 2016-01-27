@@ -105,6 +105,10 @@ def ports(request, drone):
     ports.rx = ost_pb.PortIdList()
     ports.rx.port_id.add().id = rx_number;
 
+    # stop transmit/capture on ports, if any
+    drone.stopTransmit(ports.tx)
+    drone.stopCapture(ports.rx)
+
     # delete existing streams, if any, on tx port
     sid_list = drone.getStreamIdList(ports.tx.port_id[0])
     drone.deleteStream(sid_list)
@@ -181,12 +185,13 @@ def test_packet_length(drone, ports, stream, mode):
         buff = drone.getCaptureBuffer(ports.rx.port_id[0])
         drone.saveCaptureBuffer(buff, 'capture.pcap')
         log.info('dumping Rx capture buffer')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
-                        '-R', 'udp'])
+        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap'])
+        print(cap_pkts)
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
                         '-R', 'udp', '-o', fmt])
         print(cap_pkts)
         result = extract_column(cap_pkts, fmt_col)
+        print(result)
         diffSum = 0
         for i in range(len(result)):
             l = int(result[i]) + 4 # add FCS to length

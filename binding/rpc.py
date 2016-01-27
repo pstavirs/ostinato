@@ -80,6 +80,8 @@ class OstinatoRpcChannel(RpcChannel):
         try:
             self.log.info('invoking RPC %s(%s): %s', method.name, 
                     type(request).__name__, response_class.__name__)
+            if not request.IsInitialized():
+                raise RpcError('missing required fields in request')
             self.log.debug('serializing request arg %s', request)
             req = request.SerializeToString()
             hdr = struct.pack('>HHI', MSG_TYPE_REQUEST, method.index, len(req))

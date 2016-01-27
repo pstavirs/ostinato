@@ -819,7 +819,8 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
             sum += *((quint16*)(p + 14)); // src-ip lo
             sum += *((quint16*)(p + 16)); // dst-ip hi
             sum += *((quint16*)(p + 18)); // dst-ip lo
-            sum += qToBigEndian((quint16) protocolFramePayloadSize()); // len
+            sum += qToBigEndian((quint16)
+                    protocolFramePayloadSize(streamIndex)); // len
             sum += qToBigEndian((quint16) *(p + 9)); // proto
 
             while(sum>>16)

@@ -81,6 +81,8 @@ LinuxPort::~LinuxPort()
 {
     qDebug("In %s", __FUNCTION__);
 
+    allPorts_.removeAll(this);
+
     if (monitor_->isRunning())
     {
         monitor_->stop();

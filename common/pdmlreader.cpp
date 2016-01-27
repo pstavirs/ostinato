@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4pdml.h"
 #include "ip6pdml.h"
 #include "mldpdml.h"
+#include "stppdml.h"
 #include "svlanpdml.h"
 #include "tcppdml.h"
 #include "textprotopdml.h"
@@ -73,6 +74,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
     factory_.insert("sdp", PdmlTextProtocol::createInstance);
     factory_.insert("sip", PdmlTextProtocol::createInstance);
     factory_.insert("smtp", PdmlTextProtocol::createInstance);
+    factory_.insert("stp", PdmlStpProtocol::createInstance);
     factory_.insert("tcp", PdmlTcpProtocol::createInstance);
     factory_.insert("udp", PdmlUdpProtocol::createInstance);
     factory_.insert("udplite", PdmlUdpProtocol::createInstance);
