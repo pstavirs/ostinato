@@ -9,6 +9,7 @@ import sys
 import time
 
 from harness import extract_column
+from utils import get_tshark
 
 sys.path.insert(1, '../binding')
 from core import ost_pb, DroneProxy
@@ -21,10 +22,7 @@ host_name = '127.0.0.1'
 tx_number = -1
 rx_number = -1
 
-if sys.platform == 'win32':
-    tshark = r'C:\Program Files\Wireshark\tshark.exe'
-else:
-    tshark = 'tshark'
+tshark = get_tshark(minversion='1.2.0') 
 
 fmt = 'column.format:"Packet#","%m","Time","%t","Source","%uns","Destination","%und","Protocol","%p","Size","%L","Info","%i","Expert","%a"'
 fmt_col = 7 # col# in fmt for Size/PktLength
@@ -32,8 +30,10 @@ fmt_col = 7 # col# in fmt for Size/PktLength
 # setup protocol number dictionary
 proto_number = {}
 proto_number['mac'] = ost_pb.Protocol.kMacFieldNumber
+proto_number['vlan'] = ost_pb.Protocol.kVlanFieldNumber
 proto_number['eth2'] = ost_pb.Protocol.kEth2FieldNumber
 proto_number['ip4'] = ost_pb.Protocol.kIp4FieldNumber
+proto_number['ip6'] = ost_pb.Protocol.kIp6FieldNumber
 proto_number['udp'] = ost_pb.Protocol.kUdpFieldNumber
 proto_number['payload'] = ost_pb.Protocol.kPayloadFieldNumber
 
@@ -115,8 +115,7 @@ def ports(request, drone):
 
     return ports
 
-protolist=['mac eth2 ip4 udp payload', 'mac eth2 ip4 udp']
-@pytest.fixture(scope='module', params=protolist)
+@pytest.fixture(scope='module')
 def stream(request, drone, ports):
     global proto_number
 
@@ -136,7 +135,39 @@ def stream(request, drone, ports):
     s.control.packets_per_sec = 100
     s.control.num_packets = 10
 
-    # setup stream protocols as mac:eth2:ip:udp:payload
+    # XXX: don't setup any stream protocols
+
+    def fin():
+        # delete streams
+        log.info('deleting tx_stream %d' % stream_id.stream_id[0].id)
+        drone.deleteStream(stream_id)
+
+    request.addfinalizer(fin)
+
+    return stream_cfg
+
+protolist=['mac eth2 ip4 udp payload', 'mac eth2 ip4 udp']
+@pytest.fixture(scope='module', params=protolist)
+def stream_toggle_payload(request, drone, ports):
+    global proto_number
+
+    # add a stream
+    stream_id = ost_pb.StreamIdList()
+    stream_id.port_id.CopyFrom(ports.tx.port_id[0])
+    stream_id.stream_id.add().id = 1
+    log.info('adding tx_stream %d' % stream_id.stream_id[0].id)
+    drone.addStream(stream_id)
+
+    # configure the stream
+    stream_cfg = ost_pb.StreamConfigList()
+    stream_cfg.port_id.CopyFrom(ports.tx.port_id[0])
+    s = stream_cfg.stream.add()
+    s.stream_id.id = stream_id.stream_id[0].id
+    s.core.is_enabled = True
+    s.control.packets_per_sec = 100
+    s.control.num_packets = 10
+
+    # setup stream protocols
     s.ClearField("protocol")
     protos = request.param.split()
     for p in protos:
@@ -156,17 +187,25 @@ def stream(request, drone, ports):
     ost_pb.StreamCore.e_fl_dec,
     ost_pb.StreamCore.e_fl_random
 ])
-def test_packet_length(drone, ports, stream, mode):
-    """ Test random length packets """
+def test_framelen_modes(drone, ports, stream_toggle_payload, mode):
+    """ Test various framelen modes """
 
     min_pkt_len = 100
     max_pkt_len = 1000
+    stream = stream_toggle_payload
     stream.stream[0].core.len_mode = mode
     stream.stream[0].core.frame_len_min = min_pkt_len
     stream.stream[0].core.frame_len_max = max_pkt_len
 
     log.info('configuring tx_stream %d' % stream.stream[0].stream_id.id)
     drone.modifyStream(stream)
+
+    if stream.stream[0].protocol[-1].protocol_id.id \
+            == ost_pb.Protocol.kPayloadFieldNumber:
+       filter = 'udp && !expert.severity'
+    else:
+       filter = 'udp && eth.fcs_bad==1' \
+                '&& ip.checksum_bad==0 && udp.checksum_bad==0'
 
     # clear tx/rx stats
     log.info('clearing tx/rx stats')
@@ -187,9 +226,11 @@ def test_packet_length(drone, ports, stream, mode):
         log.info('dumping Rx capture buffer')
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap'])
         print(cap_pkts)
+        print(filter)
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
-                        '-R', 'udp', '-o', fmt])
+                        '-Y', filter, '-o', fmt])
         print(cap_pkts)
+        assert cap_pkts.count('\n') == stream.stream[0].control.num_packets
         result = extract_column(cap_pkts, fmt_col)
         print(result)
         diffSum = 0
@@ -217,3 +258,51 @@ def test_packet_length(drone, ports, stream, mode):
     finally:
         drone.stopTransmit(ports.tx)
 
+def test_frame_trunc(drone, ports, stream):
+    """ Test frame is truncated even if the protocol sizes exceed framelen """
+
+    #stream.stream[0].core.frame_len_min = min_pkt_len
+
+    # setup stream protocols as mac:vlan:eth2:ip6:udp:payload
+    stream.stream[0].ClearField("protocol")
+    protos = ['mac', 'vlan', 'eth2', 'ip6', 'udp', 'payload']
+    for p in protos:
+        stream.stream[0].protocol.add().protocol_id.id = proto_number[p]
+
+    # note: unless truncated minimum size of payload protocol is 1
+    exp_framelen = min(12+4+2+40+8+1, 60)
+
+    log.info('configuring tx_stream %d' % stream.stream[0].stream_id.id)
+    drone.modifyStream(stream)
+
+    # clear tx/rx stats
+    log.info('clearing tx/rx stats')
+    drone.clearStats(ports.tx)
+    drone.clearStats(ports.rx)
+
+    try:
+        drone.startCapture(ports.rx)
+        drone.startTransmit(ports.tx)
+        log.info('waiting for transmit to finish ...')
+        time.sleep(3)
+        drone.stopTransmit(ports.tx)
+        drone.stopCapture(ports.rx)
+
+        log.info('getting Rx capture buffer')
+        buff = drone.getCaptureBuffer(ports.rx.port_id[0])
+        drone.saveCaptureBuffer(buff, 'capture.pcap')
+        log.info('dumping Rx capture buffer')
+        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
+                        '-Y', 'vlan', '-o', fmt])
+        print(cap_pkts)
+        assert cap_pkts.count('\n') == stream.stream[0].control.num_packets
+        result = extract_column(cap_pkts, fmt_col)
+        print(result)
+        for i in range(len(result)):
+            assert (int(result[i]) == exp_framelen)
+
+        os.remove('capture.pcap')
+    except RpcError as e:
+            raise
+    finally:
+        drone.stopTransmit(ports.tx)

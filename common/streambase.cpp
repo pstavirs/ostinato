@@ -529,7 +529,7 @@ int StreamBase::frameCount() const
 // length i.e. bufMaxSize
 int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 {
-    int size, pktLen, len = 0;
+    int maxSize, size, pktLen, len = 0;
 
     pktLen = frameLen(frameIndex);
 
@@ -538,6 +538,8 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 
     if (pktLen <= 0)
         return 0;
+
+    maxSize = qMin(pktLen, bufMaxSize);
 
     ProtocolListIterator    *iter;
 
@@ -550,18 +552,18 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
         proto = iter->next();
         ba = proto->protocolFrameValue(frameIndex);
 
-        size = qMin(ba.size(), bufMaxSize-len);
+        size = qMin(ba.size(), maxSize-len);
         memcpy(buf+len, ba.constData(), size);
         len += size;
 
-        if (len == bufMaxSize)
+        if (len == maxSize)
             break;
     }
     delete iter;
 
     // Pad with zero, if required and if we have space
-    if ((len < pktLen) && (len < bufMaxSize)) {
-        size = qMin(pktLen-len, bufMaxSize-len);
+    if (len < maxSize) {
+        size = maxSize-len;
         memset(buf+len, 0, size);
         len += size;
     }
