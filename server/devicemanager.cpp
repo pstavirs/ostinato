@@ -260,6 +260,13 @@ void DeviceManager::transmitPacket(PacketBuffer *pktBuf)
     port_->sendEmulationPacket(pktBuf);
 }
 
+void DeviceManager::resolveDeviceGateways()
+{
+    foreach(Device *device, deviceList_) {
+        device->resolveGateway();
+    }
+}
+
 void DeviceManager::clearDeviceNeighbors()
 {
     foreach(Device *device, deviceList_)

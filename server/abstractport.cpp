@@ -625,7 +625,10 @@ void AbstractPort::clearDeviceNeighbors()
 
 void AbstractPort::resolveDeviceNeighbors()
 {
-    // Resolve neighbor for each unique frame of each stream
+    // Resolve gateway for each device first ...
+    deviceManager_->resolveDeviceGateways();
+
+    // ... then resolve neighbor for each unique frame of each stream
     // NOTE:
     // 1. All the frames may have the same destination ip,but may have
     // different source ip so may belong to a different emulated device;

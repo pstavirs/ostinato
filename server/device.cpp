@@ -256,6 +256,15 @@ void Device::transmitPacket(PacketBuffer *pktBuf)
     deviceManager_->transmitPacket(pktBuf);
 }
 
+void Device::resolveGateway()
+{
+    if (hasIp4_)
+        sendArpRequest(ip4Gateway_);
+
+    if (hasIp6_)
+        sendNeighborSolicit(ip6Gateway_);
+}
+
 void Device::clearNeighbors()
 {
     arpTable_.clear();
@@ -524,26 +533,13 @@ _invalid_exit:
 // pktBuf points to start of IP header
 void Device::sendArpRequest(PacketBuffer *pktBuf)
 {
-    PacketBuffer *reqPkt;
     uchar *pktData = pktBuf->data();
-    int offset = 0;
-    int ipHdrLen = (pktData[offset] & 0x0F) << 2;
-    quint32 srcIp, dstIp, mask, tgtIp;
+    int ipHdrLen = (pktData[0] & 0x0F) << 2;
+    quint32 srcIp = ip4_, dstIp, mask, tgtIp;
 
     if (pktBuf->length() < ipHdrLen) {
         qDebug("incomplete IPv4 header: expected %d, actual %d",
                 ipHdrLen, pktBuf->length());
-        return;
-    }
-
-    // FIXME: not required - caller is checking for origin anyway
-    // Extract srcIp first to check quickly that this packet originates
-    // from this device
-    srcIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 8);
-    if (srcIp != ip4_) {
-        qDebug("%s: srcIp %s is not me %s", __FUNCTION__,
-                qPrintable(QHostAddress(srcIp).toString()),
-                qPrintable(QHostAddress(ip4_).toString()));
         return;
     }
 
@@ -553,8 +549,22 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
     qDebug("dst %x src %x mask %x", dstIp, srcIp, mask);
     tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip4Gateway_;
 
+    sendArpRequest(tgtIp);
+
+}
+
+void Device::sendArpRequest(quint32 tgtIp)
+{
+    quint32 srcIp = ip4_;
+    PacketBuffer *reqPkt;
+    uchar *pktData;
+
+    // Validate target IP
+    if (!tgtIp)
+        return;
+
     // Do we already have a ARP entry (resolved or unresolved)?
-    // FIXME: do we need a timer to resend ARP for unresolved entries?
+    // XXX: No NDP state machine for now
     if (arpTable_.contains(tgtIp))
         return;
 
@@ -902,9 +912,8 @@ _invalid_exit:
 // pktBuf should point to start of IP header
 void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
 {
-    PacketBuffer *reqPkt;
     uchar *pktData = pktBuf->data();
-    UInt128 srcIp, dstIp, mask, tgtIp;
+    UInt128 srcIp = ip6_, dstIp, mask, tgtIp;
 
     if (pktBuf->length() < kIp6HdrLen) {
         qDebug("incomplete IPv6 header: expected %d, actual %d",
@@ -912,7 +921,6 @@ void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
         return;
     }
 
-    srcIp = qFromBigEndian<UInt128>(pktData +  8);
     dstIp = qFromBigEndian<UInt128>(pktData + 24);
 
     mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
@@ -922,8 +930,21 @@ void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
             qPrintable(QHostAddress(mask.toArray()).toString()));
     tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip6Gateway_;
 
+    sendNeighborSolicit(tgtIp);
+}
+
+void Device::sendNeighborSolicit(UInt128 tgtIp)
+{
+    UInt128 dstIp, srcIp = ip6_;
+    PacketBuffer *reqPkt;
+    uchar *pktData;
+
+    // Validate target IP
+    if (tgtIp == UInt128(0, 0))
+        return;
+
     // Do we already have a NDP entry (resolved or unresolved)?
-    // FIXME: do we need a timer to resend NS for unresolved entries?
+    // XXX: No ARP state machine for now
     if (ndpTable_.contains(tgtIp))
         return;
 

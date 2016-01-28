@@ -59,6 +59,8 @@ public:
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
 
+    void resolveGateway();
+
     void clearNeighbors();
     void resolveNeighbor(PacketBuffer *pktBuf);
     void getNeighbors(OstEmul::DeviceNeighborList *neighbors);
@@ -69,6 +71,7 @@ public:
 private: // methods
     void receiveArp(PacketBuffer *pktBuf);
     void sendArpRequest(PacketBuffer *pktBuf);
+    void sendArpRequest(quint32 tgtIp);
 
     void receiveIp4(PacketBuffer *pktBuf);
     void sendIp4Reply(PacketBuffer *pktBuf);
@@ -83,6 +86,7 @@ private: // methods
 
     void receiveNdp(PacketBuffer *pktBuf);
     void sendNeighborSolicit(PacketBuffer *pktBuf);
+    void sendNeighborSolicit(UInt128 tgtIp);
     void sendNeighborAdvertisement(PacketBuffer *pktBuf);
 
 private: // data

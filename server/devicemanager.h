@@ -52,6 +52,8 @@ public:
     void receivePacket(PacketBuffer *pktBuf);
     void transmitPacket(PacketBuffer *pktBuf);
 
+    void resolveDeviceGateways();
+
     void clearDeviceNeighbors();
     void resolveDeviceNeighbor(PacketBuffer *pktBuf);
     void getDeviceNeighbors(OstProto::PortNeighborList *neighborList);

@@ -594,7 +594,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             print(cap_pkts)
             assert cap_pkts.count('\n') == 1
 
-    # verify *no* ARP Requests sent out from rx port
+    # verify ARP Requests sent out from rx port
     buff = drone.getCaptureBuffer(emul_ports.port_id[1])
     drone.saveCaptureBuffer(buff, 'capture.pcap')
     log.info('dumping Rx capture buffer (all)')
@@ -621,7 +621,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
                         '-Y', filter])
             print(cap_pkts)
-            assert cap_pkts.count('\n') == 0
+            assert cap_pkts.count('\n') == 1
 
     # retrieve and verify ARP/NDP Table on tx/rx ports
     log.info('retrieving ARP/NDP entries on tx port')
@@ -636,8 +636,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             for arp in device.arp:
                 print('%s: %s %012x' %
                         (str(ipaddress.ip_address(dev_cfg.ip4)),
-                         str(ipaddress.ip_address(arp.ip4)),
-                         arp.mac))
+                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
                 if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
                     resolved = True
             assert resolved
@@ -646,32 +645,36 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             for ndp in device.ndp:
                 print('%s: %s %012x' %
                         (str(ip6_address(dev_cfg.ip6)),
-                         str(ip6_address(ndp.ip6)),
-                         ndp.mac))
+                         str(ip6_address(ndp.ip6)), ndp.mac))
                 if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
                     resolved = True
             assert resolved
 
     log.info('retrieving ARP/NDP entries on rx port')
-    device_list = drone.getDeviceList(emul_ports.port_id[0])
+    device_list = drone.getDeviceList(emul_ports.port_id[1])
     device_config = device_list.Extensions[emul.port_device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
     devices = neigh_list.Extensions[emul.devices]
     log.info('ARP/NDP Table on rx port')
     for dev_cfg, device in zip(device_config, devices):
-        # verify *no* ARPs/NDPs learnt on rx port
         if has_ip4:
+            resolved = False
             for arp in device.arp:
                 print('%s: %s %012x' %
                         (str(ipaddress.ip_address(dev_cfg.ip4)),
                          str(ipaddress.ip_address(arp.ip4)), arp.mac))
-            assert len(device.arp) == 0
+                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                    resolved = True
+            assert resolved
         if has_ip6:
+            resolved = False
             for ndp in device.ndp:
                 print('%s: %s %012x' %
                         (str(ip6_address(dev_cfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-            assert len(device.ndp) == 0
+                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                    resolved = True
+            assert resolved
 
     # ping the tx devices from the DUT
     for i in range(num_devs):
@@ -998,8 +1001,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
                 print(cap_pkts)
                 assert cap_pkts.count('\n') == 1
 
-    # verify *no* ARP/NDP Requests sent out from rx port
-    buff = drone.getCaptureBuffer(emul_ports.port_id[0])
+    # verify ARP/NDP Requests sent out from rx port
+    buff = drone.getCaptureBuffer(emul_ports.port_id[1])
     drone.saveCaptureBuffer(buff, 'capture.pcap')
     log.info('dumping Rx capture buffer (all)')
     cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
@@ -1030,7 +1033,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
                 cap_pkts = subprocess.check_output([tshark, '-nr',
                             'capture.pcap', '-Y', filter])
                 print(cap_pkts)
-                assert cap_pkts.count('\n') == 0
+                assert cap_pkts.count('\n') == 1
 
     # retrieve and verify ARP/NDP Table on tx/rx ports
     log.info('retrieving ARP/NDP entries on tx port')
@@ -1063,7 +1066,7 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
             assert resolved
 
     log.info('retrieving ARP entries on rx port')
-    device_list = drone.getDeviceList(emul_ports.port_id[0])
+    device_list = drone.getDeviceList(emul_ports.port_id[1])
     device_config = device_list.Extensions[emul.port_device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
     devices = neigh_list.Extensions[emul.devices]
@@ -1072,19 +1075,24 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
         vlans = ''
         for v in dev_cfg.vlan:
             vlans += str(v & 0xffff) + ' '
-        # verify *no* ARPs/NDPs learnt on rx port
         if has_ip4:
+            resolved = False
             for arp in device.arp:
                 print('%s%s: %s %012x' %
                         (vlans, str(ipaddress.ip_address(dev_cfg.ip4)),
-                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
-            assert len(device.arp) == 0
+                        str(ipaddress.ip_address(arp.ip4)), arp.mac))
+                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                    resolved = True
+            assert resolved
         if has_ip6:
+            resolved = False
             for ndp in device.ndp:
                 print('%s%s: %s %012x' %
                         (vlans, str(ip6_address(dev_cfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-            assert len(device.ndp) == 0
+                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                    resolved = True
+            assert resolved
 
     # ping the tx devices from the DUT
     for i in range(num_vlans):
