@@ -933,9 +933,16 @@ _invalid_port:
 quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
 {
     MyService *service = drone->rpcService();
+    DeviceManager *devMgr = NULL;
     quint64 mac;
 
     if (!service)
+        return 0;
+
+    if ((portId >= 0) && (portId < service->portInfo.size()))
+        devMgr = service->portInfo[portId]->deviceManager();
+
+    if (!devMgr || !devMgr->deviceCount())
         return 0;
 
     service->portLock[portId]->lockForWrite();
@@ -948,9 +955,16 @@ quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
 quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
 {
     MyService *service = drone->rpcService();
+    DeviceManager *devMgr = NULL;
     quint64 mac;
 
     if (!service)
+        return 0;
+
+    if ((portId >= 0) && (portId < service->portInfo.size()))
+        devMgr = service->portInfo[portId]->deviceManager();
+
+    if (!devMgr || !devMgr->deviceCount())
         return 0;
 
     service->portLock[portId]->lockForWrite();

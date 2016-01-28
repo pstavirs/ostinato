@@ -321,6 +321,10 @@ Device* DeviceManager::originDevice(PacketBuffer *pktBuf)
     quint16 vlan;
     int idx = 0;
 
+    // Do we have any devices at all?
+    if (!deviceCount())
+       return NULL;
+
     // pktBuf will not have the correct dstMac populated, so use bcastMac
     // and search for device by IP
 
