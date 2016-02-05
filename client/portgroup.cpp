@@ -365,8 +365,10 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     // design
     emit portListChanged(mPortGroupId);
 
-    if (numPorts() > 0)
+    if (numPorts() > 0) {
         getStreamIdList();
+        getDeviceGroupIdList();
+    }
 
 _error_exit:
     delete controller;
@@ -580,6 +582,9 @@ void PortGroup::getStreamConfigList()
 
     for (int portIndex = 0; portIndex < numPorts(); portIndex++)
     {
+        if (mPorts[portIndex]->numStreams() == 0)
+            continue;
+
         OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
         OstProto::StreamConfigList *streamConfigList 
                 = new OstProto::StreamConfigList;
@@ -634,11 +639,160 @@ void PortGroup::processStreamConfigList(int portIndex,
             streamConfigList->mutable_stream(i));
     }
 
+#if 0
+    // FIXME: incorrect check - will never be true if last port does not have any streams configured
     // Are we done for all ports?
-    if (portIndex >= numPorts())
+    if (portIndex >= (numPorts()-1))
     {
         // FIXME(HI): some way to reset streammodel 
     }
+#endif
+
+_exit:
+    delete controller;
+}
+
+void PortGroup::getDeviceGroupIdList()
+{
+    using OstProto::PortId;
+    using OstProto::DeviceGroupIdList;
+
+    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
+    {
+        PortId *portId = new PortId;
+        DeviceGroupIdList *devGrpIdList = new DeviceGroupIdList;
+        PbRpcController *controller = new PbRpcController(portId, devGrpIdList);
+
+        portId->set_id(mPorts[portIndex]->id());
+
+        serviceStub->getDeviceGroupIdList(controller, portId, devGrpIdList,
+                NewCallback(this, &PortGroup::processDeviceGroupIdList,
+                    portIndex, controller));
+    }
+}
+
+void PortGroup::processDeviceGroupIdList(
+        int portIndex,
+        PbRpcController *controller)
+{
+    using OstProto::DeviceGroupIdList;
+
+    DeviceGroupIdList *devGrpIdList = static_cast<DeviceGroupIdList*>(
+                                                controller->response());
+
+    qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        goto _exit;
+    }
+
+    Q_ASSERT(portIndex < numPorts());
+
+    if (devGrpIdList->port_id().id() != mPorts[portIndex]->id())
+    {
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            devGrpIdList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
+    }
+
+    for(int i = 0; i < devGrpIdList->device_group_id_size(); i++)
+    {
+        uint devGrpId;
+
+        devGrpId = devGrpIdList->device_group_id(i).id();
+        mPorts[portIndex]->insertDeviceGroup(devGrpId);
+    }
+
+    //FIXME: mPorts[portIndex]->when_syncComplete();
+
+    // Are we done for all ports?
+    if (numPorts() && portIndex >= (numPorts()-1))
+        getDeviceGroupConfigList();
+
+_exit:
+    delete controller;
+}
+
+void PortGroup::getDeviceGroupConfigList()
+{
+    using OstProto::DeviceGroupId;
+    using OstProto::DeviceGroupIdList;
+    using OstProto::DeviceGroupConfigList;
+
+    qDebug("requesting device group config list ...");
+
+    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
+    {
+        if (mPorts[portIndex]->numDeviceGroups() == 0)
+            continue;
+
+        DeviceGroupIdList *devGrpIdList = new DeviceGroupIdList;
+        DeviceGroupConfigList *devGrpCfgList = new DeviceGroupConfigList;
+        PbRpcController *controller = new PbRpcController(
+                devGrpIdList, devGrpCfgList);
+
+        devGrpIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+        for (int j = 0; j < mPorts[portIndex]->numDeviceGroups(); j++)
+        {
+            DeviceGroupId *dgid = devGrpIdList->add_device_group_id();
+            dgid->set_id(mPorts[portIndex]->deviceGroupByIndex(j)
+                                                    ->device_group_id().id());
+        }
+
+        serviceStub->getDeviceGroupConfig(controller,
+                devGrpIdList, devGrpCfgList,
+                NewCallback(this, &PortGroup::processDeviceGroupConfigList,
+                    portIndex, controller));
+    }
+}
+
+void PortGroup::processDeviceGroupConfigList(int portIndex,
+        PbRpcController *controller)
+{
+    using OstProto::DeviceGroupConfigList;
+
+    DeviceGroupConfigList *devGrpCfgList =
+        static_cast<OstProto::DeviceGroupConfigList*>(controller->response());
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    Q_ASSERT(portIndex < numPorts());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        goto _exit;
+    }
+
+    Q_ASSERT(portIndex < numPorts());
+
+    if (devGrpCfgList->port_id().id() != mPorts[portIndex]->id())
+    {
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            devGrpCfgList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
+    }
+
+    for(int i = 0; i <  devGrpCfgList->device_group_size(); i++)
+    {
+        uint dgid = devGrpCfgList->device_group(i).device_group_id().id();
+
+        mPorts[portIndex]->updateDeviceGroup(dgid,
+                                    devGrpCfgList->mutable_device_group(i));
+    }
+
+#if 0
+    // FIXME: incorrect check - will never be true if last port does not have any deviceGroups configured
+    // Are we done for all ports?
+    if (portIndex >= (numPorts()-1))
+    {
+        // FIXME: reset deviceGroupModel?
+    }
+#endif
 
 _exit:
     delete controller;

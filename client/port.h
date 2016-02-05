@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_H
 
 #include <QDir>
+#include <QHash>
 #include <QList>
 #include <QString>
 #include <QTemporaryFile>
@@ -50,6 +51,8 @@ class Port : public QObject {
 
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
+
+    QHash<uint, OstProto::DeviceGroup*> deviceGroups_;
 
     uint newStreamId();
     void updateStreamOrdinalsFromIndex();
@@ -144,6 +147,18 @@ public:
 
     bool openStreams(QString fileName, bool append, QString &error);
     bool saveStreams(QString fileName, QString fileType, QString &error);
+
+    // ------------ Device Group ----------- //
+
+    int numDeviceGroups();
+    OstProto::DeviceGroup* deviceGroupByIndex(int index);
+
+    //! Used by MyService::Stub to update from config received from server
+    //@{
+    bool insertDeviceGroup(uint deviceGroupId);
+    bool updateDeviceGroup(uint deviceGroupId,
+                           OstProto::DeviceGroup *deviceGroup);
+    //@}
 
 signals:
     void portRateChanged(int portGroupId, int portId);

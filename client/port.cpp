@@ -605,3 +605,55 @@ _exit:
     mainWindow->setEnabled(true);
     return ret;
 }
+
+// ------------ Device Group ----------- //
+
+int Port::numDeviceGroups()
+{
+    return deviceGroups_.size();
+}
+
+OstProto::DeviceGroup* Port::deviceGroupByIndex(int index)
+{
+   // FIXME: do we need to index? can't we use an iterator instead?
+   if ((index < 0) || (index >= numDeviceGroups())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDeviceGroups() - 1);
+        return NULL;
+    }
+
+    // Sort List by 'id', get the id at 'index' and then corresponding devGrp
+    return deviceGroups_.value(deviceGroups_.uniqueKeys().value(index));
+}
+
+bool Port::insertDeviceGroup(uint deviceGroupId)
+{
+    OstProto::DeviceGroup *devGrp;
+
+    if (deviceGroups_.contains(deviceGroupId)) {
+        qDebug("%s: deviceGroup id %u already exists", __FUNCTION__,
+                deviceGroupId);
+        return false;
+    }
+
+    devGrp = new OstProto::DeviceGroup;
+    devGrp->mutable_device_group_id()->set_id(deviceGroupId);
+    deviceGroups_.insert(deviceGroupId, devGrp);
+    return true;
+}
+
+bool Port::updateDeviceGroup(
+        uint deviceGroupId,
+        OstProto::DeviceGroup *deviceGroup)
+{
+    OstProto::DeviceGroup *devGrp = deviceGroups_.value(deviceGroupId);
+
+    if (!devGrp) {
+        qDebug("%s: deviceGroup id %u does not exist", __FUNCTION__,
+                deviceGroupId);
+        return false;
+    }
+
+    devGrp->CopyFrom(*deviceGroup);
+    return true;
+}

@@ -117,6 +117,13 @@ public:
 
     void processModifyStreamAck(OstProto::Ack *ack);
 
+    void getDeviceGroupIdList();
+    void processDeviceGroupIdList(int portIndex, PbRpcController *controller);
+    void getDeviceGroupConfigList();
+    void processDeviceGroupConfigList(
+            int portIndex,
+            PbRpcController *controller);
+
     void startTx(QList<uint> *portList = NULL);
     void processStartTxAck(PbRpcController *controller);
     void stopTx(QList<uint> *portList = NULL);
