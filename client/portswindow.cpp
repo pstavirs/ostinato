@@ -51,6 +51,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     tvStreamList->verticalHeader()->setDefaultSectionSize(
             tvStreamList->verticalHeader()->minimumSectionSize());
+    deviceGroupList->verticalHeader()->setDefaultSectionSize(
+            deviceGroupList->verticalHeader()->minimumSectionSize());
 
     // Populate PortList Context Menu Actions
     tvPortList->addAction(actionNew_Port_Group);
@@ -82,6 +84,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     addActions(tvStreamList->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
+    deviceGroupList->setModel(plm->getDeviceGroupModel());
 
     // XXX: It would be ideal if we only needed to do the below to 
     // get the proxy model to do its magic. However, the QModelIndex
@@ -127,6 +130,10 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     tvStreamList->resizeColumnToContents(StreamModel::StreamIcon);
     tvStreamList->resizeColumnToContents(StreamModel::StreamStatus);
+
+    // FIXME: hardcoding
+    deviceGroupList->resizeColumnToContents(1);
+    deviceGroupList->resizeColumnToContents(2);
 
     // Initially we don't have any ports/streams - so send signal triggers
     when_portView_currentChanged(QModelIndex(), QModelIndex());
@@ -203,6 +210,7 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
 {
     QModelIndex current = currentIndex;
     QModelIndex previous = previousIndex;
+    Port *port = NULL;
 
     if (proxyPortModel) {
         current = proxyPortModel->mapToSource(current);
@@ -214,6 +222,10 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     updateStreamViewActions();
 
     qDebug("In %s", __FUNCTION__);
+
+    if (plm->isPort(current))
+        port = &(plm->port(current));
+    plm->getDeviceGroupModel()->setPort(port);
 
     if (previous.isValid() && plm->isPort(previous))
     {
@@ -801,5 +813,3 @@ _retry:
 _exit:
     return;
 }
-
-

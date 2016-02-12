@@ -25,7 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PortGroupList::PortGroupList()
     : mPortGroupListModel(this), 
       mStreamListModel(this),
-      mPortStatsModel(this, this)
+      mPortStatsModel(this, this),
+      mDeviceGroupModel(this)
 {
     PortGroup    *pg;
 
@@ -33,10 +34,12 @@ PortGroupList::PortGroupList()
     streamModelTester_ = NULL;
     portModelTester_ = NULL;
     portStatsModelTester_ = NULL;
+    deviceGroupModelTester_ = NULL;
 #else
     streamModelTester_ = new ModelTest(getStreamModel());
     portModelTester_ = new ModelTest(getPortModel());
     portStatsModelTester_ = new ModelTest(getPortStatsModel());
+    deviceGroupModelTester_ = new ModelTest(getPortStatsModel());
 #endif 
 
     // Add the "Local" Port Group
@@ -49,10 +52,10 @@ PortGroupList::~PortGroupList()
     delete portStatsModelTester_;
     delete portModelTester_;
     delete streamModelTester_;
+    delete deviceGroupModelTester_;
 
     while (!mPortGroups.isEmpty())
         delete mPortGroups.takeFirst();
-
 }
 
 bool PortGroupList::isPortGroup(const QModelIndex& index)

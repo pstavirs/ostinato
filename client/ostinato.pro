@@ -33,6 +33,7 @@ LIBS += -lprotobuf
 LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
 HEADERS += \
+    devicegroupmodel.h \
     dumpview.h \
     hexlineedit.h \
     mainwindow.h \
@@ -67,6 +68,7 @@ FORMS += \
     variablefieldswidget.ui
 
 SOURCES += \
+    devicegroupmodel.cpp \
     dumpview.cpp \
     stream.cpp \
     hexlineedit.cpp \

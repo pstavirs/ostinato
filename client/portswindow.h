@@ -25,12 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ui_portswindow.h"
 #include "portgrouplist.h"
 
-/* TODO
-HIGH
-MED
-LOW
-*/
-
 class QAbstractItemDelegate;
 class QSortFilterProxyModel;
 
