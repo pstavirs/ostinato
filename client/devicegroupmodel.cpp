@@ -25,16 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 enum {
     kName,
-    kCount,
-    kVlan,
+    kVlanCount,
+    kDeviceCount, // Across all vlans
     kIp,
     kFieldCount
 };
 
 static QStringList columns_ = QStringList()
     << "Name"
-    << "Count"
-    << "Vlan"
+    << "Vlans"
+    << "Devices"
     << "IP";
 
 DeviceGroupModel::DeviceGroupModel(QObject *parent)
@@ -92,6 +92,8 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
 
     OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(dgIdx);
 
+    Q_ASSERT(devGrp);
+
     switch (field) {
         case kName:
             switch (role) {
@@ -102,10 +104,12 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
             }
             return QVariant();
 
-        case kCount:
+        case kVlanCount:
             switch (role) {
                 case Qt::DisplayRole:
-                    return devGrp->device_count();
+                    if (int v = vlanCount(devGrp))
+                        return v;
+                    return QString("None");
                 case Qt::TextAlignmentRole:
                     return Qt::AlignRight;
                 default:
@@ -113,17 +117,12 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
             }
             return QVariant();
 
-        case kVlan:
+        case kDeviceCount:
             switch (role) {
-                case Qt::CheckStateRole:
-                    if (devGrp->has_encap()
-                            && devGrp->encap().HasExtension(OstEmul::vlan)
-                            && devGrp->encap().GetExtension(OstEmul::vlan)
-                                    .stack_size())
-                        return Qt::Checked;
-                    return Qt::Unchecked;
+                case Qt::DisplayRole:
+                    return qMax(vlanCount(devGrp), 1)*devGrp->device_count();
                 case Qt::TextAlignmentRole:
-                    return Qt::AlignCenter;
+                    return Qt::AlignRight;
                 default:
                     break;
             }
@@ -170,4 +169,24 @@ void DeviceGroupModel::setPort(Port *port)
 {
     port_ = port;
     reset();
+}
+
+//
+// ---------------------- Private Methods -----------------------
+//
+int DeviceGroupModel::vlanCount(const OstProto::DeviceGroup *deviceGroup) const
+{
+    if (!deviceGroup->has_encap()
+            || !deviceGroup->encap().HasExtension(OstEmul::vlan))
+        return 0;
+
+    OstEmul::VlanEmulation vlan = deviceGroup->encap()
+                                        .GetExtension(OstEmul::vlan);
+    int numTags = vlan.stack_size();
+    int count = 1;
+
+    for (int i = 0; i < numTags; i++)
+        count *= vlan.stack(i).count();
+
+    return count;
 }

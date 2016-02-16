@@ -24,6 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QStringList>
 
 class Port;
+namespace OstProto {
+    class DeviceGroup;
+};
 
 class DeviceGroupModel: public QAbstractTableModel
 {
@@ -41,7 +44,10 @@ public:
             int role = Qt::EditRole);
 
     void setPort(Port *port);
+
 private:
+    int vlanCount(const OstProto::DeviceGroup *deviceGroup) const;
+
     Port *port_;
 };
 
