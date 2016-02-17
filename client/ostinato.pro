@@ -33,6 +33,7 @@ LIBS += -lprotobuf
 LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
 HEADERS += \
+    devicegroupdialog.h \
     devicegroupmodel.h \
     dumpview.h \
     hexlineedit.h \
@@ -58,6 +59,7 @@ HEADERS += \
 
 FORMS += \
     about.ui \
+    devicegroupdialog.ui \
     mainwindow.ui \
     portconfigdialog.ui \
     portstatsfilter.ui \
@@ -68,6 +70,7 @@ FORMS += \
     variablefieldswidget.ui
 
 SOURCES += \
+    devicegroupdialog.cpp \
     devicegroupmodel.cpp \
     dumpview.cpp \
     stream.cpp \

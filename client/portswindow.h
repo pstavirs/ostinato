@@ -80,6 +80,8 @@ private slots:
     void on_actionSave_Streams_triggered();
 
     void streamModelDataChanged();
+
+    void on_deviceGroupList_activated(const QModelIndex &index);
 };
 
 #endif

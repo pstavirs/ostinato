@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portswindow.h"
 
 #include "abstractfileformat.h"
+#include "devicegroupdialog.h"
 #include "portconfigdialog.h"
 #include "settings.h"
 #include "streamconfigdialog.h"
@@ -812,4 +813,16 @@ _retry:
     fileName = QFileInfo(fileName).absolutePath();
 _exit:
     return;
+}
+
+//
+// DeviceGroup slots
+//
+void PortsWindow::on_deviceGroupList_activated(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+
+    DeviceGroupDialog dgd(this);
+    dgd.exec();
 }
