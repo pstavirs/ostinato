@@ -50,6 +50,7 @@ public slots:
 private slots:
     void updatePortViewActions(const QModelIndex& currentIndex);
     void updateStreamViewActions();
+    void updateDeviceViewActions();
 
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();

@@ -142,13 +142,29 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->resizeColumnToContents(StreamModel::StreamIcon);
     tvStreamList->resizeColumnToContents(StreamModel::StreamStatus);
 
+    connect(plm->getDeviceGroupModel(),
+        SIGNAL(rowsInserted(QModelIndex, int, int)),
+        SLOT(updateDeviceViewActions()));
+    connect(plm->getDeviceGroupModel(),
+        SIGNAL(rowsRemoved(QModelIndex, int, int)),
+        SLOT(updateDeviceViewActions()));
+
+    connect(deviceGroupList->selectionModel(),
+        SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+        SLOT(updateDeviceViewActions()));
+    connect(deviceGroupList->selectionModel(),
+        SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
+        SLOT(updateDeviceViewActions()));
+
     // FIXME: hardcoding
     deviceGroupList->resizeColumnToContents(1);
     deviceGroupList->resizeColumnToContents(2);
 
-    // Initially we don't have any ports/streams - so send signal triggers
+    // Initially we don't have any ports/streams/devices
+    //  - so send signal triggers
     when_portView_currentChanged(QModelIndex(), QModelIndex());
     updateStreamViewActions();
+    updateDeviceViewActions();
 
     connect(plm->getStreamModel(), 
         SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)), 
@@ -231,6 +247,7 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     plm->getStreamModel()->setCurrentPortIndex(current);
     updatePortViewActions(currentIndex);
     updateStreamViewActions();
+    updateDeviceViewActions();
 
     qDebug("In %s", __FUNCTION__);
 
@@ -389,6 +406,51 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
+}
+
+void PortsWindow::updateDeviceViewActions()
+{
+    QModelIndex current = tvPortList->currentIndex();
+    QItemSelectionModel *devSel = deviceGroupList->selectionModel();
+
+    if (proxyPortModel)
+        current = proxyPortModel->mapToSource(current);
+
+    // For some reason hasSelection() returns true even if selection size is 0
+    // so additional check for size introduced
+    if (devSel->hasSelection() && (devSel->selection().size() > 0))
+    {
+        // If more than one non-contiguous ranges selected,
+        // disable "New" and "Edit"
+        if (devSel->selection().size() > 1)
+        {
+            actionNewDeviceGroup->setDisabled(true);
+            actionEditDeviceGroup->setDisabled(true);
+        }
+        else
+        {
+            actionNewDeviceGroup->setEnabled(true);
+
+            // Enable "Edit" only if the single range has a single row
+            if (devSel->selection().at(0).height() > 1)
+                actionEditDeviceGroup->setDisabled(true);
+            else
+                actionEditDeviceGroup->setEnabled(true);
+        }
+
+        // Delete is always enabled as long as we have a selection
+        actionDeleteDeviceGroup->setEnabled(true);
+    }
+    else
+    {
+        qDebug("No device selection");
+        if (plm->isPort(current))
+            actionNewDeviceGroup->setEnabled(true);
+        else
+            actionNewDeviceGroup->setDisabled(true);
+        actionEditDeviceGroup->setDisabled(true);
+        actionDeleteDeviceGroup->setDisabled(true);
+    }
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
