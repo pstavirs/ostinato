@@ -77,12 +77,22 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
 
-    // PortList and StreamList actions combined make this window's actions
+    // Populate DeviceGroup Context Menu Actions
+    deviceGroupList->addAction(actionNewDeviceGroup);
+    deviceGroupList->addAction(actionEditDeviceGroup);
+    deviceGroupList->addAction(actionDeleteDeviceGroup);
+
+    // PortList, StreamList, DeviceGroupList actions combined
+    // make this window's actions
     addActions(tvPortList->actions());
     sep = new QAction(this);
     sep->setSeparator(true);
     addAction(sep);
     addActions(tvStreamList->actions());
+    sep = new QAction(this);
+    sep->setSeparator(true);
+    addAction(sep);
+    addActions(deviceGroupList->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
     deviceGroupList->setModel(plm->getDeviceGroupModel());
@@ -818,6 +828,46 @@ _exit:
 //
 // DeviceGroup slots
 //
+void PortsWindow::on_actionNewDeviceGroup_triggered()
+{
+    // In case nothing is selected, insert 1 row at the top
+    int row = 0, count = 1;
+    QItemSelection selection = deviceGroupList->selectionModel()->selection();
+
+    // In case we have a single range selected; insert as many rows as
+    // in the singe selected range before the top of the selected range
+    if (selection.size() == 1)
+    {
+        row = selection.at(0).top();
+        count = selection.at(0).height();
+    }
+
+    plm->getDeviceGroupModel()->insertRows(row, count);
+}
+
+void PortsWindow::on_actionDeleteDeviceGroup_triggered()
+{
+    QModelIndex index;
+
+    if (deviceGroupList->selectionModel()->hasSelection())
+    {
+        while(deviceGroupList->selectionModel()->selectedRows().size())
+        {
+            index = deviceGroupList->selectionModel()->selectedRows().at(0);
+            plm->getDeviceGroupModel()->removeRows(index.row(), 1);
+        }
+    }
+}
+
+void PortsWindow::on_actionEditDeviceGroup_triggered()
+{
+    QItemSelection selection = deviceGroupList->selectionModel()->selection();
+
+    // Ensure we have only one range selected which contains only one row
+    if ((selection.size() == 1) && (selection.at(0).height() == 1))
+        on_deviceGroupList_activated(selection.at(0).topLeft());
+}
+
 void PortsWindow::on_deviceGroupList_activated(const QModelIndex &index)
 {
     if (!index.isValid())

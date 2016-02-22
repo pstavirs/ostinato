@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 extern QMainWindow *mainWindow;
 
 uint Port::mAllocStreamId = 0;
+uint Port::allocDeviceGroupId_ = 1;
 
 static const int kEthOverhead = 20;
 
@@ -608,6 +609,11 @@ _exit:
 
 // ------------ Device Group ----------- //
 
+uint Port::newDeviceGroupId()
+{
+    return allocDeviceGroupId_++;
+}
+
 int Port::numDeviceGroups()
 {
     return deviceGroups_.size();
@@ -615,22 +621,62 @@ int Port::numDeviceGroups()
 
 OstProto::DeviceGroup* Port::deviceGroupByIndex(int index)
 {
-   // FIXME: do we need to index? can't we use an iterator instead?
-   if ((index < 0) || (index >= numDeviceGroups())) {
+    if ((index < 0) || (index >= numDeviceGroups())) {
         qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
                 index, numDeviceGroups() - 1);
         return NULL;
     }
 
-    // Sort List by 'id', get the id at 'index' and then corresponding devGrp
-    return deviceGroups_.value(deviceGroups_.uniqueKeys().value(index));
+    return deviceGroups_.at(index);
+}
+
+OstProto::DeviceGroup* Port::deviceGroupById(uint deviceGroupId)
+{
+    for (int i = 0; i < deviceGroups_.size(); i++) {
+        OstProto::DeviceGroup *devGrp = deviceGroups_.at(i);
+        if (devGrp->device_group_id().id() == deviceGroupId)
+            return devGrp;
+    }
+
+    return NULL;
+}
+
+bool Port::newDeviceGroupAt(int index, const OstProto::DeviceGroup *deviceGroup)
+{
+    if (index < 0 || index > numDeviceGroups())
+        return false;
+
+    OstProto::DeviceGroup *devGrp = new OstProto::DeviceGroup;
+
+    if (!devGrp) {
+        qWarning("failed allocating a new device group");
+        return false;
+    }
+
+    if (deviceGroup)
+        devGrp->CopyFrom(*deviceGroup);
+
+    devGrp->mutable_device_group_id()->set_id(newDeviceGroupId());
+    deviceGroups_.insert(index, devGrp);
+
+    return true;
+}
+
+bool Port::deleteDeviceGroupAt(int index)
+{
+    if (index < 0 || index >= deviceGroups_.size())
+        return false;
+
+    delete deviceGroups_.takeAt(index);
+
+    return true;
 }
 
 bool Port::insertDeviceGroup(uint deviceGroupId)
 {
     OstProto::DeviceGroup *devGrp;
 
-    if (deviceGroups_.contains(deviceGroupId)) {
+    if (deviceGroupById(deviceGroupId)) {
         qDebug("%s: deviceGroup id %u already exists", __FUNCTION__,
                 deviceGroupId);
         return false;
@@ -638,7 +684,7 @@ bool Port::insertDeviceGroup(uint deviceGroupId)
 
     devGrp = new OstProto::DeviceGroup;
     devGrp->mutable_device_group_id()->set_id(deviceGroupId);
-    deviceGroups_.insert(deviceGroupId, devGrp);
+    deviceGroups_.append(devGrp);
     return true;
 }
 
@@ -646,7 +692,7 @@ bool Port::updateDeviceGroup(
         uint deviceGroupId,
         OstProto::DeviceGroup *deviceGroup)
 {
-    OstProto::DeviceGroup *devGrp = deviceGroups_.value(deviceGroupId);
+    OstProto::DeviceGroup *devGrp = deviceGroupById(deviceGroupId);
 
     if (!devGrp) {
         qDebug("%s: deviceGroup id %u does not exist", __FUNCTION__,

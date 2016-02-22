@@ -312,6 +312,21 @@
     <string>Duplicate Stream</string>
    </property>
   </action>
+  <action name="actionNewDeviceGroup" >
+   <property name="text" >
+    <string>New Device Group</string>
+   </property>
+  </action>
+  <action name="actionDeleteDeviceGroup" >
+   <property name="text" >
+    <string>Delete Device Group</string>
+   </property>
+  </action>
+  <action name="actionEditDeviceGroup" >
+   <property name="text" >
+    <string>Edit Device Group</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="ostinato.qrc" />

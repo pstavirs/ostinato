@@ -165,6 +165,56 @@ bool DeviceGroupModel::setData(
     return false;
 }
 
+bool DeviceGroupModel::insertRows(
+        int row,
+        int count,
+        const QModelIndex &parent)
+{
+    int c = 0;
+
+    Q_ASSERT(!parent.isValid());
+
+    beginInsertRows(parent, row, row+count-1);
+    for (int i = 0; i < count; i++) {
+        if (port_->newDeviceGroupAt(row))
+            c++;
+    }
+    endInsertRows();
+
+    if (c != count) {
+        qWarning("failed to insert rows in DeviceGroupModel at row %d; "
+                 "requested = %d, actual = %d", row, count, c);
+        return false;
+    }
+
+    return true;
+}
+
+bool DeviceGroupModel::removeRows(
+        int row,
+        int count,
+        const QModelIndex &parent)
+{
+    int c = 0;
+
+    Q_ASSERT(!parent.isValid());
+
+    beginRemoveRows(parent, row, row+count-1);
+    for (int i = 0; i < count; i++) {
+        if (port_->deleteDeviceGroupAt(row))
+            c++;
+    }
+    endRemoveRows();
+
+    if (c != count) {
+        qWarning("failed to delete rows in DeviceGroupModel at row %d; "
+                 "requested = %d, actual = %d", row, count, c);
+        return false;
+    }
+
+    return true;
+}
+
 void DeviceGroupModel::setPort(Port *port)
 {
     port_ = port;
