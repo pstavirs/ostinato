@@ -30,6 +30,7 @@ class UInt128
 public:
     UInt128();
     UInt128(quint64 hi, quint64 lo);
+    UInt128(quint8 *value);
 
     quint64 hi64() const;
     quint64 lo64() const;
@@ -58,6 +59,27 @@ inline UInt128::UInt128(quint64 hi, quint64 lo)
 {
     hi_ = hi;
     lo_ = lo;
+}
+
+inline UInt128::UInt128(quint8 *value)
+{
+    hi_ = (quint64(value[0]) << 56)
+        | (quint64(value[1]) << 48)
+        | (quint64(value[2]) << 40)
+        | (quint64(value[3]) << 32)
+        | (quint64(value[4]) << 24)
+        | (quint64(value[5]) << 16)
+        | (quint64(value[6]) <<  8)
+        | (quint64(value[7]) <<  0);
+
+    lo_ = (quint64(value[ 8]) << 56)
+        | (quint64(value[ 9]) << 48)
+        | (quint64(value[10]) << 40)
+        | (quint64(value[11]) << 32)
+        | (quint64(value[12]) << 24)
+        | (quint64(value[13]) << 16)
+        | (quint64(value[14]) <<  8)
+        | (quint64(value[15]) <<  0);
 }
 
 inline quint64 UInt128::hi64() const

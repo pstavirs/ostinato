@@ -935,6 +935,10 @@ void PortsWindow::on_deviceGroupList_activated(const QModelIndex &index)
     if (!index.isValid())
         return;
 
-    DeviceGroupDialog dgd(this);
+    QModelIndex currentPort = tvPortList->currentIndex();
+    if (proxyPortModel)
+        currentPort = proxyPortModel->mapToSource(currentPort);
+
+    DeviceGroupDialog dgd(&plm->port(currentPort), index.row(), this);
     dgd.exec();
 }

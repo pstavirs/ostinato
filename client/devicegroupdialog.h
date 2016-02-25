@@ -24,18 +24,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QDialog>
 
+class Port;
+
 class DeviceGroupDialog: public QDialog, private Ui::DeviceGroupDialog
 {
     Q_OBJECT
 public:
-    DeviceGroupDialog(QWidget *parent = NULL, Qt::WindowFlags flags = 0);
+    DeviceGroupDialog(Port *port, int deviceGroupIndex,
+            QWidget *parent = NULL, Qt::WindowFlags flags = 0);
 
+    virtual void accept();
 private slots:
     void on_vlanTagCount_valueChanged(int value);
     void on_ipStack_currentIndexChanged(int index);
 
+    void loadDeviceGroup();
+    void storeDeviceGroup();
 private:
+    int totalVlanCount();
+
     static const int kMaxVlanTags = 4;
+
+    Port *port_;
+    int index_;
 };
 
 #endif
