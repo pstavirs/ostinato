@@ -46,8 +46,7 @@ extend OstProto.EncapEmulation {
 //  Protocols
 // ===========
 message MacEmulation {
-    optional uint64 address = 1; // FIXME: default value
-
+    optional uint64 address = 1; // no default - need unique value
     optional uint64 step = 10 [default = 1];
 }
 

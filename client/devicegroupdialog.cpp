@@ -24,14 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "emulproto.pb.h"
 #include "uint128.h"
 
+#include "macedit.h"
 #include <QHeaderView>
 #include <QHostAddress>
-
-#define uintToMacStr(num) \
-    QString("%1").arg(num, 6*2, 16, QChar('0')) \
-        .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
-#define macStrToUInt(str) \
-    str.remove(QChar(' ')).toULongLong()
 
 enum { kIpNone, kIp4, kIp6, kIpDual };
 static QStringList ipStackItems = QStringList()
@@ -59,8 +54,6 @@ DeviceGroupDialog::DeviceGroupDialog(
         Qt::WindowFlags flags)
     : QDialog(parent, flags), port_(port), index_(deviceGroupIndex)
 {
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
-
     // Setup the Dialog
     setupUi(this);
     vlanTagCount->setRange(0, kMaxVlanTags);
@@ -72,8 +65,6 @@ DeviceGroupDialog::DeviceGroupDialog(
     qDebug("vlan def size: %d", vlans->verticalHeader()->defaultSectionSize());
     qDebug("vlan min size: %d", vlans->verticalHeader()->minimumSectionSize());
 #endif
-    macAddress->setValidator(new QRegExpValidator(reMac, this));
-    macStep->setValidator(new QRegExpValidator(reMac, this));
     ipStack->insertItems(0, ipStackItems);
 
     layout()->setSizeConstraint(QLayout::SetFixedSize);
@@ -145,8 +136,23 @@ void DeviceGroupDialog::loadDeviceGroup()
             QString::number(totalVlans * devGrp->device_count()));
 
     OstEmul::MacEmulation mac = devGrp->GetExtension(OstEmul::mac);
-    macAddress->setText(uintToMacStr(mac.address()));
-    macStep->setText(uintToMacStr(mac.step()));
+    if (!mac.has_address()) {
+        // Mac address as per RFC 4814 Sec 4.2
+        // (RR & 0xFC):PP:PP:RR:RR:RR
+        // where RR is a random number, PP:PP is 1-indexed port index
+        // NOTE: although qrand() return type is a int, the max value
+        // is RAND_MAX (stdlib.h) which is often 16-bit only, so we
+        // use two random numbers
+        quint32 r1 = qrand(), r2 = qrand();
+        quint64 mac;
+        mac = quint64(r1 & 0xfc00) << 32
+            | quint64(port_->id() + 1) << 24
+            | quint64((r1 & 0xff) << 16 | (r2 & 0xffff));
+        macAddress->setValue(mac);
+    }
+    else
+        macAddress->setValue(mac.address());
+    macStep->setValue(mac.step());
 
     OstEmul::Ip4Emulation ip4 = devGrp->GetExtension(OstEmul::ip4);
     ip4Address->setText(IP4STR(ip4.address()));
@@ -184,8 +190,8 @@ void DeviceGroupDialog::storeDeviceGroup()
     devGrp->set_device_count(devicePerVlanCount->value());
 
     OstEmul::MacEmulation *mac = devGrp->MutableExtension(OstEmul::mac);
-    mac->set_address(macStrToUInt(macAddress->text()));
-    mac->set_step(macStrToUInt(macStep->text()));
+    mac->set_address(macAddress->value());
+    mac->set_step(macStep->value());
 
     if (ipStack->currentIndex() == kIp4
             || ipStack->currentIndex() == kIpDual) {
