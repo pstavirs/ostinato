@@ -181,7 +181,7 @@
        </widget>
       </item>
       <item row="0" column="1" >
-       <widget class="QLineEdit" name="ip4Address" />
+       <widget class="Ip4Edit" name="ip4Address" />
       </item>
       <item row="0" column="2" >
        <widget class="QLabel" name="label_12" >
@@ -204,7 +204,7 @@
        </widget>
       </item>
       <item row="0" column="6" >
-       <widget class="QLineEdit" name="ip4Step" />
+       <widget class="Ip4Edit" name="ip4Step" />
       </item>
       <item row="1" column="0" >
        <widget class="QLabel" name="label_7" >
@@ -214,7 +214,7 @@
        </widget>
       </item>
       <item row="1" column="1" >
-       <widget class="QLineEdit" name="ip4Gateway" />
+       <widget class="Ip4Edit" name="ip4Gateway" />
       </item>
       <item row="0" column="3" >
        <widget class="QSpinBox" name="ip4PrefixLength" >
@@ -346,6 +346,11 @@
    <class>MacEdit</class>
    <extends>QLineEdit</extends>
    <header>macedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Ip4Edit</class>
+   <extends>QLineEdit</extends>
+   <header>ip4edit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

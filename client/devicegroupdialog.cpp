@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "uint128.h"
 
 #include "macedit.h"
+#include "ip4edit.h"
 #include <QHeaderView>
 #include <QHostAddress>
 
@@ -35,11 +36,6 @@ static QStringList ipStackItems = QStringList()
 inline UInt128 UINT128(OstEmul::Ip6Address x)
 {
     return UInt128(x.hi(), x.lo());
-}
-
-inline QString IP4STR(quint32 ip)
-{
-    return QHostAddress(ip).toString();
 }
 
 inline QString IP6STR(OstEmul::Ip6Address ip)
@@ -68,6 +64,11 @@ DeviceGroupDialog::DeviceGroupDialog(
     ipStack->insertItems(0, ipStackItems);
 
     layout()->setSizeConstraint(QLayout::SetFixedSize);
+
+    connect(ip4Address, SIGNAL(textEdited(const QString&)),
+            this, SLOT(updateIp4Gateway()));
+    connect(ip4PrefixLength, SIGNAL(valueChanged(const QString&)),
+            this, SLOT(updateIp4Gateway()));
 
     loadDeviceGroup();
 }
@@ -113,6 +114,12 @@ void DeviceGroupDialog::on_ipStack_currentIndexChanged(int index)
     }
 }
 
+void DeviceGroupDialog::updateIp4Gateway()
+{
+    quint32 net = ip4Address->value() & (~0 << (32 - ip4PrefixLength->value()));
+    ip4Gateway->setValue(net | 0x01);
+}
+
 void DeviceGroupDialog::loadDeviceGroup()
 {
     OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
@@ -155,9 +162,10 @@ void DeviceGroupDialog::loadDeviceGroup()
     macStep->setValue(mac.step());
 
     OstEmul::Ip4Emulation ip4 = devGrp->GetExtension(OstEmul::ip4);
-    ip4Address->setText(IP4STR(ip4.address()));
-    ip4Step->setText(IP4STR(ip4.step()));
-    ip4Gateway->setText(IP4STR(ip4.default_gateway()));
+    ip4Address->setValue(ip4.address());
+    ip4PrefixLength->setValue(ip4.prefix_length());
+    ip4Step->setValue(ip4.step());
+    ip4Gateway->setValue(ip4.default_gateway());
 
     OstEmul::Ip6Emulation ip6 = devGrp->GetExtension(OstEmul::ip6);
     ip6Address->setText(IP6STR(ip6.address()));
@@ -196,11 +204,10 @@ void DeviceGroupDialog::storeDeviceGroup()
     if (ipStack->currentIndex() == kIp4
             || ipStack->currentIndex() == kIpDual) {
         OstEmul::Ip4Emulation *ip4 = devGrp->MutableExtension(OstEmul::ip4);
-        ip4->set_address(QHostAddress(ip4Address->text()).toIPv4Address());
+        ip4->set_address(ip4Address->value());
         ip4->set_prefix_length(ip4PrefixLength->value());
-        ip4->set_default_gateway(
-                QHostAddress(ip4Gateway->text()).toIPv4Address());
-        ip4->set_step(QHostAddress(ip4Step->text()).toIPv4Address());
+        ip4->set_default_gateway(ip4Gateway->value());
+        ip4->set_step(ip4Step->value());
 
         if (ipStack->currentIndex() == kIp4)
             devGrp->ClearExtension(OstEmul::ip6);

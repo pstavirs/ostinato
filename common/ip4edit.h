@@ -17,37 +17,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _MAC_EDIT_H
-#define _MAC_EDIT_H
+#ifndef _IP4_EDIT_H
+#define _IP4_EDIT_H
 
+#include <QHostAddress>
 #include <QLineEdit>
 
-class MacEdit: public QLineEdit
+class Ip4Edit: public QLineEdit
 {
 public:
-    MacEdit(QWidget *parent = 0);
+    Ip4Edit(QWidget *parent = 0);
 
-    quint64 value();
-    void setValue(quint64 val);
+    quint32 value();
+    void setValue(quint32 val);
 };
 
-inline MacEdit::MacEdit(QWidget *parent)
+inline Ip4Edit::Ip4Edit(QWidget *parent)
     : QLineEdit(parent)
 {
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
-
-    setValidator(new QRegExpValidator(reMac, this));
+    setInputMask(QString("000.000.000.000; "));
 }
 
-inline quint64 MacEdit::value()
+inline quint32 Ip4Edit::value()
 {
-    return text().remove(QChar(':')).toULongLong(NULL, 16);
+    return QHostAddress(text()).toIPv4Address();
 }
 
-inline void MacEdit::setValue(quint64 val)
+inline void Ip4Edit::setValue(quint32 val)
 {
-    setText(QString("%1").arg(val, 6*2, 16, QChar('0'))
-        .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper());
+    setText(QHostAddress(val).toString());
 }
 
 #endif

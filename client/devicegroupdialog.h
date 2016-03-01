@@ -38,6 +38,8 @@ private slots:
     void on_vlanTagCount_valueChanged(int value);
     void on_ipStack_currentIndexChanged(int index);
 
+    void updateIp4Gateway();
+
     void loadDeviceGroup();
     void storeDeviceGroup();
 private:
