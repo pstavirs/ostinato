@@ -43,6 +43,7 @@ public:
     UInt128 operator<<(const int &shift) const;
     UInt128 operator~() const;
     UInt128 operator&(const UInt128 &other) const;
+    UInt128 operator|(const UInt128 &other) const;
 
 private:
     quint64 hi_;
@@ -149,6 +150,11 @@ inline UInt128 UInt128::operator~() const
 inline UInt128 UInt128::operator&(const UInt128 &other) const
 {
     return UInt128(hi_ & other.hi_, lo_ & other.lo_);
+}
+
+inline UInt128 UInt128::operator|(const UInt128 &other) const
+{
+    return UInt128(hi_ | other.hi_, lo_ | other.lo_);
 }
 
 template <> inline UInt128 qFromBigEndian<UInt128>(const uchar *src)

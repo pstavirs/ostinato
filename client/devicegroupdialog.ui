@@ -246,7 +246,7 @@
        </widget>
       </item>
       <item row="0" column="1" >
-       <widget class="QLineEdit" name="ip6Address" />
+       <widget class="Ip6Edit" name="ip6Address" />
       </item>
       <item row="0" column="2" >
        <widget class="QLabel" name="label_15" >
@@ -269,7 +269,7 @@
        </widget>
       </item>
       <item row="0" column="6" >
-       <widget class="QLineEdit" name="ip6Step" />
+       <widget class="Ip6Edit" name="ip6Step" />
       </item>
       <item row="1" column="0" >
        <widget class="QLabel" name="label_17" >
@@ -279,7 +279,7 @@
        </widget>
       </item>
       <item row="1" column="1" >
-       <widget class="QLineEdit" name="ip6Gateway" />
+       <widget class="Ip6Edit" name="ip6Gateway" />
       </item>
       <item row="0" column="3" >
        <widget class="QSpinBox" name="ip6PrefixLength" >
@@ -351,6 +351,11 @@
    <class>Ip4Edit</class>
    <extends>QLineEdit</extends>
    <header>ip4edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Ip6Edit</class>
+   <extends>QLineEdit</extends>
+   <header>ip6edit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

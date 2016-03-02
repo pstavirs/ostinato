@@ -39,6 +39,7 @@ private slots:
     void on_ipStack_currentIndexChanged(int index);
 
     void updateIp4Gateway();
+    void updateIp6Gateway();
 
     void loadDeviceGroup();
     void storeDeviceGroup();

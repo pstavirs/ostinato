@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "emulproto.pb.h"
 #include "uint128.h"
 
-#include "macedit.h"
-#include "ip4edit.h"
 #include <QHeaderView>
 #include <QHostAddress>
 
@@ -38,9 +36,13 @@ inline UInt128 UINT128(OstEmul::Ip6Address x)
     return UInt128(x.hi(), x.lo());
 }
 
-inline QString IP6STR(OstEmul::Ip6Address ip)
+inline OstEmul::Ip6Address IP6ADDR(UInt128 x)
 {
-    return QHostAddress(UINT128(ip).toArray()).toString();
+    OstEmul::Ip6Address ip;
+
+    ip.set_hi(x.hi64());
+    ip.set_lo(x.lo64());
+    return ip;
 }
 
 DeviceGroupDialog::DeviceGroupDialog(
@@ -69,6 +71,10 @@ DeviceGroupDialog::DeviceGroupDialog(
             this, SLOT(updateIp4Gateway()));
     connect(ip4PrefixLength, SIGNAL(valueChanged(const QString&)),
             this, SLOT(updateIp4Gateway()));
+    connect(ip6Address, SIGNAL(textEdited(const QString&)),
+            this, SLOT(updateIp6Gateway()));
+    connect(ip6PrefixLength, SIGNAL(valueChanged(const QString&)),
+            this, SLOT(updateIp6Gateway()));
 
     loadDeviceGroup();
 }
@@ -120,6 +126,13 @@ void DeviceGroupDialog::updateIp4Gateway()
     ip4Gateway->setValue(net | 0x01);
 }
 
+void DeviceGroupDialog::updateIp6Gateway()
+{
+    UInt128 net = ip6Address->value()
+                        & (~UInt128(0, 0) << (128 - ip6PrefixLength->value()));
+    ip6Gateway->setValue(net | UInt128(0, 1));
+}
+
 void DeviceGroupDialog::loadDeviceGroup()
 {
     OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
@@ -168,9 +181,16 @@ void DeviceGroupDialog::loadDeviceGroup()
     ip4Gateway->setValue(ip4.default_gateway());
 
     OstEmul::Ip6Emulation ip6 = devGrp->GetExtension(OstEmul::ip6);
-    ip6Address->setText(IP6STR(ip6.address()));
-    ip6Step->setText(IP6STR(ip6.step()));
-    ip6Gateway->setText(IP6STR(ip6.default_gateway()));
+    // ip6 fields don't have default values defined in the .proto
+    // because protobuf doesn't allow different default values for
+    // embedded message fields, so assign them here
+    // Use address 2001:0200::/64 from the RFC 5180 range
+    ip6Address->setValue(ip6.has_address() ?
+            UINT128(ip6.address()) : UInt128(0x20010200ULL << 32, 2));
+    ip6PrefixLength->setValue(ip6.prefix_length());
+    ip6Step->setValue(ip6.has_step() ? UINT128(ip6.step()) : UInt128(0, 1));
+    ip6Gateway->setValue(ip6.has_default_gateway() ?
+            UINT128(ip6.default_gateway()) : UInt128(0x20010200ULL << 32, 1));
 
     int stk = kIpNone;
     if (devGrp->HasExtension(OstEmul::ip4))
@@ -216,25 +236,10 @@ void DeviceGroupDialog::storeDeviceGroup()
     if (ipStack->currentIndex() == kIp6
             || ipStack->currentIndex() == kIpDual) {
         OstEmul::Ip6Emulation *ip6 = devGrp->MutableExtension(OstEmul::ip6);
-        Q_IPV6ADDR w;
-        UInt128 x;
-
-        w = QHostAddress(ip6Address->text()).toIPv6Address();
-        x = UInt128((quint8*)&w);
-        ip6->mutable_address()->set_hi(x.hi64());
-        ip6->mutable_address()->set_lo(x.lo64());
-
-        ip6->set_prefix_length(ip4PrefixLength->value());
-
-        w = QHostAddress(ip6Gateway->text()).toIPv6Address();
-        x = UInt128((quint8*)&w);
-        ip6->mutable_default_gateway()->set_hi(x.hi64());
-        ip6->mutable_default_gateway()->set_lo(x.lo64());
-
-        w = QHostAddress(ip6Step->text()).toIPv6Address();
-        x = UInt128((quint8*)&w);
-        ip6->mutable_step()->set_hi(x.hi64());
-        ip6->mutable_step()->set_lo(x.lo64());
+        ip6->mutable_address()->CopyFrom(IP6ADDR(ip6Address->value()));
+        ip6->set_prefix_length(ip6PrefixLength->value());
+        ip6->mutable_step()->CopyFrom(IP6ADDR(ip6Step->value()));
+        ip6->mutable_default_gateway()->CopyFrom(IP6ADDR(ip6Gateway->value()));
 
         if (ipStack->currentIndex() == kIp6)
             devGrp->ClearExtension(OstEmul::ip4);

@@ -66,8 +66,10 @@ message Ip6Address {
 }
 
 message Ip6Emulation {
+    // no defaults since we can't set different default values
+    // for an embedded message field
     optional Ip6Address address = 1;
-    optional uint32 prefix_length = 2;
+    optional uint32 prefix_length = 2 [default = 64];
     optional Ip6Address default_gateway = 3;
 
     optional Ip6Address step = 10;
