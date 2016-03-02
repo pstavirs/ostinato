@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _IP6_EDIT_H
 
 #include "ipv6addressvalidator.h"
-#include "UInt128.h"
+#include "uint128.h"
 
 #include <QHostAddress>
 #include <QLineEdit>
