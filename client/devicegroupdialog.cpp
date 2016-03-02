@@ -173,16 +173,15 @@ void DeviceGroupDialog::updateTotalVlanCount()
     int count = vlanTagCount->value() ? 1 : 0;
     for (int i = 0; i < vlanTagCount->value(); i++)
         count *= vlans->item(i, kVlanCount)->text().toUInt();
-    vlanCount->setText(QString::number(count));
+    vlanCount->setValue(count);
 
     updateTotalDeviceCount();
 }
 
 void DeviceGroupDialog::updateTotalDeviceCount()
 {
-    totalDeviceCount->setText(QString::number(
-                qMax(vlanCount->text().toInt(), 1)
-                    * devicePerVlanCount->value()));
+    totalDeviceCount->setValue(qMax(vlanCount->value(), 1)
+                                    * devicePerVlanCount->value());
 }
 
 void DeviceGroupDialog::updateIp4Gateway()

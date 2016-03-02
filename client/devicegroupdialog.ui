@@ -63,7 +63,7 @@
       </widget>
      </item>
      <item row="0" column="1" >
-      <widget class="QLineEdit" name="vlanCount" >
+      <widget class="IntEdit" name="vlanCount" >
        <property name="enabled" >
         <bool>false</bool>
        </property>
@@ -90,7 +90,7 @@
       </widget>
      </item>
      <item row="0" column="6" >
-      <widget class="QLineEdit" name="totalDeviceCount" >
+      <widget class="IntEdit" name="totalDeviceCount" >
        <property name="enabled" >
         <bool>false</bool>
        </property>
@@ -320,6 +320,11 @@
    <class>Ip6Edit</class>
    <extends>QLineEdit</extends>
    <header>ip6edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>IntEdit</class>
+   <extends>QSpinBox</extends>
+   <header>intedit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
