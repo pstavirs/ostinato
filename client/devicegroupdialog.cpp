@@ -27,6 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QHeaderView>
 #include <QHostAddress>
 
+enum { kVlanId, kVlanCount, kVlanStep, kVlanCfi, kVlanPrio, kVlanTpid,
+    kVlanColumns };
+static QStringList vlanTableColumnHeaders = QStringList()
+    << "Vlan Id" << "Count" << "Step" << "CFI/DE" << "Prio" << "TPID";
+
 enum { kIpNone, kIp4, kIp6, kIpDual };
 static QStringList ipStackItems = QStringList()
     << "None" << "IPv4" << "IPv6" << "Dual";
@@ -63,9 +68,37 @@ DeviceGroupDialog::DeviceGroupDialog(
     qDebug("vlan def size: %d", vlans->verticalHeader()->defaultSectionSize());
     qDebug("vlan min size: %d", vlans->verticalHeader()->minimumSectionSize());
 #endif
+    // Populate the Vlan Table with placeholders - we do this so that
+    // user entered values are retained during the lifetime of the dialog
+    // even if user is playing around with number of vlan tags
+    // TODO: use spinbox delegate with rangecheck for validation
+    vlans->setRowCount(kMaxVlanTags);
+    vlans->setColumnCount(kVlanColumns);
+    vlans->setHorizontalHeaderLabels(vlanTableColumnHeaders);
+    for (int i = 0; i < kMaxVlanTags; i++) {
+        vlans->setItem(i, kVlanId,
+                new QTableWidgetItem(QString::number(100*(i+1))));
+        vlans->setItem(i, kVlanCount,
+                new QTableWidgetItem(QString::number(10)));
+        vlans->setItem(i, kVlanStep,
+                new QTableWidgetItem(QString::number(1)));
+        vlans->setItem(i, kVlanCfi,
+                new QTableWidgetItem(QString::number(0)));
+        vlans->setItem(i, kVlanPrio,
+                new QTableWidgetItem(QString::number(0)));
+        vlans->setItem(i, kVlanTpid,
+                new QTableWidgetItem(QString::number(0x8100, 16)));
+    }
+    // Set vlan tag count *after* adding items so connected slots
+    // can access the items
+    vlanTagCount->setValue(kMaxVlanTags);
+
     ipStack->insertItems(0, ipStackItems);
 
     layout()->setSizeConstraint(QLayout::SetFixedSize);
+
+    connect(devicePerVlanCount, SIGNAL(valueChanged(const QString&)),
+            this, SLOT(updateTotalDeviceCount()));
 
     connect(ip4Address, SIGNAL(textEdited(const QString&)),
             this, SLOT(updateIp4Gateway()));
@@ -92,7 +125,22 @@ void DeviceGroupDialog::on_vlanTagCount_valueChanged(int value)
 {
     Q_ASSERT((value >= 0) && (value <= kMaxVlanTags));
 
+    for (int row = 0; row < kMaxVlanTags; row++)
+        vlans->setRowHidden(row, row >= value);
+
     vlans->setVisible(value > 0);
+    updateTotalVlanCount();
+}
+
+void DeviceGroupDialog::on_vlans_cellChanged(int row, int col)
+{
+    if (col != kVlanCount)
+        return;
+
+    if (vlans->isRowHidden(row))
+        return;
+
+    updateTotalVlanCount();
 }
 
 void DeviceGroupDialog::on_ipStack_currentIndexChanged(int index)
@@ -120,6 +168,23 @@ void DeviceGroupDialog::on_ipStack_currentIndexChanged(int index)
     }
 }
 
+void DeviceGroupDialog::updateTotalVlanCount()
+{
+    int count = vlanTagCount->value() ? 1 : 0;
+    for (int i = 0; i < vlanTagCount->value(); i++)
+        count *= vlans->item(i, kVlanCount)->text().toUInt();
+    vlanCount->setText(QString::number(count));
+
+    updateTotalDeviceCount();
+}
+
+void DeviceGroupDialog::updateTotalDeviceCount()
+{
+    totalDeviceCount->setText(QString::number(
+                qMax(vlanCount->text().toInt(), 1)
+                    * devicePerVlanCount->value()));
+}
+
 void DeviceGroupDialog::updateIp4Gateway()
 {
     quint32 net = ip4Address->value() & (~0 << (32 - ip4PrefixLength->value()));
@@ -137,23 +202,32 @@ void DeviceGroupDialog::loadDeviceGroup()
 {
     OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
     int tagCount = 0;
-    int totalVlans;
 
     Q_ASSERT(devGrp);
 
     name->setText(QString::fromStdString(devGrp->core().name()));
 
-    if (devGrp->has_encap() && devGrp->encap().HasExtension(OstEmul::vlan))
-        tagCount = devGrp->encap().GetExtension(OstEmul::vlan).stack_size();
+    if (devGrp->has_encap() && devGrp->encap().HasExtension(OstEmul::vlan)) {
+        OstEmul::VlanEmulation vlan = devGrp->encap()
+                                            .GetExtension(OstEmul::vlan);
+        tagCount = vlan.stack_size();
+        for (int i = 0; i < tagCount; i++) {
+            OstEmul::VlanEmulation::Vlan v = vlan.stack(i);
+            vlans->item(i, kVlanPrio)->setText(
+                    QString::number((v.vlan_tag() >> 13) & 0x7));
+            vlans->item(i, kVlanCfi)->setText(
+                    QString::number((v.vlan_tag() >> 12) & 0x1));
+            vlans->item(i, kVlanId)->setText(
+                    QString::number(v.vlan_tag() & 0x0fff));
+            vlans->item(i, kVlanCount)->setText(QString::number(v.count()));
+            vlans->item(i, kVlanStep)->setText(QString::number(v.step()));
+            vlans->item(i, kVlanTpid)->setText(QString::number(v.tpid(), 16));
+        }
+    }
     vlanTagCount->setValue(tagCount);
 
-    // FIXME: vlan table widget
-
-    totalVlans = totalVlanCount();
-    vlanCount->setText(QString::number(totalVlans));
+    updateTotalVlanCount();
     devicePerVlanCount->setValue(devGrp->device_count());
-    totalDeviceCount->setText(
-            QString::number(totalVlans * devGrp->device_count()));
 
     OstEmul::MacEmulation mac = devGrp->GetExtension(OstEmul::mac);
     if (!mac.has_address()) {
@@ -212,8 +286,20 @@ void DeviceGroupDialog::storeDeviceGroup()
 
     devGrp->mutable_core()->set_name(name->text().toStdString());
 
+    OstEmul::VlanEmulation *vlan = devGrp->mutable_encap()
+                                        ->MutableExtension(OstEmul::vlan);
+    vlan->clear_stack();
     tagCount = vlanTagCount->value();
-    // FIXME: vlan table widget
+    for (int i = 0; i < tagCount; i++) {
+        OstEmul::VlanEmulation::Vlan *v = vlan->add_stack();
+        v->set_vlan_tag(
+                  vlans->item(i, kVlanPrio)->text().toUInt() << 13
+                | vlans->item(i, kVlanCfi)->text().toUInt() << 12
+                | vlans->item(i, kVlanId)->text().toUInt());
+        v->set_count(vlans->item(i, kVlanCount)->text().toUInt());
+        v->set_step(vlans->item(i, kVlanStep)->text().toUInt());
+        v->set_tpid(vlans->item(i, kVlanTpid)->text().toUInt(NULL, 16));
+    }
 
     devGrp->set_device_count(devicePerVlanCount->value());
 
@@ -249,10 +335,4 @@ void DeviceGroupDialog::storeDeviceGroup()
         devGrp->ClearExtension(OstEmul::ip4);
         devGrp->ClearExtension(OstEmul::ip6);
     }
-}
-
-int DeviceGroupDialog::totalVlanCount()
-{
-    // FIXME
-    return 1;
 }

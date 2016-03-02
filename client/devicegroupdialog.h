@@ -36,16 +36,17 @@ public:
     virtual void accept();
 private slots:
     void on_vlanTagCount_valueChanged(int value);
+    void on_vlans_cellChanged(int row, int col);
     void on_ipStack_currentIndexChanged(int index);
 
+    void updateTotalVlanCount();
+    void updateTotalDeviceCount();
     void updateIp4Gateway();
     void updateIp6Gateway();
 
     void loadDeviceGroup();
     void storeDeviceGroup();
 private:
-    int totalVlanCount();
-
     static const int kMaxVlanTags = 4;
 
     Port *port_;
