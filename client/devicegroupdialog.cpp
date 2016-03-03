@@ -61,14 +61,6 @@ DeviceGroupDialog::DeviceGroupDialog(
     // Setup the Dialog
     setupUi(this);
     vlanTagCount->setRange(0, kMaxVlanTags);
-#if 0 // FIXME: not working
-    qDebug("vlan def size: %d", vlans->verticalHeader()->defaultSectionSize());
-    qDebug("vlan min size: %d", vlans->verticalHeader()->minimumSectionSize());
-    vlans->verticalHeader()->setDefaultSectionSize(
-        vlans->verticalHeader()->minimumSectionSize());
-    qDebug("vlan def size: %d", vlans->verticalHeader()->defaultSectionSize());
-    qDebug("vlan min size: %d", vlans->verticalHeader()->minimumSectionSize());
-#endif
     // Populate the Vlan Table with placeholders - we do this so that
     // user entered values are retained during the lifetime of the dialog
     // even if user is playing around with number of vlan tags
@@ -87,7 +79,7 @@ DeviceGroupDialog::DeviceGroupDialog(
         vlans->setItem(i, kVlanPrio,
                 new QTableWidgetItem(QString::number(0)));
         vlans->setItem(i, kVlanTpid,
-                new QTableWidgetItem(QString::number(0x8100, 16)));
+                new QTableWidgetItem(QString("0x8100")));
     }
 
     // Set SpinBoxDelegate for all columns except TPID
@@ -101,12 +93,16 @@ DeviceGroupDialog::DeviceGroupDialog(
             vlans->setItemDelegateForColumn(i, spd);
     }
 
-    // Set vlan tag count *after* adding items so connected slots
+    vlans->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    vlans->resizeRowsToContents();
+
+    // Set vlan tag count *after* adding all items, so connected slots
     // can access the items
     vlanTagCount->setValue(kMaxVlanTags);
 
     ipStack->insertItems(0, ipStackItems);
 
+    // setup dialog to auto-resize as widgets are hidden or shown
     layout()->setSizeConstraint(QLayout::SetFixedSize);
 
     connect(devicePerVlanCount, SIGNAL(valueChanged(const QString&)),
@@ -232,7 +228,8 @@ void DeviceGroupDialog::loadDeviceGroup()
                     QString::number(v.vlan_tag() & 0x0fff));
             vlans->item(i, kVlanCount)->setText(QString::number(v.count()));
             vlans->item(i, kVlanStep)->setText(QString::number(v.step()));
-            vlans->item(i, kVlanTpid)->setText(QString::number(v.tpid(), 16));
+            vlans->item(i, kVlanTpid)->setText(QString("0x%1")
+                                                    .arg(v.tpid(), 0, 16));
         }
     }
     vlanTagCount->setValue(tagCount);
