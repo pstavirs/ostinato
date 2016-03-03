@@ -44,7 +44,8 @@ HEADERS = \
     pythonfileformat.h \
     pdmlprotocol.h \
     pdmlprotocols.h \
-    pdmlreader.h
+    pdmlreader.h \
+    spinboxdelegate.h
 
 HEADERS += \
     abstractprotocolconfig.h \
@@ -87,6 +88,7 @@ SOURCES += \
     pdmlprotocol.cpp \
     pdmlprotocols.cpp \
     pdmlreader.cpp \
+    spinboxdelegate.cpp
 
 SOURCES += \
     protocolwidgetfactory.cpp \

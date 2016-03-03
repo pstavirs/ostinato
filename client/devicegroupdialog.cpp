@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicegroupdialog.h"
 
 #include "port.h"
+#include "spinboxdelegate.h"
 
 #include "emulproto.pb.h"
 #include "uint128.h"
@@ -71,7 +72,6 @@ DeviceGroupDialog::DeviceGroupDialog(
     // Populate the Vlan Table with placeholders - we do this so that
     // user entered values are retained during the lifetime of the dialog
     // even if user is playing around with number of vlan tags
-    // TODO: use spinbox delegate with rangecheck for validation
     vlans->setRowCount(kMaxVlanTags);
     vlans->setColumnCount(kVlanColumns);
     vlans->setHorizontalHeaderLabels(vlanTableColumnHeaders);
@@ -89,6 +89,18 @@ DeviceGroupDialog::DeviceGroupDialog(
         vlans->setItem(i, kVlanTpid,
                 new QTableWidgetItem(QString::number(0x8100, 16)));
     }
+
+    // Set SpinBoxDelegate for all columns except TPID
+    SpinBoxDelegate *spd = new SpinBoxDelegate(this);
+    spd->setColumnRange(kVlanId, 0, 4095);
+    spd->setColumnRange(kVlanStep, 0, 4095);
+    spd->setColumnRange(kVlanCfi, 0, 1);
+    spd->setColumnRange(kVlanPrio, 0, 7);
+    for (int i = 0; i < kVlanColumns; i++) {
+        if (i != kVlanTpid)
+            vlans->setItemDelegateForColumn(i, spd);
+    }
+
     // Set vlan tag count *after* adding items so connected slots
     // can access the items
     vlanTagCount->setValue(kMaxVlanTags);
