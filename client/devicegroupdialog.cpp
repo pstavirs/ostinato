@@ -60,7 +60,9 @@ DeviceGroupDialog::DeviceGroupDialog(
 {
     // Setup the Dialog
     setupUi(this);
+
     vlanTagCount->setRange(0, kMaxVlanTags);
+
     // Populate the Vlan Table with placeholders - we do this so that
     // user entered values are retained during the lifetime of the dialog
     // even if user is playing around with number of vlan tags
@@ -101,6 +103,13 @@ DeviceGroupDialog::DeviceGroupDialog(
     vlanTagCount->setValue(kMaxVlanTags);
 
     ipStack->insertItems(0, ipStackItems);
+
+    // TODO: DeviceGroup Traversal; hide buttons for now
+    prev->setHidden(true);
+    next->setHidden(true);
+
+    // TODO: Preview devices expanded from deviceGroup configuration
+    // for user convenience
 
     // setup dialog to auto-resize as widgets are hidden or shown
     layout()->setSizeConstraint(QLayout::SetFixedSize);
