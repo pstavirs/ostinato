@@ -409,6 +409,38 @@ void Port::getModifiedStreamsSinceLastSync(
     qDebug("Done %s", __FUNCTION__);
 }
 
+void Port::getDeletedDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupIdList &deviceGroupIdList)
+{
+    deviceGroupIdList.clear_device_group_id();
+    foreach(int id, lastSyncDeviceGroupList_) {
+        if (!deviceGroupById(id))
+            deviceGroupIdList.add_device_group_id()->set_id(id);
+    }
+}
+
+void Port::getNewDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupIdList &deviceGroupIdList)
+{
+    deviceGroupIdList.clear_device_group_id();
+    foreach(OstProto::DeviceGroup *dg, deviceGroups_) {
+        quint32 dgid = dg->device_group_id().id();
+        if (!lastSyncDeviceGroupList_.contains(dgid))
+            deviceGroupIdList.add_device_group_id()->set_id(dgid);
+    }
+}
+
+void Port::getModifiedDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupConfigList &deviceGroupConfigList)
+{
+    // FIXME: we currently don't have any mechanism to check
+    // if a DeviceGroup was modified since last sync, so we
+    // include all DeviceGroups
+    deviceGroupConfigList.clear_device_group();
+    foreach(OstProto::DeviceGroup *dg, deviceGroups_)
+        deviceGroupConfigList.add_device_group()->CopyFrom(*dg);
+}
+
 void Port::when_syncComplete()
 {
     //reorderStreamsByOrdinals();
@@ -416,6 +448,12 @@ void Port::when_syncComplete()
     mLastSyncStreamList.clear();
     for (int i=0; i<mStreams.size(); i++)
         mLastSyncStreamList.append(mStreams[i]->id());
+
+    lastSyncDeviceGroupList_.clear();
+    for (int i = 0; i < deviceGroups_.size(); i++) {
+        lastSyncDeviceGroupList_.append(
+                deviceGroups_.at(i)->device_group_id().id());
+    }
 }
 
 void Port::updateStats(OstProto::PortStats *portStats)

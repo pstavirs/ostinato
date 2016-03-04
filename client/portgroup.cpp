@@ -389,6 +389,13 @@ void PortGroup::when_configApply(int portIndex)
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     mainWindow->setDisabled(true);
 
+    // FIXME: as currently written this code will make unnecessary RPCs
+    // even if the request contains no data; the fix will need to take
+    // care to identify when sync is complete
+
+    //
+    // Update/Sync Streams
+    //
     qDebug("applying 'deleted streams' ...");
     streamIdList = new OstProto::StreamIdList;
     ack = new OstProto::Ack;
@@ -422,6 +429,47 @@ void PortGroup::when_configApply(int portIndex)
     serviceStub->modifyStream(controller, streamConfigList, ack, 
             NewCallback(this, &PortGroup::processModifyStreamAck, 
                 portIndex, controller));
+
+    //
+    // Update/Sync DeviceGroups
+    //
+    OstProto::DeviceGroupIdList *deviceGroupIdList;
+    OstProto::DeviceGroupConfigList *deviceGroupConfigList;
+
+    qDebug("applying 'deleted deviceGroups' ...");
+    deviceGroupIdList = new OstProto::DeviceGroupIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(deviceGroupIdList, ack);
+
+    deviceGroupIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getDeletedDeviceGroupsSinceLastSync(*deviceGroupIdList);
+
+    serviceStub->deleteDeviceGroup(controller, deviceGroupIdList, ack,
+        NewCallback(this, &PortGroup::processDeleteDeviceGroupAck, controller));
+
+    qDebug("applying 'new deviceGroups' ...");
+    deviceGroupIdList = new OstProto::DeviceGroupIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(deviceGroupIdList, ack);
+
+    deviceGroupIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getNewDeviceGroupsSinceLastSync(*deviceGroupIdList);
+
+    serviceStub->addDeviceGroup(controller, deviceGroupIdList, ack,
+        NewCallback(this, &PortGroup::processAddDeviceGroupAck, controller));
+
+    qDebug("applying 'modified deviceGroups' ...");
+    deviceGroupConfigList = new OstProto::DeviceGroupConfigList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(deviceGroupConfigList, ack);
+
+    deviceGroupConfigList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getModifiedDeviceGroupsSinceLastSync(
+            *deviceGroupConfigList);
+
+    serviceStub->modifyDeviceGroup(controller, deviceGroupConfigList, ack,
+            NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
+                portIndex, controller));
 }
 
 void PortGroup::processAddStreamAck(PbRpcController *controller)
@@ -437,6 +485,25 @@ void PortGroup::processDeleteStreamAck(PbRpcController *controller)
 }
 
 void PortGroup::processModifyStreamAck(int portIndex, 
+        PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processAddDeviceGroupAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processDeleteDeviceGroupAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processModifyDeviceGroupAck(int portIndex,
         PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
@@ -562,8 +629,6 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         streamId = streamIdList->stream_id(i).id();
         mPorts[portIndex]->insertStream(streamId);
     }
-
-    mPorts[portIndex]->when_syncComplete();
 
     // Are we done for all ports?
     if (numPorts() && portIndex >= (numPorts()-1))
@@ -706,7 +771,7 @@ void PortGroup::processDeviceGroupIdList(
         mPorts[portIndex]->insertDeviceGroup(devGrpId);
     }
 
-    //FIXME: mPorts[portIndex]->when_syncComplete();
+    mPorts[portIndex]->when_syncComplete();
 
     // Are we done for all ports?
     if (numPorts() && portIndex >= (numPorts()-1))

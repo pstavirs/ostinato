@@ -106,6 +106,10 @@ public:
     void processDeleteStreamAck(PbRpcController *controller);
     void processModifyStreamAck(int portIndex, PbRpcController *controller);
 
+    void processAddDeviceGroupAck(PbRpcController *controller);
+    void processDeleteDeviceGroupAck(PbRpcController *controller);
+    void processModifyDeviceGroupAck(int portIndex, PbRpcController *controller);
+
     void modifyPort(int portId, OstProto::Port portConfig);
     void processModifyPortAck(PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);

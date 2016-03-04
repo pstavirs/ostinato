@@ -52,6 +52,7 @@ class Port : public QObject {
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
 
+    QList<quint32>    lastSyncDeviceGroupList_;
     QList<OstProto::DeviceGroup*> deviceGroups_;
 
     uint newStreamId();
@@ -133,6 +134,13 @@ public:
     void getNewStreamsSinceLastSync(OstProto::StreamIdList &streamIdList);
     void getModifiedStreamsSinceLastSync(
         OstProto::StreamConfigList &streamConfigList);
+
+    void getDeletedDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupIdList &streamIdList);
+    void getNewDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupIdList &streamIdList);
+    void getModifiedDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupConfigList &streamConfigList);
 
     void when_syncComplete();
 
