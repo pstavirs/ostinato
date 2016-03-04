@@ -34,7 +34,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="portDetail" >
-       <layout class="QGridLayout" >
+       <layout class="QVBoxLayout" >
         <property name="leftMargin" >
          <number>0</number>
         </property>
@@ -47,7 +47,51 @@
         <property name="bottomMargin" >
          <number>0</number>
         </property>
-        <item row="1" column="0" >
+        <item>
+         <widget class="QFrame" name="frame" >
+          <property name="frameShape" >
+           <enum>QFrame::Panel</enum>
+          </property>
+          <property name="frameShadow" >
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" >
+           <property name="leftMargin" >
+            <number>3</number>
+           </property>
+           <property name="topMargin" >
+            <number>3</number>
+           </property>
+           <property name="rightMargin" >
+            <number>3</number>
+           </property>
+           <property name="bottomMargin" >
+            <number>3</number>
+           </property>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pbApply" >
+             <property name="text" >
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QTabWidget" name="portConfig" >
           <property name="currentIndex" >
            <number>0</number>
@@ -60,86 +104,44 @@
             <item>
              <layout class="QHBoxLayout" >
               <item>
-               <widget class="QFrame" name="frAggregate" >
-                <property name="sizePolicy" >
-                 <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+               <widget class="QRadioButton" name="radioButton" >
+                <property name="text" >
+                 <string>Avg pps</string>
                 </property>
-                <property name="frameShape" >
-                 <enum>QFrame::StyledPanel</enum>
+                <property name="checked" >
+                 <bool>true</bool>
                 </property>
-                <property name="frameShadow" >
-                 <enum>QFrame::Sunken</enum>
-                </property>
-                <layout class="QGridLayout" >
-                 <item row="0" column="0" >
-                  <widget class="QRadioButton" name="radioButton" >
-                   <property name="text" >
-                    <string>Avg pps</string>
-                   </property>
-                   <property name="checked" >
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1" >
-                  <widget class="QLineEdit" name="averagePacketsPerSec" />
-                 </item>
-                 <item row="1" column="0" >
-                  <widget class="QRadioButton" name="radioButton_2" >
-                   <property name="text" >
-                    <string>Avg bps</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1" >
-                  <widget class="QLineEdit" name="averageBitsPerSec" >
-                   <property name="enabled" >
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2" >
-                  <spacer>
-                   <property name="orientation" >
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" >
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
                </widget>
               </item>
               <item>
-               <layout class="QVBoxLayout" >
-                <item>
-                 <widget class="QPushButton" name="pbApply" >
-                  <property name="text" >
-                   <string>Apply</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer>
-                  <property name="orientation" >
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" >
-                   <size>
-                    <width>20</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
+               <widget class="QLineEdit" name="averagePacketsPerSec" />
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_2" >
+                <property name="text" >
+                 <string>Avg bps</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="averageBitsPerSec" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </item>
@@ -174,7 +176,48 @@
            <attribute name="title" >
             <string>Devices</string>
            </attribute>
-           <layout class="QHBoxLayout" >
+           <layout class="QVBoxLayout" >
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="deviceConfig" >
+                <property name="text" >
+                 <string>Configuration</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="deviceInfo" >
+                <property name="text" >
+                 <string>Information</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>131</width>
+                  <height>23</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="refresh" >
+                <property name="text" >
+                 <string>Refresh</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
             <item>
              <widget class="QTableView" name="deviceGroupList" >
               <property name="sizePolicy" >
@@ -339,12 +382,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>313</x>
-     <y>28</y>
+     <x>326</x>
+     <y>80</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>380</x>
-     <y>28</y>
+     <x>454</x>
+     <y>79</y>
     </hint>
    </hints>
   </connection>
@@ -355,12 +398,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>333</x>
-     <y>55</y>
+     <x>523</x>
+     <y>80</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>395</x>
-     <y>56</y>
+     <x>651</x>
+     <y>88</y>
     </hint>
    </hints>
   </connection>

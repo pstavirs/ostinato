@@ -45,6 +45,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     plm = pgl;
 
     setupUi(this);
+    refresh->setVisible(deviceInfo->isChecked());
 
     tvPortList->header()->hide();
 
@@ -890,6 +891,14 @@ _exit:
 //
 // DeviceGroup slots
 //
+
+void PortsWindow::on_deviceInfo_toggled(bool checked)
+{
+    refresh->setVisible(checked);
+
+    // TODO: toggle between deviceGroup config and deviceInfo
+}
+
 void PortsWindow::on_actionNewDeviceGroup_triggered()
 {
     // In case nothing is selected, insert 1 row at the top
