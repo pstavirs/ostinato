@@ -35,7 +35,7 @@ static QStringList columns_ = QStringList()
     << "Name"
     << "Vlans"
     << "Devices"
-    << "IP";
+    << "IP Stack";
 
 DeviceGroupModel::DeviceGroupModel(QObject *parent)
     : QAbstractTableModel(parent)

@@ -105,6 +105,9 @@ DeviceGroupDialog::DeviceGroupDialog(
     ipStack->insertItems(0, ipStackItems);
 
     // TODO: DeviceGroup Traversal; hide buttons for now
+    // NOTE for implementation: Use a QHash<int, deviceGroup*>
+    // to store modified values while traversing; in accept()
+    // update port->deviceGroups[] from the QHash
     prev->setHidden(true);
     next->setHidden(true);
 
