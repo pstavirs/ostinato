@@ -37,6 +37,15 @@ static const int kEthOverhead = 20;
 
 uint Port::newStreamId()
 {
+    // We use a monotonically increasing class variable to generate
+    // unique id. To ensure that we take into account the already
+    // existing ids at drone, we update this variable to be greater
+    // than the last id that we fetched
+    // FIXME: In some cases e.g. wrap around or more likely multiple
+    // clients, we will still run into trouble - to fix this we should
+    // check here that the same id does not already exist; but currently
+    // we can only do a linear search - fix this when the lookup/search
+    // is optimized
     return mAllocStreamId++;
 }
 
@@ -649,6 +658,15 @@ _exit:
 
 uint Port::newDeviceGroupId()
 {
+    // We use a monotonically increasing class variable to generate
+    // unique id. To ensure that we take into account the already
+    // existing ids at drone, we update this variable to be greater
+    // than the last id that we fetched
+    // FIXME: In some cases e.g. wrap around or more likely multiple
+    // clients, we will still run into trouble - to fix this we should
+    // check here that the same id does not already exist; but currently
+    // we can only do a linear search - fix this when the lookup/search
+    // is optimized
     return allocDeviceGroupId_++;
 }
 
@@ -723,6 +741,12 @@ bool Port::insertDeviceGroup(uint deviceGroupId)
     devGrp = new OstProto::DeviceGroup;
     devGrp->mutable_device_group_id()->set_id(deviceGroupId);
     deviceGroups_.append(devGrp);
+
+    // Update allocDeviceGroupId_ to take into account the deviceGroup id
+    // received from server - this is required to make sure newly allocated
+    // deviceGroup ids are unique
+    if (allocDeviceGroupId_ <= deviceGroupId)
+        allocDeviceGroupId_ = deviceGroupId + 1;
     return true;
 }
 
