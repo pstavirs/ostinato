@@ -896,7 +896,8 @@ void PortsWindow::on_deviceInfo_toggled(bool checked)
 {
     refresh->setVisible(checked);
 
-    // TODO: toggle between deviceGroup config and deviceInfo
+    // TODO: deviceInfo
+    deviceGroupList->setModel(checked ? NULL : plm->getDeviceGroupModel());
 }
 
 void PortsWindow::on_actionNewDeviceGroup_triggered()
