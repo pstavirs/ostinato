@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 #include "device.h"
+#include "../common/emulation.h"
 #include "packetbuffer.h"
 
 #include "../common/emulproto.pb.h"
@@ -93,7 +94,7 @@ bool DeviceManager::addDeviceGroup(uint deviceGroupId)
         return false;
     }
 
-    deviceGroup = new OstProto::DeviceGroup;
+    deviceGroup = newDeviceGroup(port_->id());
     deviceGroup->mutable_device_group_id()->set_id(deviceGroupId);
     deviceGroupList_.insert(deviceGroupId, deviceGroup);
 

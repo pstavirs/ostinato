@@ -250,22 +250,8 @@ void DeviceGroupDialog::loadDeviceGroup()
     devicePerVlanCount->setValue(devGrp->device_count());
 
     OstEmul::MacEmulation mac = devGrp->GetExtension(OstEmul::mac);
-    if (!mac.has_address()) {
-        // Mac address as per RFC 4814 Sec 4.2
-        // (RR & 0xFC):PP:PP:RR:RR:RR
-        // where RR is a random number, PP:PP is 1-indexed port index
-        // NOTE: although qrand() return type is a int, the max value
-        // is RAND_MAX (stdlib.h) which is often 16-bit only, so we
-        // use two random numbers
-        quint32 r1 = qrand(), r2 = qrand();
-        quint64 mac;
-        mac = quint64(r1 & 0xfc00) << 32
-            | quint64(port_->id() + 1) << 24
-            | quint64((r1 & 0xff) << 16 | (r2 & 0xffff));
-        macAddress->setValue(mac);
-    }
-    else
-        macAddress->setValue(mac.address());
+    Q_ASSERT(mac.has_address());
+    macAddress->setValue(mac.address());
     macStep->setValue(mac.step());
 
     OstEmul::Ip4Emulation ip4 = devGrp->GetExtension(OstEmul::ip4);

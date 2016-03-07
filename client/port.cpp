@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 
 #include "abstractfileformat.h"
+#include "emulation.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -702,7 +703,7 @@ bool Port::newDeviceGroupAt(int index, const OstProto::DeviceGroup *deviceGroup)
     if (index < 0 || index > numDeviceGroups())
         return false;
 
-    OstProto::DeviceGroup *devGrp = new OstProto::DeviceGroup;
+    OstProto::DeviceGroup *devGrp = newDeviceGroup(id());
 
     if (!devGrp) {
         qWarning("failed allocating a new device group");
@@ -738,7 +739,7 @@ bool Port::insertDeviceGroup(uint deviceGroupId)
         return false;
     }
 
-    devGrp = new OstProto::DeviceGroup;
+    devGrp = newDeviceGroup(id());
     devGrp->mutable_device_group_id()->set_id(deviceGroupId);
     deviceGroups_.append(devGrp);
 

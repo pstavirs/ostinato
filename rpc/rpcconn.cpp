@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <google/protobuf/service.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
+#include <QDateTime>
 #include <QHostAddress>
 #include <QString>
 #include <QTcpSocket>
@@ -82,6 +83,7 @@ void RpcConnection::start()
         return;
     }
     qDebug("clientSock Thread = %p", clientSock->thread());
+    qsrand(QDateTime::currentDateTime().toTime_t());
 
     connId.setLocalData(new QString(id.arg(clientSock->peerAddress().toString())
                                       .arg(clientSock->peerPort())));
