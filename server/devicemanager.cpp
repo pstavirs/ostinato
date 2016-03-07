@@ -467,6 +467,11 @@ void DeviceManager::enumerateDevices(
 
             switch (oper) {
                 case kAdd:
+                    if (deviceList_.contains(dk.key())) {
+                        qWarning("%s: error adding device %s (EEXIST)",
+                                __FUNCTION__, qPrintable(dk.config()));
+                        break;
+                    }
                     device = new Device(this);
                     *device = dk;
                     deviceList_.insert(dk.key(), device);
@@ -478,6 +483,11 @@ void DeviceManager::enumerateDevices(
 
                 case kDelete:
                     device = deviceList_.take(dk.key());
+                    if (!device) {
+                        qWarning("%s: error deleting device %s (NOTFOUND)",
+                                __FUNCTION__, qPrintable(dk.config()));
+                        break;
+                    }
                     qDebug("enumerate(del): %s", qPrintable(device->config()));
                     delete device;
 
