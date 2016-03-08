@@ -286,7 +286,7 @@ void DeviceGroupDialog::loadDeviceGroup()
 void DeviceGroupDialog::storeDeviceGroup()
 {
     OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
-    int tagCount = 0;
+    int tagCount = vlanTagCount->value();
 
     Q_ASSERT(devGrp);
 
@@ -295,7 +295,6 @@ void DeviceGroupDialog::storeDeviceGroup()
     OstEmul::VlanEmulation *vlan = devGrp->mutable_encap()
                                         ->MutableExtension(OstEmul::vlan);
     vlan->clear_stack();
-    tagCount = vlanTagCount->value();
     for (int i = 0; i < tagCount; i++) {
         OstEmul::VlanEmulation::Vlan *v = vlan->add_stack();
         v->set_vlan_tag(
@@ -306,6 +305,9 @@ void DeviceGroupDialog::storeDeviceGroup()
         v->set_step(vlans->item(i, kVlanStep)->text().toUInt());
         v->set_tpid(vlans->item(i, kVlanTpid)->text().toUInt(NULL, 16));
     }
+
+    if (!tagCount)
+        devGrp->clear_encap();
 
     devGrp->set_device_count(devicePerVlanCount->value());
 
