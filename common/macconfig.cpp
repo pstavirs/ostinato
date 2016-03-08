@@ -46,29 +46,43 @@ MacConfigForm* MacConfigForm::createInstance()
 
 void MacConfigForm::on_cmbDstMacMode_currentIndexChanged(int index)
 {
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leDstMacCount->setEnabled(false);
-        leDstMacStep->setEnabled(false);
-    }
-    else
-    {
-        leDstMacCount->setEnabled(true);
-        leDstMacStep->setEnabled(true);
+    switch (index) {
+        case OstProto::Mac::e_mm_resolve:
+            leDstMac->setEnabled(false);
+            leDstMacCount->setEnabled(false);
+            leDstMacStep->setEnabled(false);
+            break;
+        case OstProto::Mac::e_mm_fixed:
+            leDstMac->setEnabled(true);
+            leDstMacCount->setEnabled(false);
+            leDstMacStep->setEnabled(false);
+            break;
+        default:
+            leDstMac->setEnabled(true);
+            leDstMacCount->setEnabled(true);
+            leDstMacStep->setEnabled(true);
+            break;
     }
 }
 
 void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 {
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leSrcMacCount->setEnabled(false);
-        leSrcMacStep->setEnabled(false);
-    }
-    else
-    {
-        leSrcMacCount->setEnabled(true);
-        leSrcMacStep->setEnabled(true);
+    switch (index) {
+        case OstProto::Mac::e_mm_resolve:
+            leSrcMac->setEnabled(false);
+            leSrcMacCount->setEnabled(false);
+            leSrcMacStep->setEnabled(false);
+            break;
+        case OstProto::Mac::e_mm_fixed:
+            leSrcMac->setEnabled(true);
+            leSrcMacCount->setEnabled(false);
+            leSrcMacStep->setEnabled(false);
+            break;
+        default:
+            leSrcMac->setEnabled(true);
+            leSrcMacCount->setEnabled(true);
+            leSrcMacStep->setEnabled(true);
+            break;
     }
 }
 
