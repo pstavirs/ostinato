@@ -22,12 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 
 #include "emulproto.pb.h"
+#include "uint128.h"
+
+#include <QHostAddress>
 
 enum {
     kName,
     kVlanCount,
     kDeviceCount, // Across all vlans
     kIp,
+    kIp4Address,
+    kIp6Address,
     kFieldCount
 };
 
@@ -35,7 +40,9 @@ static QStringList columns_ = QStringList()
     << "Name"
     << "Vlans"
     << "Devices"
-    << "IP Stack";
+    << "IP Stack"
+    << "IPv4 Address"
+    << "IPv6 Address";
 
 DeviceGroupModel::DeviceGroupModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -145,7 +152,39 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
             }
             return QVariant();
 
+        case kIp4Address:
+            switch (role) {
+                case Qt::DisplayRole:
+                    if (devGrp->HasExtension(OstEmul::ip4))
+                        return QHostAddress(
+                                    devGrp->MutableExtension(OstEmul::ip4)
+                                                    ->address()).toString();
+                    else
+                        return QString("--");
+                default:
+                    break;
+            }
+            return QVariant();
+
+        case kIp6Address:
+            switch (role) {
+                case Qt::DisplayRole:
+                    if (devGrp->HasExtension(OstEmul::ip6)) {
+                        OstEmul::Ip6Address ip = devGrp->MutableExtension(
+                                                    OstEmul::ip6)->address();
+                        return QHostAddress(
+                                    UInt128(ip.hi(), ip.lo()).toArray())
+                                        .toString();
+                    }
+                    else
+                        return QString("--");
+                default:
+                    break;
+            }
+            return QVariant();
+
         default:
+            Q_ASSERT(false); // unreachable!
             break;
     }
 
