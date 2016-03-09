@@ -142,6 +142,39 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="tbResolveNeighbors" >
+        <property name="toolTip" >
+         <string>Resolve Neighbors</string>
+        </property>
+        <property name="statusTip" >
+         <string>Resolve Device Neighbors on selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Resolve Neighbors</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="tbClearNeighbors" >
+        <property name="toolTip" >
+         <string>Clear Neighbors</string>
+        </property>
+        <property name="statusTip" >
+         <string>Clear Device Neighbors on selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Clear Neighbors</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line2" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer>
         <property name="orientation" >
          <enum>Qt::Horizontal</enum>

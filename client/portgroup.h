@@ -140,6 +140,11 @@ public:
     void viewCapture(QList<uint> *portList = NULL);
     void processViewCaptureAck(PbRpcController *controller);
 
+    void resolveDeviceNeighbors(QList<uint> *portList = NULL);
+    void processResolveDeviceNeighborsAck(PbRpcController *controller);
+    void clearDeviceNeighbors(QList<uint> *portList = NULL);
+    void processClearDeviceNeighborsAck(PbRpcController *controller);
+
     void getPortStats();
     void processPortStatsList();
     void clearPortStats(QList<uint> *portList = NULL);

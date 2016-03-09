@@ -1061,6 +1061,78 @@ _exit:
     delete controller;
 }
 
+void PortGroup::resolveDeviceNeighbors(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return;
+
+    if ((portList == NULL) || (portList->size() == 0))
+        goto _exit;
+
+    {
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
+
+        for (int i = 0; i < portList->size(); i++)
+        {
+            OstProto::PortId *portId = portIdList->add_port_id();
+            portId->set_id(portList->at(i));
+        }
+
+        serviceStub->resolveDeviceNeighbors(controller, portIdList, ack,
+            NewCallback(this, &PortGroup::processResolveDeviceNeighborsAck,
+                        controller));
+    }
+_exit:
+    return;
+}
+
+void PortGroup::processResolveDeviceNeighborsAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
+}
+
+void PortGroup::clearDeviceNeighbors(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return;
+
+    if ((portList == NULL) || (portList->size() == 0))
+        goto _exit;
+
+    {
+        OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+        OstProto::Ack *ack = new OstProto::Ack;
+        PbRpcController *controller = new PbRpcController(portIdList, ack);
+
+        for (int i = 0; i < portList->size(); i++)
+        {
+            OstProto::PortId *portId = portIdList->add_port_id();
+            portId->set_id(portList->at(i));
+        }
+
+        serviceStub->clearDeviceNeighbors(controller, portIdList, ack,
+            NewCallback(this, &PortGroup::processClearDeviceNeighborsAck,
+                        controller));
+    }
+_exit:
+    return;
+}
+
+void PortGroup::processClearDeviceNeighborsAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
+}
+
 void PortGroup::getPortStats()
 {
     //qDebug("In %s", __FUNCTION__);
