@@ -152,6 +152,9 @@
         <property name="text" >
          <string>Resolve Neighbors</string>
         </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/neighbor_resolve.png</iconset>
+        </property>
        </widget>
       </item>
       <item>
@@ -164,6 +167,9 @@
         </property>
         <property name="text" >
          <string>Clear Neighbors</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/neighbor_clear.png</iconset>
         </property>
        </widget>
       </item>
