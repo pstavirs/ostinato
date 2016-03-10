@@ -366,8 +366,8 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     emit portListChanged(mPortGroupId);
 
     if (numPorts() > 0) {
-        getStreamIdList();
         getDeviceGroupIdList();
+        getStreamIdList();
     }
 
 _error_exit:
@@ -392,43 +392,9 @@ void PortGroup::when_configApply(int portIndex)
     // FIXME: as currently written this code will make unnecessary RPCs
     // even if the request contains no data; the fix will need to take
     // care to identify when sync is complete
-
-    //
-    // Update/Sync Streams
-    //
-    qDebug("applying 'deleted streams' ...");
-    streamIdList = new OstProto::StreamIdList;
-    ack = new OstProto::Ack;
-    controller = new PbRpcController(streamIdList, ack);
-
-    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
-    mPorts[portIndex]->getDeletedStreamsSinceLastSync(*streamIdList);
-
-    serviceStub->deleteStream(controller, streamIdList, ack, 
-        NewCallback(this, &PortGroup::processDeleteStreamAck, controller));
-
-    qDebug("applying 'new streams' ...");
-    streamIdList = new OstProto::StreamIdList;
-    ack = new OstProto::Ack;
-    controller = new PbRpcController(streamIdList, ack);
-
-    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
-    mPorts[portIndex]->getNewStreamsSinceLastSync(*streamIdList);
-
-    serviceStub->addStream(controller, streamIdList, ack, 
-        NewCallback(this, &PortGroup::processAddStreamAck, controller));
-
-    qDebug("applying 'modified streams' ...");
-    streamConfigList = new OstProto::StreamConfigList;
-    ack = new OstProto::Ack;
-    controller = new PbRpcController(streamConfigList, ack);
-
-    streamConfigList->mutable_port_id()->set_id(mPorts[portIndex]->id());
-    mPorts[portIndex]->getModifiedStreamsSinceLastSync(*streamConfigList);
-
-    serviceStub->modifyStream(controller, streamConfigList, ack, 
-            NewCallback(this, &PortGroup::processModifyStreamAck, 
-                portIndex, controller));
+    // Also, drone currently updates its packet list at the end of
+    // modifyStream() implicitly assuming that will be the last API
+    // called - this will also need to be fixed
 
     //
     // Update/Sync DeviceGroups
@@ -470,25 +436,44 @@ void PortGroup::when_configApply(int portIndex)
     serviceStub->modifyDeviceGroup(controller, deviceGroupConfigList, ack,
             NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
                 portIndex, controller));
-}
 
-void PortGroup::processAddStreamAck(PbRpcController *controller)
-{
-    qDebug("In %s", __FUNCTION__);
-    delete controller;
-}
+    //
+    // Update/Sync Streams
+    //
+    qDebug("applying 'deleted streams' ...");
+    streamIdList = new OstProto::StreamIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamIdList, ack);
 
-void PortGroup::processDeleteStreamAck(PbRpcController *controller)
-{
-    qDebug("In %s", __FUNCTION__);
-    delete controller;
-}
+    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getDeletedStreamsSinceLastSync(*streamIdList);
 
-void PortGroup::processModifyStreamAck(int portIndex, 
-        PbRpcController *controller)
-{
-    qDebug("In %s", __FUNCTION__);
-    delete controller;
+    serviceStub->deleteStream(controller, streamIdList, ack,
+        NewCallback(this, &PortGroup::processDeleteStreamAck, controller));
+
+    qDebug("applying 'new streams' ...");
+    streamIdList = new OstProto::StreamIdList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamIdList, ack);
+
+    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getNewStreamsSinceLastSync(*streamIdList);
+
+    serviceStub->addStream(controller, streamIdList, ack,
+        NewCallback(this, &PortGroup::processAddStreamAck, controller));
+
+    qDebug("applying 'modified streams' ...");
+    streamConfigList = new OstProto::StreamConfigList;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(streamConfigList, ack);
+
+    streamConfigList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    mPorts[portIndex]->getModifiedStreamsSinceLastSync(*streamConfigList);
+
+    serviceStub->modifyStream(controller, streamConfigList, ack,
+            NewCallback(this, &PortGroup::processModifyStreamAck,
+                portIndex, controller));
+
 }
 
 void PortGroup::processAddDeviceGroupAck(PbRpcController *controller)
@@ -507,13 +492,31 @@ void PortGroup::processModifyDeviceGroupAck(int portIndex,
         PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processAddStreamAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processDeleteStreamAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+    delete controller;
+}
+
+void PortGroup::processModifyStreamAck(int portIndex,
+        PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
 
     qDebug("apply completed");
     mPorts[portIndex]->when_syncComplete();
 
     mainWindow->setEnabled(true);
     QApplication::restoreOverrideCursor();
-
     delete controller;
 }
 
