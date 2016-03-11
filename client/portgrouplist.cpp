@@ -26,7 +26,8 @@ PortGroupList::PortGroupList()
     : mPortGroupListModel(this), 
       mStreamListModel(this),
       mPortStatsModel(this, this),
-      mDeviceGroupModel(this)
+      mDeviceGroupModel(this),
+      mDeviceModel(this)
 {
     PortGroup    *pg;
 
@@ -35,11 +36,13 @@ PortGroupList::PortGroupList()
     portModelTester_ = NULL;
     portStatsModelTester_ = NULL;
     deviceGroupModelTester_ = NULL;
+    deviceModelTester_ = NULL;
 #else
     streamModelTester_ = new ModelTest(getStreamModel());
     portModelTester_ = new ModelTest(getPortModel());
     portStatsModelTester_ = new ModelTest(getPortStatsModel());
-    deviceGroupModelTester_ = new ModelTest(getPortStatsModel());
+    deviceGroupModelTester_ = new ModelTest(getDeviceGroupModel());
+    deviceModelTester_ = new ModelTest(getDeviceModel());
 #endif 
 
     // Add the "Local" Port Group

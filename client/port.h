@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "stream.h"
 
 //class StreamModel;
+namespace OstEmul {
+    class Device;
+}
 
 class Port : public QObject {
 
@@ -54,6 +57,7 @@ class Port : public QObject {
 
     QList<quint32>    lastSyncDeviceGroupList_;
     QList<OstProto::DeviceGroup*> deviceGroups_;
+    QList<OstEmul::Device*> devices_;
 
     uint newStreamId();
     void updateStreamOrdinalsFromIndex();
@@ -177,10 +181,21 @@ public:
                            OstProto::DeviceGroup *deviceGroup);
     //@}
 
+    // ------------ Device ----------- //
+
+    int numDevices();
+    const OstEmul::Device* deviceByIndex(int index);
+
+    //! Used by MyService::Stub to update from config received from server
+    void clearDeviceList();
+    void insertDevice(const OstEmul::Device &device);
+    void deviceListRefreshed();
+
 signals:
     void portRateChanged(int portGroupId, int portId);
     void portDataChanged(int portGroupId, int portId);
     void streamListChanged(int portGroupId, int portId);
+    void deviceListChanged();
 
 };
 

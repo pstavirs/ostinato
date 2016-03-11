@@ -255,6 +255,7 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     if (plm->isPort(current))
         port = &(plm->port(current));
     plm->getDeviceGroupModel()->setPort(port);
+    plm->getDeviceModel()->setPort(port);
 
     if (previous.isValid() && plm->isPort(previous))
     {
@@ -896,8 +897,10 @@ void PortsWindow::on_deviceInfo_toggled(bool checked)
 {
     refresh->setVisible(checked);
 
-    // TODO: deviceInfo
-    deviceGroupList->setModel(checked ? NULL : plm->getDeviceGroupModel());
+    if (checked)
+        deviceGroupList->setModel(plm->getDeviceModel());
+    else
+        deviceGroupList->setModel(plm->getDeviceGroupModel());
 }
 
 void PortsWindow::on_actionNewDeviceGroup_triggered()
@@ -951,4 +954,22 @@ void PortsWindow::on_deviceGroupList_activated(const QModelIndex &index)
 
     DeviceGroupDialog dgd(&plm->port(currentPort), index.row(), this);
     dgd.exec();
+}
+
+void PortsWindow::on_refresh_clicked()
+{
+    QModelIndex curPort;
+    QModelIndex curPortGroup;
+
+    curPort = tvPortList->selectionModel()->currentIndex();
+    if (proxyPortModel)
+        curPort = proxyPortModel->mapToSource(curPort);
+    Q_ASSERT(curPort.isValid());
+    Q_ASSERT(plm->isPort(curPort));
+
+    curPortGroup = plm->getPortModel()->parent(curPort);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(plm->isPortGroup(curPortGroup));
+
+    plm->portGroup(curPortGroup).getDeviceList(plm->port(curPort).id());
 }

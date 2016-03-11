@@ -766,3 +766,39 @@ bool Port::updateDeviceGroup(
     devGrp->CopyFrom(*deviceGroup);
     return true;
 }
+
+// ------------ Devices  ----------- //
+
+int Port::numDevices()
+{
+    return devices_.size();
+}
+
+const OstEmul::Device* Port::deviceByIndex(int index)
+{
+    if ((index < 0) || (index >= numDevices())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDevices() - 1);
+        return NULL;
+    }
+
+    return devices_.at(index);
+}
+
+void Port::clearDeviceList()
+{
+    while (devices_.size())
+        delete devices_.takeFirst();
+}
+
+void Port::insertDevice(const OstEmul::Device &device)
+{
+    OstEmul::Device *dev = new OstEmul::Device(device);
+    devices_.append(dev);
+}
+
+void Port::deviceListRefreshed()
+{
+    emit deviceListChanged();
+}
+

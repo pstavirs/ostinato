@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_GROUP_LIST_H
 
 #include "devicegroupmodel.h"
+#include "devicemodel.h"
 #include "portgroup.h"
 #include "portmodel.h"
 #include "portstatsmodel.h"
@@ -42,11 +43,13 @@ class PortGroupList : public QObject {
     StreamModel          mStreamListModel;
     PortStatsModel       mPortStatsModel;
     DeviceGroupModel     mDeviceGroupModel;
+    DeviceModel          mDeviceModel;
 
     QObject *streamModelTester_;
     QObject *portModelTester_;
     QObject *portStatsModelTester_;
     QObject *deviceGroupModelTester_;
+    QObject *deviceModelTester_;
 
 // Methods
 public:
@@ -57,6 +60,7 @@ public:
     PortStatsModel* getPortStatsModel() { return &mPortStatsModel; }
     StreamModel* getStreamModel() { return &mStreamListModel; }
     DeviceGroupModel* getDeviceGroupModel() { return &mDeviceGroupModel; }
+    DeviceModel* getDeviceModel() { return &mDeviceModel; }
 
     bool isPortGroup(const QModelIndex& index);
     bool isPort(const QModelIndex& index);

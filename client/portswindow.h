@@ -83,10 +83,13 @@ private slots:
     void streamModelDataChanged();
 
     void on_deviceInfo_toggled(bool checked);
+
     void on_actionNewDeviceGroup_triggered();
     void on_actionDeleteDeviceGroup_triggered();
     void on_actionEditDeviceGroup_triggered();
     void on_deviceGroupList_activated(const QModelIndex &index);
+
+    void on_refresh_clicked();
 };
 
 #endif

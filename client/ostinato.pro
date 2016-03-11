@@ -35,6 +35,7 @@ RESOURCES += ostinato.qrc
 HEADERS += \
     devicegroupdialog.h \
     devicegroupmodel.h \
+    devicemodel.h \
     dumpview.h \
     hexlineedit.h \
     mainwindow.h \
@@ -72,6 +73,7 @@ FORMS += \
 SOURCES += \
     devicegroupdialog.cpp \
     devicegroupmodel.cpp \
+    devicemodel.cpp \
     dumpview.cpp \
     stream.cpp \
     hexlineedit.cpp \

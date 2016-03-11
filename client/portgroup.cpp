@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "settings.h"
 
+#include "emulproto.pb.h"
+
 #include <QApplication>
 #include <QCursor>
 #include <QMainWindow>
@@ -517,6 +519,61 @@ void PortGroup::processModifyStreamAck(int portIndex,
 
     mainWindow->setEnabled(true);
     QApplication::restoreOverrideCursor();
+    delete controller;
+}
+
+void PortGroup::getDeviceList(int portIndex)
+{
+    OstProto::PortId *portId;
+    OstProto::PortDeviceList *deviceList;
+    PbRpcController *controller;
+
+    Q_ASSERT(portIndex < mPorts.size());
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return;
+
+    portId = new OstProto::PortId;
+    portId->set_id(mPorts[portIndex]->id());
+    deviceList = new OstProto::PortDeviceList;
+    controller = new PbRpcController(portId, deviceList);
+
+    serviceStub->getDeviceList(controller, portId, deviceList,
+        NewCallback(this, &PortGroup::processDeviceList,
+                    portIndex, controller));
+}
+
+void PortGroup::processDeviceList(int portIndex, PbRpcController *controller)
+{
+    OstProto::PortDeviceList *deviceList
+        = static_cast<OstProto::PortDeviceList*>(controller->response());
+
+    qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        goto _exit;
+    }
+
+    Q_ASSERT(portIndex < numPorts());
+
+    if (deviceList->port_id().id() != mPorts[portIndex]->id())
+    {
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            deviceList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
+    }
+
+    mPorts[portIndex]->clearDeviceList();
+    for(int i = 0; i < deviceList->ExtensionSize(OstEmul::port_device); i++) {
+        mPorts[portIndex]->insertDevice(
+                deviceList->GetExtension(OstEmul::port_device, i));
+    }
+    mPorts[portIndex]->deviceListRefreshed();
+
+_exit:
     delete controller;
 }
 
