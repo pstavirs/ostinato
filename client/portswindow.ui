@@ -219,28 +219,76 @@
              </layout>
             </item>
             <item>
-             <widget class="QTableView" name="deviceGroupList" >
-              <property name="sizePolicy" >
-               <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
-                <horstretch>0</horstretch>
-                <verstretch>1</verstretch>
-               </sizepolicy>
+             <widget class="QStackedWidget" name="devicesWidget" >
+              <property name="currentIndex" >
+               <number>0</number>
               </property>
-              <property name="contextMenuPolicy" >
-               <enum>Qt::ActionsContextMenu</enum>
-              </property>
-              <property name="frameShape" >
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="lineWidth" >
-               <number>1</number>
-              </property>
-              <property name="selectionMode" >
-               <enum>QAbstractItemView::ExtendedSelection</enum>
-              </property>
-              <property name="selectionBehavior" >
-               <enum>QAbstractItemView::SelectRows</enum>
-              </property>
+              <widget class="QWidget" name="deviceConfigPage" >
+               <layout class="QHBoxLayout" >
+                <property name="spacing" >
+                 <number>0</number>
+                </property>
+                <property name="leftMargin" >
+                 <number>0</number>
+                </property>
+                <property name="topMargin" >
+                 <number>0</number>
+                </property>
+                <property name="rightMargin" >
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin" >
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QTableView" name="deviceGroupList" >
+                  <property name="sizePolicy" >
+                   <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+                    <horstretch>0</horstretch>
+                    <verstretch>1</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="contextMenuPolicy" >
+                   <enum>Qt::ActionsContextMenu</enum>
+                  </property>
+                  <property name="frameShape" >
+                   <enum>QFrame::StyledPanel</enum>
+                  </property>
+                  <property name="lineWidth" >
+                   <number>1</number>
+                  </property>
+                  <property name="selectionMode" >
+                   <enum>QAbstractItemView::ExtendedSelection</enum>
+                  </property>
+                  <property name="selectionBehavior" >
+                   <enum>QAbstractItemView::SelectRows</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="deviceInfoPage" >
+               <layout class="QHBoxLayout" >
+                <property name="spacing" >
+                 <number>0</number>
+                </property>
+                <property name="leftMargin" >
+                 <number>0</number>
+                </property>
+                <property name="topMargin" >
+                 <number>0</number>
+                </property>
+                <property name="rightMargin" >
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin" >
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QTableView" name="deviceList" />
+                </item>
+               </layout>
+              </widget>
              </widget>
             </item>
            </layout>

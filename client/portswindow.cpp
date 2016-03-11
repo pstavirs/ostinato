@@ -55,6 +55,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
             tvStreamList->verticalHeader()->minimumSectionSize());
     deviceGroupList->verticalHeader()->setDefaultSectionSize(
             deviceGroupList->verticalHeader()->minimumSectionSize());
+    deviceList->verticalHeader()->setDefaultSectionSize(
+            deviceList->verticalHeader()->minimumSectionSize());
 
     // Populate PortList Context Menu Actions
     tvPortList->addAction(actionNew_Port_Group);
@@ -97,6 +99,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     tvStreamList->setModel(plm->getStreamModel());
     deviceGroupList->setModel(plm->getDeviceGroupModel());
+    deviceList->setModel(plm->getDeviceModel());
 
     // XXX: It would be ideal if we only needed to do the below to 
     // get the proxy model to do its magic. However, the QModelIndex
@@ -158,8 +161,11 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
         SLOT(updateDeviceViewActions()));
 
     // FIXME: hardcoding
-    deviceGroupList->resizeColumnToContents(1);
-    deviceGroupList->resizeColumnToContents(2);
+    deviceGroupList->resizeColumnToContents(1); // Vlan Count
+    deviceGroupList->resizeColumnToContents(2); // Device Count
+
+    // FIXME: hardcoding
+    deviceList->resizeColumnToContents(1); // Vlan Id(s)
 
     // Initially we don't have any ports/streams/devices
     //  - so send signal triggers
@@ -896,11 +902,7 @@ _exit:
 void PortsWindow::on_deviceInfo_toggled(bool checked)
 {
     refresh->setVisible(checked);
-
-    if (checked)
-        deviceGroupList->setModel(plm->getDeviceModel());
-    else
-        deviceGroupList->setModel(plm->getDeviceGroupModel());
+    devicesWidget->setCurrentIndex(checked ? 1 : 0);
 }
 
 void PortsWindow::on_actionNewDeviceGroup_triggered()
