@@ -166,6 +166,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     // FIXME: hardcoding
     deviceList->resizeColumnToContents(1); // Vlan Id(s)
+    deviceList->resizeColumnToContents(6); // ARP Info
+    deviceList->resizeColumnToContents(7); // NDP Info
 
     // Initially we don't have any ports/streams/devices
     //  - so send signal triggers
@@ -973,5 +975,5 @@ void PortsWindow::on_refresh_clicked()
     Q_ASSERT(curPortGroup.isValid());
     Q_ASSERT(plm->isPortGroup(curPortGroup));
 
-    plm->portGroup(curPortGroup).getDeviceList(plm->port(curPort).id());
+    plm->portGroup(curPortGroup).getDeviceInfo(plm->port(curPort).id());
 }

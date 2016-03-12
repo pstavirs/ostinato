@@ -522,10 +522,11 @@ void PortGroup::processModifyStreamAck(int portIndex,
     delete controller;
 }
 
-void PortGroup::getDeviceList(int portIndex)
+void PortGroup::getDeviceInfo(int portIndex)
 {
     OstProto::PortId *portId;
     OstProto::PortDeviceList *deviceList;
+    OstProto::PortNeighborList *neighList;
     PbRpcController *controller;
 
     Q_ASSERT(portIndex < mPorts.size());
@@ -540,6 +541,15 @@ void PortGroup::getDeviceList(int portIndex)
 
     serviceStub->getDeviceList(controller, portId, deviceList,
         NewCallback(this, &PortGroup::processDeviceList,
+                    portIndex, controller));
+
+    portId = new OstProto::PortId;
+    portId->set_id(mPorts[portIndex]->id());
+    neighList = new OstProto::PortNeighborList;
+    controller = new PbRpcController(portId, neighList);
+
+    serviceStub->getDeviceNeighbors(controller, portId, neighList,
+        NewCallback(this, &PortGroup::processDeviceNeighbors,
                     portIndex, controller));
 }
 
@@ -571,7 +581,42 @@ void PortGroup::processDeviceList(int portIndex, PbRpcController *controller)
         mPorts[portIndex]->insertDevice(
                 deviceList->GetExtension(OstEmul::port_device, i));
     }
-    mPorts[portIndex]->deviceListRefreshed();
+
+_exit:
+    delete controller;
+}
+
+void PortGroup::processDeviceNeighbors(
+        int portIndex, PbRpcController *controller)
+{
+    OstProto::PortNeighborList *neighList
+        = static_cast<OstProto::PortNeighborList*>(controller->response());
+
+    qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        goto _exit;
+    }
+
+    Q_ASSERT(portIndex < numPorts());
+
+    if (neighList->port_id().id() != mPorts[portIndex]->id())
+    {
+        qDebug("Invalid portId %d (expected %d) received for portIndex %d",
+            neighList->port_id().id(), mPorts[portIndex]->id(), portIndex);
+        goto _exit;
+    }
+
+    mPorts[portIndex]->clearDeviceNeighbors();
+    for(int i = 0; i < neighList->ExtensionSize(OstEmul::devices); i++) {
+        mPorts[portIndex]->insertDeviceNeighbors(
+                neighList->GetExtension(OstEmul::devices, i)); // FIXME: change extn id
+    }
+
+    mPorts[portIndex]->deviceInfoRefreshed();
 
 _exit:
     delete controller;

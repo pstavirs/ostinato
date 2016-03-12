@@ -797,8 +797,81 @@ void Port::insertDevice(const OstEmul::Device &device)
     devices_.append(dev);
 }
 
-void Port::deviceListRefreshed()
+// ------------- Device Neighbors (ARP/NDP) ------------- //
+
+const OstEmul::DeviceNeighborList* Port::deviceNeighbors(int deviceIndex)
 {
-    emit deviceListChanged();
+    if ((deviceIndex < 0) || (deviceIndex >= numDevices())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                deviceIndex, numDevices() - 1);
+        return NULL;
+    }
+
+    return deviceNeighbors_.value(deviceIndex);
+}
+
+int Port::numArp(int deviceIndex)
+{
+    if (deviceNeighbors_.contains(deviceIndex))
+        return deviceNeighbors_.value(deviceIndex)->arp_size();
+
+    return 0;
+}
+
+int Port::numArpResolved(int deviceIndex)
+{
+    if (arpResolvedCount_.contains(deviceIndex))
+        return arpResolvedCount_.value(deviceIndex);
+
+    return 0;
+}
+
+int Port::numNdp(int deviceIndex)
+{
+    if (deviceNeighbors_.contains(deviceIndex))
+        return deviceNeighbors_.value(deviceIndex)->ndp_size();
+
+    return 0;
+}
+
+int Port::numNdpResolved(int deviceIndex)
+{
+    if (ndpResolvedCount_.contains(deviceIndex))
+        return ndpResolvedCount_.value(deviceIndex);
+
+    return 0;
+}
+
+void Port::clearDeviceNeighbors()
+{
+    arpResolvedCount_.clear();
+    ndpResolvedCount_.clear();
+    qDeleteAll(deviceNeighbors_);
+    deviceNeighbors_.clear();
+}
+
+void Port::insertDeviceNeighbors(const OstEmul::DeviceNeighborList &neighList)
+{
+    int count;
+    OstEmul::DeviceNeighborList *neighbors =
+        new OstEmul::DeviceNeighborList(neighList);
+    deviceNeighbors_.insert(neighList.device_index(), neighbors);
+
+    count = 0;
+    for (int i = 0; i < neighbors->arp_size(); i++)
+        if (neighbors->arp(i).mac())
+            count++;
+    arpResolvedCount_.insert(neighbors->device_index(), count);
+
+    count = 0;
+    for (int i = 0; i < neighbors->ndp_size(); i++)
+        if (neighbors->ndp(i).mac())
+            count++;
+    ndpResolvedCount_.insert(neighbors->device_index(), count);
+}
+
+void Port::deviceInfoRefreshed()
+{
+    emit deviceInfoChanged();
 }
 

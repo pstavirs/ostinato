@@ -33,6 +33,8 @@ enum {
     kIp4Gateway,
     kIp6Address,
     kIp6Gateway,
+    kArpInfo,
+    kNdpInfo,
     kFieldCount
 };
 
@@ -42,7 +44,9 @@ static QStringList columns_ = QStringList()
     << "IPv4 Address"
     << "IPv4 Gateway"
     << "IPv6 Address"
-    << "IPv6 Gateway";
+    << "IPv6 Gateway"
+    << "ARP"
+    << "NDP";
 
 DeviceModel::DeviceModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -188,6 +192,28 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
             }
             return QVariant();
 
+        case kArpInfo:
+            switch (role) {
+                case Qt::DisplayRole:
+                    return QString("%1/%2")
+                                .arg(port_->numArpResolved(devIdx))
+                                .arg(port_->numArp(devIdx));
+                default:
+                    break;
+            }
+            return QVariant();
+
+        case kNdpInfo:
+            switch (role) {
+                case Qt::DisplayRole:
+                    return QString("%1/%2")
+                                .arg(port_->numNdpResolved(devIdx))
+                                .arg(port_->numNdp(devIdx));
+                default:
+                    break;
+            }
+            return QVariant();
+
         default:
             Q_ASSERT(false); // unreachable!
             break;
@@ -201,7 +227,7 @@ void DeviceModel::setPort(Port *port)
 {
     port_ = port;
     if (port_)
-        connect(port_, SIGNAL(deviceListChanged()), SLOT(updateDeviceList()));
+        connect(port_, SIGNAL(deviceInfoChanged()), SLOT(updateDeviceList()));
     reset();
 }
 

@@ -111,6 +111,7 @@ public:
     void processModifyDeviceGroupAck(int portIndex, PbRpcController *controller);
 
     void processDeviceList(int portIndex, PbRpcController *controller);
+    void processDeviceNeighbors(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, OstProto::Port portConfig);
     void processModifyPortAck(PbRpcController *controller);
@@ -172,7 +173,7 @@ private slots:
 
 public slots:
     void when_configApply(int portIndex);
-    void getDeviceList(int portIndex);
+    void getDeviceInfo(int portIndex);
 
 };
 

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_H
 
 #include <QDir>
+#include <QHash>
 #include <QList>
 #include <QString>
 #include <QTemporaryFile>
@@ -30,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 //class StreamModel;
 namespace OstEmul {
     class Device;
+    class DeviceNeighborList;
 }
 
 class Port : public QObject {
@@ -58,6 +60,9 @@ class Port : public QObject {
     QList<quint32>    lastSyncDeviceGroupList_;
     QList<OstProto::DeviceGroup*> deviceGroups_;
     QList<OstEmul::Device*> devices_;
+    QHash<quint32, OstEmul::DeviceNeighborList*> deviceNeighbors_;
+    QHash<quint32, quint32> arpResolvedCount_;
+    QHash<quint32, quint32> ndpResolvedCount_;
 
     uint newStreamId();
     void updateStreamOrdinalsFromIndex();
@@ -189,13 +194,24 @@ public:
     //! Used by MyService::Stub to update from config received from server
     void clearDeviceList();
     void insertDevice(const OstEmul::Device &device);
-    void deviceListRefreshed();
+
+    const OstEmul::DeviceNeighborList* deviceNeighbors(int deviceIndex);
+    int numArp(int deviceIndex);
+    int numArpResolved(int deviceIndex);
+    int numNdp(int deviceIndex);
+    int numNdpResolved(int deviceIndex);
+
+    //! Used by MyService::Stub to update from config received from server
+    void clearDeviceNeighbors();
+    void insertDeviceNeighbors(const OstEmul::DeviceNeighborList &neighList);
+
+    void deviceInfoRefreshed();
 
 signals:
     void portRateChanged(int portGroupId, int portId);
     void portDataChanged(int portGroupId, int portId);
     void streamListChanged(int portGroupId, int portId);
-    void deviceListChanged();
+    void deviceInfoChanged();
 
 };
 
