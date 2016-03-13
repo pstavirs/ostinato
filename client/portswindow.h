@@ -39,6 +39,10 @@ public:
     PortsWindow(PortGroupList *pgl, QWidget *parent = 0);
     ~PortsWindow();
 
+signals:
+    void currentPortChanged(const QModelIndex &current,
+                            const QModelIndex &previous);
+
 private:
     QString        lastNewPortGroup;
     QAbstractItemDelegate *delegate;
@@ -50,7 +54,6 @@ public slots:
 private slots:
     void updatePortViewActions(const QModelIndex& currentIndex);
     void updateStreamViewActions();
-    void updateDeviceViewActions();
 
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();
@@ -81,15 +84,6 @@ private slots:
     void on_actionSave_Streams_triggered();
 
     void streamModelDataChanged();
-
-    void on_deviceInfo_toggled(bool checked);
-
-    void on_actionNewDeviceGroup_triggered();
-    void on_actionDeleteDeviceGroup_triggered();
-    void on_actionEditDeviceGroup_triggered();
-    void on_deviceGroupList_activated(const QModelIndex &index);
-
-    void on_refresh_clicked();
 };
 
 #endif

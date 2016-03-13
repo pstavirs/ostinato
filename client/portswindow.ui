@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>710</width>
+    <width>663</width>
     <height>352</height>
    </rect>
   </property>
@@ -178,118 +178,7 @@
            </attribute>
            <layout class="QVBoxLayout" >
             <item>
-             <layout class="QHBoxLayout" >
-              <item>
-               <widget class="QRadioButton" name="deviceConfig" >
-                <property name="text" >
-                 <string>Configuration</string>
-                </property>
-                <property name="checked" >
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="deviceInfo" >
-                <property name="text" >
-                 <string>Information</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer>
-                <property name="orientation" >
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" >
-                 <size>
-                  <width>131</width>
-                  <height>23</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="refresh" >
-                <property name="text" >
-                 <string>Refresh</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QStackedWidget" name="devicesWidget" >
-              <property name="currentIndex" >
-               <number>0</number>
-              </property>
-              <widget class="QWidget" name="deviceConfigPage" >
-               <layout class="QHBoxLayout" >
-                <property name="spacing" >
-                 <number>0</number>
-                </property>
-                <property name="leftMargin" >
-                 <number>0</number>
-                </property>
-                <property name="topMargin" >
-                 <number>0</number>
-                </property>
-                <property name="rightMargin" >
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin" >
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QTableView" name="deviceGroupList" >
-                  <property name="sizePolicy" >
-                   <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
-                    <horstretch>0</horstretch>
-                    <verstretch>1</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="contextMenuPolicy" >
-                   <enum>Qt::ActionsContextMenu</enum>
-                  </property>
-                  <property name="frameShape" >
-                   <enum>QFrame::StyledPanel</enum>
-                  </property>
-                  <property name="lineWidth" >
-                   <number>1</number>
-                  </property>
-                  <property name="selectionMode" >
-                   <enum>QAbstractItemView::ExtendedSelection</enum>
-                  </property>
-                  <property name="selectionBehavior" >
-                   <enum>QAbstractItemView::SelectRows</enum>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-              <widget class="QWidget" name="deviceInfoPage" >
-               <layout class="QHBoxLayout" >
-                <property name="spacing" >
-                 <number>0</number>
-                </property>
-                <property name="leftMargin" >
-                 <number>0</number>
-                </property>
-                <property name="topMargin" >
-                 <number>0</number>
-                </property>
-                <property name="rightMargin" >
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin" >
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QTableView" name="deviceList" />
-                </item>
-               </layout>
-              </widget>
-             </widget>
+             <widget class="DevicesWidget" native="1" name="devicesWidget" />
             </item>
            </layout>
           </widget>
@@ -403,22 +292,15 @@
     <string>Duplicate Stream</string>
    </property>
   </action>
-  <action name="actionNewDeviceGroup" >
-   <property name="text" >
-    <string>New Device Group</string>
-   </property>
-  </action>
-  <action name="actionDeleteDeviceGroup" >
-   <property name="text" >
-    <string>Delete Device Group</string>
-   </property>
-  </action>
-  <action name="actionEditDeviceGroup" >
-   <property name="text" >
-    <string>Edit Device Group</string>
-   </property>
-  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DevicesWidget</class>
+   <extends>QWidget</extends>
+   <header>deviceswidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="ostinato.qrc" />
  </resources>

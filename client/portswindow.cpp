@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portswindow.h"
 
 #include "abstractfileformat.h"
-#include "devicegroupdialog.h"
+#include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
 #include "streamconfigdialog.h"
@@ -45,7 +45,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     plm = pgl;
 
     setupUi(this);
-    refresh->setVisible(deviceInfo->isChecked());
+    devicesWidget->setPortGroupList(plm);
 
     tvPortList->header()->hide();
 
@@ -53,10 +53,6 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     tvStreamList->verticalHeader()->setDefaultSectionSize(
             tvStreamList->verticalHeader()->minimumSectionSize());
-    deviceGroupList->verticalHeader()->setDefaultSectionSize(
-            deviceGroupList->verticalHeader()->minimumSectionSize());
-    deviceList->verticalHeader()->setDefaultSectionSize(
-            deviceList->verticalHeader()->minimumSectionSize());
 
     // Populate PortList Context Menu Actions
     tvPortList->addAction(actionNew_Port_Group);
@@ -67,7 +63,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvPortList->addAction(actionExclusive_Control);
     tvPortList->addAction(actionPort_Configuration);
 
-    // Populate StramList Context Menu Actions
+    // Populate StreamList Context Menu Actions
     tvStreamList->addAction(actionNew_Stream);
     tvStreamList->addAction(actionEdit_Stream);
     tvStreamList->addAction(actionDuplicate_Stream);
@@ -80,12 +76,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
 
-    // Populate DeviceGroup Context Menu Actions
-    deviceGroupList->addAction(actionNewDeviceGroup);
-    deviceGroupList->addAction(actionEditDeviceGroup);
-    deviceGroupList->addAction(actionDeleteDeviceGroup);
-
-    // PortList, StreamList, DeviceGroupList actions combined
+    // PortList, StreamList, DeviceWidget actions combined
     // make this window's actions
     addActions(tvPortList->actions());
     sep = new QAction(this);
@@ -95,11 +86,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     sep = new QAction(this);
     sep->setSeparator(true);
     addAction(sep);
-    addActions(deviceGroupList->actions());
+    addActions(devicesWidget->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
-    deviceGroupList->setModel(plm->getDeviceGroupModel());
-    deviceList->setModel(plm->getDeviceModel());
 
     // XXX: It would be ideal if we only needed to do the below to 
     // get the proxy model to do its magic. However, the QModelIndex
@@ -130,6 +119,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
         SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
         this, SLOT(when_portView_currentChanged(const QModelIndex&, 
             const QModelIndex&)));
+    connect(this,
+            SIGNAL(currentPortChanged(const QModelIndex&, const QModelIndex&)),
+            devicesWidget, SLOT(setCurrentPortIndex(const QModelIndex&)));
 
     connect(plm->getStreamModel(), SIGNAL(rowsInserted(QModelIndex, int, int)), 
         SLOT(updateStreamViewActions()));
@@ -146,34 +138,10 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->resizeColumnToContents(StreamModel::StreamIcon);
     tvStreamList->resizeColumnToContents(StreamModel::StreamStatus);
 
-    connect(plm->getDeviceGroupModel(),
-        SIGNAL(rowsInserted(QModelIndex, int, int)),
-        SLOT(updateDeviceViewActions()));
-    connect(plm->getDeviceGroupModel(),
-        SIGNAL(rowsRemoved(QModelIndex, int, int)),
-        SLOT(updateDeviceViewActions()));
-
-    connect(deviceGroupList->selectionModel(),
-        SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
-        SLOT(updateDeviceViewActions()));
-    connect(deviceGroupList->selectionModel(),
-        SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
-        SLOT(updateDeviceViewActions()));
-
-    // FIXME: hardcoding
-    deviceGroupList->resizeColumnToContents(1); // Vlan Count
-    deviceGroupList->resizeColumnToContents(2); // Device Count
-
-    // FIXME: hardcoding
-    deviceList->resizeColumnToContents(1); // Vlan Id(s)
-    deviceList->resizeColumnToContents(6); // ARP Info
-    deviceList->resizeColumnToContents(7); // NDP Info
-
     // Initially we don't have any ports/streams/devices
     //  - so send signal triggers
     when_portView_currentChanged(QModelIndex(), QModelIndex());
     updateStreamViewActions();
-    updateDeviceViewActions();
 
     connect(plm->getStreamModel(), 
         SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)), 
@@ -246,7 +214,6 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
 {
     QModelIndex current = currentIndex;
     QModelIndex previous = previousIndex;
-    Port *port = NULL;
 
     if (proxyPortModel) {
         current = proxyPortModel->mapToSource(current);
@@ -256,14 +223,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     plm->getStreamModel()->setCurrentPortIndex(current);
     updatePortViewActions(currentIndex);
     updateStreamViewActions();
-    updateDeviceViewActions();
 
     qDebug("In %s", __FUNCTION__);
-
-    if (plm->isPort(current))
-        port = &(plm->port(current));
-    plm->getDeviceGroupModel()->setPort(port);
-    plm->getDeviceModel()->setPort(port);
 
     if (previous.isValid() && plm->isPort(previous))
     {
@@ -290,6 +251,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
                     SLOT(updatePortRates()));
         }
     }
+
+    emit currentPortChanged(current, previous);
 }
 
 void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
@@ -416,51 +379,6 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
-}
-
-void PortsWindow::updateDeviceViewActions()
-{
-    QModelIndex current = tvPortList->currentIndex();
-    QItemSelectionModel *devSel = deviceGroupList->selectionModel();
-
-    if (proxyPortModel)
-        current = proxyPortModel->mapToSource(current);
-
-    // For some reason hasSelection() returns true even if selection size is 0
-    // so additional check for size introduced
-    if (devSel->hasSelection() && (devSel->selection().size() > 0))
-    {
-        // If more than one non-contiguous ranges selected,
-        // disable "New" and "Edit"
-        if (devSel->selection().size() > 1)
-        {
-            actionNewDeviceGroup->setDisabled(true);
-            actionEditDeviceGroup->setDisabled(true);
-        }
-        else
-        {
-            actionNewDeviceGroup->setEnabled(true);
-
-            // Enable "Edit" only if the single range has a single row
-            if (devSel->selection().at(0).height() > 1)
-                actionEditDeviceGroup->setDisabled(true);
-            else
-                actionEditDeviceGroup->setEnabled(true);
-        }
-
-        // Delete is always enabled as long as we have a selection
-        actionDeleteDeviceGroup->setEnabled(true);
-    }
-    else
-    {
-        qDebug("No device selection");
-        if (plm->isPort(current))
-            actionNewDeviceGroup->setEnabled(true);
-        else
-            actionNewDeviceGroup->setDisabled(true);
-        actionEditDeviceGroup->setDisabled(true);
-        actionDeleteDeviceGroup->setDisabled(true);
-    }
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
@@ -897,83 +815,4 @@ _exit:
     return;
 }
 
-//
-// DeviceGroup slots
-//
 
-void PortsWindow::on_deviceInfo_toggled(bool checked)
-{
-    refresh->setVisible(checked);
-    devicesWidget->setCurrentIndex(checked ? 1 : 0);
-}
-
-void PortsWindow::on_actionNewDeviceGroup_triggered()
-{
-    // In case nothing is selected, insert 1 row at the top
-    int row = 0, count = 1;
-    QItemSelection selection = deviceGroupList->selectionModel()->selection();
-
-    // In case we have a single range selected; insert as many rows as
-    // in the singe selected range before the top of the selected range
-    if (selection.size() == 1)
-    {
-        row = selection.at(0).top();
-        count = selection.at(0).height();
-    }
-
-    plm->getDeviceGroupModel()->insertRows(row, count);
-}
-
-void PortsWindow::on_actionDeleteDeviceGroup_triggered()
-{
-    QModelIndex index;
-
-    if (deviceGroupList->selectionModel()->hasSelection())
-    {
-        while(deviceGroupList->selectionModel()->selectedRows().size())
-        {
-            index = deviceGroupList->selectionModel()->selectedRows().at(0);
-            plm->getDeviceGroupModel()->removeRows(index.row(), 1);
-        }
-    }
-}
-
-void PortsWindow::on_actionEditDeviceGroup_triggered()
-{
-    QItemSelection selection = deviceGroupList->selectionModel()->selection();
-
-    // Ensure we have only one range selected which contains only one row
-    if ((selection.size() == 1) && (selection.at(0).height() == 1))
-        on_deviceGroupList_activated(selection.at(0).topLeft());
-}
-
-void PortsWindow::on_deviceGroupList_activated(const QModelIndex &index)
-{
-    if (!index.isValid())
-        return;
-
-    QModelIndex currentPort = tvPortList->currentIndex();
-    if (proxyPortModel)
-        currentPort = proxyPortModel->mapToSource(currentPort);
-
-    DeviceGroupDialog dgd(&plm->port(currentPort), index.row(), this);
-    dgd.exec();
-}
-
-void PortsWindow::on_refresh_clicked()
-{
-    QModelIndex curPort;
-    QModelIndex curPortGroup;
-
-    curPort = tvPortList->selectionModel()->currentIndex();
-    if (proxyPortModel)
-        curPort = proxyPortModel->mapToSource(curPort);
-    Q_ASSERT(curPort.isValid());
-    Q_ASSERT(plm->isPort(curPort));
-
-    curPortGroup = plm->getPortModel()->parent(curPort);
-    Q_ASSERT(curPortGroup.isValid());
-    Q_ASSERT(plm->isPortGroup(curPortGroup));
-
-    plm->portGroup(curPortGroup).getDeviceInfo(plm->port(curPort).id());
-}

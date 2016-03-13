@@ -36,6 +36,7 @@ HEADERS += \
     devicegroupdialog.h \
     devicegroupmodel.h \
     devicemodel.h \
+    deviceswidget.h \
     dumpview.h \
     hexlineedit.h \
     mainwindow.h \
@@ -61,6 +62,7 @@ HEADERS += \
 FORMS += \
     about.ui \
     devicegroupdialog.ui \
+    deviceswidget.ui \
     mainwindow.ui \
     portconfigdialog.ui \
     portstatsfilter.ui \
@@ -74,6 +76,7 @@ SOURCES += \
     devicegroupdialog.cpp \
     devicegroupmodel.cpp \
     devicemodel.cpp \
+    deviceswidget.cpp \
     dumpview.cpp \
     stream.cpp \
     hexlineedit.cpp \
