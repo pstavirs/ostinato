@@ -24,6 +24,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 
 #include <QHeaderView>
+#include <QKeyEvent>
 
 DevicesWidget::DevicesWidget(QWidget *parent)
     : QWidget(parent), portGroups_(NULL)
@@ -85,6 +86,16 @@ void DevicesWidget::setPortGroupList(PortGroupList *portGroups)
     deviceList->resizeColumnToContents(7); // NDP Info
 
     updateDeviceViewActions();
+}
+
+void DevicesWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape) {
+        deviceDetail->hide();
+        event->accept();
+    }
+    else
+        event->ignore();
 }
 
 void DevicesWidget::setCurrentPortIndex(const QModelIndex &portIndex)
@@ -220,6 +231,7 @@ void DevicesWidget::on_refresh_clicked()
     Q_ASSERT(curPortGroup.isValid());
     Q_ASSERT(portGroups_->isPortGroup(curPortGroup));
 
+    deviceDetail->hide();
     portGroups_->portGroup(curPortGroup)
                     .getDeviceInfo(portGroups_->port(currentPortIndex_).id());
 }

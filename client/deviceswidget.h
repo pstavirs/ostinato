@@ -33,6 +33,8 @@ public:
     DevicesWidget(QWidget *parent = NULL);
     void setPortGroupList(PortGroupList *portGroups);
 
+    virtual void keyPressEvent(QKeyEvent *event);
+
 public slots:
     void setCurrentPortIndex(const QModelIndex &portIndex);
 
