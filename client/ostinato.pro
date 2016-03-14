@@ -41,6 +41,7 @@ HEADERS += \
     dumpview.h \
     hexlineedit.h \
     mainwindow.h \
+    ndpstatusmodel.h \
     packetmodel.h \
     port.h \
     portconfigdialog.h \
@@ -84,6 +85,7 @@ SOURCES += \
     hexlineedit.cpp \
     main.cpp \
     mainwindow.cpp \
+    ndpstatusmodel.cpp \
     packetmodel.cpp \
     port.cpp \
     portconfigdialog.cpp \

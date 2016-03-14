@@ -268,6 +268,7 @@ void Device::resolveGateway()
 void Device::clearNeighbors()
 {
     arpTable_.clear();
+    ndpTable_.clear();
 }
 
 // Resolve the Neighbor IP address for this to-be-transmitted pktBuf

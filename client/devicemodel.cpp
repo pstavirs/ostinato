@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemodel.h"
 
 #include "arpstatusmodel.h"
+#include "ndpstatusmodel.h"
 #include "port.h"
 
 #include "emulproto.pb.h"
@@ -57,6 +58,7 @@ DeviceModel::DeviceModel(QObject *parent)
 {
     port_ = NULL;
     arpStatusModel_ = new ArpStatusModel(this);
+    ndpStatusModel_ = new NdpStatusModel(this);
 }
 
 int DeviceModel::rowCount(const QModelIndex &parent) const
@@ -236,7 +238,6 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
 
     qWarning("%s: Unsupported field #%d", __FUNCTION__, field);
 
-_exit:
     return QVariant();
 }
 
@@ -258,6 +259,8 @@ QAbstractItemModel* DeviceModel::detailModel(const QModelIndex &index)
             arpStatusModel_->setDeviceIndex(port_, index.row());
             return arpStatusModel_;
         case kNdpInfo:
+            ndpStatusModel_->setDeviceIndex(port_, index.row());
+            return ndpStatusModel_;
         default:
             return NULL;
     }
