@@ -17,19 +17,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _DEVICE_MODEL_H
-#define _DEVICE_MODEL_H
+#ifndef _ARP_STATUS_MODEL_H
+#define _ARP_STATUS_MODEL_H
 
 #include <QAbstractTableModel>
 
-class ArpStatusModel;
 class Port;
+namespace OstEmul {
+    class DeviceNeighborList;
+}
 
-class DeviceModel: public QAbstractTableModel
+class ArpStatusModel: public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    DeviceModel(QObject *parent = 0);
+    ArpStatusModel(QObject *parent = 0);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -38,17 +40,15 @@ public:
             int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
 
-    void setPort(Port *port);
-    QAbstractItemModel* detailModel(const QModelIndex &index);
+    void setDeviceIndex(Port *port, int deviceIndex);
 
 public slots:
-    void updateDeviceList();
+    void updateArpStatus();
 
 private:
-    QVariant drillableStyle(int role) const;
-
     Port *port_;
-    ArpStatusModel *arpStatusModel_;
+    int deviceIndex_;
+    const OstEmul::DeviceNeighborList *neighbors_;
 };
 
 #endif

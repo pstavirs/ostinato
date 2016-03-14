@@ -32,11 +32,14 @@ DevicesWidget::DevicesWidget(QWidget *parent)
     deviceGroupList->setVisible(deviceConfig->isChecked());
     deviceList->setVisible(deviceInfo->isChecked());
     refresh->setVisible(deviceInfo->isChecked());
+    deviceDetail->hide();
 
     deviceGroupList->verticalHeader()->setDefaultSectionSize(
             deviceGroupList->verticalHeader()->minimumSectionSize());
     deviceList->verticalHeader()->setDefaultSectionSize(
             deviceList->verticalHeader()->minimumSectionSize());
+    deviceDetail->verticalHeader()->setDefaultSectionSize(
+            deviceDetail->verticalHeader()->minimumSectionSize());
 
     // Populate DeviceGroup Context Menu Actions
     deviceGroupList->addAction(actionNewDeviceGroup);
@@ -67,6 +70,10 @@ void DevicesWidget::setPortGroupList(PortGroupList *portGroups)
     connect(deviceGroupList->selectionModel(),
         SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
         SLOT(updateDeviceViewActions()));
+
+    connect(deviceList->selectionModel(),
+        SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+        SLOT(when_deviceList_currentChanged(const QModelIndex&)));
 
     // FIXME: hardcoding
     deviceGroupList->resizeColumnToContents(1); // Vlan Count
@@ -147,6 +154,7 @@ void DevicesWidget::on_deviceInfo_toggled(bool checked)
     refresh->setVisible(checked);
     deviceGroupList->setHidden(checked);
     deviceList->setVisible(checked);
+    deviceDetail->hide();
 }
 
 void DevicesWidget::on_actionNewDeviceGroup_triggered()
@@ -214,4 +222,16 @@ void DevicesWidget::on_refresh_clicked()
 
     portGroups_->portGroup(curPortGroup)
                     .getDeviceInfo(portGroups_->port(currentPortIndex_).id());
+}
+
+void DevicesWidget::when_deviceList_currentChanged(const QModelIndex &index)
+{
+    if (!index.isValid() || !portGroups_)
+        return;
+
+    QAbstractItemModel *detailModel = portGroups_->getDeviceModel()
+                                                        ->detailModel(index);
+
+    deviceDetail->setModel(detailModel);
+    deviceDetail->setVisible(detailModel != NULL);
 }

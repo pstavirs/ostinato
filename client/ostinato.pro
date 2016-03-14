@@ -33,6 +33,7 @@ LIBS += -lprotobuf
 LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
 HEADERS += \
+    arpstatusmodel.h \
     devicegroupdialog.h \
     devicegroupmodel.h \
     devicemodel.h \
@@ -73,6 +74,7 @@ FORMS += \
     variablefieldswidget.ui
 
 SOURCES += \
+    arpstatusmodel.cpp \
     devicegroupdialog.cpp \
     devicegroupmodel.cpp \
     devicemodel.cpp \

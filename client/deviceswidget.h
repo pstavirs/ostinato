@@ -48,6 +48,8 @@ private slots:
 
     void on_refresh_clicked();
 
+    void when_deviceList_currentChanged(const QModelIndex &index);
+
 private:
     PortGroupList *portGroups_;
     QModelIndex currentPortIndex_;

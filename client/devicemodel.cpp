@@ -19,11 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "devicemodel.h"
 
+#include "arpstatusmodel.h"
 #include "port.h"
 
 #include "emulproto.pb.h"
 #include "uint128.h"
 
+#include <QBrush>
+#include <QColor>
+#include <QFont>
 #include <QHostAddress>
 
 enum {
@@ -52,6 +56,7 @@ DeviceModel::DeviceModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
     port_ = NULL;
+    arpStatusModel_ = new ArpStatusModel(this);
 }
 
 int DeviceModel::rowCount(const QModelIndex &parent) const
@@ -195,10 +200,15 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
         case kArpInfo:
             switch (role) {
                 case Qt::DisplayRole:
-                    return QString("%1/%2")
+                    if (dev->has_ip4_prefix_length())
+                        return QString("%1/%2")
                                 .arg(port_->numArpResolved(devIdx))
                                 .arg(port_->numArp(devIdx));
+                    else
+                        return QString("--");
                 default:
+                    if (dev->has_ip4_prefix_length())
+                        return drillableStyle(role);
                     break;
             }
             return QVariant();
@@ -206,10 +216,15 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
         case kNdpInfo:
             switch (role) {
                 case Qt::DisplayRole:
-                    return QString("%1/%2")
+                    if (dev->has_ip6_prefix_length())
+                        return QString("%1/%2")
                                 .arg(port_->numNdpResolved(devIdx))
                                 .arg(port_->numNdp(devIdx));
+                    else
+                        return QString("--");
                 default:
+                    if (dev->has_ip6_prefix_length())
+                        return drillableStyle(role);
                     break;
             }
             return QVariant();
@@ -220,6 +235,8 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
     }
 
     qWarning("%s: Unsupported field #%d", __FUNCTION__, field);
+
+_exit:
     return QVariant();
 }
 
@@ -231,7 +248,41 @@ void DeviceModel::setPort(Port *port)
     reset();
 }
 
+QAbstractItemModel* DeviceModel::detailModel(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return NULL;
+
+    switch(index.column()) {
+        case kArpInfo:
+            arpStatusModel_->setDeviceIndex(port_, index.row());
+            return arpStatusModel_;
+        case kNdpInfo:
+        default:
+            return NULL;
+    }
+}
+
 void DeviceModel::updateDeviceList()
 {
     reset();
 }
+
+// Style roles for drillable fields
+QVariant DeviceModel::drillableStyle(int role) const
+{
+    QFont f;
+    switch (role) {
+        case Qt::ToolTipRole:
+            return QString("Click for details ...");
+        case Qt::ForegroundRole:
+            return QBrush(QColor(Qt::blue));
+        case Qt::FontRole:
+            f.setUnderline(true);
+            return f;
+        default:
+            break;
+    }
+    return QVariant();
+}
+

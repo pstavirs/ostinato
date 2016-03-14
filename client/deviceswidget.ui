@@ -86,7 +86,24 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="deviceList" />
+    <widget class="QTableView" name="deviceList" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+       <horstretch>0</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="selectionBehavior" >
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableView" name="deviceDetail" >
+     <property name="selectionMode" >
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+    </widget>
    </item>
   </layout>
   <action name="actionNewDeviceGroup" >
