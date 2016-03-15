@@ -1166,6 +1166,12 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
                 assert cap_pkts.count('\n') == 1
     os.remove('capture.pcap')
 
+#
+# TODO
+#  * Verify that device_index in OstEmul.DeviceNeighborList matches the
+#    correct device in OstEmul.PortDeviceList
+#  * Verify ARP/NDP resolution in a bridging topology
+#
 import pytest
 pytest.main(__file__)
 

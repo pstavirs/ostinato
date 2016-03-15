@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/emulproto.pb.h"
 
-#include <QMap>
 #include <qendian.h>
 
 #define __STDC_FORMAT_MACROS
@@ -162,16 +161,7 @@ int DeviceManager::deviceCount()
 void DeviceManager::getDeviceList(
         OstProto::PortDeviceList *deviceList)
 {
-    // We want to return a sorted deviceList. However, deviceList_
-    // is a QHash (unsorted) instead of a QMap (sorted) because
-    // QHash is faster. So here we use a temporary QMap to sort the
-    // list that will be returned
-    QMap<DeviceKey, Device*> list;
-    foreach(Device *device, deviceList_) {
-        list.insert(device->key(), device);
-    }
-
-    foreach(Device *device, list) {
+    foreach(Device *device, sortedDeviceList_) {
         OstEmul::Device *dev =
             deviceList->AddExtension(OstEmul::port_device);
         device->getConfig(dev);
@@ -279,7 +269,7 @@ void DeviceManager::getDeviceNeighbors(
 {
     int count = 0;
 
-    foreach(Device *device, deviceList_) {
+    foreach(Device *device, sortedDeviceList_) {
         OstEmul::DeviceNeighborList *neighList =
             neighborList->AddExtension(OstEmul::devices);
         neighList->set_device_index(count++);
@@ -476,6 +466,7 @@ void DeviceManager::enumerateDevices(
                     device = new Device(this);
                     *device = dk;
                     deviceList_.insert(dk.key(), device);
+                    sortedDeviceList_.insert(dk.key(), device);
 
                     dk.setMac(kBcastMac);
                     bcastList_.insert(dk.key(), device);
@@ -491,6 +482,7 @@ void DeviceManager::enumerateDevices(
                     }
                     qDebug("enumerate(del): %s", qPrintable(device->config()));
                     delete device;
+                    sortedDeviceList_.take(dk.key()); // already freed above
 
                     dk.setMac(kBcastMac);
                     bcastList_.take(dk.key()); // device already freed above

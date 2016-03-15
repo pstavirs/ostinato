@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "device.h"
 
 #include <QHash>
+#include <QMap>
 #include <QMultiHash>
 #include <QtGlobal>
 
@@ -71,7 +72,8 @@ private:
 
     AbstractPort *port_;
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
-    QHash<DeviceKey, Device*> deviceList_;
+    QHash<DeviceKey, Device*> deviceList_; // fast access to devices
+    QMap<DeviceKey, Device*> sortedDeviceList_; // sorted access to devices
     QMultiHash<DeviceKey, Device*> bcastList_;
     QHash<quint16, uint> tpidList_; // Key: TPID, Value: RefCount
 };
