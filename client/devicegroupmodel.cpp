@@ -97,7 +97,7 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
     Q_ASSERT(dgIdx < port_->numDeviceGroups());
     Q_ASSERT(field < kFieldCount);
 
-    OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(dgIdx);
+    const OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(dgIdx);
 
     Q_ASSERT(devGrp);
 
@@ -157,8 +157,8 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
                 case Qt::DisplayRole:
                     if (devGrp->HasExtension(OstEmul::ip4))
                         return QHostAddress(
-                                    devGrp->MutableExtension(OstEmul::ip4)
-                                                    ->address()).toString();
+                                    devGrp->GetExtension(OstEmul::ip4)
+                                                    .address()).toString();
                     else
                         return QString("--");
                 default:
@@ -170,8 +170,8 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
             switch (role) {
                 case Qt::DisplayRole:
                     if (devGrp->HasExtension(OstEmul::ip6)) {
-                        OstEmul::Ip6Address ip = devGrp->MutableExtension(
-                                                    OstEmul::ip6)->address();
+                        OstEmul::Ip6Address ip = devGrp->GetExtension(
+                                                    OstEmul::ip6).address();
                         return QHostAddress(
                                     UInt128(ip.hi(), ip.lo()).toArray())
                                         .toString();

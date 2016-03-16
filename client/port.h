@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QDir>
 #include <QHash>
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QTemporaryFile>
 
@@ -57,7 +58,8 @@ class Port : public QObject {
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
 
-    QList<quint32>    lastSyncDeviceGroupList_;
+    QList<quint32> lastSyncDeviceGroupList_;
+    QSet<quint32>  modifiedDeviceGroupList_;
     QList<OstProto::DeviceGroup*> deviceGroups_;
     QList<OstEmul::Device*> devices_;
     QHash<quint32, OstEmul::DeviceNeighborList*> deviceNeighbors_;
@@ -168,8 +170,9 @@ public:
     // ------------ Device Group ----------- //
 
     uint newDeviceGroupId();
-    int numDeviceGroups();
-    OstProto::DeviceGroup* deviceGroupByIndex(int index);
+    int numDeviceGroups() const;
+    const OstProto::DeviceGroup* deviceGroupByIndex(int index) const;
+    OstProto::DeviceGroup* mutableDeviceGroupByIndex(int index);
     OstProto::DeviceGroup* deviceGroupById(uint deviceGroupId);
 
     //! Used by StreamModel

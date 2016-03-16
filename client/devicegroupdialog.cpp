@@ -219,7 +219,7 @@ void DeviceGroupDialog::updateIp6Gateway()
 
 void DeviceGroupDialog::loadDeviceGroup()
 {
-    OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
+    const OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
     int tagCount = 0;
 
     Q_ASSERT(devGrp);
@@ -285,7 +285,7 @@ void DeviceGroupDialog::loadDeviceGroup()
 
 void DeviceGroupDialog::storeDeviceGroup()
 {
-    OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
+    OstProto::DeviceGroup *devGrp = port_->mutableDeviceGroupByIndex(index_);
     int tagCount = vlanTagCount->value();
 
     Q_ASSERT(devGrp);

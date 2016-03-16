@@ -443,12 +443,10 @@ void Port::getNewDeviceGroupsSinceLastSync(
 void Port::getModifiedDeviceGroupsSinceLastSync(
     OstProto::DeviceGroupConfigList &deviceGroupConfigList)
 {
-    // FIXME: we currently don't have any mechanism to check
-    // if a DeviceGroup was modified since last sync, so we
-    // include all DeviceGroups
     deviceGroupConfigList.clear_device_group();
-    foreach(OstProto::DeviceGroup *dg, deviceGroups_)
-        deviceGroupConfigList.add_device_group()->CopyFrom(*dg);
+    foreach(quint32 id, modifiedDeviceGroupList_)
+        deviceGroupConfigList.add_device_group()
+                                ->CopyFrom(*deviceGroupById(id));
 }
 
 void Port::when_syncComplete()
@@ -464,6 +462,7 @@ void Port::when_syncComplete()
         lastSyncDeviceGroupList_.append(
                 deviceGroups_.at(i)->device_group_id().id());
     }
+    modifiedDeviceGroupList_.clear();
 }
 
 void Port::updateStats(OstProto::PortStats *portStats)
@@ -671,12 +670,12 @@ uint Port::newDeviceGroupId()
     return allocDeviceGroupId_++;
 }
 
-int Port::numDeviceGroups()
+int Port::numDeviceGroups() const
 {
     return deviceGroups_.size();
 }
 
-OstProto::DeviceGroup* Port::deviceGroupByIndex(int index)
+const OstProto::DeviceGroup* Port::deviceGroupByIndex(int index) const
 {
     if ((index < 0) || (index >= numDeviceGroups())) {
         qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
@@ -685,6 +684,22 @@ OstProto::DeviceGroup* Port::deviceGroupByIndex(int index)
     }
 
     return deviceGroups_.at(index);
+}
+
+OstProto::DeviceGroup* Port::mutableDeviceGroupByIndex(int index)
+{
+    if ((index < 0) || (index >= numDeviceGroups())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDeviceGroups() - 1);
+        return NULL;
+    }
+
+    OstProto::DeviceGroup *devGrp = deviceGroups_.at(index);
+
+    // Caller can modify DeviceGroup - assume she will
+    modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
+
+    return devGrp;
 }
 
 OstProto::DeviceGroup* Port::deviceGroupById(uint deviceGroupId)
@@ -715,6 +730,7 @@ bool Port::newDeviceGroupAt(int index, const OstProto::DeviceGroup *deviceGroup)
 
     devGrp->mutable_device_group_id()->set_id(newDeviceGroupId());
     deviceGroups_.insert(index, devGrp);
+    modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
 
     return true;
 }
@@ -724,7 +740,9 @@ bool Port::deleteDeviceGroupAt(int index)
     if (index < 0 || index >= deviceGroups_.size())
         return false;
 
-    delete deviceGroups_.takeAt(index);
+    OstProto::DeviceGroup *devGrp = deviceGroups_.takeAt(index);
+    modifiedDeviceGroupList_.remove(devGrp->device_group_id().id());
+    delete devGrp;
 
     return true;
 }
