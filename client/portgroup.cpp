@@ -405,6 +405,7 @@ void PortGroup::when_configApply(int portIndex)
     //
     OstProto::DeviceGroupIdList *deviceGroupIdList;
     OstProto::DeviceGroupConfigList *deviceGroupConfigList;
+    bool refreshReqd = false;
 
     qDebug("applying 'deleted deviceGroups' ...");
     deviceGroupIdList = new OstProto::DeviceGroupIdList;
@@ -416,6 +417,7 @@ void PortGroup::when_configApply(int portIndex)
         serviceStub->deleteDeviceGroup(controller, deviceGroupIdList, ack,
             NewCallback(this, &PortGroup::processDeleteDeviceGroupAck,
                         controller));
+        refreshReqd = true;
     }
     else
         delete deviceGroupIdList;
@@ -430,6 +432,7 @@ void PortGroup::when_configApply(int portIndex)
         serviceStub->addDeviceGroup(controller, deviceGroupIdList, ack,
             NewCallback(this, &PortGroup::processAddDeviceGroupAck,
                         controller));
+        refreshReqd = true;
     }
     else
         delete deviceGroupIdList;
@@ -445,9 +448,13 @@ void PortGroup::when_configApply(int portIndex)
         serviceStub->modifyDeviceGroup(controller, deviceGroupConfigList, ack,
                 NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
                     portIndex, controller));
+        refreshReqd = true;
     }
     else
         delete deviceGroupConfigList;
+
+    if (refreshReqd)
+        getDeviceInfo(portIndex);
 
     //
     // Update/Sync Streams
