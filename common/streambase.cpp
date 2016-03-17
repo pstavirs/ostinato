@@ -571,13 +571,18 @@ bool StreamBase::preflightCheck(QString &result) const
                 "frame length should be at least %1.\n")
                 .arg(frameProtocolLength(i) + kFcsSize);
             pass = false;
+            break;
         }
+    }
 
+    for (int i = 0; i < count; i++)
+    {
         if (frameLen(i) > 1522)
         {
             result += QString("Jumbo frames may be truncated or dropped "
                 "if not supported by the hardware\n");
             pass = false;
+            break;
         }
     }
 
