@@ -55,7 +55,7 @@ public:
 
     void resolveDeviceGateways();
 
-    void clearDeviceNeighbors();
+    void clearDeviceNeighbors(Device::NeighborSet set = Device::kAllNeighbors);
     void resolveDeviceNeighbor(PacketBuffer *pktBuf);
     void getDeviceNeighbors(OstProto::PortNeighborList *neighborList);
 

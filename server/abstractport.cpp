@@ -625,6 +625,19 @@ void AbstractPort::clearDeviceNeighbors()
 
 void AbstractPort::resolveDeviceNeighbors()
 {
+    // For a user triggered 'Resolve Neighbors', the behaviour we want is
+    //   IP not in cache - send ARP/NDP request
+    //   IP present in cache, but unresolved - re-send ARP/NDP request
+    //   IP present in cache and resolved - don't sent ARP/NDP
+    //
+    // Device does not resend ARP/NDP requests if the IP address is
+    // already present in the cache, irrespective of whether it is
+    // resolved or not (this is done to avoid sending duplicate requests).
+    //
+    // So, to get the behaviour we want, let's clear all unresolved neighbors
+    // before calling resolve
+    deviceManager_->clearDeviceNeighbors(Device::kUnresolvedNeighbors);
+
     // Resolve gateway for each device first ...
     deviceManager_->resolveDeviceGateways();
 

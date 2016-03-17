@@ -265,10 +265,33 @@ void Device::resolveGateway()
         sendNeighborSolicit(ip6Gateway_);
 }
 
-void Device::clearNeighbors()
+void Device::clearNeighbors(Device::NeighborSet set)
 {
-    arpTable_.clear();
-    ndpTable_.clear();
+    QMutableHashIterator<quint32, quint64> arpIter(arpTable_);
+    QMutableHashIterator<UInt128, quint64> ndpIter(ndpTable_);
+
+    switch (set) {
+    case kAllNeighbors:
+        arpTable_.clear();
+        ndpTable_.clear();
+        break;
+
+    case kUnresolvedNeighbors:
+        while (arpIter.hasNext()) {
+            arpIter.next();
+            if (arpIter.value() == 0)
+                arpIter.remove();
+        }
+
+        while (ndpIter.hasNext()) {
+            ndpIter.next();
+            if (ndpIter.value() == 0)
+                ndpIter.remove();
+        }
+        break;
+    default:
+        Q_ASSERT(false); // Unreachable!
+    }
 }
 
 // Resolve the Neighbor IP address for this to-be-transmitted pktBuf
@@ -564,8 +587,12 @@ void Device::sendArpRequest(quint32 tgtIp)
     if (!tgtIp)
         return;
 
-    // Do we already have a ARP entry (resolved or unresolved)?
-    // XXX: No NDP state machine for now
+    // This function will be called once per unique stream - which
+    // may all have the same dst IP; even if dst IP are different the
+    // gateway for the different dst IP may all be same. However,
+    // we don't want to send duplicate ARP requests, so we check
+    // if the tgtIP is already in the cache (resolved or unresolved)
+    // and if so, we don't resend it
     if (arpTable_.contains(tgtIp))
         return;
 
@@ -945,7 +972,7 @@ void Device::sendNeighborSolicit(UInt128 tgtIp)
         return;
 
     // Do we already have a NDP entry (resolved or unresolved)?
-    // XXX: No ARP state machine for now
+    // If so, don't resend (see note in sendArpRequest())
     if (ndpTable_.contains(tgtIp))
         return;
 

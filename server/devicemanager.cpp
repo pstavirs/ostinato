@@ -258,10 +258,10 @@ void DeviceManager::resolveDeviceGateways()
     }
 }
 
-void DeviceManager::clearDeviceNeighbors()
+void DeviceManager::clearDeviceNeighbors(Device::NeighborSet set)
 {
     foreach(Device *device, deviceList_)
-        device->clearNeighbors();
+        device->clearNeighbors(set);
 }
 
 void DeviceManager::getDeviceNeighbors(

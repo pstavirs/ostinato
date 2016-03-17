@@ -39,6 +39,11 @@ class Device
 public:
     static const quint16 kVlanTpid = 0x8100;
 
+    enum NeighborSet {
+        kAllNeighbors,
+        kUnresolvedNeighbors
+    };
+
 public:
     Device(DeviceManager *deviceManager);
 
@@ -61,7 +66,7 @@ public:
 
     void resolveGateway();
 
-    void clearNeighbors();
+    void clearNeighbors(Device::NeighborSet set);
     void resolveNeighbor(PacketBuffer *pktBuf);
     void getNeighbors(OstEmul::DeviceNeighborList *neighbors);
 
