@@ -28,6 +28,12 @@ MacConfigForm::MacConfigForm(QWidget *parent)
     QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
     setupUi(this);
+    resolveInfo->hide();
+#if 0
+    // not working for some reason
+    resolveInfo->setPixmap(resolveInfo->style()->standardIcon(
+                               QStyle::SP_MessageBoxInformation).pixmap(128));
+#endif
     leDstMac->setValidator(new QRegExpValidator(reMac, this));
     leSrcMac->setValidator(new QRegExpValidator(reMac, this));
     leDstMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
@@ -63,6 +69,9 @@ void MacConfigForm::on_cmbDstMacMode_currentIndexChanged(int index)
             leDstMacStep->setEnabled(true);
             break;
     }
+    resolveInfo->setVisible(
+            cmbDstMacMode->currentIndex() == OstProto::Mac::e_mm_resolve
+            || cmbSrcMacMode->currentIndex() == OstProto::Mac::e_mm_resolve);
 }
 
 void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
@@ -84,6 +93,9 @@ void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
             leSrcMacStep->setEnabled(true);
             break;
     }
+    resolveInfo->setVisible(
+            cmbDstMacMode->currentIndex() == OstProto::Mac::e_mm_resolve
+            || cmbSrcMacMode->currentIndex() == OstProto::Mac::e_mm_resolve);
 }
 
 void MacConfigForm::loadWidget(AbstractProtocol *proto)
