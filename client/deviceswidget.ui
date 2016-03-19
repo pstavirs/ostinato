@@ -107,21 +107,32 @@
    </item>
   </layout>
   <action name="actionNewDeviceGroup" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/devicegroup_add.png</iconset>
+   </property>
    <property name="text" >
     <string>New Device Group</string>
    </property>
   </action>
   <action name="actionDeleteDeviceGroup" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/devicegroup_delete.png</iconset>
+   </property>
    <property name="text" >
     <string>Delete Device Group</string>
    </property>
   </action>
   <action name="actionEditDeviceGroup" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/devicegroup_edit.png</iconset>
+   </property>
    <property name="text" >
     <string>Edit Device Group</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="ostinato.qrc" />
+ </resources>
  <connections/>
 </ui>
