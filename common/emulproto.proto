@@ -51,10 +51,9 @@ message MacEmulation {
 }
 
 message Ip4Emulation {
-    // Use RFC 2544 reserved address for default - 198.18.0.2/24
-    optional uint32 address = 1 [default = 0xc6120002];
+    optional uint32 address = 1;
     optional uint32 prefix_length = 2 [default = 24];
-    optional uint32 default_gateway = 3 [default = 0xc6120001];
+    optional uint32 default_gateway = 3;
 
     optional uint32 step = 10 [default = 1];
     // FIXME: step for gateway?
@@ -66,8 +65,6 @@ message Ip6Address {
 }
 
 message Ip6Emulation {
-    // no defaults since we can't set different default values
-    // for an embedded message field
     optional Ip6Address address = 1;
     optional uint32 prefix_length = 2 [default = 64];
     optional Ip6Address default_gateway = 3;

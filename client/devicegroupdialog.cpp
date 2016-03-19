@@ -221,6 +221,10 @@ void DeviceGroupDialog::loadDeviceGroup()
 {
     const OstProto::DeviceGroup *devGrp = port_->deviceGroupByIndex(index_);
     int tagCount = 0;
+    // use 1-indexed id so that it matches the port id used in the
+    // RFC 4814 compliant mac addresses assigned by default to deviceGroups
+    // XXX: use deviceGroupId also as part of the id?
+    quint32 id = (port_->id()+1) & 0xff;
 
     Q_ASSERT(devGrp);
 
@@ -255,22 +259,26 @@ void DeviceGroupDialog::loadDeviceGroup()
     macStep->setValue(mac.step());
 
     OstEmul::Ip4Emulation ip4 = devGrp->GetExtension(OstEmul::ip4);
-    ip4Address->setValue(ip4.address());
+    // If address is not set, assign one from RFC 2544 space - 192.18.0.0/15
+    // Use port Id as the 3rd octet of the address
+    ip4Address->setValue(ip4.has_address() ?
+            ip4.address() : 0xc6120002 | (id << 8));
     ip4PrefixLength->setValue(ip4.prefix_length());
-    ip4Step->setValue(ip4.step());
-    ip4Gateway->setValue(ip4.default_gateway());
+    ip4Step->setValue(ip4.has_step()? ip4.step() : 1);
+    ip4Gateway->setValue(ip4.has_default_gateway() ?
+            ip4.default_gateway() : 0xc6120001 | (id << 8));
 
     OstEmul::Ip6Emulation ip6 = devGrp->GetExtension(OstEmul::ip6);
-    // ip6 fields don't have default values defined in the .proto
-    // because protobuf doesn't allow different default values for
-    // embedded message fields, so assign them here
-    // Use address 2001:0200::/64 from the RFC 5180 range
+    // If address is not set, assign one from  RFC 5180 space 2001:0200::/64
+    // Use port Id as the 3rd hextet of the address
     ip6Address->setValue(ip6.has_address() ?
-            UINT128(ip6.address()) : UInt128(0x20010200ULL << 32, 2));
+            UINT128(ip6.address()) :
+            UInt128((0x200102000000ULL | id) << 16, 2));
     ip6PrefixLength->setValue(ip6.prefix_length());
     ip6Step->setValue(ip6.has_step() ? UINT128(ip6.step()) : UInt128(0, 1));
     ip6Gateway->setValue(ip6.has_default_gateway() ?
-            UINT128(ip6.default_gateway()) : UInt128(0x20010200ULL << 32, 1));
+            UINT128(ip6.default_gateway()) :
+            UInt128((0x200102000000ULL | id) << 16, 1));
 
     int stk = kIpNone;
     if (devGrp->HasExtension(OstEmul::ip4))
