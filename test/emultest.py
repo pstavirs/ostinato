@@ -557,15 +557,58 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     # FIXME: find alternative to sleep
     time.sleep(5)
 
-    # resolve ARP on tx/rx ports
+    # clear ARP/NDP cache
+    log.info('clearing ARP/NDP cache on tx/rx port')
+    drone.clearDeviceNeighbors(emul_ports)
+
+    log.info('retrieving ARP/NDP entries on tx port to verify clear')
+    device_list = drone.getDeviceList(emul_ports.port_id[0])
+    device_config = device_list.Extensions[emul.port_device]
+    neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
+    devices = neigh_list.Extensions[emul.devices]
+    log.info('ARP/NDP Table on tx port')
+    for devcfg, device in zip(device_config, devices):
+        if has_ip4:
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(devcfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
+            assert(len(device.arp) == 0)
+        if has_ip6:
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(devcfg.ip6)),
+                         str(ip6_address(ndp.ip6)), ndp.mac))
+            assert(len(device.ndp) == 0)
+
+    log.info('retrieving ARP/NDP entries on rx port to verify clear')
+    device_list = drone.getDeviceList(emul_ports.port_id[1])
+    device_config = device_list.Extensions[emul.port_device]
+    neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
+    devices = neigh_list.Extensions[emul.devices]
+    log.info('ARP/NDP Table on rx port')
+    for devcfg, device in zip(device_config, devices):
+        if has_ip4:
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(devcfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
+            assert(len(device.arp) == 0)
+        if has_ip6:
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(devcfg.ip6)),
+                         str(ip6_address(ndp.ip6)), ndp.mac))
+            assert(len(device.ndp) == 0)
+
+    # resolve ARP/NDP on tx/rx ports
     log.info('resolving Neighbors on tx/rx ports ...')
     drone.startCapture(emul_ports)
-    drone.clearDeviceNeighbors(emul_ports)
     drone.resolveDeviceNeighbors(emul_ports)
     time.sleep(3)
     drone.stopCapture(emul_ports)
 
-    # verify ARP Requests sent out from tx port
+    # verify ARP/NDP Requests sent out from tx port
     buff = drone.getCaptureBuffer(emul_ports.port_id[0])
     drone.saveCaptureBuffer(buff, 'capture.pcap')
     log.info('dumping Tx capture buffer (all)')
@@ -594,7 +637,7 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             print(cap_pkts)
             assert cap_pkts.count('\n') == 1
 
-    # verify ARP Requests sent out from rx port
+    # verify ARP/NDP Requests sent out from rx port
     buff = drone.getCaptureBuffer(emul_ports.port_id[1])
     drone.saveCaptureBuffer(buff, 'capture.pcap')
     log.info('dumping Rx capture buffer (all)')
@@ -630,23 +673,23 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
     devices = neigh_list.Extensions[emul.devices]
     log.info('ARP/NDP Table on tx port')
-    for dev_cfg, device in zip(device_config, devices):
+    for devcfg, device in zip(device_config, devices):
         if has_ip4:
             resolved = False
             for arp in device.arp:
                 print('%s: %s %012x' %
-                        (str(ipaddress.ip_address(dev_cfg.ip4)),
+                        (str(ipaddress.ip_address(devcfg.ip4)),
                          str(ipaddress.ip_address(arp.ip4)), arp.mac))
-                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                if (arp.ip4 == devcfg.ip4_default_gateway) and (arp.mac):
                     resolved = True
             assert resolved
         if has_ip6:
             resolved = False
             for ndp in device.ndp:
                 print('%s: %s %012x' %
-                        (str(ip6_address(dev_cfg.ip6)),
+                        (str(ip6_address(devcfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                if (ndp.ip6 == devcfg.ip6_default_gateway) and (ndp.mac):
                     resolved = True
             assert resolved
 
@@ -656,23 +699,23 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
     devices = neigh_list.Extensions[emul.devices]
     log.info('ARP/NDP Table on rx port')
-    for dev_cfg, device in zip(device_config, devices):
+    for devcfg, device in zip(device_config, devices):
         if has_ip4:
             resolved = False
             for arp in device.arp:
                 print('%s: %s %012x' %
-                        (str(ipaddress.ip_address(dev_cfg.ip4)),
+                        (str(ipaddress.ip_address(devcfg.ip4)),
                          str(ipaddress.ip_address(arp.ip4)), arp.mac))
-                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                if (arp.ip4 == devcfg.ip4_default_gateway) and (arp.mac):
                     resolved = True
             assert resolved
         if has_ip6:
             resolved = False
             for ndp in device.ndp:
                 print('%s: %s %012x' %
-                        (str(ip6_address(dev_cfg.ip6)),
+                        (str(ip6_address(devcfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                if (ndp.ip6 == devcfg.ip6_default_gateway) and (ndp.mac):
                     resolved = True
             assert resolved
 
@@ -959,10 +1002,53 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
     if has_ip6:
         time.sleep(5)
 
+    # clear ARP/NDP cache
+    log.info('clearing ARP/NDP cache on tx/rx port')
+    drone.clearDeviceNeighbors(emul_ports)
+
+    log.info('retrieving ARP/NDP entries on tx port to verify clear')
+    device_list = drone.getDeviceList(emul_ports.port_id[0])
+    device_config = device_list.Extensions[emul.port_device]
+    neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
+    devices = neigh_list.Extensions[emul.devices]
+    log.info('ARP/NDP Table on tx port')
+    for devcfg, device in zip(device_config, devices):
+        if has_ip4:
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(devcfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
+            assert(len(device.arp) == 0)
+        if has_ip6:
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(devcfg.ip6)),
+                         str(ip6_address(ndp.ip6)), ndp.mac))
+            assert(len(device.ndp) == 0)
+
+    log.info('retrieving ARP/NDP entries on rx port to verify clear')
+    device_list = drone.getDeviceList(emul_ports.port_id[1])
+    device_config = device_list.Extensions[emul.port_device]
+    neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
+    devices = neigh_list.Extensions[emul.devices]
+    log.info('ARP/NDP Table on rx port')
+    for devcfg, device in zip(device_config, devices):
+        if has_ip4:
+            for arp in device.arp:
+                print('%s: %s %012x' %
+                        (str(ipaddress.ip_address(devcfg.ip4)),
+                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
+            assert(len(device.arp) == 0)
+        if has_ip6:
+            for ndp in device.ndp:
+                print('%s: %s %012x' %
+                        (str(ip6_address(devcfg.ip6)),
+                         str(ip6_address(ndp.ip6)), ndp.mac))
+            assert(len(device.ndp) == 0)
+
     # resolve ARP/NDP on tx/rx ports
     log.info('resolving Neighbors on tx/rx ports ...')
     drone.startCapture(emul_ports)
-    drone.clearDeviceNeighbors(emul_ports)
     drone.resolveDeviceNeighbors(emul_ports)
     time.sleep(3)
     drone.stopCapture(emul_ports)
@@ -1042,26 +1128,26 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
     devices = neigh_list.Extensions[emul.devices]
     log.info('ARP/NDP Table on tx port')
-    for dev_cfg, device in zip(device_config, devices):
+    for devcfg, device in zip(device_config, devices):
         vlans = ''
-        for v in dev_cfg.vlan:
+        for v in devcfg.vlan:
             vlans += str(v & 0xffff) + ' '
         if has_ip4:
             resolved = False
             for arp in device.arp:
                 print('%s%s: %s %012x' %
-                        (vlans, str(ipaddress.ip_address(dev_cfg.ip4)),
+                        (vlans, str(ipaddress.ip_address(devcfg.ip4)),
                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
-                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                if (arp.ip4 == devcfg.ip4_default_gateway) and (arp.mac):
                     resolved = True
             assert resolved
         if has_ip6:
             resolved = False
             for ndp in device.ndp:
                 print('%s%s: %s %012x' %
-                        (vlans, str(ip6_address(dev_cfg.ip6)),
+                        (vlans, str(ip6_address(devcfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                if (ndp.ip6 == devcfg.ip6_default_gateway) and (ndp.mac):
                     resolved = True
             assert resolved
 
@@ -1071,26 +1157,26 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
     devices = neigh_list.Extensions[emul.devices]
     log.info('ARP/NDP Table on rx port')
-    for dev_cfg, device in zip(device_config, devices):
+    for devcfg, device in zip(device_config, devices):
         vlans = ''
-        for v in dev_cfg.vlan:
+        for v in devcfg.vlan:
             vlans += str(v & 0xffff) + ' '
         if has_ip4:
             resolved = False
             for arp in device.arp:
                 print('%s%s: %s %012x' %
-                        (vlans, str(ipaddress.ip_address(dev_cfg.ip4)),
+                        (vlans, str(ipaddress.ip_address(devcfg.ip4)),
                         str(ipaddress.ip_address(arp.ip4)), arp.mac))
-                if (arp.ip4 == dev_cfg.ip4_default_gateway) and (arp.mac):
+                if (arp.ip4 == devcfg.ip4_default_gateway) and (arp.mac):
                     resolved = True
             assert resolved
         if has_ip6:
             resolved = False
             for ndp in device.ndp:
                 print('%s%s: %s %012x' %
-                        (vlans, str(ip6_address(dev_cfg.ip6)),
+                        (vlans, str(ip6_address(devcfg.ip6)),
                          str(ip6_address(ndp.ip6)), ndp.mac))
-                if (ndp.ip6 == dev_cfg.ip6_default_gateway) and (ndp.mac):
+                if (ndp.ip6 == devcfg.ip6_default_gateway) and (ndp.mac):
                     resolved = True
             assert resolved
 
