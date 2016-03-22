@@ -163,7 +163,7 @@ void DeviceManager::getDeviceList(
 {
     foreach(Device *device, sortedDeviceList_) {
         OstEmul::Device *dev =
-            deviceList->AddExtension(OstEmul::port_device);
+            deviceList->AddExtension(OstEmul::device);
         device->getConfig(dev);
     }
 }
@@ -271,7 +271,7 @@ void DeviceManager::getDeviceNeighbors(
 
     foreach(Device *device, sortedDeviceList_) {
         OstEmul::DeviceNeighborList *neighList =
-            neighborList->AddExtension(OstEmul::devices);
+            neighborList->AddExtension(OstEmul::device_neighbor);
         neighList->set_device_index(count++);
         device->getNeighbors(neighList);
     }

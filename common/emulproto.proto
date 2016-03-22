@@ -95,7 +95,7 @@ message Device {
 }
 
 extend OstProto.PortDeviceList {
-    repeated Device port_device = 100;
+    repeated Device device = 100;
 }
 
 message ArpEntry {
@@ -115,6 +115,5 @@ message DeviceNeighborList {
 }
 
 extend OstProto.PortNeighborList {
-    // FIXME: rename to device (singular) to be consistent with naming convention for other repeated fields
-    repeated DeviceNeighborList devices = 100;
+    repeated DeviceNeighborList device_neighbor = 100;
 }

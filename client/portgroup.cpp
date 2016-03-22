@@ -594,9 +594,9 @@ void PortGroup::processDeviceList(int portIndex, PbRpcController *controller)
     }
 
     mPorts[portIndex]->clearDeviceList();
-    for(int i = 0; i < deviceList->ExtensionSize(OstEmul::port_device); i++) {
+    for(int i = 0; i < deviceList->ExtensionSize(OstEmul::device); i++) {
         mPorts[portIndex]->insertDevice(
-                deviceList->GetExtension(OstEmul::port_device, i));
+                deviceList->GetExtension(OstEmul::device, i));
     }
 
 _exit:
@@ -628,9 +628,9 @@ void PortGroup::processDeviceNeighbors(
     }
 
     mPorts[portIndex]->clearDeviceNeighbors();
-    for(int i = 0; i < neighList->ExtensionSize(OstEmul::devices); i++) {
+    for(int i=0; i < neighList->ExtensionSize(OstEmul::device_neighbor); i++) {
         mPorts[portIndex]->insertDeviceNeighbors(
-                neighList->GetExtension(OstEmul::devices, i)); // FIXME: change extn id
+                neighList->GetExtension(OstEmul::device_neighbor, i));
     }
 
     mPorts[portIndex]->deviceInfoRefreshed();

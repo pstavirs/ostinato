@@ -563,9 +563,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
 
     log.info('retrieving ARP/NDP entries on tx port to verify clear')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on tx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -583,9 +583,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
 
     log.info('retrieving ARP/NDP entries on rx port to verify clear')
     device_list = drone.getDeviceList(emul_ports.port_id[1])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on rx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -669,9 +669,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     # retrieve and verify ARP/NDP Table on tx/rx ports
     log.info('retrieving ARP/NDP entries on tx port')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on tx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -695,9 +695,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
 
     log.info('retrieving ARP/NDP entries on rx port')
     device_list = drone.getDeviceList(emul_ports.port_id[1])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on rx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -1008,9 +1008,9 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
 
     log.info('retrieving ARP/NDP entries on tx port to verify clear')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on tx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -1028,9 +1028,9 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
 
     log.info('retrieving ARP/NDP entries on rx port to verify clear')
     device_list = drone.getDeviceList(emul_ports.port_id[1])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on rx port')
     for devcfg, device in zip(device_config, devices):
         if has_ip4:
@@ -1124,9 +1124,9 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
     # retrieve and verify ARP/NDP Table on tx/rx ports
     log.info('retrieving ARP/NDP entries on tx port')
     device_list = drone.getDeviceList(emul_ports.port_id[0])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[0])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on tx port')
     for devcfg, device in zip(device_config, devices):
         vlans = ''
@@ -1153,9 +1153,9 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
 
     log.info('retrieving ARP entries on rx port')
     device_list = drone.getDeviceList(emul_ports.port_id[1])
-    device_config = device_list.Extensions[emul.port_device]
+    device_config = device_list.Extensions[emul.device]
     neigh_list = drone.getDeviceNeighbors(emul_ports.port_id[1])
-    devices = neigh_list.Extensions[emul.devices]
+    devices = neigh_list.Extensions[emul.device_neighbor]
     log.info('ARP/NDP Table on rx port')
     for devcfg, device in zip(device_config, devices):
         vlans = ''
@@ -1257,6 +1257,8 @@ def test_multiEmulDevPerVlan(request, drone, ports, dut, dut_ports,
 #  * Verify that device_index in OstEmul.DeviceNeighborList matches the
 #    correct device in OstEmul.PortDeviceList
 #  * Verify ARP/NDP resolution in a bridging topology
+#  * Verify non-default IP prefix-length
+#  * Verify bi-directional streams
 #
 import pytest
 pytest.main(__file__)
