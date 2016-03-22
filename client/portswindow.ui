@@ -22,6 +22,12 @@
       <bool>false</bool>
      </property>
      <widget class="QTreeView" name="tvPortList" >
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="contextMenuPolicy" >
        <enum>Qt::ActionsContextMenu</enum>
       </property>
@@ -30,6 +36,12 @@
       </property>
      </widget>
      <widget class="QStackedWidget" name="swDetail" >
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+        <horstretch>2</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="currentIndex" >
        <number>0</number>
       </property>
