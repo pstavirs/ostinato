@@ -18,7 +18,7 @@
 import os
 from rpc import OstinatoRpcChannel, OstinatoRpcController, RpcError
 import protocols.protocol_pb2 as ost_pb
-import protocols.emulproto_pb2 as emul # FIXME: change name?
+import protocols.emulproto_pb2 as emul
 from __init__ import __version__
 
 class DroneProxy(object):

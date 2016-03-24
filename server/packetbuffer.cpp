@@ -76,7 +76,6 @@ uchar* PacketBuffer::end() const
 
 void PacketBuffer::reserve(int len)
 {
-    // FIXME: add validation
     data_ += len;
     tail_ += len;
 }

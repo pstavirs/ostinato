@@ -200,7 +200,8 @@ bool DeviceGroupModel::setData(
     if (!port_)
         return false;
 
-    // FIXME
+    // TODO; when implementing also implement flags() to
+    // return ItemIsEditable
     return false;
 }
 

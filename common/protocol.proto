@@ -277,11 +277,6 @@ message Notification {
 
 /*
  * Protocol Emulation
- * FIXME: review/fix tag numbers
- * FIXME: move xxxEmulation to their own .proto files?
- * FIXME: What will be the contents of a default device created by addDeviceGroup()?
- * FIXME: decide default values for device and protoEmulations
- * FIXME: rename 'DeviceGroup'?
  * FIXME: merge getDeviceList() and get DeviceNeighbors() into a single
  *        getDeviceInfo() RPC?
  */

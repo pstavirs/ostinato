@@ -454,8 +454,6 @@ void DeviceManager::enumerateDevices(
                           ip6.prefix_length(),
                           UINT128(ip6.default_gateway()));
 
-            // TODO: fill in other pbDevice data
-
             switch (oper) {
                 case kAdd:
                     if (deviceList_.contains(dk.key())) {

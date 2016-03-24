@@ -947,8 +947,14 @@ void PcapPort::EmulationTransceiver::run()
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
 #if 0
+    const char *capture_filter =
+        "arp or icmp or icmp6 or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and vlan and (arp or icmp or icmp6))";
 /*
-    Ideally we should use the below filter, but the 'vlan' capture filter
+    Ideally we should use the above filter, but the 'vlan' capture filter
     in libpcap is implemented as a kludge. From the pcap-filter man page -
 
     vlan [vlan_id]
@@ -965,12 +971,6 @@ void PcapPort::EmulationTransceiver::run()
     So we use the modified filter expression that works as we intend. If ever
     libpcap changes their implementation, this will need to change as well.
 */
-    const char *capture_filter =
-        "arp or icmp or icmp6 or "
-        "(vlan and (arp or icmp or icmp6)) or "
-        "(vlan and vlan and (arp or icmp or icmp6)) or "
-        "(vlan and vlan and vlan and (arp or icmp or icmp6)) or "
-        "(vlan and vlan and vlan and vlan and (arp or icmp or icmp6))";
 #else
     const char *capture_filter =
         "arp or icmp or icmp6 or "
@@ -989,7 +989,6 @@ void PcapPort::EmulationTransceiver::run()
 #endif
 
 _retry:
-    // FIXME: use 0 timeout value?
 #ifdef Q_OS_WIN32
     // NOCAPTURE_LOCAL needs windows only pcap_open()
     handle_ = pcap_open(qPrintable(device_), 65535,
@@ -1024,7 +1023,10 @@ _retry:
         }
     }
 
-    // FIXME: hardcoded filter
+    // TODO: for now the filter is hardcoded to accept tagged/untagged
+    // ARP/NDP or ICMPv4/v6; when more protocols are added, we may need
+    // to derive this filter based on which protocols are configured
+    // on the devices
     if (pcap_compile(handle_, &bpf, capture_filter, optimize, 0) < 0)
     {
         qWarning("%s: error compiling filter: %s", qPrintable(device_),
