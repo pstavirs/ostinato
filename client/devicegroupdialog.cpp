@@ -70,10 +70,11 @@ DeviceGroupDialog::DeviceGroupDialog(
     vlans->setColumnCount(kVlanColumns);
     vlans->setHorizontalHeaderLabels(vlanTableColumnHeaders);
     for (int i = 0; i < kMaxVlanTags; i++) {
+        // Use same default values as defined in .proto
         vlans->setItem(i, kVlanId,
                 new QTableWidgetItem(QString::number(100*(i+1))));
         vlans->setItem(i, kVlanCount,
-                new QTableWidgetItem(QString::number(10)));
+                new QTableWidgetItem(QString::number(1)));
         vlans->setItem(i, kVlanStep,
                 new QTableWidgetItem(QString::number(1)));
         vlans->setItem(i, kVlanCfi,
