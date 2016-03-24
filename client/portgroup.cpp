@@ -972,6 +972,9 @@ void PortGroup::processDeviceGroupConfigList(int portIndex,
                                     devGrpCfgList->mutable_device_group(i));
     }
 
+    if (devGrpCfgList->device_group_size())
+        getDeviceInfo(portIndex);
+
 #if 0
     // FIXME: incorrect check - will never be true if last port does not have any deviceGroups configured
     // Are we done for all ports?
