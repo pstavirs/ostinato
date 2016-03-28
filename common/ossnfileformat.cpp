@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -16,28 +16,31 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _FILE_FORMAT_H
-#define _FILE_FORMAT_H
 
-#include "abstractfileformat.h"
-#include "nativefileformat.h"
+#include "ossnfileformat.h"
 
-#include "fileformat.pb.h"
-
-class FileFormat : public AbstractFileFormat, public NativeFileFormat
+bool OssnFileFormat::open(const QString fileName,
+        OstProto::SessionContent &session, QString &error)
 {
-public:
-    FileFormat();
+    // TODO
+    return false;
+}
 
-    virtual bool openStreams(const QString fileName, 
-            OstProto::StreamConfigList &streams, QString &error);
-    virtual bool saveStreams(const OstProto::StreamConfigList streams, 
-            const QString fileName, QString &error);
+bool OssnFileFormat::save(const OstProto::SessionContent &session,
+        const QString fileName, QString &error)
+{
+    // TODO
+    return false;
+}
 
-    bool isMyFileFormat(const QString fileName);
-    bool isMyFileType(const QString fileType);
-};
+bool OssnFileFormat::isMyFileFormat(const QString fileName)
+{
+    // TODO
+    return true;
+}
 
-extern FileFormat fileFormat;
-
-#endif
+bool OssnFileFormat::isMyFileType(const QString fileType)
+{
+    // TODO
+    return true;
+}

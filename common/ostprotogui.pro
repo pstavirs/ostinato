@@ -39,12 +39,15 @@ HEADERS = \
     fileformat.h \
     ipv4addressdelegate.h \
     ipv6addressdelegate.h \
+    nativefileformat.h \
+    ossnfileformat.h \
     pcapfileformat.h \
     pdmlfileformat.h \
     pythonfileformat.h \
     pdmlprotocol.h \
     pdmlprotocols.h \
     pdmlreader.h \
+    sessionfileformat.h \
     spinboxdelegate.h
 
 HEADERS += \
@@ -82,12 +85,15 @@ SOURCES += \
     ostprotolib.cpp \
     abstractfileformat.cpp \
     fileformat.cpp \
+    nativefileformat.cpp \
+    ossnfileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \
     pythonfileformat.cpp \
     pdmlprotocol.cpp \
     pdmlprotocols.cpp \
     pdmlreader.cpp \
+    sessionfileformat.cpp \
     spinboxdelegate.cpp
 
 SOURCES += \
