@@ -48,7 +48,7 @@ QStringList SessionFileFormat::supportedFileTypes()
         << "Ostinato Session (*.ossn)";
 }
 
-void SessionFileFormat::openOffline(const QString fileName,
+void SessionFileFormat::openAsync(const QString fileName,
         OstProto::SessionContent &session, QString &error)
 {
     fileName_ = fileName;
@@ -60,7 +60,7 @@ void SessionFileFormat::openOffline(const QString fileName,
     start();
 }
 
-void SessionFileFormat::saveOffline(
+void SessionFileFormat::saveAsync(
         const OstProto::SessionContent &session,
         const QString fileName, QString &error)
 {

@@ -19,28 +19,73 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "ossnfileformat.h"
 
+OssnFileFormat ossnFileFormat;
+
+OssnFileFormat::OssnFileFormat()
+    : SessionFileFormat(), NativeFileFormat()
+{
+    // Do Nothing
+}
+
 bool OssnFileFormat::open(const QString fileName,
         OstProto::SessionContent &session, QString &error)
 {
-    // TODO
+    OstProto::FileMeta meta;
+    OstProto::FileContent content;
+    bool ret = NativeFileFormat::open(fileName, meta, content, error);
+
+    if (!ret)
+        goto _exit;
+
+    if (!content.matter().has_session())
+        goto _missing_session;
+
+    postParseFixup(meta.data(), content);
+
+    session.CopyFrom(content.matter().streams());
+
+    return true;
+
+_missing_session:
+    error = QString(tr("%1 does not contain a session")).arg(fileName);
+    goto _fail;
+_fail:
+    qDebug("%s", error.toAscii().constData());
+_exit:
     return false;
 }
 
 bool OssnFileFormat::save(const OstProto::SessionContent &session,
         const QString fileName, QString &error)
 {
-    // TODO
+    OstProto::FileContent content;
+
+    if (!session.IsInitialized())
+        goto _session_not_init;
+
+    content.mutable_matter()->mutable_session()->CopyFrom(session);
+    Q_ASSERT(content.IsInitialized());
+
+    return NativeFileFormat::save(OstProto::kSessionFileType, content,
+                                  fileName, error);
+
+_session_not_init:
+    error = QString(tr("Internal Error: Session not initialized\n%1\n%2"))
+                .arg(QString().fromStdString(
+                            session.InitializationErrorString()))
+                .arg(QString().fromStdString(session.DebugString()));
+    goto _fail;
+_fail:
+    qDebug("%s", error.toAscii().constData());
     return false;
 }
 
 bool OssnFileFormat::isMyFileFormat(const QString fileName)
 {
-    // TODO
-    return true;
+    return isNativeFileFormat(fileName, OstProto::kSessionFileType);
 }
 
 bool OssnFileFormat::isMyFileType(const QString fileType)
 {
-    // TODO
-    return true;
+    return fileType.contains("(*.ossn)") ? true : false;
 }

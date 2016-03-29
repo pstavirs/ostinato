@@ -43,9 +43,9 @@ public:
     virtual QDialog* openOptionsDialog();
     virtual QDialog* saveOptionsDialog();
 
-    void openOffline(const QString fileName,
+    void openAsync(const QString fileName,
             OstProto::SessionContent &session, QString &error);
-    void saveOffline(const OstProto::SessionContent &session,
+    void saveAsync(const OstProto::SessionContent &session,
             const QString fileName, QString &error);
 
     bool result();

@@ -20,11 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _OSSN_FILE_FORMAT_H
 #define _OSSN_FILE_FORMAT_H
 
+#include "nativefileformat.h"
 #include "sessionfileformat.h"
 
-class OssnFileFormat : public SessionFileFormat
+class OssnFileFormat : public SessionFileFormat, public NativeFileFormat
 {
 public:
+    OssnFileFormat();
+
     virtual bool open(const QString fileName,
             OstProto::SessionContent &session, QString &error);
     virtual bool save(const OstProto::SessionContent &session,
