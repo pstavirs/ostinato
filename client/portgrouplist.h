@@ -72,6 +72,7 @@ public:
 
     void addPortGroup(PortGroup &portGroup);
     void removePortGroup(PortGroup &portGroup);
+    void removeAllPortGroups();
 
 private:
     int indexOfPortGroup(quint32 portGroupId);

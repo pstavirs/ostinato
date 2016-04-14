@@ -126,6 +126,20 @@ void PortGroupList::removePortGroup(PortGroup &portGroup)
     mPortStatsModel.when_portListChanged();
 }
 
+void PortGroupList::removeAllPortGroups()
+{
+    while (!mPortGroups.isEmpty()) {
+        PortGroup *pg = mPortGroups.at(0);
+        mPortGroupListModel.portGroupAboutToBeRemoved(pg);
+        mPortGroups.removeFirst();
+        delete pg;
+    }
+    mPortGroupListModel.portGroupRemoved();
+
+    mPortGroupListModel.when_portListChanged();
+    mPortStatsModel.when_portListChanged();
+}
+
 //....................
 // Private Methods
 //....................

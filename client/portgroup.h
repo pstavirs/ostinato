@@ -36,6 +36,10 @@ LOW
 
 #define DEFAULT_SERVER_PORT        7878
 
+namespace OstProto {
+    class PortGroupContent;
+}
+
 class QFile;
 class QTimer;
 
@@ -62,6 +66,8 @@ private:
     OstProto::PortIdList       *portIdList_;
     OstProto::PortStatsList    *portStatsList_;
 
+    OstProto::PortGroupContent *atConnectConfig_;
+
 public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;
 
@@ -81,6 +87,8 @@ public:
         rpcChannel->establish(serverName, port);
     }
     void disconnectFromHost() { reconnect = false; rpcChannel->tearDown(); }
+
+    void setConfigAtConnect(const OstProto::PortGroupContent *config);
 
     int numPorts() const { return mPorts.size(); }
     quint32 id() const { return mPortGroupId; } 

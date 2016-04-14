@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "settings.h"
 
 #include "emulproto.pb.h"
+#include "fileformat.pb.h"
 
 #include <QApplication>
 #include <QCursor>
@@ -49,6 +50,8 @@ PortGroup::PortGroup(QString serverName, quint16 port)
 
     statsController = new PbRpcController(portIdList_, portStatsList_);
     isGetStatsPending_ = false;
+
+    atConnectConfig_ = NULL;
 
     compat = kUnknown;
 
@@ -91,8 +94,21 @@ PortGroup::~PortGroup()
     delete serviceStub;
     delete rpcChannel;
     delete statsController;
+    delete atConnectConfig_;
 }
 
+void PortGroup::setConfigAtConnect(const OstProto::PortGroupContent *config)
+{
+    if (!config) {
+        delete atConnectConfig_;
+        atConnectConfig_ = NULL;
+        return;
+    }
+
+    if (!atConnectConfig_)
+        atConnectConfig_ = config->New();
+    atConnectConfig_->CopyFrom(*config);
+}
 
 // ------------------------------------------------
 //                      Slots
@@ -168,6 +184,14 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
 
     compat = kCompatible;
 
+    if (atConnectConfig_)
+    {
+        // TODO: apply config
+
+        delete atConnectConfig_;
+        atConnectConfig_ = NULL;
+    }
+    else
     {
         OstProto::Void *void_ = new OstProto::Void;
         OstProto::PortIdList *portIdList = new OstProto::PortIdList;

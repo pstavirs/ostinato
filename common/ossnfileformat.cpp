@@ -32,8 +32,8 @@ bool OssnFileFormat::open(const QString fileName,
 {
     OstProto::FileMeta meta;
     OstProto::FileContent content;
-    bool ret = NativeFileFormat::open(fileName, meta, content, error);
-
+    bool ret = NativeFileFormat::open(fileName, OstProto::kSessionFileType,
+                                      meta, content, error);
     if (!ret)
         goto _exit;
 
@@ -42,7 +42,7 @@ bool OssnFileFormat::open(const QString fileName,
 
     postParseFixup(meta.data(), content);
 
-    session.CopyFrom(content.matter().streams());
+    session.CopyFrom(content.matter().session());
 
     return true;
 

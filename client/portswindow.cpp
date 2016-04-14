@@ -26,11 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamconfigdialog.h"
 #include "streamlistdelegate.h"
 
+#include "fileformat.pb.h"
+
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QItemSelectionModel>
+#include <QMainWindow>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
+
+extern QMainWindow *mainWindow;
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent), proxyPortModel(NULL)
@@ -166,6 +171,75 @@ PortsWindow::~PortsWindow()
 {
     delete delegate;
     delete proxyPortModel;
+}
+
+int PortsWindow::portGroupCount()
+{
+    return plm->numPortGroups();
+}
+
+//! Always return true
+bool PortsWindow::openSession(
+        const OstProto::SessionContent *session,
+        QString &error)
+{
+    QProgressDialog progress("Opening Session", NULL,
+                             0, session->port_groups_size(), mainWindow);
+    progress.show();
+    progress.setEnabled(true); // since parent (mainWindow) is disabled
+
+    plm->removeAllPortGroups();
+
+    for (int i = 0; i < session->port_groups_size(); i++) {
+        const OstProto::PortGroupContent &pgc = session->port_groups(i);
+        PortGroup *pg = new PortGroup(QString::fromStdString(
+                                                    pgc.server_name()),
+                                      quint16(pgc.server_port()));
+        pg->setConfigAtConnect(&pgc);
+        plm->addPortGroup(*pg);
+        progress.setValue(i+1);
+    }
+
+    return true;
+}
+
+/*!
+ * Prepare content to be saved for a session
+ *
+ * Returns false, if user cancels op; true, otherwise
+ */
+bool PortsWindow::saveSession(
+        OstProto::SessionContent *session, // OUT param
+        QString &error,
+        QProgressDialog *progress)
+{
+    int n = portGroupCount();
+
+    if (progress) {
+        progress->setLabelText("Preparing Ports and PortGroups ...");
+        progress->setRange(0, n);
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        OstProto::PortGroupContent *pgc = session->add_port_groups();
+        PortGroup &pg = plm->portGroupByIndex(i);
+
+        pgc->set_server_name(pg.serverName().toStdString());
+        pgc->set_server_port(pg.serverPort());
+
+        // TODO: ports
+
+        if (progress) {
+            if (progress->wasCanceled())
+                return false;
+            progress->setValue(i);
+        }
+        if (i % 2 == 0)
+            qApp->processEvents();
+    }
+
+    return true;
 }
 
 void PortsWindow::showMyReservedPortsOnly(bool enabled)

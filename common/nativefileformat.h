@@ -41,6 +41,7 @@ public:
     NativeFileFormat();
 
     bool open(const QString fileName,
+              OstProto::FileType fileType,
               OstProto::FileMeta &meta,
               OstProto::FileContent &content,
               QString &error);

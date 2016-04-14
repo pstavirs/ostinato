@@ -31,6 +31,22 @@ const std::string NativeFileFormat::kFileMagicValue = "\xa7\xb7OSTINATO";
 
 static const int kBaseHex = 16;
 
+static QString fileTypeStr(OstProto::FileType fileType)
+{
+    switch (fileType) {
+        case OstProto::kReservedFileType:
+            return QString("Reserved");
+        case OstProto::kStreamsFileType:
+            return QString("Streams");
+        case OstProto::kSessionFileType:
+            return QString("Streams");
+        default:
+            Q_ASSERT(false);
+    }
+
+    return QString("Unknown");
+}
+
 NativeFileFormat::NativeFileFormat()
 {
     /*
@@ -54,6 +70,7 @@ NativeFileFormat::NativeFileFormat()
 
 bool NativeFileFormat::open(
         const QString fileName,
+        OstProto::FileType fileType,
         OstProto::FileMeta &meta,
         OstProto::FileContent &content,
         QString &error)
@@ -137,7 +154,7 @@ bool NativeFileFormat::open(
     qDebug("%s: END MetaData", __FUNCTION__);
 
     // MetaData Validation(s)
-    if (meta.data().file_type() != OstProto::kStreamsFileType)
+    if (meta.data().file_type() != fileType)
         goto _unexpected_file_type;
 
     if (meta.data().format_version_major() != kFileFormatVersionMajor)
@@ -196,7 +213,9 @@ _incompatible_file_version:
             .arg(kFileFormatVersionRevision);
     goto _fail;
 _unexpected_file_type:
-    error = QString(tr("%1 is not a streams file")).arg(fileName);
+    error = QString(tr("%1 is not a %2 file"))
+            .arg(fileName)
+            .arg(fileTypeStr(fileType));
     goto _fail;
 _metadata_parse_fail:
     error = QString(tr("Failed parsing %1 meta data")).arg(fileName);

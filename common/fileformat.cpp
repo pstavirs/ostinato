@@ -32,8 +32,8 @@ bool FileFormat::openStreams(const QString fileName,
 {
     OstProto::FileMeta meta;
     OstProto::FileContent content;
-    bool ret = NativeFileFormat::open(fileName, meta, content, error);
-    
+    bool ret = NativeFileFormat::open(fileName, OstProto::kStreamsFileType,
+                                      meta, content, error);
     if (!ret)
         goto _fail;
 
