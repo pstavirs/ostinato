@@ -66,6 +66,11 @@ Port::~Port()
         delete mStreams.takeFirst();
 }
 
+void Port::protoDataCopyInto(OstProto::Port *data)
+{
+    data->CopyFrom(d);
+}
+
 void Port::updatePortConfig(OstProto::Port *port)
 {
     bool recalc = false;

@@ -222,13 +222,34 @@ bool PortsWindow::saveSession(
 
     for (int i = 0; i < n; i++)
     {
-        OstProto::PortGroupContent *pgc = session->add_port_groups();
         PortGroup &pg = plm->portGroupByIndex(i);
+        OstProto::PortGroupContent *pgc = session->add_port_groups();
 
         pgc->set_server_name(pg.serverName().toStdString());
         pgc->set_server_port(pg.serverPort());
 
-        // TODO: ports
+        for (int j = 0; j < pg.numPorts(); j++)
+        {
+            OstProto::PortContent *pc = pgc->add_ports();
+            OstProto::Port *p = pc->mutable_port_config();
+
+            // XXX: We save the entire OstProto::Port even though some
+            // fields may be ephemeral; while opening we use only relevant
+            // fields
+            pg.mPorts.at(j)->protoDataCopyInto(p);
+
+            for (int k = 0; k < pg.mPorts.at(j)->numStreams(); k++)
+            {
+                OstProto::Stream *s = pc->add_streams();
+                pg.mPorts.at(j)->streamByIndex(k)->protoDataCopyInto(*s);
+            }
+
+            for (int k = 0; k < pg.mPorts.at(j)->numDeviceGroups(); k++)
+            {
+                OstProto::DeviceGroup *dg = pc->add_device_groups();
+                dg->CopyFrom(*(pg.mPorts.at(j)->deviceGroupByIndex(k)));
+            }
+        }
 
         if (progress) {
             if (progress->wasCanceled())

@@ -126,6 +126,8 @@ public:
         return capFile_; 
     }
 
+    void protoDataCopyInto(OstProto::Port *data);
+
     // FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
     void updatePortConfig(OstProto::Port *port);
     
