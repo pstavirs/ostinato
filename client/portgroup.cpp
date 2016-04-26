@@ -776,43 +776,35 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         mPorts[portIndex]->insertStream(streamId);
     }
 
-    // Are we done for all ports?
-    if (numPorts() && portIndex >= (numPorts()-1))
-    {
-        // FIXME(HI): some way to reset streammodel 
-        getStreamConfigList();
-    }
+    getStreamConfigList(portIndex);
 
 _exit:
     delete controller;
 }
 
-void PortGroup::getStreamConfigList()
+void PortGroup::getStreamConfigList(int portIndex)
 {
-    qDebug("requesting stream config list ...");
+    if (mPorts[portIndex]->numStreams() == 0)
+        return;
 
-    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
+    qDebug("requesting stream config list (port %d)...", portIndex);
+
+    OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
+    OstProto::StreamConfigList *streamConfigList
+            = new OstProto::StreamConfigList;
+    PbRpcController *controller = new PbRpcController(
+            streamIdList, streamConfigList);
+
+    streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    for (int j = 0; j < mPorts[portIndex]->numStreams(); j++)
     {
-        if (mPorts[portIndex]->numStreams() == 0)
-            continue;
-
-        OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
-        OstProto::StreamConfigList *streamConfigList 
-                = new OstProto::StreamConfigList;
-        PbRpcController *controller = new PbRpcController(
-                streamIdList, streamConfigList);
-
-        streamIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
-        for (int j = 0; j < mPorts[portIndex]->numStreams(); j++)
-        {
-            OstProto::StreamId *s = streamIdList->add_stream_id();
-            s->set_id(mPorts[portIndex]->streamByIndex(j)->id());
-        }
-
-        serviceStub->getStreamConfig(controller, streamIdList, streamConfigList,
-                NewCallback(this, &PortGroup::processStreamConfigList, 
-                    portIndex, controller));
+        OstProto::StreamId *s = streamIdList->add_stream_id();
+        s->set_id(mPorts[portIndex]->streamByIndex(j)->id());
     }
+
+    serviceStub->getStreamConfig(controller, streamIdList, streamConfigList,
+            NewCallback(this, &PortGroup::processStreamConfigList,
+                portIndex, controller));
 }
 
 void PortGroup::processStreamConfigList(int portIndex, 
@@ -919,45 +911,40 @@ void PortGroup::processDeviceGroupIdList(
 
     mPorts[portIndex]->when_syncComplete();
 
-    // Are we done for all ports?
-    if (numPorts() && portIndex >= (numPorts()-1))
-        getDeviceGroupConfigList();
+    getDeviceGroupConfigList(portIndex);
 
 _exit:
     delete controller;
 }
 
-void PortGroup::getDeviceGroupConfigList()
+void PortGroup::getDeviceGroupConfigList(int portIndex)
 {
     using OstProto::DeviceGroupId;
     using OstProto::DeviceGroupIdList;
     using OstProto::DeviceGroupConfigList;
 
-    qDebug("requesting device group config list ...");
+    if (mPorts[portIndex]->numDeviceGroups() == 0)
+        return;
 
-    for (int portIndex = 0; portIndex < numPorts(); portIndex++)
+    qDebug("requesting device group config list (port %d) ...", portIndex);
+
+    DeviceGroupIdList *devGrpIdList = new DeviceGroupIdList;
+    DeviceGroupConfigList *devGrpCfgList = new DeviceGroupConfigList;
+    PbRpcController *controller = new PbRpcController(
+            devGrpIdList, devGrpCfgList);
+
+    devGrpIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    for (int j = 0; j < mPorts[portIndex]->numDeviceGroups(); j++)
     {
-        if (mPorts[portIndex]->numDeviceGroups() == 0)
-            continue;
-
-        DeviceGroupIdList *devGrpIdList = new DeviceGroupIdList;
-        DeviceGroupConfigList *devGrpCfgList = new DeviceGroupConfigList;
-        PbRpcController *controller = new PbRpcController(
-                devGrpIdList, devGrpCfgList);
-
-        devGrpIdList->mutable_port_id()->set_id(mPorts[portIndex]->id());
-        for (int j = 0; j < mPorts[portIndex]->numDeviceGroups(); j++)
-        {
-            DeviceGroupId *dgid = devGrpIdList->add_device_group_id();
-            dgid->set_id(mPorts[portIndex]->deviceGroupByIndex(j)
-                                                    ->device_group_id().id());
-        }
-
-        serviceStub->getDeviceGroupConfig(controller,
-                devGrpIdList, devGrpCfgList,
-                NewCallback(this, &PortGroup::processDeviceGroupConfigList,
-                    portIndex, controller));
+        DeviceGroupId *dgid = devGrpIdList->add_device_group_id();
+        dgid->set_id(mPorts[portIndex]->deviceGroupByIndex(j)
+                                                ->device_group_id().id());
     }
+
+    serviceStub->getDeviceGroupConfig(controller,
+            devGrpIdList, devGrpCfgList,
+            NewCallback(this, &PortGroup::processDeviceGroupConfigList,
+                portIndex, controller));
 }
 
 void PortGroup::processDeviceGroupConfigList(int portIndex,

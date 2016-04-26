@@ -127,14 +127,14 @@ public:
 
     void getStreamIdList();
     void processStreamIdList(int portIndex, PbRpcController *controller);
-    void getStreamConfigList();
+    void getStreamConfigList(int portIndex);
     void processStreamConfigList(int portIndex, PbRpcController *controller);
 
     void processModifyStreamAck(OstProto::Ack *ack);
 
     void getDeviceGroupIdList();
     void processDeviceGroupIdList(int portIndex, PbRpcController *controller);
-    void getDeviceGroupConfigList();
+    void getDeviceGroupConfigList(int portIndex);
     void processDeviceGroupConfigList(
             int portIndex,
             PbRpcController *controller);
