@@ -37,6 +37,7 @@ LOW
 #define DEFAULT_SERVER_PORT        7878
 
 namespace OstProto {
+    class PortContent;
     class PortGroupContent;
 }
 
@@ -67,6 +68,7 @@ private:
     OstProto::PortStatsList    *portStatsList_;
 
     OstProto::PortGroupContent *atConnectConfig_;
+    QList<const OstProto::PortContent*> atConnectPortConfig_;
 
 public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;

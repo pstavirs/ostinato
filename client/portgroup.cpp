@@ -184,14 +184,6 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
 
     compat = kCompatible;
 
-    if (atConnectConfig_)
-    {
-        // TODO: apply config
-
-        delete atConnectConfig_;
-        atConnectConfig_ = NULL;
-    }
-    else
     {
         OstProto::Void *void_ = new OstProto::Void;
         OstProto::PortIdList *portIdList = new OstProto::PortIdList;
@@ -213,6 +205,7 @@ void PortGroup::on_rpcChannel_disconnected()
 
     while (!mPorts.isEmpty())
         delete mPorts.takeFirst(); 
+    atConnectPortConfig_.clear();
 
     emit portListChanged(mPortGroupId);
     emit portGroupDataChanged(mPortGroupId);
@@ -330,6 +323,7 @@ void PortGroup::processPortIdList(PbRpcController *controller)
                 this, SIGNAL(portGroupDataChanged(int, int)));
         qDebug("before port append\n");
         mPorts.append(p);
+        atConnectPortConfig_.append(NULL); // will be filled later
     }
 
     emit portListChanged(mPortGroupId);
@@ -394,6 +388,27 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     if (numPorts() > 0) {
         getDeviceGroupIdList();
         getStreamIdList();
+    }
+
+    // Now that we have the port details, let's identify which ports
+    // need to be re-configured based on atConnectConfig_
+    if (atConnectConfig_ && numPorts() > 0)
+    {
+        for (int i = 0; i < atConnectConfig_->ports_size(); i++)
+        {
+            const OstProto::PortContent *pc = &atConnectConfig_->ports(i);
+            for (int j = 0; j < mPorts.size(); j++)
+            {
+                // FIXME: How to handle the generated ifX Win32 port names
+                if (mPorts[j]->name() == pc->port_config().name().c_str())
+                {
+                    atConnectPortConfig_[j] = pc;
+                    qDebug("port %d will be reconfigured", j);
+                    break;
+                }
+
+            }
+        }
     }
 
 _error_exit:
@@ -749,6 +764,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
 {
     OstProto::StreamIdList *streamIdList
         = static_cast<OstProto::StreamIdList*>(controller->response());
+    const OstProto::PortContent *newPortContent
+        = atConnectPortConfig_.at(portIndex);
 
     qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
 
@@ -768,15 +785,111 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         goto _exit;
     }
 
-    for(int i = 0; i < streamIdList->stream_id_size(); i++)
+    // FIXME: what if port already has a reservation?
+    if (newPortContent)
     {
-        uint streamId;
+        // This port needs to configured with new content - to do this
+        // we'll insert the following RPC sequence at this point and once
+        // this sequence is over, return to the regular RPC sequence by
+        // re-requesting getStreamId()
+        //   * delete (existing) streams
+        //   * modify port
+        //   * add (new) stream ids
+        //   * modify (new) streams
+        //   FIXME: delete/add/modify deviceGroups
 
-        streamId = streamIdList->stream_id(i).id();
-        mPorts[portIndex]->insertStream(streamId);
+        // XXX: same name as input param, but shouldn't cause any problem
+        PbRpcController *controller;
+        quint32 portId = mPorts[portIndex]->id();
+
+        // delete all existing streams
+        if (streamIdList->stream_id_size())
+        {
+            OstProto::StreamIdList *streamIdList2 = new OstProto::StreamIdList;
+            streamIdList2->CopyFrom(*streamIdList);
+
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(streamIdList2, ack);
+
+            serviceStub->deleteStream(controller, streamIdList2, ack,
+                NewCallback(this, &PortGroup::processDeleteStreamAck,
+                            controller));
+        }
+
+        // modify port FIXME: check if there's actually any change
+        if (newPortContent->has_port_config())
+        {
+            OstProto::PortConfigList *portConfigList =
+                    new OstProto::PortConfigList;
+            OstProto::Port *port = portConfigList->add_port();
+            port->CopyFrom(newPortContent->port_config());
+            port->mutable_port_id()->set_id(portId); // overwrite
+
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(portConfigList, ack);
+
+            serviceStub->modifyPort(controller, portConfigList, ack,
+                NewCallback(this, &PortGroup::processModifyPortAck, controller));
+            // FIXME: change callback function to avoid mainWindow ops
+        }
+
+        // add/modify streams
+        if (newPortContent->streams_size())
+        {
+            OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
+            OstProto::StreamConfigList *streamConfigList =
+                    new OstProto::StreamConfigList;
+            streamIdList->mutable_port_id()->set_id(portId);
+            streamConfigList->mutable_port_id()->set_id(portId);
+            for (int i = 0; i < newPortContent->streams_size(); i++)
+            {
+                const OstProto::Stream &s = newPortContent->streams(i);
+                streamIdList->add_stream_id()->set_id(s.stream_id().id());
+                streamConfigList->add_stream()->CopyFrom(s);
+            }
+
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(streamIdList, ack);
+
+            serviceStub->addStream(controller, streamIdList, ack,
+                    NewCallback(this, &PortGroup::processAddStreamAck,
+                                controller));
+
+            ack = new OstProto::Ack;
+            controller = new PbRpcController(streamConfigList, ack);
+
+            serviceStub->modifyStream(controller, streamConfigList, ack,
+                    NewCallback(this, &PortGroup::processModifyStreamAck,
+                        portIndex, controller));
+        }
+
+        // delete newPortConfig
+        delete atConnectPortConfig_.at(portIndex);
+        atConnectPortConfig_[portIndex] = NULL;
+
+        // return to normal sequence re-starting from getStreamIdList()
+        OstProto::PortId *portId2 = new OstProto::PortId;
+        portId2->set_id(portId);
+
+        OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
+        controller = new PbRpcController(portId2, streamIdList);
+
+        serviceStub->getStreamIdList(controller, portId2, streamIdList,
+                NewCallback(this, &PortGroup::processStreamIdList,
+                    portIndex, controller));
     }
+    else
+    {
+        for(int i = 0; i < streamIdList->stream_id_size(); i++)
+        {
+            uint streamId;
 
-    getStreamConfigList(portIndex);
+            streamId = streamIdList->stream_id(i).id();
+            mPorts[portIndex]->insertStream(streamId);
+        }
+
+        getStreamConfigList(portIndex);
+    }
 
 _exit:
     delete controller;
