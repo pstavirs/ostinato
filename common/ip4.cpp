@@ -267,9 +267,9 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("Flags");
                 case FieldValue:
-                    return data.flags();
+                    return data.flags() & IP_FLAGS;
                 case FieldFrameValue:
-                    return QByteArray(1, (char) data.flags());
+                    return QByteArray(1, (char) (data.flags() >> 5));
                 case FieldTextValue:
                 {
                     QString s;
@@ -293,17 +293,17 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("Fragment Offset");
                 case FieldValue:
-                    return data.frag_ofs();
+                    return data.frag_ofs() & IP_FRAG_OFS ;
                 case FieldFrameValue:
                 {
                     QByteArray fv;
                     fv.resize(2);
                     qToBigEndian((quint16) (data.frag_ofs()),
-                        (uchar*) fv.data());
+                            (uchar*) fv.data());
                     return fv;
                 }
                 case FieldTextValue:
-                    return QString("%1").arg(data.frag_ofs()*8);
+                    return QString("%1").arg((data.frag_ofs() & IP_FRAG_OFS)*8);
                 case FieldBitSize:
                     return 13;
                 default:
@@ -650,14 +650,14 @@ bool Ip4Protocol::setFieldData(int index, const QVariant &value,
         {
             uint flags = value.toUInt(&isOk);
             if (isOk)
-                data.set_flags(flags);
+                data.set_flags(flags & IP_FLAGS);
             break;
         }
         case ip4_fragOfs:
         {
             uint fragOfs = value.toUInt(&isOk);
             if (isOk)
-                data.set_frag_ofs(fragOfs);
+                data.set_frag_ofs(fragOfs & IP_FRAG_OFS);
             break;
         }
         case ip4_ttl:
