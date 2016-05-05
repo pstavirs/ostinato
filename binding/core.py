@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 # Copyright (C) 2014 Srivats P.
 #
 # This file is part of "Ostinato"

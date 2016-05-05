@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 # Copyright (C) 2014 Srivats P.
 #
 # This file is part of "Ostinato"
@@ -123,7 +124,7 @@ class OstinatoRpcChannel(RpcChannel):
             elif msg_type == MSG_TYPE_BLOB:
                 response = resp
             elif msg_type == MSG_TYPE_ERROR:
-                raise RpcError(unicode(resp, 'utf-8'))
+                raise RpcError(str(resp, 'utf-8'))
             else:
                 raise RpcError('unknown RPC msg type %d' % msg_type)
 

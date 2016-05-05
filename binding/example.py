@@ -3,6 +3,7 @@
 # standard modules
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import input
 import logging
 import os
 import sys
@@ -53,7 +54,7 @@ print('port as both Tx and Rx ports')
 print('')
 
 if not use_defaults:
-    s = raw_input('Drone\'s Hostname/IP [%s]: ' % (host_name))
+    s = input('Drone\'s Hostname/IP [%s]: ' % (host_name))
     host_name = s or host_name
 
 drone = DroneProxy(host_name)
@@ -87,11 +88,11 @@ try:
             rx_port_number = port.port_id.id
 
     if not use_defaults:
-        p = raw_input('Tx Port Id [%d]: ' % (tx_port_number))
+        p = input('Tx Port Id [%d]: ' % (tx_port_number))
         if p:
             tx_port_number = int(p)
 
-        p = raw_input('Rx Port Id [%d]: ' % (rx_port_number))
+        p = input('Rx Port Id [%d]: ' % (rx_port_number))
         if p:
             rx_port_number = int(p)
 
