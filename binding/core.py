@@ -1,24 +1,25 @@
+from __future__ import absolute_import
 # Copyright (C) 2014 Srivats P.
-# 
+#
 # This file is part of "Ostinato"
-# 
+#
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os
-from rpc import OstinatoRpcChannel, OstinatoRpcController, RpcError
-import protocols.protocol_pb2 as ost_pb
-from __init__ import __version__
+from .rpc import OstinatoRpcChannel, OstinatoRpcController, RpcError
+from .protocols import protocol_pb2 as ost_pb
+from .__init__ import __version__
 
 class DroneProxy(object):
 
@@ -47,7 +48,7 @@ class DroneProxy(object):
         ver.version = __version__
         compat = self.checkVersion(ver)
         if compat.result == ost_pb.VersionCompatibility.kIncompatible:
-            raise RpcError('incompatible version %s (%s)' % 
+            raise RpcError('incompatible version %s (%s)' %
                     (ver.version, compat.notes))
 
     def disconnect(self):

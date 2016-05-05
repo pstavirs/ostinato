@@ -1,17 +1,19 @@
 #! /usr/bin/env python
 
 # standard modules
+from __future__ import print_function
+from __future__ import absolute_import
 import logging
 import os
 import sys
 import time
 
-# ostinato modules 
+# ostinato modules
 # (user scripts using the installed package should prepend ostinato. i.e
 #  ostinato.core and ostinato.protocols)
-from core import ost_pb, DroneProxy
-from protocols.mac_pb2 import mac
-from protocols.ip4_pb2 import ip4, Ip4
+from .core import ost_pb, DroneProxy
+from .protocols.mac_pb2 import mac
+from .protocols.ip4_pb2 import ip4, Ip4
 
 # initialize defaults
 use_defaults = False
@@ -58,7 +60,7 @@ drone = DroneProxy(host_name)
 
 try:
     # connect to drone
-    log.info('connecting to drone(%s:%d)' 
+    log.info('connecting to drone(%s:%d)'
             % (drone.hostName(), drone.portNumber()))
     drone.connect()
 
@@ -74,12 +76,12 @@ try:
         log.warning('drone has no ports!')
         sys.exit(1)
 
-    # print port list and get tx/rx port id 
+    # print port list and get tx/rx port id
     print('Port List')
     print('---------')
     for port in port_config_list.port:
         print('%d.%s (%s)' % (port.port_id.id, port.name, port.description))
-        # use a loopback port as default tx/rx port 
+        # use a loopback port as default tx/rx port
         if ('lo' in port.name or 'loopback' in port.description.lower()):
             tx_port_number = port.port_id.id
             rx_port_number = port.port_id.id
@@ -165,7 +167,7 @@ try:
 
     #log.info('--> (tx_stats)' + tx_stats.__str__())
     #log.info('--> (rx_stats)' + rx_stats.__str__())
-    log.info('tx pkts = %d, rx pkts = %d' % 
+    log.info('tx pkts = %d, rx pkts = %d' %
             (tx_stats.port_stats[0].tx_pkts, rx_stats.port_stats[0].rx_pkts))
 
     # retrieve and dump received packets
