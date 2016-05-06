@@ -178,6 +178,17 @@ int PortsWindow::portGroupCount()
     return plm->numPortGroups();
 }
 
+int PortsWindow::reservedPortCount()
+{
+    int count = 0;
+    int n = portGroupCount();
+
+    for (int i = 0; i < n; i++)
+        count += plm->portGroupByIndex(i).numReservedPorts();
+
+    return count;
+}
+
 //! Always return true
 bool PortsWindow::openSession(
         const OstProto::SessionContent *session,
@@ -206,6 +217,8 @@ bool PortsWindow::openSession(
 /*!
  * Prepare content to be saved for a session
  *
+ * If port reservation is in use, saves only 'my' reserved ports
+ *
  * Returns false, if user cancels op; true, otherwise
  */
 bool PortsWindow::saveSession(
@@ -214,11 +227,15 @@ bool PortsWindow::saveSession(
         QProgressDialog *progress)
 {
     int n = portGroupCount();
+    QString myself;
 
     if (progress) {
         progress->setLabelText("Preparing Ports and PortGroups ...");
         progress->setRange(0, n);
     }
+
+    if (reservedPortCount())
+        myself = appSettings->value(kUserKey, kUserDefaultValue).toString();
 
     for (int i = 0; i < n; i++)
     {
@@ -230,6 +247,9 @@ bool PortsWindow::saveSession(
 
         for (int j = 0; j < pg.numPorts(); j++)
         {
+            if (myself != pg.mPorts.at(j)->userName())
+                continue;
+
             OstProto::PortContent *pc = pgc->add_ports();
             OstProto::Port *p = pc->mutable_port_config();
 

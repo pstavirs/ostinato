@@ -93,6 +93,7 @@ public:
     void setConfigAtConnect(const OstProto::PortGroupContent *config);
 
     int numPorts() const { return mPorts.size(); }
+    int numReservedPorts() const;
     quint32 id() const { return mPortGroupId; } 
 
     const QString& userAlias() const { return mUserAlias; } 

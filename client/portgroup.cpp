@@ -110,6 +110,16 @@ void PortGroup::setConfigAtConnect(const OstProto::PortGroupContent *config)
     atConnectConfig_->CopyFrom(*config);
 }
 
+int PortGroup::numReservedPorts() const
+{
+    int count = 0;
+    for (int i = 0; i < mPorts.size(); i++)
+    {
+        if (!mPorts[i]->userName().isEmpty())
+            count++;
+    }
+}
+
 // ------------------------------------------------
 //                      Slots
 // ------------------------------------------------

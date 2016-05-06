@@ -45,6 +45,7 @@ public:
     ~PortsWindow();
 
     int portGroupCount();
+    int reservedPortCount();
 
     bool openSession(const OstProto::SessionContent *session,
                      QString &error);

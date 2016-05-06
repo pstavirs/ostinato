@@ -206,6 +206,17 @@ void MainWindow::on_actionSaveSession_triggered()
     if (fileName.isEmpty())
         goto _exit;
 
+    if (portsWindow->reservedPortCount()) {
+        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
+                            .toString();
+        if (QMessageBox::question(this,
+                tr("Save Session"),
+                QString("Some ports are reserved!\n\nOnly ports reserved by %1 will be saved. Proceed?").arg(myself),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) == QMessageBox::No)
+            goto _exit;
+    }
+
     if (!saveSession(fileName, fileType, errorStr))
         QMessageBox::critical(this, qApp->applicationName(), errorStr);
     else if (!errorStr.isEmpty())
