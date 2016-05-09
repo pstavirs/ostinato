@@ -106,7 +106,7 @@ void PortGroup::setConfigAtConnect(const OstProto::PortGroupContent *config)
     }
 
     if (!atConnectConfig_)
-        atConnectConfig_ = config->New();
+        atConnectConfig_ = new OstProto::PortGroupContent;
     atConnectConfig_->CopyFrom(*config);
 }
 
@@ -874,7 +874,6 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         }
 
         // delete newPortConfig
-        delete atConnectPortConfig_.at(portIndex);
         atConnectPortConfig_[portIndex] = NULL;
 
         // return to normal sequence re-starting from getStreamIdList()
