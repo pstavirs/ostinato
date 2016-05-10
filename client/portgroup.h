@@ -103,6 +103,7 @@ public:
         { return rpcChannel->serverName(); }
     quint16 serverPort() const 
         { return rpcChannel->serverPort(); } 
+    const QString serverFullName() const;
     QAbstractSocket::SocketState state() const {
         if (compat == kIncompatible)
             return QAbstractSocket::SocketState(-1);

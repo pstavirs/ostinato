@@ -118,6 +118,14 @@ int PortGroup::numReservedPorts() const
         if (!mPorts[i]->userName().isEmpty())
             count++;
     }
+
+    return count;
+}
+
+const QString PortGroup::serverFullName() const
+{
+    return serverPort() == DEFAULT_SERVER_PORT ?
+        serverName() : QString("%1:%2").arg(serverName()).arg(serverPort());
 }
 
 // ------------------------------------------------
@@ -404,14 +412,32 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     // need to be re-configured based on atConnectConfig_
     if (atConnectConfig_ && numPorts() > 0)
     {
+        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
+                            .toString();
         for (int i = 0; i < atConnectConfig_->ports_size(); i++)
         {
             const OstProto::PortContent *pc = &atConnectConfig_->ports(i);
             for (int j = 0; j < mPorts.size(); j++)
             {
+                Port *port = mPorts[j];
+
                 // FIXME: How to handle the generated ifX Win32 port names
-                if (mPorts[j]->name() == pc->port_config().name().c_str())
+                if (port->name() == pc->port_config().name().c_str())
                 {
+                    if (!port->userName().isEmpty() // rsvd?
+                            && port->userName() != myself) // by someone else?
+                    {
+                        QString warning =
+                                QString("%1 - %2: %3 is reserved by %4.\n\n"
+                                        "Port will not be reconfigured.")
+                                    .arg(serverFullName())
+                                    .arg(j)
+                                    .arg(port->name())
+                                    .arg(port->userName());
+                        QMessageBox::warning(NULL, tr("Open Session"), warning);
+                        qWarning(qPrintable(warning));
+                        continue;
+                    }
                     atConnectPortConfig_[j] = pc;
                     qDebug("port %d will be reconfigured", j);
                     break;
@@ -811,6 +837,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         // XXX: same name as input param, but shouldn't cause any problem
         PbRpcController *controller;
         quint32 portId = mPorts[portIndex]->id();
+        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
+                            .toString();
 
         // delete all existing streams
         if (streamIdList->stream_id_size())
@@ -834,6 +862,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             OstProto::Port *port = portConfigList->add_port();
             port->CopyFrom(newPortContent->port_config());
             port->mutable_port_id()->set_id(portId); // overwrite
+            if (newPortContent->port_config().has_user_name())
+                port->set_user_name(qPrintable(myself)); // overwrite
 
             OstProto::Ack *ack = new OstProto::Ack;
             controller = new PbRpcController(portConfigList, ack);
