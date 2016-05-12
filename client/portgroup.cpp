@@ -404,6 +404,10 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     emit portListChanged(mPortGroupId);
 
     if (numPorts() > 0) {
+        // XXX: The open session code (atConnectConfig_ related) assumes
+        // the following two RPCs are invoked in the below order
+        // Any change here without coressponding change in that code
+        // will break stuff
         getDeviceGroupIdList();
         getStreamIdList();
     }
@@ -821,18 +825,22 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         goto _exit;
     }
 
-    // FIXME: what if port already has a reservation?
     if (newPortContent)
     {
         // This port needs to configured with new content - to do this
         // we'll insert the following RPC sequence at this point and once
         // this sequence is over, return to the regular RPC sequence by
         // re-requesting getStreamId()
+        //   * delete (existing) deviceGroups
+        //     (already done by processDeviceIdList)
         //   * delete (existing) streams
         //   * modify port
+        //   * add (new) deviceGroup ids
+        //   * modify (new) deviceGroups
         //   * add (new) stream ids
         //   * modify (new) streams
-        //   FIXME: delete/add/modify deviceGroups
+        // XXX: This assumes getDeviceGroupIdList() was invoked before
+        // getStreamIdList() - if the order changes this code will break!
 
         // XXX: same name as input param, but shouldn't cause any problem
         PbRpcController *controller;
@@ -873,6 +881,40 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             // FIXME: change callback function to avoid mainWindow ops
         }
 
+        // add/modify deviceGroups
+        if (newPortContent->device_groups_size())
+        {
+            OstProto::DeviceGroupIdList *deviceGroupIdList
+                    = new OstProto::DeviceGroupIdList;
+            OstProto::DeviceGroupConfigList *deviceGroupConfigList
+                    = new OstProto::DeviceGroupConfigList;
+            deviceGroupIdList->mutable_port_id()->set_id(portId);
+            deviceGroupConfigList->mutable_port_id()->set_id(portId);
+            for (int i = 0; i < newPortContent->device_groups_size(); i++)
+            {
+                const OstProto::DeviceGroup &dg
+                        = newPortContent->device_groups(i);
+                deviceGroupIdList->add_device_group_id()->set_id(
+                        dg.device_group_id().id());
+                deviceGroupConfigList->add_device_group()->CopyFrom(dg);
+            }
+
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(deviceGroupIdList, ack);
+
+            serviceStub->addDeviceGroup(controller, deviceGroupIdList, ack,
+                    NewCallback(this, &PortGroup::processAddDeviceGroupAck,
+                                controller));
+
+            ack = new OstProto::Ack;
+            controller = new PbRpcController(deviceGroupConfigList, ack);
+
+            serviceStub->modifyDeviceGroup(controller,
+                    deviceGroupConfigList, ack,
+                    NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
+                        portIndex, controller));
+        }
+
         // add/modify streams
         if (newPortContent->streams_size())
         {
@@ -906,10 +948,21 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         // delete newPortConfig
         atConnectPortConfig_[portIndex] = NULL;
 
-        // return to normal sequence re-starting from getStreamIdList()
+        // return to normal sequence re-starting from
+        // getDeviceGroupIdList() and getStreamIdList()
         OstProto::PortId *portId2 = new OstProto::PortId;
         portId2->set_id(portId);
 
+        OstProto::DeviceGroupIdList *devGrpIdList
+                = new OstProto::DeviceGroupIdList;
+        controller = new PbRpcController(portId2, devGrpIdList);
+
+        serviceStub->getDeviceGroupIdList(controller, portId2, devGrpIdList,
+                NewCallback(this, &PortGroup::processDeviceGroupIdList,
+                    portIndex, controller));
+
+        portId2 = new OstProto::PortId;
+        portId2->set_id(portId);
         OstProto::StreamIdList *streamIdList = new OstProto::StreamIdList;
         controller = new PbRpcController(portId2, streamIdList);
 
@@ -1034,6 +1087,8 @@ void PortGroup::processDeviceGroupIdList(
 
     DeviceGroupIdList *devGrpIdList = static_cast<DeviceGroupIdList*>(
                                                 controller->response());
+    const OstProto::PortContent *newPortContent = atConnectPortConfig_.at(
+                                                                    portIndex);
 
     qDebug("In %s (portIndex = %d)", __FUNCTION__, portIndex);
 
@@ -1053,17 +1108,40 @@ void PortGroup::processDeviceGroupIdList(
         goto _exit;
     }
 
-    for(int i = 0; i < devGrpIdList->device_group_id_size(); i++)
+    if (newPortContent)
     {
-        uint devGrpId;
+        // We delete all existing deviceGroups
+        // Remaining stuff is done in processStreamIdList() - see notes there
+        if (devGrpIdList->device_group_id_size())
+        {
+            OstProto::DeviceGroupIdList *devGrpIdList2
+                    = new OstProto::DeviceGroupIdList;
+            devGrpIdList2->CopyFrom(*devGrpIdList);
 
-        devGrpId = devGrpIdList->device_group_id(i).id();
-        mPorts[portIndex]->insertDeviceGroup(devGrpId);
+            OstProto::Ack *ack = new OstProto::Ack;
+            PbRpcController *controller
+                    = new PbRpcController(devGrpIdList2, ack);
+
+            serviceStub->deleteDeviceGroup(controller, devGrpIdList2, ack,
+                NewCallback(this, &PortGroup::processDeleteDeviceGroupAck,
+                            controller));
+        }
     }
+    else
+    {
+        for(int i = 0; i < devGrpIdList->device_group_id_size(); i++)
+        {
+            uint devGrpId;
 
-    mPorts[portIndex]->when_syncComplete();
+            devGrpId = devGrpIdList->device_group_id(i).id();
+            mPorts[portIndex]->insertDeviceGroup(devGrpId);
+        }
 
-    getDeviceGroupConfigList(portIndex);
+        // FIXME: incorrect? recheck!!!
+        mPorts[portIndex]->when_syncComplete();
+
+        getDeviceGroupConfigList(portIndex);
+    }
 
 _exit:
     delete controller;
