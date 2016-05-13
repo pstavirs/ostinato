@@ -980,6 +980,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             mPorts[portIndex]->insertStream(streamId);
         }
 
+        mPorts[portIndex]->when_syncComplete();
+
         getStreamConfigList(portIndex);
     }
 
@@ -1136,9 +1138,6 @@ void PortGroup::processDeviceGroupIdList(
             devGrpId = devGrpIdList->device_group_id(i).id();
             mPorts[portIndex]->insertDeviceGroup(devGrpId);
         }
-
-        // FIXME: incorrect? recheck!!!
-        mPorts[portIndex]->when_syncComplete();
 
         getDeviceGroupConfigList(portIndex);
     }
