@@ -736,10 +736,10 @@ void PortGroup::modifyPort(int portIndex, OstProto::Port portConfig)
 
     PbRpcController *controller = new PbRpcController(portConfigList, ack);
     serviceStub->modifyPort(controller, portConfigList, ack, 
-        NewCallback(this, &PortGroup::processModifyPortAck, controller));
+        NewCallback(this, &PortGroup::processModifyPortAck, true, controller));
 }
 
-void PortGroup::processModifyPortAck(PbRpcController *controller)
+void PortGroup::processModifyPortAck(bool restoreUi,PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
@@ -749,8 +749,10 @@ void PortGroup::processModifyPortAck(PbRpcController *controller)
                 qPrintable(controller->ErrorString()));
     }
 
-    mainWindow->setEnabled(true);
-    QApplication::restoreOverrideCursor();
+    if (restoreUi) {
+        mainWindow->setEnabled(true);
+        QApplication::restoreOverrideCursor();
+    }
     delete controller;
 }
 
@@ -876,8 +878,8 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             controller = new PbRpcController(portConfigList, ack);
 
             serviceStub->modifyPort(controller, portConfigList, ack,
-                NewCallback(this, &PortGroup::processModifyPortAck, controller));
-            // FIXME: change callback function to avoid mainWindow ops
+                NewCallback(this, &PortGroup::processModifyPortAck,
+                            false, controller));
         }
 
         // add/modify deviceGroups

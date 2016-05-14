@@ -126,7 +126,7 @@ public:
     void processDeviceNeighbors(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, OstProto::Port portConfig);
-    void processModifyPortAck(PbRpcController *controller);
+    void processModifyPortAck(bool restoreUi, PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);
 
     void getStreamIdList();
