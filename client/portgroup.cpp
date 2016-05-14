@@ -862,15 +862,14 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
                             controller));
         }
 
-        // modify port FIXME: check if there's actually any change
-        if (newPortContent->has_port_config())
+        OstProto::Port portCfg = newPortContent->port_config();
+        if (mPorts[portIndex]->modifiablePortConfig(portCfg))
         {
             OstProto::PortConfigList *portConfigList =
                     new OstProto::PortConfigList;
             OstProto::Port *port = portConfigList->add_port();
-            port->CopyFrom(newPortContent->port_config());
-            port->mutable_port_id()->set_id(portId); // overwrite
-            if (newPortContent->port_config().has_user_name())
+            port->CopyFrom(portCfg);
+            if (port->has_user_name())
                 port->set_user_name(qPrintable(myself)); // overwrite
 
             OstProto::Ack *ack = new OstProto::Ack;

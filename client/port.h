@@ -155,6 +155,8 @@ public:
     void getModifiedDeviceGroupsSinceLastSync(
             OstProto::DeviceGroupConfigList &streamConfigList);
 
+    bool modifiablePortConfig(OstProto::Port &config) const;
+
     void when_syncComplete();
 
     void setAveragePacketRate(double packetsPerSec);

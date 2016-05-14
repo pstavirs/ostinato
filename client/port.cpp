@@ -454,6 +454,40 @@ void Port::getModifiedDeviceGroupsSinceLastSync(
                                 ->CopyFrom(*deviceGroupById(id));
 }
 
+/*!
+ * Finds the user modifiable fields in 'config' that are different from
+ * the current configuration on the port and modifes 'config' such that
+ * only those fields are set and returns true. If 'config' is same as
+ * current port config, 'config' is unmodified and false is returned
+ */
+bool Port::modifiablePortConfig(OstProto::Port &config) const
+{
+    bool change = false;
+    OstProto::Port modCfg;
+
+    if (config.is_exclusive_control() != d.is_exclusive_control()) {
+        modCfg.set_is_exclusive_control(config.is_exclusive_control());
+        change = true;
+    }
+    if (config.transmit_mode() != d.transmit_mode()) {
+        modCfg.set_transmit_mode(config.transmit_mode());
+        change = true;
+    }
+    if (config.user_name() != d.user_name()) {
+        modCfg.set_user_name(config.user_name());
+        change = true;
+    }
+
+    if (change) {
+        modCfg.mutable_port_id()->set_id(id());
+        config.CopyFrom(modCfg);
+
+        return true;
+    }
+
+    return false;
+}
+
 void Port::when_syncComplete()
 {
     //reorderStreamsByOrdinals();
