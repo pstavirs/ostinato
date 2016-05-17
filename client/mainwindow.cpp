@@ -276,8 +276,10 @@ bool MainWindow::openSession(QString fileName, QString &error)
     OstProto::SessionContent session;
     SessionFileFormat *fmt = SessionFileFormat::fileFormatFromFile(fileName);
 
-    if (fmt == NULL)
+    if (fmt == NULL) {
+        error = tr("Unknown session file format");
         goto _fail;
+    }
 
     if ((optDialog = fmt->openOptionsDialog()))
     {

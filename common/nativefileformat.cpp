@@ -140,11 +140,9 @@ bool NativeFileFormat::open(
         goto _cksum_verify_fail;
 
     // Parse the metadata first before we parse the full contents
-    // FIXME: metadata size is not known beforehand, so we end up
-    // parsing till EOF
     if (!meta.ParseFromArray(
                 (void*)(buf.constData() + kFileMetaDataOffset),
-                size - kFileMetaDataOffset))
+                fileMetaSize((quint8*)buf.constData(), size)))
     {
         goto _metadata_parse_fail;
     }
@@ -420,15 +418,21 @@ bool NativeFileFormat::isNativeFileFormat(
     if (!file.open(QIODevice::ReadOnly))
         goto _exit;
 
-    buf = file.peek(kFileMagicOffset + kFileMagicSize);
+    // Assume tag/length for MetaData will fit in 8 bytes
+    buf = file.peek(kFileMagicOffset + kFileMagicSize + 8);
     if (!magic.ParseFromArray((void*)(buf.constData() + kFileMagicOffset),
                 kFileMagicSize))
         goto _close_exit;
 
-    if (magic.value() == kFileMagicValue)
-        ret = true;
-
-    // TODO: check fileType
+    if (magic.value() == kFileMagicValue) {
+        OstProto::FileMetaData meta;
+        if (!meta.ParseFromArray(
+                (void*)(buf.constData() + kFileMetaDataOffset),
+                fileMetaSize((quint8*)buf.constData(), buf.size())))
+            goto _close_exit;
+        if (meta.file_type() == fileType)
+            ret = true;
+    }
 
 _close_exit:
     file.close();
@@ -449,6 +453,50 @@ void NativeFileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
         qApp->property("version").toString().toUtf8().constData());
     metaData.set_generator_revision(
         qApp->property("revision").toString().toUtf8().constData());
+}
+
+int NativeFileFormat::fileMetaSize(const quint8* file, int size)
+{
+    int i = kFileMetaDataOffset;
+    uint result, shift;
+    const int kWireTypeLengthDelimited = 2;
+
+    // An embedded Message field is encoded as
+    // <Key> <Length> <Serialized-Value>
+    // See Protobuf Encoding for more details
+
+    // Decode 'Key' varint
+    result = 0;
+    shift = 0;
+    while (i < size) {
+      quint8 byte = file[i++];
+      result |= (byte & 0x7f) << shift;
+      if (!(byte & 0x80)) // MSB == 0?
+        break;
+      shift += 7;
+    }
+
+    if (i >= size)
+        return 0;
+
+    Q_ASSERT(result == ((OstProto::File::kMetaDataFieldNumber << 3)
+                            | kWireTypeLengthDelimited));
+
+    // Decode 'Length' varint
+    result = 0;
+    shift = 0;
+    while (i < size) {
+      quint8 byte = file[i++];
+      result |= (byte & 0x7f) << shift;
+      if (!(byte & 0x80)) // MSB == 0?
+        break;
+      shift += 7;
+    }
+
+    if (i >= size)
+        return 0;
+
+    return int(result+(i-kFileMetaDataOffset));
 }
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"

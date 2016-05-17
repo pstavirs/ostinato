@@ -57,6 +57,7 @@ public:
 
 private:
     void initFileMetaData(OstProto::FileMetaData &metaData);
+    int fileMetaSize(const quint8* file, int size);
 
     static const int kFileMagicSize = 12;
     static const int kFileChecksumSize = 5;

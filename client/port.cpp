@@ -551,8 +551,10 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     OstProto::StreamConfigList streams;
     AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
 
-    if (fmt == NULL)
+    if (fmt == NULL) {
+        error = tr("Unknown streams file format");
         goto _fail;
+    }
 
     if ((optDialog = fmt->openOptionsDialog()))
     {
