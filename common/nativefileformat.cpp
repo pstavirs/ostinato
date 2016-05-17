@@ -425,12 +425,16 @@ bool NativeFileFormat::isNativeFileFormat(
         goto _close_exit;
 
     if (magic.value() == kFileMagicValue) {
-        OstProto::FileMetaData meta;
+        OstProto::FileMeta meta;
+        int metaSize = fileMetaSize((quint8*)buf.constData(), buf.size());
+        buf = file.peek(kFileMagicOffset + kFileMagicSize + metaSize);
         if (!meta.ParseFromArray(
-                (void*)(buf.constData() + kFileMetaDataOffset),
-                fileMetaSize((quint8*)buf.constData(), buf.size())))
+                (void*)(buf.constData() + kFileMetaDataOffset), metaSize)) {
+            qDebug("%s: File MetaData\n%s", __FUNCTION__,
+                    QString().fromStdString(meta.DebugString()).toAscii().constData());
             goto _close_exit;
-        if (meta.file_type() == fileType)
+        }
+        if (meta.data().file_type() == fileType)
             ret = true;
     }
 
