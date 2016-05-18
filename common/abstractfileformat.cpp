@@ -48,7 +48,7 @@ QDialog* AbstractFileFormat::saveOptionsDialog()
 QStringList AbstractFileFormat::supportedFileTypes()
 {
     return QStringList()
-        << "Ostinato (*)"
+        << "Ostinato (*.ostm)"
         << "PCAP (*)"
         << "PDML (*.pdml)"
         << "PythonScript (*.py)";
