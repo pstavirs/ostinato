@@ -145,10 +145,17 @@ void MainWindow::on_actionOpenSession_triggered()
 
     static QString dirName;
     QString fileName;
+    QStringList fileTypes = SessionFileFormat::supportedFileTypes();
+    QString fileType;
     QString errorStr;
     bool ret;
 
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Session"), dirName);
+    fileTypes.append("All files (*)");
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Session"),
+            dirName, fileTypes.join(";;"), &fileType);
     if (fileName.isEmpty())
         goto _exit;
 
