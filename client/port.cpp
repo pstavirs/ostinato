@@ -81,6 +81,10 @@ void Port::updatePortConfig(OstProto::Port *port)
 
     d.MergeFrom(*port);
 
+    // Setup a user-friendly alias for Win32 ports
+    if (name().startsWith("\\Device\\NPF_"))
+        setAlias(QString("if%1").arg(id()));
+
     if (recalc)
         recalculateAverageRates();
 }

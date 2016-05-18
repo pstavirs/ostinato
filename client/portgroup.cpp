@@ -425,7 +425,6 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
             {
                 Port *port = mPorts[j];
 
-                // FIXME: How to handle the generated ifX Win32 port names
                 if (port->name() == pc->port_config().name().c_str())
                 {
                     if (!port->userName().isEmpty() // rsvd?
@@ -436,7 +435,7 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
                                         "Port will not be reconfigured.")
                                     .arg(serverFullName())
                                     .arg(j)
-                                    .arg(port->name())
+                                    .arg(port->userAlias())
                                     .arg(port->userName());
                         QMessageBox::warning(NULL, tr("Open Session"), warning);
                         qWarning(qPrintable(warning));
