@@ -42,10 +42,16 @@ QDialog* SessionFileFormat::saveOptionsDialog()
     return NULL;
 }
 
-QStringList SessionFileFormat::supportedFileTypes()
+QStringList SessionFileFormat::supportedFileTypes(Operation op)
 {
-    return QStringList()
-        << "Ostinato Session (*.ossn)";
+    QStringList fileTypes;
+
+    fileTypes << "Ostinato Session (*.ossn)";
+
+    if (op == kOpenFile)
+        fileTypes << "All files (*)";
+
+    return fileTypes;
 }
 
 void SessionFileFormat::openAsync(const QString fileName,
@@ -54,7 +60,7 @@ void SessionFileFormat::openAsync(const QString fileName,
     fileName_ = fileName;
     openSession_ = &session;
     error_ = &error;
-    op_ = kOpen;
+    op_ = kOpenFile;
     stop_ = false;
 
     start();
@@ -67,7 +73,7 @@ void SessionFileFormat::saveAsync(
     saveSession_ = &session;
     fileName_ = fileName;
     error_ = &error;
-    op_ = kSave;
+    op_ = kSaveFile;
     stop_ = false;
 
     start();
@@ -104,8 +110,8 @@ void SessionFileFormat::cancel()
 
 void SessionFileFormat::run()
 {
-    if (op_ == kOpen)
+    if (op_ == kOpenFile)
         result_ = open(fileName_, *openSession_, *error_);
-    else if (op_ == kSave)
+    else if (op_ == kSaveFile)
         result_ = save(*saveSession_, fileName_, *error_);
 }

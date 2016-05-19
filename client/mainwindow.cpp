@@ -145,7 +145,8 @@ void MainWindow::on_actionOpenSession_triggered()
 
     static QString dirName;
     QString fileName;
-    QStringList fileTypes = SessionFileFormat::supportedFileTypes();
+    QStringList fileTypes = SessionFileFormat::supportedFileTypes(
+                                                SessionFileFormat::kOpenFile);
     QString fileType;
     QString errorStr;
     bool ret;
@@ -159,7 +160,6 @@ void MainWindow::on_actionOpenSession_triggered()
             goto _exit;
     }
 
-    fileTypes.append("All files (*)");
     if (fileTypes.size())
         fileType = fileTypes.at(0);
 
@@ -193,7 +193,8 @@ void MainWindow::on_actionSaveSession_triggered()
     qDebug("Save Session Action");
 
     static QString fileName;
-    QStringList fileTypes = SessionFileFormat::supportedFileTypes();
+    QStringList fileTypes = SessionFileFormat::supportedFileTypes(
+                                                SessionFileFormat::kSaveFile);
     QString fileType;
     QString errorStr;
     QFileDialog::Options options;

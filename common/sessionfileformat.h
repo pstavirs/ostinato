@@ -32,6 +32,8 @@ class SessionFileFormat : public QThread
 {
     Q_OBJECT
 public:
+    enum Operation { kOpenFile, kSaveFile };
+
     SessionFileFormat();
     virtual ~SessionFileFormat();
 
@@ -50,7 +52,7 @@ public:
 
     bool result();
 
-    static QStringList supportedFileTypes();
+    static QStringList supportedFileTypes(Operation op);
 
     static SessionFileFormat* fileFormatFromFile(const QString fileName);
     static SessionFileFormat* fileFormatFromType(const QString fileType);
@@ -72,16 +74,11 @@ protected:
     bool stop_;
 
 private:
-    enum kOp {
-        kOpen,
-        kSave
-    };
-
     QString fileName_;
     OstProto::SessionContent *openSession_;
     const OstProto::SessionContent *saveSession_;
     QString *error_;
-    kOp op_;
+    Operation op_;
     bool result_;
 
 };
