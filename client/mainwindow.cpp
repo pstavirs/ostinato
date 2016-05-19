@@ -150,15 +150,6 @@ void MainWindow::on_actionOpenSession_triggered()
     QString errorStr;
     bool ret;
 
-    fileTypes.append("All files (*)");
-    if (fileTypes.size())
-        fileType = fileTypes.at(0);
-
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Session"),
-            dirName, fileTypes.join(";;"), &fileType);
-    if (fileName.isEmpty())
-        goto _exit;
-
     if (portsWindow->portGroupCount()) {
         if (QMessageBox::question(this,
                 tr("Open Session"),
@@ -167,6 +158,15 @@ void MainWindow::on_actionOpenSession_triggered()
                 QMessageBox::No) == QMessageBox::No)
             goto _exit;
     }
+
+    fileTypes.append("All files (*)");
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Session"),
+            dirName, fileTypes.join(";;"), &fileType);
+    if (fileName.isEmpty())
+        goto _exit;
 
     ret = openSession(fileName, errorStr);
     if (!ret || !errorStr.isEmpty()) {
@@ -198,6 +198,17 @@ void MainWindow::on_actionSaveSession_triggered()
     QString errorStr;
     QFileDialog::Options options;
 
+    if (portsWindow->reservedPortCount()) {
+        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
+                            .toString();
+        if (QMessageBox::question(this,
+                tr("Save Session"),
+                QString("Some ports are reserved!\n\nOnly ports reserved by %1 will be saved. Proceed?").arg(myself),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) == QMessageBox::No)
+            goto _exit;
+    }
+
     // On Mac OS with Native Dialog, getSaveFileName() ignores fileType.
     // Although currently there's only one supported file type, we may
     // have more in the future
@@ -212,17 +223,6 @@ void MainWindow::on_actionSaveSession_triggered()
             fileName, fileTypes.join(";;"), &fileType, options);
     if (fileName.isEmpty())
         goto _exit;
-
-    if (portsWindow->reservedPortCount()) {
-        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
-                            .toString();
-        if (QMessageBox::question(this,
-                tr("Save Session"),
-                QString("Some ports are reserved!\n\nOnly ports reserved by %1 will be saved. Proceed?").arg(myself),
-                QMessageBox::Yes | QMessageBox::No,
-                QMessageBox::No) == QMessageBox::No)
-            goto _exit;
-    }
 
     if (!saveSession(fileName, fileType, errorStr))
         QMessageBox::critical(this, qApp->applicationName(), errorStr);
