@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PDML_FILE_FORMAT_H
 #define _PDML_FILE_FORMAT_H
 
-#include "abstractfileformat.h"
+#include "streamfileformat.h"
 
-class PdmlFileFormat : public AbstractFileFormat
+class PdmlFileFormat : public StreamFileFormat
 {
 public:
     PdmlFileFormat();

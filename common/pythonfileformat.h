@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PYTHON_FILE_FORMAT_H
 #define _PYTHON_FILE_FORMAT_H
 
-#include "abstractfileformat.h"
+#include "streamfileformat.h"
 
 #include <QTextStream>
 
-class PythonFileFormat : public AbstractFileFormat
+class PythonFileFormat : public StreamFileFormat
 {
 public:
     PythonFileFormat();

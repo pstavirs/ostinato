@@ -80,7 +80,7 @@ bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams,
 {
     bool isOk = false;
     QTemporaryFile pcapFile;
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType("PCAP");
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromType("PCAP");
     QProcess tshark;
 
     Q_ASSERT(fmt);

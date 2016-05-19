@@ -16,18 +16,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _FILE_FORMAT_H
-#define _FILE_FORMAT_H
+#ifndef _OSTM_FILE_FORMAT_H
+#define _OSTM_FILE_FORMAT_H
 
-#include "abstractfileformat.h"
 #include "nativefileformat.h"
+#include "streamfileformat.h"
 
 #include "fileformat.pb.h"
 
-class FileFormat : public AbstractFileFormat, public NativeFileFormat
+class OstmFileFormat : public StreamFileFormat, public NativeFileFormat
 {
 public:
-    FileFormat();
+    OstmFileFormat();
 
     virtual bool openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error);
@@ -38,6 +38,6 @@ public:
     bool isMyFileType(const QString fileType);
 };
 
-extern FileFormat fileFormat;
+extern OstmFileFormat fileFormat;
 
 #endif

@@ -17,35 +17,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "abstractfileformat.h"
+#include "streamfileformat.h"
 
-#include "fileformat.h"
+#include "ostmfileformat.h"
 #include "pcapfileformat.h"
 #include "pdmlfileformat.h"
 #include "pythonfileformat.h"
 
 #include <QStringList>
 
-AbstractFileFormat::AbstractFileFormat()
+StreamFileFormat::StreamFileFormat()
 {
     stop_ = false;
 }
 
-AbstractFileFormat::~AbstractFileFormat()
+StreamFileFormat::~StreamFileFormat()
 {
 }
 
-QDialog* AbstractFileFormat::openOptionsDialog()
-{
-    return NULL;
-}
-
-QDialog* AbstractFileFormat::saveOptionsDialog()
+QDialog* StreamFileFormat::openOptionsDialog()
 {
     return NULL;
 }
 
-QStringList AbstractFileFormat::supportedFileTypes(Operation op)
+QDialog* StreamFileFormat::saveOptionsDialog()
+{
+    return NULL;
+}
+
+QStringList StreamFileFormat::supportedFileTypes(Operation op)
 {
     QStringList fileTypes;
 
@@ -62,7 +62,7 @@ QStringList AbstractFileFormat::supportedFileTypes(Operation op)
     return fileTypes;
 }
 
-void AbstractFileFormat::openStreamsOffline(const QString fileName, 
+void StreamFileFormat::openStreamsOffline(const QString fileName,
         OstProto::StreamConfigList &streams, QString &error)
 {
     fileName_ = fileName;
@@ -74,7 +74,7 @@ void AbstractFileFormat::openStreamsOffline(const QString fileName,
     start();
 }
 
-void AbstractFileFormat::saveStreamsOffline(
+void StreamFileFormat::saveStreamsOffline(
         const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
 {
@@ -87,12 +87,12 @@ void AbstractFileFormat::saveStreamsOffline(
     start();
 }
 
-bool AbstractFileFormat::result()
+bool StreamFileFormat::result()
 {
     return result_;
 }
 
-AbstractFileFormat* AbstractFileFormat::fileFormatFromFile(
+StreamFileFormat* StreamFileFormat::fileFormatFromFile(
         const QString fileName)
 {
     if (fileFormat.isMyFileFormat(fileName))
@@ -107,7 +107,7 @@ AbstractFileFormat* AbstractFileFormat::fileFormatFromFile(
     return NULL;
 }
 
-AbstractFileFormat* AbstractFileFormat::fileFormatFromType(
+StreamFileFormat* StreamFileFormat::fileFormatFromType(
         const QString fileType)
 {
 
@@ -126,12 +126,12 @@ AbstractFileFormat* AbstractFileFormat::fileFormatFromType(
     return NULL;
 }
 
-void AbstractFileFormat::cancel()
+void StreamFileFormat::cancel()
 {
     stop_ = true;
 }
 
-void AbstractFileFormat::run()
+void StreamFileFormat::run()
 {
     if (op_ == kOpenFile)
         result_ = openStreams(fileName_, *openStreams_, *error_);

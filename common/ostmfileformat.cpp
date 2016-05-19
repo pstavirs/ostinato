@@ -17,17 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "fileformat.h"
+#include "ostmfileformat.h"
 
-FileFormat fileFormat;
+OstmFileFormat fileFormat;
 
-FileFormat::FileFormat()
-    : AbstractFileFormat(), NativeFileFormat()
+OstmFileFormat::OstmFileFormat()
+    : StreamFileFormat(), NativeFileFormat()
 {
     // Do Nothing!
 }
 
-bool FileFormat::openStreams(const QString fileName, 
+bool OstmFileFormat::openStreams(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error)
 {
     OstProto::FileMeta meta;
@@ -54,7 +54,7 @@ _fail:
     return false;
 }
 
-bool FileFormat::saveStreams(const OstProto::StreamConfigList streams, 
+bool OstmFileFormat::saveStreams(const OstProto::StreamConfigList streams,
         const QString fileName, QString &error)
 {
     OstProto::FileContent content;
@@ -79,12 +79,12 @@ _fail:
     return false;
 }
 
-bool FileFormat::isMyFileFormat(const QString fileName)
+bool OstmFileFormat::isMyFileFormat(const QString fileName)
 {
     return isNativeFileFormat(fileName, OstProto::kStreamsFileType);
 }
 
-bool FileFormat::isMyFileType(const QString fileType)
+bool OstmFileFormat::isMyFileType(const QString fileType)
 {
     if (fileType.startsWith("Ostinato"))
         return true;

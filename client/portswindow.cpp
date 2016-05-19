@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portswindow.h"
 
-#include "abstractfileformat.h"
 #include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
 #include "streamconfigdialog.h"
+#include "streamfileformat.h"
 #include "streamlistdelegate.h"
 
 #include "fileformat.pb.h"
@@ -812,8 +812,8 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 {
     qDebug("Open Streams Action");
 
-    QStringList fileTypes = AbstractFileFormat::supportedFileTypes(
-                                            AbstractFileFormat::kOpenFile);
+    QStringList fileTypes = StreamFileFormat::supportedFileTypes(
+                                            StreamFileFormat::kOpenFile);
     QString fileType;
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString dirName;
@@ -885,8 +885,8 @@ void PortsWindow::on_actionSave_Streams_triggered()
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString fileName;
-    QStringList fileTypes = AbstractFileFormat::supportedFileTypes(
-                                            AbstractFileFormat::kSaveFile);
+    QStringList fileTypes = StreamFileFormat::supportedFileTypes(
+                                            StreamFileFormat::kSaveFile);
     QString fileType;
     QString errorStr;
     QFileDialog::Options options;

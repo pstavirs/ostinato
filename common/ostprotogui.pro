@@ -35,12 +35,11 @@ PROTOS = \
 # TODO: Move fileformat related stuff into a different library - why?
 HEADERS = \
     ostprotolib.h \
-    abstractfileformat.h \
-    fileformat.h \
     ipv4addressdelegate.h \
     ipv6addressdelegate.h \
     nativefileformat.h \
     ossnfileformat.h \
+    ostmfileformat.h \
     pcapfileformat.h \
     pdmlfileformat.h \
     pythonfileformat.h \
@@ -48,6 +47,7 @@ HEADERS = \
     pdmlprotocols.h \
     pdmlreader.h \
     sessionfileformat.h \
+    streamfileformat.h \
     spinboxdelegate.h
 
 HEADERS += \
@@ -83,10 +83,9 @@ HEADERS += \
 
 SOURCES += \
     ostprotolib.cpp \
-    abstractfileformat.cpp \
-    fileformat.cpp \
     nativefileformat.cpp \
     ossnfileformat.cpp \
+    ostmfileformat.cpp \
     pcapfileformat.cpp \
     pdmlfileformat.cpp \
     pythonfileformat.cpp \
@@ -94,6 +93,7 @@ SOURCES += \
     pdmlprotocols.cpp \
     pdmlreader.cpp \
     sessionfileformat.cpp \
+    streamfileformat.cpp \
     spinboxdelegate.cpp
 
 SOURCES += \

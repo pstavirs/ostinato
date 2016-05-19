@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _ABSTRACT_FILE_FORMAT_H
-#define _ABSTRACT_FILE_FORMAT_H
+#ifndef _STREAM_FILE_FORMAT_H
+#define _STREAM_FILE_FORMAT_H
 
 #include "protocol.pb.h"
 
@@ -27,14 +27,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 class QDialog;
 
-class AbstractFileFormat : public QThread
+class StreamFileFormat : public QThread
 {
     Q_OBJECT
 public:
     enum Operation { kOpenFile, kSaveFile };
 
-    AbstractFileFormat();
-    virtual ~AbstractFileFormat();
+    StreamFileFormat();
+    virtual ~StreamFileFormat();
 
     virtual bool openStreams(const QString fileName, 
             OstProto::StreamConfigList &streams, QString &error) = 0;
@@ -53,8 +53,8 @@ public:
 
     static QStringList supportedFileTypes(Operation op);
 
-    static AbstractFileFormat* fileFormatFromFile(const QString fileName);
-    static AbstractFileFormat* fileFormatFromType(const QString fileType);
+    static StreamFileFormat* fileFormatFromFile(const QString fileName);
+    static StreamFileFormat* fileFormatFromType(const QString fileType);
 
 #if 0
     bool isMyFileFormat(const QString fileName) = 0;

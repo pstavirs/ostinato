@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "port.h"
 
-#include "abstractfileformat.h"
 #include "emulation.h"
+#include "streamfileformat.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -553,7 +553,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     QDialog *optDialog;
     QProgressDialog progress("Opening Streams", "Cancel", 0, 0, mainWindow);
     OstProto::StreamConfigList streams;
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromFile(fileName);
 
     if (fmt == NULL) {
         error = tr("Unknown streams file format");
@@ -642,7 +642,7 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
 {
     bool ret = false;
     QProgressDialog progress("Saving Streams", "Cancel", 0, 0, mainWindow);
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType(fileType);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromType(fileType);
     OstProto::StreamConfigList streams;
 
     if (fmt == NULL)

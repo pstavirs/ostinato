@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PCAP_FILE_FORMAT_H
 #define _PCAP_FILE_FORMAT_H
 
-#include "abstractfileformat.h"
+#include "streamfileformat.h"
 #include "ui_pcapfileimport.h"
 
 #include <QDataStream>
@@ -39,7 +39,7 @@ private:
 };
 
 class PdmlReader;
-class PcapFileFormat : public AbstractFileFormat
+class PcapFileFormat : public StreamFileFormat
 {
     friend class PdmlReader;
 
