@@ -812,7 +812,8 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 {
     qDebug("Open Streams Action");
 
-    QStringList fileTypes = AbstractFileFormat::supportedFileTypes();
+    QStringList fileTypes = AbstractFileFormat::supportedFileTypes(
+                                            AbstractFileFormat::kOpenFile);
     QString fileType;
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString dirName;
@@ -826,9 +827,6 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 
     Q_ASSERT(plm->isPort(current));
 
-    // cannot open Python Scripts
-    fileTypes.removeAt(fileTypes.indexOf("PythonScript (*.py)"));
-    fileTypes.append("All files (*)");
     if (fileTypes.size())
         fileType = fileTypes.at(0);
 
@@ -887,7 +885,8 @@ void PortsWindow::on_actionSave_Streams_triggered()
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString fileName;
-    QStringList fileTypes = AbstractFileFormat::supportedFileTypes();
+    QStringList fileTypes = AbstractFileFormat::supportedFileTypes(
+                                            AbstractFileFormat::kSaveFile);
     QString fileType;
     QString errorStr;
     QFileDialog::Options options;

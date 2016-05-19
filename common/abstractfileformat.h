@@ -31,6 +31,8 @@ class AbstractFileFormat : public QThread
 {
     Q_OBJECT
 public:
+    enum Operation { kOpenFile, kSaveFile };
+
     AbstractFileFormat();
     virtual ~AbstractFileFormat();
 
@@ -49,7 +51,7 @@ public:
 
     bool result();
 
-    static QStringList supportedFileTypes();
+    static QStringList supportedFileTypes(Operation op);
 
     static AbstractFileFormat* fileFormatFromFile(const QString fileName);
     static AbstractFileFormat* fileFormatFromType(const QString fileType);
@@ -73,16 +75,11 @@ protected:
     bool stop_;
 
 private:
-    enum kOp
-    {
-        kOpen,
-        kSave 
-    };
     QString fileName_;
     OstProto::StreamConfigList *openStreams_;
     OstProto::StreamConfigList saveStreams_;
     QString *error_;
-    kOp op_;
+    Operation op_;
     bool result_;
 
 };

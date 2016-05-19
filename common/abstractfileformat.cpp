@@ -45,13 +45,21 @@ QDialog* AbstractFileFormat::saveOptionsDialog()
     return NULL;
 }
 
-QStringList AbstractFileFormat::supportedFileTypes()
+QStringList AbstractFileFormat::supportedFileTypes(Operation op)
 {
-    return QStringList()
+    QStringList fileTypes;
+
+    fileTypes
         << "Ostinato (*.ostm)"
         << "PCAP (*)"
-        << "PDML (*.pdml)"
-        << "PythonScript (*.py)";
+        << "PDML (*.pdml)";
+
+    if (op == kSaveFile)
+        fileTypes << "PythonScript (*.py)";
+    else if (op == kOpenFile)
+        fileTypes << "All files (*)";
+
+    return fileTypes;
 }
 
 void AbstractFileFormat::openStreamsOffline(const QString fileName, 
@@ -60,7 +68,7 @@ void AbstractFileFormat::openStreamsOffline(const QString fileName,
     fileName_ = fileName;
     openStreams_ = &streams;
     error_ = &error;
-    op_ = kOpen;
+    op_ = kOpenFile;
     stop_ = false;
 
     start();
@@ -73,7 +81,7 @@ void AbstractFileFormat::saveStreamsOffline(
     saveStreams_ = streams;
     fileName_ = fileName;
     error_ = &error;
-    op_ = kSave;
+    op_ = kSaveFile;
     stop_ = false;
 
     start();
@@ -125,8 +133,8 @@ void AbstractFileFormat::cancel()
 
 void AbstractFileFormat::run()
 {
-    if (op_ == kOpen)
+    if (op_ == kOpenFile)
         result_ = openStreams(fileName_, *openStreams_, *error_);
-    else if (op_ == kSave)
+    else if (op_ == kSaveFile)
         result_ = saveStreams(saveStreams_, fileName_, *error_);
 }
