@@ -47,9 +47,9 @@ public:
     PcapFileFormat();
     ~PcapFileFormat();
 
-    bool openStreams(const QString fileName, 
+    bool open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error);
-    bool saveStreams(const OstProto::StreamConfigList streams, 
+    bool save(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error);
 
     virtual QDialog* openOptionsDialog();

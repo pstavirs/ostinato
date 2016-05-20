@@ -46,14 +46,14 @@ PythonFileFormat::~PythonFileFormat()
     // Nothing to do
 }
 
-bool PythonFileFormat::openStreams(const QString /*fileName*/, 
+bool PythonFileFormat::open(const QString /*fileName*/,
         OstProto::StreamConfigList &/*streams*/, QString &/*error*/)
 {
     // NOT SUPPORTED!
     return false;
 }
 
-bool PythonFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
+bool PythonFileFormat::save(const OstProto::StreamConfigList streams,
         const QString fileName, QString &error)
 {
     QFile file(fileName);

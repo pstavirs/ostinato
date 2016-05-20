@@ -583,12 +583,12 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
     connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
 
-    fmt->openStreamsOffline(fileName, streams, error);
-    qDebug("after open offline");
+    fmt->openAsync(fileName, streams, error);
+    qDebug("after open async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     if (!fmt->result())
         goto _fail;
@@ -676,12 +676,12 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
             qApp->processEvents();
     }
 
-    fmt->saveStreamsOffline(streams, fileName, error);
-    qDebug("after save offline");
+    fmt->saveAsync(streams, fileName, error);
+    qDebug("after save async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     ret = fmt->result();
     goto _exit;

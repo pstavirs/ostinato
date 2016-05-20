@@ -36,17 +36,17 @@ public:
     StreamFileFormat();
     virtual ~StreamFileFormat();
 
-    virtual bool openStreams(const QString fileName, 
+    virtual bool open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error) = 0;
-    virtual bool saveStreams(const OstProto::StreamConfigList streams, 
+    virtual bool save(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error) = 0;
 
     virtual QDialog* openOptionsDialog();
     virtual QDialog* saveOptionsDialog();
 
-    void openStreamsOffline(const QString fileName, 
+    void openAsync(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error);
-    void saveStreamsOffline(const OstProto::StreamConfigList streams, 
+    void saveAsync(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error);
 
     bool result();

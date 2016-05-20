@@ -35,7 +35,7 @@ PdmlFileFormat::~PdmlFileFormat()
 {
 }
 
-bool PdmlFileFormat::openStreams(const QString fileName, 
+bool PdmlFileFormat::open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error)
 {
     bool isOk = false;
@@ -75,7 +75,7 @@ _exit:
     return isOk;
 }
 
-bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
+bool PdmlFileFormat::save(const OstProto::StreamConfigList streams,
         const QString fileName, QString &error)
 {
     bool isOk = false;
@@ -97,7 +97,7 @@ bool PdmlFileFormat::saveStreams(const OstProto::StreamConfigList streams,
     connect(fmt, SIGNAL(progress(int)), this, SIGNAL(progress(int)));
 
     emit status("Writing intermediate PCAP file...");
-    isOk = fmt->saveStreams(streams, pcapFile.fileName(), error);
+    isOk = fmt->save(streams, pcapFile.fileName(), error);
 
     qDebug("generating PDML %s", fileName.toAscii().constData());
     emit status("Converting PCAP to PDML...");

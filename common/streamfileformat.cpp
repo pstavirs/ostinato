@@ -62,7 +62,7 @@ QStringList StreamFileFormat::supportedFileTypes(Operation op)
     return fileTypes;
 }
 
-void StreamFileFormat::openStreamsOffline(const QString fileName,
+void StreamFileFormat::openAsync(const QString fileName,
         OstProto::StreamConfigList &streams, QString &error)
 {
     fileName_ = fileName;
@@ -74,7 +74,7 @@ void StreamFileFormat::openStreamsOffline(const QString fileName,
     start();
 }
 
-void StreamFileFormat::saveStreamsOffline(
+void StreamFileFormat::saveAsync(
         const OstProto::StreamConfigList streams, 
         const QString fileName, QString &error)
 {
@@ -134,7 +134,7 @@ void StreamFileFormat::cancel()
 void StreamFileFormat::run()
 {
     if (op_ == kOpenFile)
-        result_ = openStreams(fileName_, *openStreams_, *error_);
+        result_ = open(fileName_, *openStreams_, *error_);
     else if (op_ == kSaveFile)
-        result_ = saveStreams(saveStreams_, fileName_, *error_);
+        result_ = save(saveStreams_, fileName_, *error_);
 }

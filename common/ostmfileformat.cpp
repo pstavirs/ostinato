@@ -27,7 +27,7 @@ OstmFileFormat::OstmFileFormat()
     // Do Nothing!
 }
 
-bool OstmFileFormat::openStreams(const QString fileName,
+bool OstmFileFormat::open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error)
 {
     OstProto::FileMeta meta;
@@ -54,7 +54,7 @@ _fail:
     return false;
 }
 
-bool OstmFileFormat::saveStreams(const OstProto::StreamConfigList streams,
+bool OstmFileFormat::save(const OstProto::StreamConfigList streams,
         const QString fileName, QString &error)
 {
     OstProto::FileContent content;

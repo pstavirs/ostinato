@@ -27,9 +27,9 @@ public:
     PdmlFileFormat();
     ~PdmlFileFormat();
 
-    virtual bool openStreams(const QString fileName, 
+    virtual bool open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error);
-    virtual bool saveStreams(const OstProto::StreamConfigList streams, 
+    virtual bool save(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error);
 
     bool isMyFileFormat(const QString fileName);
