@@ -277,8 +277,6 @@ message Notification {
 
 /*
  * Protocol Emulation
- * FIXME: merge getDeviceList() and get DeviceNeighbors() into a single
- *        getDeviceInfo() RPC?
  */
 message DeviceGroupId {
     required uint32 id = 1;
