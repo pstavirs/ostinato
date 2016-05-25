@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -16,27 +16,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _PDML_FILE_FORMAT_H
-#define _PDML_FILE_FORMAT_H
 
-#include "streamfileformat.h"
+#ifndef _OSSN_FILE_FORMAT_H
+#define _OSSN_FILE_FORMAT_H
 
-class PdmlFileFormat : public StreamFileFormat
+#include "nativefileformat.h"
+#include "sessionfileformat.h"
+
+class OssnFileFormat : public SessionFileFormat, public NativeFileFormat
 {
 public:
-    PdmlFileFormat();
-    ~PdmlFileFormat();
+    OssnFileFormat();
 
     virtual bool open(const QString fileName,
-            OstProto::StreamConfigList &streams, QString &error);
-    virtual bool save(const OstProto::StreamConfigList streams,
+            OstProto::SessionContent &session, QString &error);
+    virtual bool save(const OstProto::SessionContent &session,
             const QString fileName, QString &error);
 
-    bool isMyFileFormat(const QString fileName);
-    bool isMyFileType(const QString fileType);
-
+    virtual bool isMyFileFormat(const QString fileName);
+    virtual bool isMyFileType(const QString fileType);
 };
 
-extern PdmlFileFormat pdmlFileFormat;
+extern OssnFileFormat ossnFileFormat;
 
 #endif
+

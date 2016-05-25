@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "port.h"
 
-#include "abstractfileformat.h"
 #include "emulation.h"
+#include "streamfileformat.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -66,6 +66,11 @@ Port::~Port()
         delete mStreams.takeFirst();
 }
 
+void Port::protoDataCopyInto(OstProto::Port *data)
+{
+    data->CopyFrom(d);
+}
+
 void Port::updatePortConfig(OstProto::Port *port)
 {
     bool recalc = false;
@@ -75,6 +80,10 @@ void Port::updatePortConfig(OstProto::Port *port)
         recalc = true;
 
     d.MergeFrom(*port);
+
+    // Setup a user-friendly alias for Win32 ports
+    if (name().startsWith("\\Device\\NPF_"))
+        setAlias(QString("if%1").arg(id()));
 
     if (recalc)
         recalculateAverageRates();
@@ -449,6 +458,40 @@ void Port::getModifiedDeviceGroupsSinceLastSync(
                                 ->CopyFrom(*deviceGroupById(id));
 }
 
+/*!
+ * Finds the user modifiable fields in 'config' that are different from
+ * the current configuration on the port and modifes 'config' such that
+ * only those fields are set and returns true. If 'config' is same as
+ * current port config, 'config' is unmodified and false is returned
+ */
+bool Port::modifiablePortConfig(OstProto::Port &config) const
+{
+    bool change = false;
+    OstProto::Port modCfg;
+
+    if (config.is_exclusive_control() != d.is_exclusive_control()) {
+        modCfg.set_is_exclusive_control(config.is_exclusive_control());
+        change = true;
+    }
+    if (config.transmit_mode() != d.transmit_mode()) {
+        modCfg.set_transmit_mode(config.transmit_mode());
+        change = true;
+    }
+    if (config.user_name() != d.user_name()) {
+        modCfg.set_user_name(config.user_name());
+        change = true;
+    }
+
+    if (change) {
+        modCfg.mutable_port_id()->set_id(id());
+        config.CopyFrom(modCfg);
+
+        return true;
+    }
+
+    return false;
+}
+
 void Port::when_syncComplete()
 {
     //reorderStreamsByOrdinals();
@@ -510,10 +553,12 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     QDialog *optDialog;
     QProgressDialog progress("Opening Streams", "Cancel", 0, 0, mainWindow);
     OstProto::StreamConfigList streams;
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromFile(fileName);
 
-    if (fmt == NULL)
+    if (fmt == NULL) {
+        error = tr("Unknown streams file format");
         goto _fail;
+    }
 
     if ((optDialog = fmt->openOptionsDialog()))
     {
@@ -538,12 +583,12 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
     connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
 
-    fmt->openStreamsOffline(fileName, streams, error);
-    qDebug("after open offline");
+    fmt->openAsync(fileName, streams, error);
+    qDebug("after open async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     if (!fmt->result())
         goto _fail;
@@ -597,7 +642,7 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
 {
     bool ret = false;
     QProgressDialog progress("Saving Streams", "Cancel", 0, 0, mainWindow);
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType(fileType);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromType(fileType);
     OstProto::StreamConfigList streams;
 
     if (fmt == NULL)
@@ -631,12 +676,12 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
             qApp->processEvents();
     }
 
-    fmt->saveStreamsOffline(streams, fileName, error);
-    qDebug("after save offline");
+    fmt->saveAsync(streams, fileName, error);
+    qDebug("after save async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     ret = fmt->result();
     goto _exit;

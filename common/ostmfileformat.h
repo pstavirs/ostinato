@@ -16,16 +16,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _PDML_FILE_FORMAT_H
-#define _PDML_FILE_FORMAT_H
+#ifndef _OSTM_FILE_FORMAT_H
+#define _OSTM_FILE_FORMAT_H
 
+#include "nativefileformat.h"
 #include "streamfileformat.h"
 
-class PdmlFileFormat : public StreamFileFormat
+#include "fileformat.pb.h"
+
+class OstmFileFormat : public StreamFileFormat, public NativeFileFormat
 {
 public:
-    PdmlFileFormat();
-    ~PdmlFileFormat();
+    OstmFileFormat();
 
     virtual bool open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error);
@@ -34,9 +36,8 @@ public:
 
     bool isMyFileFormat(const QString fileName);
     bool isMyFileType(const QString fileType);
-
 };
 
-extern PdmlFileFormat pdmlFileFormat;
+extern OstmFileFormat fileFormat;
 
 #endif

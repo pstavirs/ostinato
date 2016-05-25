@@ -27,12 +27,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatswindow.h"
 #include "portswindow.h"
 #include "preferences.h"
+#include "sessionfileformat.h"
 #include "settings.h"
 #include "ui_about.h"
 #include "updater.h"
 
+#include "fileformat.pb.h"
+
 #include <QDockWidget>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QProcess>
+#include <QProgressDialog>
 
 extern const char* version;
 extern const char* revision;
@@ -75,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupUi(this);
 
-    menuFile->insertActions(menuFile->actions().at(0), portsWindow->actions());
+    menuFile->insertActions(menuFile->actions().at(3), portsWindow->actions());
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);
@@ -133,6 +139,102 @@ MainWindow::~MainWindow()
     delete localServer_;
 }
 
+void MainWindow::on_actionOpenSession_triggered()
+{
+    qDebug("Open Session Action");
+
+    static QString dirName;
+    QString fileName;
+    QStringList fileTypes = SessionFileFormat::supportedFileTypes(
+                                                SessionFileFormat::kOpenFile);
+    QString fileType;
+    QString errorStr;
+    bool ret;
+
+    if (portsWindow->portGroupCount()) {
+        if (QMessageBox::question(this,
+                tr("Open Session"),
+                tr("Existing session will be lost. Proceed?"),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) == QMessageBox::No)
+            goto _exit;
+    }
+
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Session"),
+            dirName, fileTypes.join(";;"), &fileType);
+    if (fileName.isEmpty())
+        goto _exit;
+
+    ret = openSession(fileName, errorStr);
+    if (!ret || !errorStr.isEmpty()) {
+        QMessageBox msgBox(this);
+        QStringList str = errorStr.split("\n\n\n\n");
+
+        msgBox.setIcon(ret ? QMessageBox::Warning : QMessageBox::Critical);
+        msgBox.setWindowTitle(qApp->applicationName());
+        msgBox.setText(str.at(0));
+        if (str.size() > 1)
+            msgBox.setDetailedText(str.at(1));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+
+        msgBox.exec();
+    }
+    dirName = QFileInfo(fileName).absolutePath();
+
+_exit:
+    return;
+}
+
+void MainWindow::on_actionSaveSession_triggered()
+{
+    qDebug("Save Session Action");
+
+    static QString fileName;
+    QStringList fileTypes = SessionFileFormat::supportedFileTypes(
+                                                SessionFileFormat::kSaveFile);
+    QString fileType;
+    QString errorStr;
+    QFileDialog::Options options;
+
+    if (portsWindow->reservedPortCount()) {
+        QString myself = appSettings->value(kUserKey, kUserDefaultValue)
+                            .toString();
+        if (QMessageBox::question(this,
+                tr("Save Session"),
+                QString("Some ports are reserved!\n\nOnly ports reserved by %1 will be saved. Proceed?").arg(myself),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) == QMessageBox::No)
+            goto _exit;
+    }
+
+    // On Mac OS with Native Dialog, getSaveFileName() ignores fileType.
+    // Although currently there's only one supported file type, we may
+    // have more in the future
+#if defined(Q_OS_MAC)
+    options |= QFileDialog::DontUseNativeDialog;
+#endif
+
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
+
+    fileName = QFileDialog::getSaveFileName(this, tr("Save Session"),
+            fileName, fileTypes.join(";;"), &fileType, options);
+    if (fileName.isEmpty())
+        goto _exit;
+
+    if (!saveSession(fileName, fileType, errorStr))
+        QMessageBox::critical(this, qApp->applicationName(), errorStr);
+    else if (!errorStr.isEmpty())
+        QMessageBox::warning(this, qApp->applicationName(), errorStr);
+
+    fileName = QFileInfo(fileName).absolutePath();
+_exit:
+    return;
+}
+
 void MainWindow::on_actionPreferences_triggered()
 {
     Preferences *preferences = new Preferences();
@@ -172,3 +274,120 @@ void MainWindow::onNewVersion(QString newVersion)
     statusBar()->showMessage(QString("New Ostinato version %1 available. "
                 "Visit http://ostinato.org to download").arg(newVersion));
 }
+
+//! Returns true on success (or user cancel) and false on failure
+bool MainWindow::openSession(QString fileName, QString &error)
+{
+    bool ret = false;
+    QDialog *optDialog;
+    QProgressDialog progress("Opening Session", "Cancel", 0, 0, this);
+    OstProto::SessionContent session;
+    SessionFileFormat *fmt = SessionFileFormat::fileFormatFromFile(fileName);
+
+    if (fmt == NULL) {
+        error = tr("Unknown session file format");
+        goto _fail;
+    }
+
+    if ((optDialog = fmt->openOptionsDialog()))
+    {
+        int ret;
+        optDialog->setParent(this, Qt::Dialog);
+        ret = optDialog->exec();
+        optDialog->setParent(0, Qt::Dialog);
+        if (ret == QDialog::Rejected)
+            goto _user_opt_cancel;
+    }
+
+    progress.setAutoReset(false);
+    progress.setAutoClose(false);
+    progress.setMinimumDuration(0);
+    progress.show();
+
+    setDisabled(true);
+    progress.setEnabled(true); // to override the mainWindow disable
+
+    connect(fmt, SIGNAL(status(QString)),&progress,SLOT(setLabelText(QString)));
+    connect(fmt, SIGNAL(target(int)), &progress, SLOT(setMaximum(int)));
+    connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
+    connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
+
+    fmt->openAsync(fileName, session, error);
+    qDebug("after open async");
+
+    while (!fmt->isFinished())
+        qApp->processEvents();
+    qDebug("wait over for async operation");
+
+    if (!fmt->result())
+        goto _fail;
+
+    // process any remaining events posted from the thread
+    for (int i = 0; i < 10; i++)
+        qApp->processEvents();
+
+    // XXX: user can't cancel operation from here on!
+    progress.close();
+
+    portsWindow->openSession(&session, error);
+
+_user_opt_cancel:
+    ret = true;
+
+_fail:
+    progress.close();
+    setEnabled(true);
+    return ret;
+}
+
+bool MainWindow::saveSession(QString fileName, QString fileType, QString &error)
+{
+    bool ret = false;
+    QProgressDialog progress("Saving Session", "Cancel", 0, 0, this);
+    SessionFileFormat *fmt = SessionFileFormat::fileFormatFromType(fileType);
+    OstProto::SessionContent session;
+
+    if (fmt == NULL)
+        goto _fail;
+
+    progress.setAutoReset(false);
+    progress.setAutoClose(false);
+    progress.setMinimumDuration(0);
+    progress.show();
+
+    setDisabled(true);
+    progress.setEnabled(true); // to override the mainWindow disable
+
+    // Fill in session
+    ret = portsWindow->saveSession(&session, error, &progress);
+    if (!ret)
+        goto _user_cancel;
+
+    connect(fmt, SIGNAL(status(QString)),&progress,SLOT(setLabelText(QString)));
+    connect(fmt, SIGNAL(target(int)), &progress, SLOT(setMaximum(int)));
+    connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
+    connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
+
+    fmt->saveAsync(session, fileName, error);
+    qDebug("after save async");
+
+    while (!fmt->isFinished())
+        qApp->processEvents();
+    qDebug("wait over for async operation");
+
+    ret = fmt->result();
+    goto _exit;
+
+_user_cancel:
+   goto _exit;
+
+_fail:
+    error = QString("Unsupported File Type - %1").arg(fileType);
+    goto _exit;
+
+_exit:
+    progress.close();
+    setEnabled(true);
+    return ret;
+}
+

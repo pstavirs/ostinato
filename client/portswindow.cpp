@@ -19,18 +19,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portswindow.h"
 
-#include "abstractfileformat.h"
 #include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
 #include "streamconfigdialog.h"
+#include "streamfileformat.h"
 #include "streamlistdelegate.h"
+
+#include "fileformat.pb.h"
 
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QItemSelectionModel>
+#include <QMainWindow>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
+
+extern QMainWindow *mainWindow;
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent), proxyPortModel(NULL)
@@ -166,6 +171,116 @@ PortsWindow::~PortsWindow()
 {
     delete delegate;
     delete proxyPortModel;
+}
+
+int PortsWindow::portGroupCount()
+{
+    return plm->numPortGroups();
+}
+
+int PortsWindow::reservedPortCount()
+{
+    int count = 0;
+    int n = portGroupCount();
+
+    for (int i = 0; i < n; i++)
+        count += plm->portGroupByIndex(i).numReservedPorts();
+
+    return count;
+}
+
+//! Always return true
+bool PortsWindow::openSession(
+        const OstProto::SessionContent *session,
+        QString &error)
+{
+    QProgressDialog progress("Opening Session", NULL,
+                             0, session->port_groups_size(), mainWindow);
+    progress.show();
+    progress.setEnabled(true); // since parent (mainWindow) is disabled
+
+    plm->removeAllPortGroups();
+
+    for (int i = 0; i < session->port_groups_size(); i++) {
+        const OstProto::PortGroupContent &pgc = session->port_groups(i);
+        PortGroup *pg = new PortGroup(QString::fromStdString(
+                                                    pgc.server_name()),
+                                      quint16(pgc.server_port()));
+        pg->setConfigAtConnect(&pgc);
+        plm->addPortGroup(*pg);
+        progress.setValue(i+1);
+    }
+
+    return true;
+}
+
+/*!
+ * Prepare content to be saved for a session
+ *
+ * If port reservation is in use, saves only 'my' reserved ports
+ *
+ * Returns false, if user cancels op; true, otherwise
+ */
+bool PortsWindow::saveSession(
+        OstProto::SessionContent *session, // OUT param
+        QString &error,
+        QProgressDialog *progress)
+{
+    int n = portGroupCount();
+    QString myself;
+
+    if (progress) {
+        progress->setLabelText("Preparing Ports and PortGroups ...");
+        progress->setRange(0, n);
+    }
+
+    if (reservedPortCount())
+        myself = appSettings->value(kUserKey, kUserDefaultValue).toString();
+
+    for (int i = 0; i < n; i++)
+    {
+        PortGroup &pg = plm->portGroupByIndex(i);
+        OstProto::PortGroupContent *pgc = session->add_port_groups();
+
+        pgc->set_server_name(pg.serverName().toStdString());
+        pgc->set_server_port(pg.serverPort());
+
+        for (int j = 0; j < pg.numPorts(); j++)
+        {
+            if (myself != pg.mPorts.at(j)->userName())
+                continue;
+
+            OstProto::PortContent *pc = pgc->add_ports();
+            OstProto::Port *p = pc->mutable_port_config();
+
+            // XXX: We save the entire OstProto::Port even though some
+            // fields may be ephemeral; while opening we use only relevant
+            // fields
+            pg.mPorts.at(j)->protoDataCopyInto(p);
+
+            for (int k = 0; k < pg.mPorts.at(j)->numStreams(); k++)
+            {
+                OstProto::Stream *s = pc->add_streams();
+                pg.mPorts.at(j)->streamByIndex(k)->protoDataCopyInto(*s);
+            }
+
+            for (int k = 0; k < pg.mPorts.at(j)->numDeviceGroups(); k++)
+            {
+                OstProto::DeviceGroup *dg = pc->add_device_groups();
+                dg->CopyFrom(*(pg.mPorts.at(j)->deviceGroupByIndex(k)));
+            }
+        }
+
+        if (progress) {
+            if (progress->wasCanceled())
+                return false;
+            progress->setValue(i);
+        }
+        if (i % 2 == 0)
+            qApp->processEvents();
+    }
+
+    return true;
 }
 
 void PortsWindow::showMyReservedPortsOnly(bool enabled)
@@ -697,6 +812,9 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 {
     qDebug("Open Streams Action");
 
+    QStringList fileTypes = StreamFileFormat::supportedFileTypes(
+                                            StreamFileFormat::kOpenFile);
+    QString fileType;
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString dirName;
     QString fileName;
@@ -709,7 +827,11 @@ void PortsWindow::on_actionOpen_Streams_triggered()
 
     Q_ASSERT(plm->isPort(current));
 
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"), dirName);
+    if (fileTypes.size())
+        fileType = fileTypes.at(0);
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Streams"),
+            dirName, fileTypes.join(";;"), &fileType);
     if (fileName.isEmpty())
         goto _exit;
 
@@ -763,7 +885,8 @@ void PortsWindow::on_actionSave_Streams_triggered()
 
     QModelIndex current = tvPortList->selectionModel()->currentIndex();
     static QString fileName;
-    QStringList fileTypes = AbstractFileFormat::supportedFileTypes();
+    QStringList fileTypes = StreamFileFormat::supportedFileTypes(
+                                            StreamFileFormat::kSaveFile);
     QString fileType;
     QString errorStr;
     QFileDialog::Options options;

@@ -32,6 +32,7 @@ PbRpcChannel::PbRpcChannel(QString serverName, quint16 port,
     isPending = false;
     pendingMethodId = -1;    // don't care as long as isPending is false
 
+    method = NULL;
     controller = NULL;
     done = NULL;
     response = NULL;
@@ -107,9 +108,10 @@ void PbRpcChannel::CallMethod(
     {
         RpcCall call;
         qDebug("RpcChannel: queueing rpc since method %d is pending;<----\n "
-                "queued method = %d\n"
+                "queued method = %d:%s\n"
                 "queued message = \n%s\n---->", 
-                pendingMethodId, method->index(), req->DebugString().c_str());
+                pendingMethodId, method->index(), method->name().c_str(),
+                req->DebugString().c_str());
 
         call.method = method;
         call.controller = controller;
@@ -128,7 +130,8 @@ void PbRpcChannel::CallMethod(
     if (!req->IsInitialized())
     {
         qWarning("RpcChannel: missing required fields in request <----");
-        qDebug("req = \n%s", req->DebugString().c_str());
+        qDebug("req = %s\n%s", method->input_type()->name().c_str(),
+                req->DebugString().c_str());
         qDebug("error = \n%s\n--->", req->InitializationErrorString().c_str());
 
         controller->SetFailed("Required fields missing");
@@ -137,6 +140,7 @@ void PbRpcChannel::CallMethod(
     }
 
     pendingMethodId = method->index();
+    this->method=method;
     this->controller=controller;
     this->done=done;
     this->response=response;
@@ -153,8 +157,10 @@ void PbRpcChannel::CallMethod(
         qDebug("client(%s) sending %d bytes <----", __FUNCTION__, 
                 PB_HDR_SIZE + len);
         BUFDUMP(msg, PB_HDR_SIZE);
-        qDebug("method = %d\n req = \n%s\n---->", 
-                method->index(), req->DebugString().c_str());
+        qDebug("method = %d:%s\n req = %s\n%s\n---->",
+                method->index(), method->name().c_str(),
+                method->input_type()->name().c_str(),
+                req->DebugString().c_str());
     }
 
     mpSocket->write(msg, PB_HDR_SIZE);
@@ -308,14 +314,18 @@ _top:
             if (method != 13)
             {
                 qDebug("client(%s): Received Msg <---- ", __FUNCTION__);
-                qDebug("method = %d\nresp = \n%s\n---->",
-                        method, response->DebugString().c_str());
+                qDebug("method = %d:%s\nresp = %s\n%s\n---->",
+                        method, this->method->name().c_str(),
+                        this->method->output_type()->name().c_str(),
+                        response->DebugString().c_str());
             }
 
             if (!response->IsInitialized())
             {
                 qWarning("RpcChannel: missing required fields in response <----");
-                qDebug("resp = \n%s", response->DebugString().c_str());
+                qDebug("resp = %s\n%s",
+                        this->method->output_type()->name().c_str(),
+                        response->DebugString().c_str());
                 qDebug("error = \n%s\n--->", 
                         response->InitializationErrorString().c_str());
 
@@ -419,6 +429,7 @@ _top:
     done->Run();
 
     pendingMethodId = -1;
+    this->method = NULL;
     controller = NULL;
     response = NULL;
     isPending = false;
@@ -428,9 +439,11 @@ _top:
     {
         RpcCall call = pendingCallList.takeFirst();
         qDebug("RpcChannel: executing queued method <----\n"
-               "method = %d\n"
-               "req = \n%s\n---->", 
-                call.method->index(), call.request->DebugString().c_str());
+               "method = %d:%s\n"
+               "req = %s\n%s\n---->",
+                call.method->index(), call.method->name().c_str(),
+                call.method->input_type()->name().c_str(),
+                call.request->DebugString().c_str());
         CallMethod(call.method, call.controller, call.request, call.response,
                 call.done);
     }
@@ -475,6 +488,7 @@ void PbRpcChannel::on_mpSocket_disconnected()
     qDebug("In %s", __FUNCTION__);
 
     pendingMethodId = -1;
+    method = NULL;
     controller = NULL;
     response = NULL;
     isPending = false;

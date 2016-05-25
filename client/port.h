@@ -79,7 +79,8 @@ public:
     ~Port();
 
     quint32 portGroupId() const { return mPortGroupId; }
-    const QString& userAlias() const { return mUserAlias; }
+    const QString userAlias() const
+        { return mUserAlias.isEmpty() ? name() :  mUserAlias; }
 
     quint32 id() const 
         { return d.port_id().id(); }
@@ -103,7 +104,7 @@ public:
         { return avgBitsPerSec_; }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
-    void setAlias(QString &alias) { mUserAlias = alias; }
+    void setAlias(QString alias) { mUserAlias = alias; }
     //void setExclusive(bool flag);
 
     int numStreams() { return mStreams.size(); }
@@ -125,6 +126,8 @@ public:
                                         .append(".XXXXXX"));
         return capFile_; 
     }
+
+    void protoDataCopyInto(OstProto::Port *data);
 
     // FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
     void updatePortConfig(OstProto::Port *port);
@@ -152,6 +155,8 @@ public:
             OstProto::DeviceGroupIdList &streamIdList);
     void getModifiedDeviceGroupsSinceLastSync(
             OstProto::DeviceGroupConfigList &streamConfigList);
+
+    bool modifiablePortConfig(OstProto::Port &config) const;
 
     void when_syncComplete();
 

@@ -26,7 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 
 class QAbstractItemDelegate;
+class QProgressDialog;
 class QSortFilterProxyModel;
+
+namespace OstProto {
+    class SessionContent;
+}
 
 class PortsWindow : public QWidget, private Ui::PortsWindow
 {
@@ -38,6 +43,15 @@ class PortsWindow : public QWidget, private Ui::PortsWindow
 public:
     PortsWindow(PortGroupList *pgl, QWidget *parent = 0);
     ~PortsWindow();
+
+    int portGroupCount();
+    int reservedPortCount();
+
+    bool openSession(const OstProto::SessionContent *session,
+                     QString &error);
+    bool saveSession(OstProto::SessionContent *session,
+                     QString &error,
+                     QProgressDialog *progress = NULL);
 
 signals:
     void currentPortChanged(const QModelIndex &current,

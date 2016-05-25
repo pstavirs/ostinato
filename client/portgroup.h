@@ -36,6 +36,11 @@ LOW
 
 #define DEFAULT_SERVER_PORT        7878
 
+namespace OstProto {
+    class PortContent;
+    class PortGroupContent;
+}
+
 class QFile;
 class QTimer;
 
@@ -62,6 +67,9 @@ private:
     OstProto::PortIdList       *portIdList_;
     OstProto::PortStatsList    *portStatsList_;
 
+    OstProto::PortGroupContent *atConnectConfig_;
+    QList<const OstProto::PortContent*> atConnectPortConfig_;
+
 public: // FIXME(HIGH): member access
     QList<Port*>        mPorts;
 
@@ -82,7 +90,10 @@ public:
     }
     void disconnectFromHost() { reconnect = false; rpcChannel->tearDown(); }
 
+    void setConfigAtConnect(const OstProto::PortGroupContent *config);
+
     int numPorts() const { return mPorts.size(); }
+    int numReservedPorts() const;
     quint32 id() const { return mPortGroupId; } 
 
     const QString& userAlias() const { return mUserAlias; } 
@@ -92,6 +103,7 @@ public:
         { return rpcChannel->serverName(); }
     quint16 serverPort() const 
         { return rpcChannel->serverPort(); } 
+    const QString serverFullName() const;
     QAbstractSocket::SocketState state() const {
         if (compat == kIncompatible)
             return QAbstractSocket::SocketState(-1);
@@ -114,19 +126,19 @@ public:
     void processDeviceNeighbors(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, OstProto::Port portConfig);
-    void processModifyPortAck(PbRpcController *controller);
+    void processModifyPortAck(bool restoreUi, PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);
 
     void getStreamIdList();
     void processStreamIdList(int portIndex, PbRpcController *controller);
-    void getStreamConfigList();
+    void getStreamConfigList(int portIndex);
     void processStreamConfigList(int portIndex, PbRpcController *controller);
 
     void processModifyStreamAck(OstProto::Ack *ack);
 
     void getDeviceGroupIdList();
     void processDeviceGroupIdList(int portIndex, PbRpcController *controller);
-    void getDeviceGroupConfigList();
+    void getDeviceGroupConfigList(int portIndex);
     void processDeviceGroupConfigList(
             int portIndex,
             PbRpcController *controller);
