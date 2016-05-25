@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010, 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "fileformat.h"
+#include "nativefileformat.h"
 
 #include "crc32c.h"
 
@@ -25,15 +25,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QFile>
 #include <QVariant>
 
-#include <string>
+#define tr(str) QObject::tr(str)
 
-const std::string FileFormat::kFileMagicValue = "\xa7\xb7OSTINATO";
+const std::string NativeFileFormat::kFileMagicValue = "\xa7\xb7OSTINATO";
 
-FileFormat fileFormat;
+static const int kBaseHex = 16;
 
-const int kBaseHex = 16;
+static QString fileTypeStr(OstProto::FileType fileType)
+{
+    switch (fileType) {
+        case OstProto::kReservedFileType:
+            return QString("Reserved");
+        case OstProto::kStreamsFileType:
+            return QString("Streams");
+        case OstProto::kSessionFileType:
+            return QString("Streams");
+        default:
+            Q_ASSERT(false);
+    }
 
-FileFormat::FileFormat()
+    return QString("Unknown");
+}
+
+NativeFileFormat::NativeFileFormat()
 {
     /*
      * We don't have any "real" work to do here in the constructor.
@@ -54,20 +68,18 @@ FileFormat::FileFormat()
     Q_ASSERT(cksum.ByteSize() == kFileChecksumSize);
 }
 
-FileFormat::~FileFormat()
-{
-}
-
-bool FileFormat::openStreams(const QString fileName, 
-            OstProto::StreamConfigList &streams, QString &error)
+bool NativeFileFormat::open(
+        const QString fileName,
+        OstProto::FileType fileType,
+        OstProto::FileMeta &meta,
+        OstProto::FileContent &content,
+        QString &error)
 {
     QFile file(fileName);
     QByteArray buf;
     int size, contentOffset, contentSize;
     quint32 calcCksum;
     OstProto::FileMagic magic;
-    OstProto::FileMeta meta;
-    OstProto::FileContent content;
     OstProto::FileChecksum cksum, zeroCksum;
 
     if (!file.open(QIODevice::ReadOnly))
@@ -95,7 +107,7 @@ bool FileFormat::openStreams(const QString fileName,
 
     // Parse and verify magic
     if (!magic.ParseFromArray(
-                (void*)(buf.constData() + kFileMagicOffset), 
+                (void*)(buf.constData() + kFileMagicOffset),
                 kFileMagicSize))
     {
         goto _magic_parse_fail;
@@ -105,7 +117,7 @@ bool FileFormat::openStreams(const QString fileName,
 
     // Parse and verify checksum
     if (!cksum.ParseFromArray(
-            (void*)(buf.constData() + size - kFileChecksumSize), 
+            (void*)(buf.constData() + size - kFileChecksumSize),
             kFileChecksumSize))
     {
         goto _cksum_parse_fail;
@@ -118,7 +130,7 @@ bool FileFormat::openStreams(const QString fileName,
     {
         goto _zero_cksum_serialize_fail;
     }
-    
+
     calcCksum = checksumCrc32C((quint8*) buf.constData(), size);
 
     qDebug("checksum \nExpected:%x Actual:%x",
@@ -129,17 +141,18 @@ bool FileFormat::openStreams(const QString fileName,
 
     // Parse the metadata first before we parse the full contents
     if (!meta.ParseFromArray(
-                (void*)(buf.constData() + kFileMetaDataOffset), 
-                size - kFileMetaDataOffset))
+                (void*)(buf.constData() + kFileMetaDataOffset),
+                fileMetaSize((quint8*)buf.constData(), size)))
     {
         goto _metadata_parse_fail;
     }
 
-    qDebug("%s: File MetaData (INFORMATION) - \n%s", __FUNCTION__, 
+    qDebug("%s: File MetaData (INFORMATION) - \n%s", __FUNCTION__,
        QString().fromStdString(meta.DebugString()).toAscii().constData());
+    qDebug("%s: END MetaData", __FUNCTION__);
 
     // MetaData Validation(s)
-    if (meta.data().file_type() != OstProto::kStreamsFileType)
+    if (meta.data().file_type() != fileType)
         goto _unexpected_file_type;
 
     if (meta.data().format_version_major() != kFileFormatVersionMajor)
@@ -165,34 +178,26 @@ bool FileFormat::openStreams(const QString fileName,
     // ByteSize() does not include the Tag/Key, so we add 2 for that
     contentOffset = kFileMetaDataOffset + meta.data().ByteSize() + 2;
     contentSize = size - contentOffset - kFileChecksumSize;
+    qDebug("%s: content offset/size = %d/%d", __FUNCTION__,
+            contentOffset, contentSize);
 
     // Parse full contents
     if (!content.ParseFromArray(
-            (void*)(buf.constData() + contentOffset), 
+            (void*)(buf.constData() + contentOffset),
             contentSize))
     {
         goto _content_parse_fail;
     }
 
-    if (!content.matter().has_streams())
-        goto _missing_streams;
-
-    postParseFixup(meta.data(), content);
-
-    streams.CopyFrom(content.matter().streams());
-
     return true;
 
-_missing_streams:
-    error = QString(tr("%1 does not contain any streams")).arg(fileName);
-    goto _fail;
 _content_parse_fail:
     error = QString(tr("Failed parsing %1 contents")).arg(fileName);
     qDebug("Error: %s", QString().fromStdString(
-            content.matter().InitializationErrorString())
+            content.InitializationErrorString())
                 .toAscii().constData());
     qDebug("Debug: %s", QString().fromStdString(
-            content.matter().DebugString()).toAscii().constData());
+            content.DebugString()).toAscii().constData());
     goto _fail;
 _incompatible_file_version:
     error = QString(tr("%1 is in an incompatible format version - %2.%3.%4"
@@ -206,7 +211,9 @@ _incompatible_file_version:
             .arg(kFileFormatVersionRevision);
     goto _fail;
 _unexpected_file_type:
-    error = QString(tr("%1 is not a streams file")).arg(fileName);
+    error = QString(tr("%1 is not a %2 file"))
+            .arg(fileName)
+            .arg(fileTypeStr(fileType));
     goto _fail;
 _metadata_parse_fail:
     error = QString(tr("Failed parsing %1 meta data")).arg(fileName);
@@ -260,12 +267,14 @@ _fail:
     return false;
 }
 
-bool FileFormat::saveStreams(const OstProto::StreamConfigList streams, 
-        const QString fileName, QString &error)
+bool NativeFileFormat::save(
+        OstProto::FileType fileType,
+        const OstProto::FileContent &content,
+        const QString fileName,
+        QString &error)
 {
     OstProto::FileMagic magic;
     OstProto::FileMeta meta;
-    OstProto::FileContent content;
     OstProto::FileChecksum cksum;
     QFile file(fileName);
     int metaSize, contentSize;
@@ -280,13 +289,12 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
     Q_ASSERT(cksum.IsInitialized());
 
     initFileMetaData(*(meta.mutable_data()));
-    meta.mutable_data()->set_file_type(OstProto::kStreamsFileType);
+    meta.mutable_data()->set_file_type(fileType);
     Q_ASSERT(meta.IsInitialized());
 
-    if (!streams.IsInitialized())
-        goto _stream_not_init;
+    if (!content.IsInitialized())
+        goto _content_not_init;
 
-    content.mutable_matter()->mutable_streams()->CopyFrom(streams);
     Q_ASSERT(content.IsInitialized());
 
     metaSize = meta.ByteSize();
@@ -323,7 +331,7 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
         goto _zero_cksum_serialize_fail;
     }
 
-    emit status("Calculating checksum...");
+    // TODO: emit status("Calculating checksum...");
 
     // Calculate and write checksum
     calcCksum = checksumCrc32C((quint8*)buf.constData(), buf.size());
@@ -338,7 +346,7 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
     qDebug("Writing %d bytes", buf.size());
     //qDebug("%s", QString(buf.toHex()).toAscii().constData());
 
-    emit status("Writing to disk...");
+    // TODO: emit status("Writing to disk...");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         goto _open_fail;
 
@@ -346,7 +354,7 @@ bool FileFormat::saveStreams(const OstProto::StreamConfigList streams,
         goto _write_fail;
 
     file.close();
-    
+
     return true;
 
 _write_fail:
@@ -387,18 +395,20 @@ _magic_serialize_fail:
                             magic.InitializationErrorString()))
                 .arg(QString().fromStdString(magic.DebugString()));
     goto _fail;
-_stream_not_init:
-    error = QString(tr("Internal Error: Streams not initialized\n%1\n%2"))
+_content_not_init:
+    error = QString(tr("Internal Error: Content not initialized\n%1\n%2"))
                 .arg(QString().fromStdString(
-                            streams.InitializationErrorString()))
-                .arg(QString().fromStdString(streams.DebugString()));
+                            content.InitializationErrorString()))
+                .arg(QString().fromStdString(content.DebugString()));
     goto _fail;
 _fail:
     qDebug("%s", error.toAscii().constData());
     return false;
 }
 
-bool FileFormat::isMyFileFormat(const QString fileName)
+bool NativeFileFormat::isNativeFileFormat(
+        const QString fileName,
+        OstProto::FileType fileType)
 {
     bool ret = false;
     QFile file(fileName);
@@ -408,13 +418,25 @@ bool FileFormat::isMyFileFormat(const QString fileName)
     if (!file.open(QIODevice::ReadOnly))
         goto _exit;
 
-    buf = file.peek(kFileMagicOffset + kFileMagicSize);
-    if (!magic.ParseFromArray((void*)(buf.constData() + kFileMagicOffset), 
+    // Assume tag/length for MetaData will fit in 8 bytes
+    buf = file.peek(kFileMagicOffset + kFileMagicSize + 8);
+    if (!magic.ParseFromArray((void*)(buf.constData() + kFileMagicOffset),
                 kFileMagicSize))
         goto _close_exit;
 
-    if (magic.value() == kFileMagicValue)
-        ret = true;
+    if (magic.value() == kFileMagicValue) {
+        OstProto::FileMeta meta;
+        int metaSize = fileMetaSize((quint8*)buf.constData(), buf.size());
+        buf = file.peek(kFileMagicOffset + kFileMagicSize + metaSize);
+        if (!meta.ParseFromArray(
+                (void*)(buf.constData() + kFileMetaDataOffset), metaSize)) {
+            qDebug("%s: File MetaData\n%s", __FUNCTION__,
+                    QString().fromStdString(meta.DebugString()).toAscii().constData());
+            goto _close_exit;
+        }
+        if (meta.data().file_type() == fileType)
+            ret = true;
+    }
 
 _close_exit:
     file.close();
@@ -422,15 +444,7 @@ _exit:
     return ret;
 }
 
-bool FileFormat::isMyFileType(const QString fileType)
-{
-    if (fileType.startsWith("Ostinato"))
-        return true;
-    else
-        return false;
-}
-
-void FileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
+void NativeFileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
 {
     // Fill in the "native" file format version
     metaData.set_format_version_major(kFileFormatVersionMajor);
@@ -445,9 +459,53 @@ void FileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
         qApp->property("revision").toString().toUtf8().constData());
 }
 
+int NativeFileFormat::fileMetaSize(const quint8* file, int size)
+{
+    int i = kFileMetaDataOffset;
+    uint result, shift;
+    const int kWireTypeLengthDelimited = 2;
+
+    // An embedded Message field is encoded as
+    // <Key> <Length> <Serialized-Value>
+    // See Protobuf Encoding for more details
+
+    // Decode 'Key' varint
+    result = 0;
+    shift = 0;
+    while (i < size) {
+      quint8 byte = file[i++];
+      result |= (byte & 0x7f) << shift;
+      if (!(byte & 0x80)) // MSB == 0?
+        break;
+      shift += 7;
+    }
+
+    if (i >= size)
+        return 0;
+
+    Q_ASSERT(result == ((OstProto::File::kMetaDataFieldNumber << 3)
+                            | kWireTypeLengthDelimited));
+
+    // Decode 'Length' varint
+    result = 0;
+    shift = 0;
+    while (i < size) {
+      quint8 byte = file[i++];
+      result |= (byte & 0x7f) << shift;
+      if (!(byte & 0x80)) // MSB == 0?
+        break;
+      shift += 7;
+    }
+
+    if (i >= size)
+        return 0;
+
+    return int(result+(i-kFileMetaDataOffset));
+}
+
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /*! Fixup content to what is expected in the native version */
-void FileFormat::postParseFixup(OstProto::FileMetaData metaData, 
+void NativeFileFormat::postParseFixup(OstProto::FileMetaData metaData,
         OstProto::FileContent &content)
 {
     Q_ASSERT(metaData.format_version_major() == kFileFormatVersionMajor);
@@ -460,7 +518,7 @@ void FileFormat::postParseFixup(OstProto::FileMetaData metaData,
         int n = content.matter().streams().stream_size();
         for (int i = 0; i < n; i++)
         {
-            OstProto::StreamControl *sctl = 
+            OstProto::StreamControl *sctl =
                 content.mutable_matter()->mutable_streams()->mutable_stream(i)->mutable_control();
             sctl->set_packets_per_sec(sctl->obsolete_packets_per_sec());
             sctl->set_bursts_per_sec(sctl->obsolete_bursts_per_sec());
@@ -473,7 +531,7 @@ void FileFormat::postParseFixup(OstProto::FileMetaData metaData,
 
     case 0:
     default:
-        qWarning("%s: minor version %u unhandled", __FUNCTION__, 
+        qWarning("%s: minor version %u unhandled", __FUNCTION__,
                 metaData.format_version_minor());
         Q_ASSERT_X(false, "postParseFixup", "unhandled minor version");
     }

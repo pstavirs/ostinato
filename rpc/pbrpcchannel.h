@@ -49,6 +49,7 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
 
     /*! \todo (MED) : change controller, done and response to references
      instead of pointers? */
+    const ::google::protobuf::MethodDescriptor *method;
     ::google::protobuf::RpcController    *controller;
     ::google::protobuf::Closure            *done;
     ::google::protobuf::Message            *response;

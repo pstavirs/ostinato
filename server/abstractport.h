@@ -25,8 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocol.pb.h"
 
+class DeviceManager;
 class StreamBase;
+class PacketBuffer;
 class QIODevice;
+
+// TODO: send notification back to client(s)
+#define notify qWarning
 
 class AbstractPort
 {
@@ -106,6 +111,17 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
+    DeviceManager* deviceManager();
+    virtual void startDeviceEmulation() = 0;
+    virtual void stopDeviceEmulation() = 0;
+    virtual int sendEmulationPacket(PacketBuffer *pktBuf) = 0;
+
+    void clearDeviceNeighbors();
+    void resolveDeviceNeighbors();
+
+    quint64 deviceMacAddress(int streamId, int frameIndex);
+    quint64 neighborMacAddress(int streamId, int frameIndex);
+
 protected:
     void addNote(QString note);
 
@@ -122,11 +138,19 @@ protected:
     struct PortStats    stats_;
     //! \todo Need lock for stats access/update
 
+    DeviceManager *deviceManager_;
+
 private:
     bool    isSendQueueDirty_;
 
     static const int kMaxPktSize = 16384;
     uchar   pktBuf_[kMaxPktSize];
+
+    // When finding a corresponding device for a packet, we need to inspect
+    // only uptil the L3 header; in the worst case this would be -
+    // mac (12) + 4 x vlan (16) + ethType (2) + ipv6 (40) = 74 bytes
+    // let's round it up to 80 bytes
+    static const int kMaxL3PktSize = 80;
 
     /*! \note StreamBase::id() and index into streamList[] are NOT same! */
     QList<StreamBase*>  streamList_;

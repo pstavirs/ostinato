@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>391</width>
-    <height>116</height>
+    <width>400</width>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -81,6 +81,11 @@
        <string>Decrement</string>
       </property>
      </item>
+     <item>
+      <property name="text" >
+       <string>Resolve</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item row="1" column="3" >
@@ -143,6 +148,11 @@
        <string>Decrement</string>
       </property>
      </item>
+     <item>
+      <property name="text" >
+       <string>Resolve</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item row="2" column="3" >
@@ -168,7 +178,17 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0" >
+   <item row="3" column="0" colspan="5" >
+    <widget class="QLabel" name="resolveInfo" >
+     <property name="text" >
+      <string>Please ensure that a corresponding device is configured on the port to enable source/destination mac address resolution. A corresponding device is one which has VLANs and source/gateway IP corresponding to this stream.</string>
+     </property>
+     <property name="wordWrap" >
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" >
     <spacer>
      <property name="orientation" >
       <enum>Qt::Vertical</enum>

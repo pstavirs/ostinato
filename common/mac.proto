@@ -28,6 +28,7 @@ message Mac {
         e_mm_fixed = 0;
         e_mm_inc = 1;
         e_mm_dec = 2;
+        e_mm_resolve = 3; // dst: resolve neighbor; src: from device config
     }
 
     // Dst Mac

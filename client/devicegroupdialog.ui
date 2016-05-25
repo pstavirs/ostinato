@@ -1,0 +1,385 @@
+<ui version="4.0" >
+ <class>DeviceGroupDialog</class>
+ <widget class="QDialog" name="DeviceGroupDialog" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>504</width>
+    <height>465</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Devices</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QLabel" name="label" >
+       <property name="text" >
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="name" />
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2" >
+       <property name="text" >
+        <string>Vlan Tags</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="vlanTagCount" />
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="vlans" />
+   </item>
+   <item>
+    <layout class="QGridLayout" >
+     <item row="0" column="0" >
+      <widget class="QLabel" name="label_11" >
+       <property name="text" >
+        <string>Total Vlans</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="IntEdit" name="vlanCount" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2" colspan="2" >
+      <widget class="QLabel" name="label_13" >
+       <property name="text" >
+        <string>Devices Per Vlan</string>
+       </property>
+       <property name="buddy" >
+        <cstring>devicePerVlanCount</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4" >
+      <widget class="QSpinBox" name="devicePerVlanCount" />
+     </item>
+     <item row="0" column="5" >
+      <widget class="QLabel" name="label_14" >
+       <property name="text" >
+        <string>Total Devices</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6" >
+      <widget class="IntEdit" name="totalDeviceCount" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="label_3" >
+       <property name="text" >
+        <string>Mac Address</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="MacEdit" name="macAddress" />
+     </item>
+     <item row="1" column="2" >
+      <widget class="QLabel" name="label_5" >
+       <property name="text" >
+        <string>Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" colspan="2" >
+      <widget class="MacEdit" name="macStep" />
+     </item>
+     <item row="1" column="5" >
+      <widget class="QLabel" name="label_4" >
+       <property name="text" >
+        <string>IP Stack</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6" >
+      <widget class="QComboBox" name="ipStack" />
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="ip4" >
+     <property name="frameShape" >
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Plain</enum>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_9" >
+        <property name="text" >
+         <string>IPv4 Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="Ip4Edit" name="ip4Address" />
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_12" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string>/</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5" >
+       <widget class="QLabel" name="label_8" >
+        <property name="text" >
+         <string>Step</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6" >
+       <widget class="Ip4Edit" name="ip4Step" />
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_7" >
+        <property name="text" >
+         <string>Gateway</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="Ip4Edit" name="ip4Gateway" />
+      </item>
+      <item row="0" column="3" >
+       <widget class="QSpinBox" name="ip4PrefixLength" >
+        <property name="minimum" >
+         <number>1</number>
+        </property>
+        <property name="maximum" >
+         <number>32</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="ip6" >
+     <property name="frameShape" >
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Plain</enum>
+     </property>
+     <layout class="QGridLayout" >
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_10" >
+        <property name="text" >
+         <string>IPv6 Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="Ip6Edit" name="ip6Address" />
+      </item>
+      <item row="0" column="2" >
+       <widget class="QLabel" name="label_15" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text" >
+         <string>/</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5" >
+       <widget class="QLabel" name="label_16" >
+        <property name="text" >
+         <string>Step</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6" >
+       <widget class="Ip6Edit" name="ip6Step" />
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_17" >
+        <property name="text" >
+         <string>Gateway</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="Ip6Edit" name="ip6Gateway" />
+      </item>
+      <item row="0" column="3" >
+       <widget class="QSpinBox" name="ip6PrefixLength" >
+        <property name="minimum" >
+         <number>1</number>
+        </property>
+        <property name="maximum" >
+         <number>128</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" >
+     <item>
+      <layout class="QHBoxLayout" >
+       <item>
+        <widget class="QToolButton" name="prev" >
+         <property name="text" >
+          <string>&lt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="next" >
+         <property name="text" >
+          <string>></string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons" >
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::NoButton|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MacEdit</class>
+   <extends>QLineEdit</extends>
+   <header>macedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Ip4Edit</class>
+   <extends>QLineEdit</extends>
+   <header>ip4edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Ip6Edit</class>
+   <extends>QLineEdit</extends>
+   <header>ip6edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>IntEdit</class>
+   <extends>QSpinBox</extends>
+   <header>intedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>name</tabstop>
+  <tabstop>vlanTagCount</tabstop>
+  <tabstop>vlans</tabstop>
+  <tabstop>devicePerVlanCount</tabstop>
+  <tabstop>macAddress</tabstop>
+  <tabstop>macStep</tabstop>
+  <tabstop>ipStack</tabstop>
+  <tabstop>ip4Address</tabstop>
+  <tabstop>ip4PrefixLength</tabstop>
+  <tabstop>ip4Step</tabstop>
+  <tabstop>ip4Gateway</tabstop>
+  <tabstop>ip6Address</tabstop>
+  <tabstop>ip6PrefixLength</tabstop>
+  <tabstop>ip6Step</tabstop>
+  <tabstop>ip6Gateway</tabstop>
+  <tabstop>prev</tabstop>
+  <tabstop>next</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DeviceGroupDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>227</x>
+     <y>289</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DeviceGroupDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>295</x>
+     <y>295</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

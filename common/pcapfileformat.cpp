@@ -91,7 +91,7 @@ PcapFileFormat::~PcapFileFormat()
     delete importDialog_;
 }
 
-bool PcapFileFormat::openStreams(const QString fileName, 
+bool PcapFileFormat::open(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error)
 {
     bool isOk = false;
@@ -325,7 +325,7 @@ bool PcapFileFormat::openStreams(const QString fileName,
             goto _diff_fail;
         }
 
-        if (!saveStreams(streams, importedPcapFile.fileName(), error))
+        if (!save(streams, importedPcapFile.fileName(), error))
         {
             error.append("Error saving imported streams as PCAP for diff");
             goto _diff_fail;
@@ -553,7 +553,7 @@ bool PcapFileFormat::readPacket(PcapPacketHeader &pktHdr, QByteArray &pktBuf)
     return true;
 }
 
-bool PcapFileFormat::saveStreams(const OstProto::StreamConfigList streams, 
+bool PcapFileFormat::save(const OstProto::StreamConfigList streams,
         const QString fileName, QString &error)
 {
     bool isOk = false;

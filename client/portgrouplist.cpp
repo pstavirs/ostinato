@@ -25,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PortGroupList::PortGroupList()
     : mPortGroupListModel(this), 
       mStreamListModel(this),
-      mPortStatsModel(this, this)
+      mPortStatsModel(this, this),
+      mDeviceGroupModel(this),
+      mDeviceModel(this)
 {
     PortGroup    *pg;
 
@@ -33,10 +35,14 @@ PortGroupList::PortGroupList()
     streamModelTester_ = NULL;
     portModelTester_ = NULL;
     portStatsModelTester_ = NULL;
+    deviceGroupModelTester_ = NULL;
+    deviceModelTester_ = NULL;
 #else
     streamModelTester_ = new ModelTest(getStreamModel());
     portModelTester_ = new ModelTest(getPortModel());
     portStatsModelTester_ = new ModelTest(getPortStatsModel());
+    deviceGroupModelTester_ = new ModelTest(getDeviceGroupModel());
+    deviceModelTester_ = new ModelTest(getDeviceModel());
 #endif 
 
     // Add the "Local" Port Group
@@ -49,10 +55,10 @@ PortGroupList::~PortGroupList()
     delete portStatsModelTester_;
     delete portModelTester_;
     delete streamModelTester_;
+    delete deviceGroupModelTester_;
 
     while (!mPortGroups.isEmpty())
         delete mPortGroups.takeFirst();
-
 }
 
 bool PortGroupList::isPortGroup(const QModelIndex& index)
@@ -117,6 +123,23 @@ void PortGroupList::removePortGroup(PortGroup &portGroup)
 
     delete pg;
 
+    mPortStatsModel.when_portListChanged();
+}
+
+void PortGroupList::removeAllPortGroups()
+{
+    if (mPortGroups.isEmpty())
+        return;
+
+    do {
+        PortGroup *pg = mPortGroups.at(0);
+        mPortGroupListModel.portGroupAboutToBeRemoved(pg);
+        mPortGroups.removeFirst();
+        delete pg;
+    } while (!mPortGroups.isEmpty());
+    mPortGroupListModel.portGroupRemoved();
+
+    mPortGroupListModel.when_portListChanged();
     mPortStatsModel.when_portListChanged();
 }
 

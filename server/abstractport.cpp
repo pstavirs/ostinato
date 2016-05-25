@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 
-#include "../common/streambase.h"
 #include "../common/abstractprotocol.h"
+#include "../common/streambase.h"
+#include "devicemanager.h"
+#include "packetbuffer.h"
 
 #include <QString>
 #include <QIODevice>
@@ -47,6 +49,8 @@ AbstractPort::AbstractPort(int id, const char *device)
     linkState_ = OstProto::LinkStateUnknown;
     minPacketSetSize_ = 1;
 
+    deviceManager_ = new DeviceManager(this);
+
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
@@ -54,6 +58,7 @@ AbstractPort::AbstractPort(int id, const char *device)
 
 AbstractPort::~AbstractPort()
 {
+    delete deviceManager_;
 }    
 
 void AbstractPort::init()
@@ -83,6 +88,11 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     return ret;
 }    
+
+DeviceManager* AbstractPort::deviceManager()
+{
+    return deviceManager_;
+}
 
 StreamBase* AbstractPort::streamAtIndex(int index)
 {
@@ -581,8 +591,8 @@ void AbstractPort::stats(PortStats *stats)
     stats->rxBytes = (stats_.rxBytes >= epochStats_.rxBytes) ?
                         stats_.rxBytes - epochStats_.rxBytes :
                         stats_.rxBytes + (maxStatsValue_ - epochStats_.rxBytes);
-    stats->rxPps = stats_.rxPps; 
-    stats->rxBps = stats_.rxBps; 
+    stats->rxPps = stats_.rxPps;
+    stats->rxBps = stats_.rxBps;
 
     stats->txPkts = (stats_.txPkts >= epochStats_.txPkts) ?
                         stats_.txPkts - epochStats_.txPkts :
@@ -590,8 +600,8 @@ void AbstractPort::stats(PortStats *stats)
     stats->txBytes = (stats_.txBytes >= epochStats_.txBytes) ?
                         stats_.txBytes - epochStats_.txBytes :
                         stats_.txBytes + (maxStatsValue_ - epochStats_.txBytes);
-    stats->txPps = stats_.txPps; 
-    stats->txBps = stats_.txBps; 
+    stats->txPps = stats_.txPps;
+    stats->txBps = stats_.txBps;
 
     stats->rxDrops = (stats_.rxDrops >= epochStats_.rxDrops) ?
                         stats_.rxDrops - epochStats_.rxDrops :
@@ -605,4 +615,83 @@ void AbstractPort::stats(PortStats *stats)
     stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
                         stats_.rxFrameErrors - epochStats_.rxFrameErrors :
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+}
+
+void AbstractPort::clearDeviceNeighbors()
+{
+    deviceManager_->clearDeviceNeighbors();
+    isSendQueueDirty_ = true;
+}
+
+void AbstractPort::resolveDeviceNeighbors()
+{
+    // For a user triggered 'Resolve Neighbors', the behaviour we want is
+    //   IP not in cache - send ARP/NDP request
+    //   IP present in cache, but unresolved - re-send ARP/NDP request
+    //   IP present in cache and resolved - don't sent ARP/NDP
+    //
+    // Device does not resend ARP/NDP requests if the IP address is
+    // already present in the cache, irrespective of whether it is
+    // resolved or not (this is done to avoid sending duplicate requests).
+    //
+    // So, to get the behaviour we want, let's clear all unresolved neighbors
+    // before calling resolve
+    deviceManager_->clearDeviceNeighbors(Device::kUnresolvedNeighbors);
+
+    // Resolve gateway for each device first ...
+    deviceManager_->resolveDeviceGateways();
+
+    // ... then resolve neighbor for each unique frame of each stream
+    // NOTE:
+    // 1. All the frames may have the same destination ip,but may have
+    // different source ip so may belong to a different emulated device;
+    // so we cannot optimize and send only one ARP
+    // 2. For a unidirectional stream, at egress, this will create ARP
+    // entries on the DUT for each of the source addresses
+    //
+    // TODO(optimization): Identify if stream does not vary in srcIp or dstIp
+    // - in which case resolve for only one frame of the stream
+    for (int i = 0; i < streamList_.size(); i++)
+    {
+        const StreamBase *stream = streamList_.at(i);
+        int frameCount = stream->frameVariableCount();
+
+        for (int j = 0; j < frameCount; j++) {
+            // we need the packet contents only uptil the L3 header
+            int pktLen = stream->frameValue(pktBuf_, kMaxL3PktSize, j);
+            if (pktLen) {
+                PacketBuffer pktBuf(pktBuf_, pktLen);
+                deviceManager_->resolveDeviceNeighbor(&pktBuf);
+            }
+        }
+    }
+    isSendQueueDirty_ = true;
+}
+
+quint64 AbstractPort::deviceMacAddress(int streamId, int frameIndex)
+{
+    // we need the packet contents only uptil the L3 header
+    StreamBase *s = stream(streamId);
+    int pktLen = s->frameValue(pktBuf_, kMaxL3PktSize, frameIndex);
+
+    if (pktLen) {
+        PacketBuffer pktBuf(pktBuf_, pktLen);
+        return deviceManager_->deviceMacAddress(&pktBuf);
+    }
+
+    return 0;
+}
+
+quint64 AbstractPort::neighborMacAddress(int streamId, int frameIndex)
+{
+    // we need the packet contents only uptil the L3 header
+    StreamBase *s = stream(streamId);
+    int pktLen = s->frameValue(pktBuf_, kMaxL3PktSize, frameIndex);
+
+    if (pktLen) {
+        PacketBuffer pktBuf(pktBuf_, pktLen);
+        return deviceManager_->neighborMacAddress(&pktBuf);
+    }
+
+    return 0;
 }

@@ -67,6 +67,7 @@ public:
 
 private:
     OstProto::Mac    data;
+    mutable bool forResolve_;
 };
 
 #endif

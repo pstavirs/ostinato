@@ -70,6 +70,10 @@ public:
     virtual bool isCaptureOn()  { return capturer_->isRunning(); }
     virtual QIODevice* captureData() { return capturer_->captureFile(); }
 
+    virtual void startDeviceEmulation();
+    virtual void stopDeviceEmulation();
+    virtual int sendEmulationPacket(PacketBuffer *pktBuf);
+
 protected:
     enum Direction
     {
@@ -227,6 +231,32 @@ protected:
         volatile State  state_;
     };
 
+    class EmulationTransceiver: public QThread
+    {
+    public:
+        EmulationTransceiver(const char *device, DeviceManager *deviceManager);
+        ~EmulationTransceiver();
+        void run();
+        void start();
+        void stop();
+        bool isRunning();
+        int transmitPacket(PacketBuffer *pktBuf);
+
+    private:
+        enum State
+        {
+            kNotStarted,
+            kRunning,
+            kFinished
+        };
+
+        QString         device_;
+        DeviceManager   *deviceManager_;
+        volatile bool   stop_;
+        pcap_t          *handle_;
+        volatile State  state_;
+    };
+
     PortMonitor     *monitorRx_;
     PortMonitor     *monitorTx_;
 
@@ -235,6 +265,7 @@ protected:
 private:
     PortTransmitter *transmitter_;
     PortCapturer    *capturer_;
+    EmulationTransceiver *emulXcvr_;
 
     static pcap_if_t *deviceList_;
 };

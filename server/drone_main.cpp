@@ -35,6 +35,7 @@ extern ProtocolManager *OstProtocolManager;
 extern char *version;
 extern char *revision;
 
+Drone *drone;
 QSettings *appSettings;
 int myport;
 
@@ -47,7 +48,6 @@ int main(int argc, char *argv[])
 {
     int exitCode = 0;
     QCoreApplication app(argc, argv);
-    Drone *drone;
 
     // TODO: command line options
     // -v (--version)

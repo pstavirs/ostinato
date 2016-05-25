@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>550</height>
+    <width>1024</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -17,18 +17,12 @@
   </property>
   <widget class="QWidget" name="centralwidget" />
   <widget class="QMenuBar" name="menubar" >
-   <property name="geometry" >
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>700</width>
-     <height>21</height>
-    </rect>
-   </property>
    <widget class="QMenu" name="menuFile" >
     <property name="title" >
      <string>&amp;File</string>
     </property>
+    <addaction name="actionOpenSession" />
+    <addaction name="actionSaveSession" />
     <addaction name="separator" />
     <addaction name="actionPreferences" />
     <addaction name="actionFileExit" />
@@ -95,6 +89,16 @@
   <action name="actionViewRestoreDefaults" >
    <property name="text" >
     <string>Restore &amp;Defaults</string>
+   </property>
+  </action>
+  <action name="actionOpenSession" >
+   <property name="text" >
+    <string>Open Session ...</string>
+   </property>
+  </action>
+  <action name="actionSaveSession" >
+   <property name="text" >
+    <string>Save Session ...</string>
    </property>
   </action>
  </widget>

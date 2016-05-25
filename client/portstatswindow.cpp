@@ -148,6 +148,36 @@ void PortStatsWindow::on_tbViewCapture_clicked()
     }
 }
 
+void PortStatsWindow::on_tbResolveNeighbors_clicked()
+{
+    QList<PortStatsModel::PortGroupAndPortList>    portList;
+
+    // Get selected ports
+    model->portListFromIndex(selectedColumns(), portList);
+
+    // Resolve ARP/ND for selected ports, portgroup by portgroup
+    for (int i = 0; i < portList.size(); i++)
+    {
+        pgl->portGroupByIndex(portList.at(i).portGroupId).
+            resolveDeviceNeighbors(&portList[i].portList);
+    }
+}
+
+void PortStatsWindow::on_tbClearNeighbors_clicked()
+{
+    QList<PortStatsModel::PortGroupAndPortList>    portList;
+
+    // Get selected ports
+    model->portListFromIndex(selectedColumns(), portList);
+
+    // Clear ARP/ND for ports, portgroup by portgroup
+    for (int i = 0; i < portList.size(); i++)
+    {
+        pgl->portGroupByIndex(portList.at(i).portGroupId).
+            clearDeviceNeighbors(&portList[i].portList);
+    }
+}
+
 void PortStatsWindow::on_tbClear_clicked()
 {
     QList<PortStatsModel::PortGroupAndPortList>    portList;

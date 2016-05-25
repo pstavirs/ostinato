@@ -25,8 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "settings.h"
 
 #include <QApplication>
+#include <QDateTime>
 #include <QFile>
 #include <QSettings>
+#include <QtGlobal>
 
 #include <google/protobuf/stubs/common.h>
 
@@ -68,6 +70,7 @@ int main(int argc, char* argv[])
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
 
     Preferences::initDefaults();
+    qsrand(QDateTime::currentDateTime().toTime_t());
 
     mainWindow = new MainWindow;
     mainWindow->show();

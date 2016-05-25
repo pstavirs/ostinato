@@ -105,6 +105,59 @@ public:
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
 
+    // DeviceGroup and Protocol Emulation
+    virtual void getDeviceGroupIdList(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::DeviceGroupIdList* response,
+        ::google::protobuf::Closure* done);
+    virtual void getDeviceGroupConfig(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
+        ::OstProto::DeviceGroupConfigList* response,
+        ::google::protobuf::Closure* done);
+    virtual void addDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void deleteDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void modifyDeviceGroup(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::DeviceGroupConfigList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+
+    virtual void getDeviceList(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::PortDeviceList* response,
+        ::google::protobuf::Closure* done);
+
+    virtual void resolveDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void clearDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortIdList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+    virtual void getDeviceNeighbors(
+        ::google::protobuf::RpcController* controller,
+        const ::OstProto::PortId* request,
+        ::OstProto::PortNeighborList* response,
+        ::google::protobuf::Closure* done);
+
+    friend quint64 getDeviceMacAddress(
+            int portId, int streamId, int frameIndex);
+    friend quint64 getNeighborMacAddress(
+            int portId, int streamId, int frameIndex);
 signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 

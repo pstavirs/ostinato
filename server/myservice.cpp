@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2010-2015 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "myservice.h"
 
+#include "drone.h"
+
 #if 0
 #include <qglobal.h>
 #include <qendian.h>
@@ -31,11 +33,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/streambase.h"
 #include "../rpc/pbrpccontroller.h"
+#include "device.h"
+#include "devicemanager.h"
 #include "portmanager.h"
 
 #include <QStringList>
 
 
+extern Drone *drone;
 extern char *version;
 
 MyService::MyService()
@@ -239,7 +244,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
         // Append a new "default" stream - actual contents of the new stream is
         // expected in a subsequent "modifyStream" request - set the stream id
         // now itself however!!!
-        stream = new StreamBase;
+        stream = new StreamBase(portId);
         stream->setId(request->stream_id(i).id());
         portInfo[portId]->addStream(stream);
     }
@@ -358,6 +363,8 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
             continue;     //! \todo (LOW): partial RPC?
 
         portLock[portId]->lockForWrite();
+        if (portInfo[portId]->isDirty())
+            portInfo[portId]->updatePacketList();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
     }
@@ -590,4 +597,379 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
 _invalid_version:
     controller->SetFailed("invalid version information");
     done->Run();
+}
+
+/*
+ * ===================================================================
+ * Device Emulation
+ * ===================================================================
+ * XXX: Streams and Devices are largely non-overlapping from a RPC
+ * point of view but they *do* intersect e.g. when a stream is trying to
+ * find its associated device and info from that device such as src/dst
+ * mac addresses. For this reason, both set of RPCs share the common
+ * port level locking
+ * ===================================================================
+ */
+void MyService::getDeviceGroupIdList(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::DeviceGroupIdList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    for (int i = 0; i < devMgr->deviceGroupCount(); i++)
+    {
+        OstProto::DeviceGroupId *dgid;
+
+        dgid = response->add_device_group_id();
+        dgid->CopyFrom(devMgr->deviceGroupAtIndex(i)->device_group_id());
+    }
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}
+
+void MyService::getDeviceGroupConfig(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
+    ::OstProto::DeviceGroupConfigList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    for (int i = 0; i < request->device_group_id_size(); i++)
+    {
+        const OstProto::DeviceGroup *dg;
+
+        dg = devMgr->deviceGroup(request->device_group_id(i).id());
+        if (!dg)
+            continue;        //! \todo(LOW): Partial status of RPC
+
+        response->add_device_group()->CopyFrom(*dg);
+    }
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("invalid portid");
+    done->Run();
+}
+
+void MyService::addDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_group_id_size(); i++)
+    {
+        quint32 id = request->device_group_id(i).id();
+        const OstProto::DeviceGroup *dg = devMgr->deviceGroup(id);
+
+        // If device group with same id as in request exists already ==> error!
+        if (dg)
+            continue;        //! \todo (LOW): Partial status of RPC
+
+        devMgr->addDeviceGroup(id);
+    }
+    portLock[portId]->unlock();
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
+    done->Run();
+}
+
+void MyService::deleteDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupIdList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_group_id_size(); i++)
+        devMgr->deleteDeviceGroup(request->device_group_id(i).id());
+    portLock[portId]->unlock();
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
+    done->Run();
+}
+
+void MyService::modifyDeviceGroup(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::DeviceGroupConfigList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
+    portLock[portId]->lockForWrite();
+    for (int i = 0; i < request->device_group_size(); i++)
+        devMgr->modifyDeviceGroup(&request->device_group(i));
+    portLock[portId]->unlock();
+
+    //! \todo(LOW): fill-in response "Ack"????
+
+    done->Run();
+    return;
+
+_port_busy:
+    controller->SetFailed("Port Busy");
+    goto _exit;
+_invalid_port:
+    controller->SetFailed("invalid portid");
+_exit:
+    done->Run();
+}
+
+void MyService::getDeviceList(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::PortDeviceList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    devMgr->getDeviceList(response);
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}
+
+void MyService::resolveDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortIdList* request,
+    ::OstProto::Ack* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo (LOW): partial RPC?
+
+        portLock[portId]->lockForWrite();
+        portInfo[portId]->resolveDeviceNeighbors();
+        portLock[portId]->unlock();
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+}
+
+void MyService::clearDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortIdList* request,
+    ::OstProto::Ack* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo (LOW): partial RPC?
+
+        portLock[portId]->lockForWrite();
+        portInfo[portId]->clearDeviceNeighbors();
+        portLock[portId]->unlock();
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+}
+
+void MyService::getDeviceNeighbors(
+    ::google::protobuf::RpcController* controller,
+    const ::OstProto::PortId* request,
+    ::OstProto::PortNeighborList* response,
+    ::google::protobuf::Closure* done)
+{
+    DeviceManager *devMgr;
+    int portId;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    devMgr = portInfo[portId]->deviceManager();
+
+    response->mutable_port_id()->set_id(portId);
+    portLock[portId]->lockForRead();
+    devMgr->getDeviceNeighbors(response);
+    portLock[portId]->unlock();
+
+    done->Run();
+    return;
+
+_invalid_port:
+    controller->SetFailed("Invalid Port Id");
+    done->Run();
+}
+
+/*
+ * ===================================================================
+ * Friends
+ * TODO: Encap these global functions into a DeviceBroker singleton?
+ * ===================================================================
+ */
+quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
+{
+    MyService *service = drone->rpcService();
+    DeviceManager *devMgr = NULL;
+    quint64 mac;
+
+    if (!service)
+        return 0;
+
+    if ((portId >= 0) && (portId < service->portInfo.size()))
+        devMgr = service->portInfo[portId]->deviceManager();
+
+    if (!devMgr || !devMgr->deviceCount())
+        return 0;
+
+    service->portLock[portId]->lockForWrite();
+    mac = service->portInfo[portId]->deviceMacAddress(streamId, frameIndex);
+    service->portLock[portId]->unlock();
+
+    return mac;
+}
+
+quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
+{
+    MyService *service = drone->rpcService();
+    DeviceManager *devMgr = NULL;
+    quint64 mac;
+
+    if (!service)
+        return 0;
+
+    if ((portId >= 0) && (portId < service->portInfo.size()))
+        devMgr = service->portInfo[portId]->deviceManager();
+
+    if (!devMgr || !devMgr->deviceCount())
+        return 0;
+
+    service->portLock[portId]->lockForWrite();
+    mac = service->portInfo[portId]->neighborMacAddress(streamId, frameIndex);
+    service->portLock[portId]->unlock();
+
+    return mac;
 }

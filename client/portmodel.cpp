@@ -179,7 +179,7 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
 
             return QString("Port %1: %2 %3(%4)")
                 .arg(port->id())
-                .arg(port->name())
+                .arg(port->userAlias())
                 .arg(rsvdBy)
                 .arg(port->description());
         }

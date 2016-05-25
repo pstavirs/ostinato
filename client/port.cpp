@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "port.h"
 
-#include "abstractfileformat.h"
+#include "emulation.h"
+#include "streamfileformat.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -31,11 +32,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 extern QMainWindow *mainWindow;
 
 uint Port::mAllocStreamId = 0;
+uint Port::allocDeviceGroupId_ = 1;
 
 static const int kEthOverhead = 20;
 
 uint Port::newStreamId()
 {
+    // We use a monotonically increasing class variable to generate
+    // unique id. To ensure that we take into account the already
+    // existing ids at drone, we update this variable to be greater
+    // than the last id that we fetched
+    // FIXME: In some cases e.g. wrap around or more likely multiple
+    // clients, we will still run into trouble - to fix this we should
+    // check here that the same id does not already exist; but currently
+    // we can only do a linear search - fix this when the lookup/search
+    // is optimized
     return mAllocStreamId++;
 }
 
@@ -55,6 +66,11 @@ Port::~Port()
         delete mStreams.takeFirst();
 }
 
+void Port::protoDataCopyInto(OstProto::Port *data)
+{
+    data->CopyFrom(d);
+}
+
 void Port::updatePortConfig(OstProto::Port *port)
 {
     bool recalc = false;
@@ -64,6 +80,10 @@ void Port::updatePortConfig(OstProto::Port *port)
         recalc = true;
 
     d.MergeFrom(*port);
+
+    // Setup a user-friendly alias for Win32 ports
+    if (name().startsWith("\\Device\\NPF_"))
+        setAlias(QString("if%1").arg(id()));
 
     if (recalc)
         recalculateAverageRates();
@@ -408,6 +428,70 @@ void Port::getModifiedStreamsSinceLastSync(
     qDebug("Done %s", __FUNCTION__);
 }
 
+void Port::getDeletedDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupIdList &deviceGroupIdList)
+{
+    deviceGroupIdList.clear_device_group_id();
+    foreach(int id, lastSyncDeviceGroupList_) {
+        if (!deviceGroupById(id))
+            deviceGroupIdList.add_device_group_id()->set_id(id);
+    }
+}
+
+void Port::getNewDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupIdList &deviceGroupIdList)
+{
+    deviceGroupIdList.clear_device_group_id();
+    foreach(OstProto::DeviceGroup *dg, deviceGroups_) {
+        quint32 dgid = dg->device_group_id().id();
+        if (!lastSyncDeviceGroupList_.contains(dgid))
+            deviceGroupIdList.add_device_group_id()->set_id(dgid);
+    }
+}
+
+void Port::getModifiedDeviceGroupsSinceLastSync(
+    OstProto::DeviceGroupConfigList &deviceGroupConfigList)
+{
+    deviceGroupConfigList.clear_device_group();
+    foreach(quint32 id, modifiedDeviceGroupList_)
+        deviceGroupConfigList.add_device_group()
+                                ->CopyFrom(*deviceGroupById(id));
+}
+
+/*!
+ * Finds the user modifiable fields in 'config' that are different from
+ * the current configuration on the port and modifes 'config' such that
+ * only those fields are set and returns true. If 'config' is same as
+ * current port config, 'config' is unmodified and false is returned
+ */
+bool Port::modifiablePortConfig(OstProto::Port &config) const
+{
+    bool change = false;
+    OstProto::Port modCfg;
+
+    if (config.is_exclusive_control() != d.is_exclusive_control()) {
+        modCfg.set_is_exclusive_control(config.is_exclusive_control());
+        change = true;
+    }
+    if (config.transmit_mode() != d.transmit_mode()) {
+        modCfg.set_transmit_mode(config.transmit_mode());
+        change = true;
+    }
+    if (config.user_name() != d.user_name()) {
+        modCfg.set_user_name(config.user_name());
+        change = true;
+    }
+
+    if (change) {
+        modCfg.mutable_port_id()->set_id(id());
+        config.CopyFrom(modCfg);
+
+        return true;
+    }
+
+    return false;
+}
+
 void Port::when_syncComplete()
 {
     //reorderStreamsByOrdinals();
@@ -415,6 +499,13 @@ void Port::when_syncComplete()
     mLastSyncStreamList.clear();
     for (int i=0; i<mStreams.size(); i++)
         mLastSyncStreamList.append(mStreams[i]->id());
+
+    lastSyncDeviceGroupList_.clear();
+    for (int i = 0; i < deviceGroups_.size(); i++) {
+        lastSyncDeviceGroupList_.append(
+                deviceGroups_.at(i)->device_group_id().id());
+    }
+    modifiedDeviceGroupList_.clear();
 }
 
 void Port::updateStats(OstProto::PortStats *portStats)
@@ -462,10 +553,12 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     QDialog *optDialog;
     QProgressDialog progress("Opening Streams", "Cancel", 0, 0, mainWindow);
     OstProto::StreamConfigList streams;
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromFile(fileName);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromFile(fileName);
 
-    if (fmt == NULL)
+    if (fmt == NULL) {
+        error = tr("Unknown streams file format");
         goto _fail;
+    }
 
     if ((optDialog = fmt->openOptionsDialog()))
     {
@@ -490,12 +583,12 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
     connect(fmt, SIGNAL(progress(int)), &progress, SLOT(setValue(int)));
     connect(&progress, SIGNAL(canceled()), fmt, SLOT(cancel()));
 
-    fmt->openStreamsOffline(fileName, streams, error);
-    qDebug("after open offline");
+    fmt->openAsync(fileName, streams, error);
+    qDebug("after open async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     if (!fmt->result())
         goto _fail;
@@ -549,7 +642,7 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
 {
     bool ret = false;
     QProgressDialog progress("Saving Streams", "Cancel", 0, 0, mainWindow);
-    AbstractFileFormat *fmt = AbstractFileFormat::fileFormatFromType(fileType);
+    StreamFileFormat *fmt = StreamFileFormat::fileFormatFromType(fileType);
     OstProto::StreamConfigList streams;
 
     if (fmt == NULL)
@@ -583,12 +676,12 @@ bool Port::saveStreams(QString fileName, QString fileType, QString &error)
             qApp->processEvents();
     }
 
-    fmt->saveStreamsOffline(streams, fileName, error);
-    qDebug("after save offline");
+    fmt->saveAsync(streams, fileName, error);
+    qDebug("after save async");
 
     while (!fmt->isFinished())
         qApp->processEvents();
-    qDebug("wait over for offline operation");
+    qDebug("wait over for async operation");
 
     ret = fmt->result();
     goto _exit;
@@ -605,3 +698,243 @@ _exit:
     mainWindow->setEnabled(true);
     return ret;
 }
+
+// ------------ Device Group ----------- //
+
+uint Port::newDeviceGroupId()
+{
+    // We use a monotonically increasing class variable to generate
+    // unique id. To ensure that we take into account the already
+    // existing ids at drone, we update this variable to be greater
+    // than the last id that we fetched
+    // FIXME: In some cases e.g. wrap around or more likely multiple
+    // clients, we will still run into trouble - to fix this we should
+    // check here that the same id does not already exist; but currently
+    // we can only do a linear search - fix this when the lookup/search
+    // is optimized
+    return allocDeviceGroupId_++;
+}
+
+int Port::numDeviceGroups() const
+{
+    return deviceGroups_.size();
+}
+
+const OstProto::DeviceGroup* Port::deviceGroupByIndex(int index) const
+{
+    if ((index < 0) || (index >= numDeviceGroups())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDeviceGroups() - 1);
+        return NULL;
+    }
+
+    return deviceGroups_.at(index);
+}
+
+OstProto::DeviceGroup* Port::mutableDeviceGroupByIndex(int index)
+{
+    if ((index < 0) || (index >= numDeviceGroups())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDeviceGroups() - 1);
+        return NULL;
+    }
+
+    OstProto::DeviceGroup *devGrp = deviceGroups_.at(index);
+
+    // Caller can modify DeviceGroup - assume she will
+    modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
+
+    return devGrp;
+}
+
+OstProto::DeviceGroup* Port::deviceGroupById(uint deviceGroupId)
+{
+    for (int i = 0; i < deviceGroups_.size(); i++) {
+        OstProto::DeviceGroup *devGrp = deviceGroups_.at(i);
+        if (devGrp->device_group_id().id() == deviceGroupId)
+            return devGrp;
+    }
+
+    return NULL;
+}
+
+bool Port::newDeviceGroupAt(int index, const OstProto::DeviceGroup *deviceGroup)
+{
+    if (index < 0 || index > numDeviceGroups())
+        return false;
+
+    OstProto::DeviceGroup *devGrp = newDeviceGroup(id());
+
+    if (!devGrp) {
+        qWarning("failed allocating a new device group");
+        return false;
+    }
+
+    if (deviceGroup)
+        devGrp->CopyFrom(*deviceGroup);
+
+    devGrp->mutable_device_group_id()->set_id(newDeviceGroupId());
+    deviceGroups_.insert(index, devGrp);
+    modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
+
+    return true;
+}
+
+bool Port::deleteDeviceGroupAt(int index)
+{
+    if (index < 0 || index >= deviceGroups_.size())
+        return false;
+
+    OstProto::DeviceGroup *devGrp = deviceGroups_.takeAt(index);
+    modifiedDeviceGroupList_.remove(devGrp->device_group_id().id());
+    delete devGrp;
+
+    return true;
+}
+
+bool Port::insertDeviceGroup(uint deviceGroupId)
+{
+    OstProto::DeviceGroup *devGrp;
+
+    if (deviceGroupById(deviceGroupId)) {
+        qDebug("%s: deviceGroup id %u already exists", __FUNCTION__,
+                deviceGroupId);
+        return false;
+    }
+
+    devGrp = newDeviceGroup(id());
+    devGrp->mutable_device_group_id()->set_id(deviceGroupId);
+    deviceGroups_.append(devGrp);
+
+    // Update allocDeviceGroupId_ to take into account the deviceGroup id
+    // received from server - this is required to make sure newly allocated
+    // deviceGroup ids are unique
+    if (allocDeviceGroupId_ <= deviceGroupId)
+        allocDeviceGroupId_ = deviceGroupId + 1;
+    return true;
+}
+
+bool Port::updateDeviceGroup(
+        uint deviceGroupId,
+        OstProto::DeviceGroup *deviceGroup)
+{
+    OstProto::DeviceGroup *devGrp = deviceGroupById(deviceGroupId);
+
+    if (!devGrp) {
+        qDebug("%s: deviceGroup id %u does not exist", __FUNCTION__,
+                deviceGroupId);
+        return false;
+    }
+
+    devGrp->CopyFrom(*deviceGroup);
+    return true;
+}
+
+// ------------ Devices  ----------- //
+
+int Port::numDevices()
+{
+    return devices_.size();
+}
+
+const OstEmul::Device* Port::deviceByIndex(int index)
+{
+    if ((index < 0) || (index >= numDevices())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                index, numDevices() - 1);
+        return NULL;
+    }
+
+    return devices_.at(index);
+}
+
+void Port::clearDeviceList()
+{
+    while (devices_.size())
+        delete devices_.takeFirst();
+}
+
+void Port::insertDevice(const OstEmul::Device &device)
+{
+    OstEmul::Device *dev = new OstEmul::Device(device);
+    devices_.append(dev);
+}
+
+// ------------- Device Neighbors (ARP/NDP) ------------- //
+
+const OstEmul::DeviceNeighborList* Port::deviceNeighbors(int deviceIndex)
+{
+    if ((deviceIndex < 0) || (deviceIndex >= numDevices())) {
+        qWarning("%s: index %d out of range (0 - %d)", __FUNCTION__,
+                deviceIndex, numDevices() - 1);
+        return NULL;
+    }
+
+    return deviceNeighbors_.value(deviceIndex);
+}
+
+int Port::numArp(int deviceIndex)
+{
+    if (deviceNeighbors_.contains(deviceIndex))
+        return deviceNeighbors_.value(deviceIndex)->arp_size();
+
+    return 0;
+}
+
+int Port::numArpResolved(int deviceIndex)
+{
+    if (arpResolvedCount_.contains(deviceIndex))
+        return arpResolvedCount_.value(deviceIndex);
+
+    return 0;
+}
+
+int Port::numNdp(int deviceIndex)
+{
+    if (deviceNeighbors_.contains(deviceIndex))
+        return deviceNeighbors_.value(deviceIndex)->ndp_size();
+
+    return 0;
+}
+
+int Port::numNdpResolved(int deviceIndex)
+{
+    if (ndpResolvedCount_.contains(deviceIndex))
+        return ndpResolvedCount_.value(deviceIndex);
+
+    return 0;
+}
+
+void Port::clearDeviceNeighbors()
+{
+    arpResolvedCount_.clear();
+    ndpResolvedCount_.clear();
+    qDeleteAll(deviceNeighbors_);
+    deviceNeighbors_.clear();
+}
+
+void Port::insertDeviceNeighbors(const OstEmul::DeviceNeighborList &neighList)
+{
+    int count;
+    OstEmul::DeviceNeighborList *neighbors =
+        new OstEmul::DeviceNeighborList(neighList);
+    deviceNeighbors_.insert(neighList.device_index(), neighbors);
+
+    count = 0;
+    for (int i = 0; i < neighbors->arp_size(); i++)
+        if (neighbors->arp(i).mac())
+            count++;
+    arpResolvedCount_.insert(neighbors->device_index(), count);
+
+    count = 0;
+    for (int i = 0; i < neighbors->ndp_size(); i++)
+        if (neighbors->ndp(i).mac())
+            count++;
+    ndpResolvedCount_.insert(neighbors->device_index(), count);
+}
+
+void Port::deviceInfoRefreshed()
+{
+    emit deviceInfoChanged();
+}
+

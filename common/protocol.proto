@@ -274,6 +274,55 @@ message Notification {
     optional PortIdList port_id_list = 6;
 }
 
+
+/*
+ * Protocol Emulation
+ */
+message DeviceGroupId {
+    required uint32 id = 1;
+}
+
+message DeviceGroupCore {
+    optional string name = 1;
+}
+
+message DeviceGroupIdList {
+    required PortId port_id = 1;
+    repeated DeviceGroupId device_group_id = 2;
+}
+
+message EncapEmulation {
+    // Encap Protocols implemented as extensions
+    extensions 1000 to 1999;
+}
+
+message DeviceGroup {
+    required DeviceGroupId device_group_id = 1;
+    optional DeviceGroupCore core = 2;
+    optional EncapEmulation encap = 3;
+    optional uint32 device_count = 4 [default = 1]; // per-encap
+
+    // Device Protocols implemented as extensions
+    extensions 2000 to 5999;
+}
+
+message DeviceGroupConfigList {
+    required PortId port_id = 1;
+    repeated DeviceGroup device_group = 2;
+}
+
+message PortDeviceList {
+    required PortId port_id = 1;
+
+    extensions 100 to 199;
+}
+
+message PortNeighborList {
+    required PortId port_id = 1;
+
+    extensions 100 to 199;
+}
+
 service OstService {
     rpc getPortIdList(Void) returns (PortIdList);
     rpc getPortConfig(PortIdList) returns (PortConfigList);
@@ -296,5 +345,18 @@ service OstService {
     rpc clearStats(PortIdList) returns (Ack);
 
     rpc checkVersion(VersionInfo) returns (VersionCompatibility);
+
+    // Device Emulation
+    rpc getDeviceGroupIdList(PortId) returns (DeviceGroupIdList);
+    rpc getDeviceGroupConfig(DeviceGroupIdList) returns (DeviceGroupConfigList);
+    rpc addDeviceGroup(DeviceGroupIdList) returns (Ack);
+    rpc deleteDeviceGroup(DeviceGroupIdList) returns (Ack);
+    rpc modifyDeviceGroup(DeviceGroupConfigList) returns (Ack);
+
+    rpc getDeviceList(PortId) returns (PortDeviceList);
+
+    rpc resolveDeviceNeighbors(PortIdList) returns (Ack);
+    rpc clearDeviceNeighbors(PortIdList) returns (Ack);
+    rpc getDeviceNeighbors(PortId) returns (PortNeighborList);
 }
 

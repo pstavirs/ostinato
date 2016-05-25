@@ -7,6 +7,9 @@ LIBS += \
 
 PROTOS = \
     protocol.proto \
+    emulproto.proto
+
+PROTOS += \
     mac.proto \
     payload.proto \
     eth2.proto \
@@ -35,7 +38,7 @@ PROTOS = \
     textproto.proto \
     userscript.proto \
     hexdump.proto \
-    sample.proto 
+    sample.proto
 
 HEADERS = \
     abstractprotocol.h    \

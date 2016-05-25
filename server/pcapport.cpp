@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapport.h"
 
+#include "devicemanager.h"
+#include "packetbuffer.h"
+
 #include <QtGlobal>
 
 #ifdef Q_OS_WIN32
@@ -81,6 +84,7 @@ PcapPort::PcapPort(int id, const char *device)
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
     transmitter_ = new PortTransmitter(device);
     capturer_ = new PortCapturer(device);
+    emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
         isUsable_ = false;
@@ -97,12 +101,8 @@ PcapPort::PcapPort(int id, const char *device)
     {
         if (strcmp(device, dev->name) == 0)
         {
-#ifdef Q_OS_WIN32
-            data_.set_name(QString("if%1").arg(id).toStdString());
-#else
             if (dev->name)
                 data_.set_name(dev->name);
-#endif
             if (dev->description)
                 data_.set_description(dev->description);
 
@@ -133,6 +133,7 @@ PcapPort::~PcapPort()
     if (monitorTx_)
         monitorTx_->stop();
 
+    delete emulXcvr_;
     delete capturer_;
     delete transmitter_;
 
@@ -176,6 +177,26 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
     return false;
 }
 
+void PcapPort::startDeviceEmulation()
+{
+    emulXcvr_->start();
+}
+
+void PcapPort::stopDeviceEmulation()
+{
+    emulXcvr_->stop();
+}
+
+int PcapPort::sendEmulationPacket(PacketBuffer *pktBuf)
+{
+    return emulXcvr_->transmitPacket(pktBuf);
+}
+
+/*
+ * ------------------------------------------------------------------- *
+ * Port Monitor
+ * ------------------------------------------------------------------- *
+ */
 PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
         AbstractPort::PortStats *stats)
 {
@@ -321,6 +342,11 @@ void PcapPort::PortMonitor::stop()
     pcap_breakloop(handle());
 }
 
+/*
+ * ------------------------------------------------------------------- *
+ * Port Transmitter
+ * ------------------------------------------------------------------- *
+ */
 PcapPort::PortTransmitter::PortTransmitter(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE] = "";
@@ -750,6 +776,11 @@ void PcapPort::PortTransmitter::udelay(unsigned long usec)
 #endif 
 }
 
+/*
+ * ------------------------------------------------------------------- *
+ * Port Capturer
+ * ------------------------------------------------------------------- *
+ */
 PcapPort::PortCapturer::PortCapturer(const char *device)
 {
     device_ = QString::fromAscii(device);
@@ -883,4 +914,219 @@ bool PcapPort::PortCapturer::isRunning()
 QFile* PcapPort::PortCapturer::captureFile()
 {
     return &capFile_;
+}
+
+
+/*
+ * ------------------------------------------------------------------- *
+ * Transmit+Receiver for Device/ProtocolEmulation
+ * ------------------------------------------------------------------- *
+ */
+PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
+        DeviceManager *deviceManager)
+{
+    device_ = QString::fromAscii(device);
+    deviceManager_ = deviceManager;
+    stop_ = false;
+    state_ = kNotStarted;
+    handle_ = NULL;
+}
+
+PcapPort::EmulationTransceiver::~EmulationTransceiver()
+{
+    stop();
+}
+
+void PcapPort::EmulationTransceiver::run()
+{
+    int flags = PCAP_OPENFLAG_PROMISCUOUS;
+    char errbuf[PCAP_ERRBUF_SIZE] = "";
+    struct bpf_program bpf;
+#if 0
+    const char *capture_filter =
+        "arp or icmp or icmp6 or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and (arp or icmp or icmp6)) or "
+        "(vlan and vlan and vlan and vlan and (arp or icmp or icmp6))";
+/*
+    Ideally we should use the above filter, but the 'vlan' capture filter
+    in libpcap is implemented as a kludge. From the pcap-filter man page -
+
+    vlan [vlan_id]
+       Note that the first vlan keyword encountered in expression changes
+       the decoding offsets for the remainder of expression on the
+       assumption that the packet is a VLAN packet.
+
+       The  vlan [vlan_id] expression may be used more than once, to filter on
+       VLAN hierarchies. Each use of that expression increments the filter
+       offsets by 4.
+
+    See https://ask.wireshark.org/questions/31953/unusual-behavior-with-stacked-vlan-tags-and-capture-filter
+
+    So we use the modified filter expression that works as we intend. If ever
+    libpcap changes their implementation, this will need to change as well.
+*/
+#else
+    const char *capture_filter =
+        "arp or icmp or icmp6 or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6)) or "
+        "(vlan and (arp or icmp or icmp6))";
+#endif
+
+    const int optimize = 1;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+#ifdef Q_OS_WIN32
+    flags |= PCAP_OPENFLAG_NOCAPTURE_LOCAL;
+#endif
+
+_retry:
+#ifdef Q_OS_WIN32
+    // NOCAPTURE_LOCAL needs windows only pcap_open()
+    handle_ = pcap_open(qPrintable(device_), 65535,
+                flags, 100 /* ms */, NULL, errbuf);
+#else
+    handle_ = pcap_open_live(qPrintable(device_), 65535,
+                    flags, 100 /* ms */, errbuf);
+#endif
+
+    if (handle_ == NULL)
+    {
+        if (flags && QString(errbuf).contains("promiscuous"))
+        {
+            notify("Unable to set promiscuous mode on <%s> - "
+                    "device emulation will not work", qPrintable(device_));
+            goto _exit;
+        }
+#ifdef Q_OS_WIN32
+        else if ((flags & PCAP_OPENFLAG_NOCAPTURE_LOCAL)
+                && QString(errbuf).contains("loopback"))
+        {
+            qDebug("Can't set no local capture mode %s", qPrintable(device_));
+            flags &= ~PCAP_OPENFLAG_NOCAPTURE_LOCAL;
+            goto _retry;
+        }
+#endif
+        else
+        {
+            notify("Unable to open <%s> [%s] - device emulation will not work",
+                    qPrintable(device_), errbuf);
+            goto _exit;
+        }
+    }
+
+    // TODO: for now the filter is hardcoded to accept tagged/untagged
+    // ARP/NDP or ICMPv4/v6; when more protocols are added, we may need
+    // to derive this filter based on which protocols are configured
+    // on the devices
+    if (pcap_compile(handle_, &bpf, capture_filter, optimize, 0) < 0)
+    {
+        qWarning("%s: error compiling filter: %s", qPrintable(device_),
+                pcap_geterr(handle_));
+        goto _skip_filter;
+    }
+
+    if (pcap_setfilter(handle_, &bpf) < 0)
+    {
+        qWarning("%s: error setting filter: %s", qPrintable(device_),
+                pcap_geterr(handle_));
+        goto _skip_filter;
+    }
+
+_skip_filter:
+    state_ = kRunning;
+    while (1)
+    {
+        int ret;
+        struct pcap_pkthdr *hdr;
+        const uchar *data;
+
+        ret = pcap_next_ex(handle_, &hdr, &data);
+        switch (ret)
+        {
+            case 1:
+            {
+                PacketBuffer *pktBuf = new PacketBuffer(data, hdr->caplen);
+#if 0
+                for (int i = 0; i < 64; i++) {
+                    printf("%02x ", data[i]);
+                    if (i % 16 == 0)
+                        printf("\n");
+                }
+                printf("\n");
+#endif
+                // XXX: deviceManager should free pktBuf before returning
+                // from this call; if it needs to process the pkt async
+                // it should make a copy as the pktBuf's data buffer is
+                // owned by libpcap which does not guarantee data will
+                // persist across calls to pcap_next_ex()
+                deviceManager_->receivePacket(pktBuf);
+                break;
+            }
+            case 0:
+                // timeout: just go back to the loop
+                break;
+            case -1:
+                qWarning("%s: error reading packet (%d): %s",
+                        __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
+                break;
+            case -2:
+            default:
+                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
+                        ret);
+        }
+
+        if (stop_)
+        {
+            qDebug("user requested receiver stop\n");
+            break;
+        }
+    }
+    pcap_close(handle_);
+    handle_ = NULL;
+    stop_ = false;
+
+_exit:
+    state_ = kFinished;
+}
+
+void PcapPort::EmulationTransceiver::start()
+{
+    if (state_ == kRunning) {
+        qWarning("Receive start requested but is already running!");
+        return;
+    }
+
+    state_ = kNotStarted;
+    QThread::start();
+
+    while (state_ == kNotStarted)
+        QThread::msleep(10);
+}
+
+void PcapPort::EmulationTransceiver::stop()
+{
+    if (state_ == kRunning) {
+        stop_ = true;
+        while (state_ == kRunning)
+            QThread::msleep(10);
+    }
+    else {
+        qWarning("Receive stop requested but is not running!");
+        return;
+    }
+}
+
+bool PcapPort::EmulationTransceiver::isRunning()
+{
+    return (state_ == kRunning);
+}
+
+int PcapPort::EmulationTransceiver::transmitPacket(PacketBuffer *pktBuf)
+{
+    return pcap_sendpacket(handle_, pktBuf->data(), pktBuf->length());
 }

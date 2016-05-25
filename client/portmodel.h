@@ -57,6 +57,7 @@ private:
     QIcon portIconFactory[kLinkStatesCount][kExclusiveStatesCount];
 
 private slots:
+    // FIXME: these are invoked from outside - how come they are "private"?
     void when_portGroupDataChanged(int portGroupId, int portId);
 
     void portGroupAboutToBeAppended();

@@ -21,19 +21,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_H
 
 #include <QDir>
+#include <QHash>
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QTemporaryFile>
 
 #include "stream.h"
 
 //class StreamModel;
+namespace OstEmul {
+    class Device;
+    class DeviceNeighborList;
+}
 
 class Port : public QObject {
 
     Q_OBJECT
 
     static uint            mAllocStreamId;
+    static uint            allocDeviceGroupId_;
 
     OstProto::Port        d;
     OstProto::PortStats   stats;
@@ -51,6 +58,14 @@ class Port : public QObject {
     QList<quint32>    mLastSyncStreamList;
     QList<Stream*>    mStreams;        // sorted by stream's ordinal value
 
+    QList<quint32> lastSyncDeviceGroupList_;
+    QSet<quint32>  modifiedDeviceGroupList_;
+    QList<OstProto::DeviceGroup*> deviceGroups_;
+    QList<OstEmul::Device*> devices_;
+    QHash<quint32, OstEmul::DeviceNeighborList*> deviceNeighbors_;
+    QHash<quint32, quint32> arpResolvedCount_;
+    QHash<quint32, quint32> ndpResolvedCount_;
+
     uint newStreamId();
     void updateStreamOrdinalsFromIndex();
     void reorderStreamsByOrdinals();
@@ -64,7 +79,8 @@ public:
     ~Port();
 
     quint32 portGroupId() const { return mPortGroupId; }
-    const QString& userAlias() const { return mUserAlias; }
+    const QString userAlias() const
+        { return mUserAlias.isEmpty() ? name() :  mUserAlias; }
 
     quint32 id() const 
         { return d.port_id().id(); }
@@ -88,7 +104,7 @@ public:
         { return avgBitsPerSec_; }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
-    void setAlias(QString &alias) { mUserAlias = alias; }
+    void setAlias(QString alias) { mUserAlias = alias; }
     //void setExclusive(bool flag);
 
     int numStreams() { return mStreams.size(); }
@@ -111,6 +127,8 @@ public:
         return capFile_; 
     }
 
+    void protoDataCopyInto(OstProto::Port *data);
+
     // FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
     void updatePortConfig(OstProto::Port *port);
     
@@ -131,6 +149,15 @@ public:
     void getModifiedStreamsSinceLastSync(
         OstProto::StreamConfigList &streamConfigList);
 
+    void getDeletedDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupIdList &streamIdList);
+    void getNewDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupIdList &streamIdList);
+    void getModifiedDeviceGroupsSinceLastSync(
+            OstProto::DeviceGroupConfigList &streamConfigList);
+
+    bool modifiablePortConfig(OstProto::Port &config) const;
+
     void when_syncComplete();
 
     void setAveragePacketRate(double packetsPerSec);
@@ -145,10 +172,54 @@ public:
     bool openStreams(QString fileName, bool append, QString &error);
     bool saveStreams(QString fileName, QString fileType, QString &error);
 
+    // ------------ Device Group ----------- //
+
+    uint newDeviceGroupId();
+    int numDeviceGroups() const;
+    const OstProto::DeviceGroup* deviceGroupByIndex(int index) const;
+    OstProto::DeviceGroup* mutableDeviceGroupByIndex(int index);
+    OstProto::DeviceGroup* deviceGroupById(uint deviceGroupId);
+
+    //! Used by StreamModel
+    //@{
+    bool newDeviceGroupAt(int index,
+                          const OstProto::DeviceGroup *deviceGroup = NULL);
+    bool deleteDeviceGroupAt(int index);
+    //@}
+
+    //! Used by MyService::Stub to update from config received from server
+    //@{
+    bool insertDeviceGroup(uint deviceGroupId);
+    bool updateDeviceGroup(uint deviceGroupId,
+                           OstProto::DeviceGroup *deviceGroup);
+    //@}
+
+    // ------------ Device ----------- //
+
+    int numDevices();
+    const OstEmul::Device* deviceByIndex(int index);
+
+    //! Used by MyService::Stub to update from config received from server
+    void clearDeviceList();
+    void insertDevice(const OstEmul::Device &device);
+
+    const OstEmul::DeviceNeighborList* deviceNeighbors(int deviceIndex);
+    int numArp(int deviceIndex);
+    int numArpResolved(int deviceIndex);
+    int numNdp(int deviceIndex);
+    int numNdpResolved(int deviceIndex);
+
+    //! Used by MyService::Stub to update from config received from server
+    void clearDeviceNeighbors();
+    void insertDeviceNeighbors(const OstEmul::DeviceNeighborList &neighList);
+
+    void deviceInfoRefreshed();
+
 signals:
     void portRateChanged(int portGroupId, int portId);
     void portDataChanged(int portGroupId, int portId);
     void streamListChanged(int portGroupId, int portId);
+    void deviceInfoChanged();
 
 };
 

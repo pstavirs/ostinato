@@ -15,11 +15,16 @@
         <file>icons/control_stop.png</file>
         <file>icons/deco_exclusive.png</file>
         <file>icons/delete.png</file>
+        <file>icons/devicegroup_add.png</file>
+        <file>icons/devicegroup_delete.png</file>
+        <file>icons/devicegroup_edit.png</file>
         <file>icons/exit.png</file>
         <file>icons/gaps.png</file>
         <file>icons/logo.png</file>
         <file>icons/magnifier.png</file>
         <file>icons/name.png</file>
+        <file>icons/neighbor_clear.png</file>
+        <file>icons/neighbor_resolve.png</file>
         <file>icons/portgroup_add.png</file>
         <file>icons/portgroup_connect.png</file>
         <file>icons/portgroup_delete.png</file>

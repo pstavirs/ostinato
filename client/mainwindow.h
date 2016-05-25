@@ -34,6 +34,9 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
     Q_OBJECT
 
 private:
+    bool openSession(QString fileName, QString &error);
+    bool saveSession(QString fileName, QString fileType, QString &error);
+
     QProcess        *localServer_;
     PortsWindow        *portsWindow;
     PortStatsWindow *statsWindow;
@@ -48,6 +51,8 @@ public:
     ~MainWindow();
 
 public slots:
+    void on_actionOpenSession_triggered();
+    void on_actionSaveSession_triggered();
     void on_actionPreferences_triggered();
     void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpAbout_triggered();

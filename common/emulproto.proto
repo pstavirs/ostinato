@@ -1,0 +1,122 @@
+/*
+Copyright (C) 2015 Srivats P.
+
+This file is part of "Ostinato"
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+import "protocol.proto";
+
+package OstEmul;
+
+// =======
+//  Encap
+// =======
+message VlanEmulation {
+    message Vlan {
+        optional uint32 tpid = 1 [default = 0x8100];
+
+        // includes prio, cfi and vlanid
+        optional uint32 vlan_tag = 2 [default = 100];
+
+        optional uint32 count = 10 [default = 1];
+        optional uint32 step  = 11 [default = 1];
+    }
+
+    repeated Vlan stack = 1; // outer to inner
+}
+
+extend OstProto.EncapEmulation {
+    optional VlanEmulation vlan = 1000;
+}
+
+// ===========
+//  Protocols
+// ===========
+message MacEmulation {
+    optional uint64 address = 1; // no default - need unique value
+    optional uint64 step = 10 [default = 1];
+}
+
+// No default values for IP addresses - user needs to explicitly set that
+// 'coz we derive if a device has a single/dual or no IP stack on the basis
+// of whether OstProto.DeviceGroup.ip[46] is set
+message Ip4Emulation {
+    optional uint32 address = 1;
+    optional uint32 prefix_length = 2 [default = 24];
+    optional uint32 default_gateway = 3;
+
+    optional uint32 step = 10 [default = 1];
+    // FIXME: step for gateway?
+}
+
+message Ip6Address {
+    optional uint64 hi = 1;
+    optional uint64 lo = 2;
+}
+
+message Ip6Emulation {
+    optional Ip6Address address = 1;
+    optional uint32 prefix_length = 2 [default = 64];
+    optional Ip6Address default_gateway = 3;
+
+    optional Ip6Address step = 10;
+    // FIXME: step for gateway?
+}
+
+extend OstProto.DeviceGroup {
+    optional MacEmulation mac = 2001;
+
+    optional Ip4Emulation ip4 = 3000;
+    optional Ip6Emulation ip6 = 3001;
+}
+
+message Device {
+    optional uint64 mac = 1;
+
+    repeated uint32 vlan = 2; // includes tpid 'n vlan tag
+
+    optional uint32 ip4 = 10;
+    optional uint32 ip4_prefix_length = 11;
+    optional uint32 ip4_default_gateway = 12;
+
+    optional Ip6Address ip6 = 20;
+    optional uint32 ip6_prefix_length = 21;
+    optional Ip6Address ip6_default_gateway = 22;
+}
+
+extend OstProto.PortDeviceList {
+    repeated Device device = 100;
+}
+
+message ArpEntry {
+    optional uint32 ip4 = 1;
+    optional uint64 mac = 2;
+}
+
+message NdpEntry {
+    optional Ip6Address ip6 = 1;
+    optional uint64 mac = 2;
+}
+
+message DeviceNeighborList {
+    optional uint32 device_index = 1;
+    repeated ArpEntry arp = 2;
+    repeated NdpEntry ndp = 3;
+}
+
+extend OstProto.PortNeighborList {
+    repeated DeviceNeighborList device_neighbor = 100;
+}

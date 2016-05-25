@@ -24,8 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocolmanager.h"
 
 extern ProtocolManager *OstProtocolManager;
+extern quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex);
+extern quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex);
 
-StreamBase::StreamBase() :
+StreamBase::StreamBase(int portId) :
+    portId_(portId),
     mStreamId(new OstProto::StreamId),
     mCore(new OstProto::StreamCore),
     mControl(new OstProto::StreamControl)
@@ -522,17 +525,21 @@ int StreamBase::frameCount() const
     return count;
 }
 
+// Returns packet length - if bufMaxSize < frameLen(), returns truncated
+// length i.e. bufMaxSize
 int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
 {
-    int        pktLen, len = 0;
+    int maxSize, size, pktLen, len = 0;
 
     pktLen = frameLen(frameIndex);
 
     // pktLen is adjusted for CRC/FCS which will be added by the NIC
     pktLen -= kFcsSize;
 
-    if ((pktLen < 0) || (pktLen > bufMaxSize))
+    if (pktLen <= 0)
         return 0;
+
+    maxSize = qMin(pktLen, bufMaxSize);
 
     ProtocolListIterator    *iter;
 
@@ -545,17 +552,33 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
         proto = iter->next();
         ba = proto->protocolFrameValue(frameIndex);
 
-        if (len + ba.size() < bufMaxSize)
-            memcpy(buf+len, ba.constData(), ba.size());
-        len += ba.size();
+        size = qMin(ba.size(), maxSize-len);
+        memcpy(buf+len, ba.constData(), size);
+        len += size;
+
+        if (len == maxSize)
+            break;
     }
     delete iter;
 
-    // Pad with zero, if required
-    if (len < pktLen)
-        memset(buf+len, 0, pktLen-len);
+    // Pad with zero, if required and if we have space
+    if (len < maxSize) {
+        size = maxSize-len;
+        memset(buf+len, 0, size);
+        len += size;
+    }
 
-    return pktLen;
+    return len;
+}
+
+quint64 StreamBase::deviceMacAddress(int frameIndex) const
+{
+    return getDeviceMacAddress(portId_, int(mStreamId->id()), frameIndex);
+}
+
+quint64 StreamBase::neighborMacAddress(int frameIndex) const
+{
+    return getNeighborMacAddress(portId_, int(mStreamId->id()), frameIndex);
 }
 
 bool StreamBase::preflightCheck(QString &result) const

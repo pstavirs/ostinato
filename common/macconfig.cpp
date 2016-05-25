@@ -28,6 +28,12 @@ MacConfigForm::MacConfigForm(QWidget *parent)
     QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
     setupUi(this);
+    resolveInfo->hide();
+#if 0
+    // not working for some reason
+    resolveInfo->setPixmap(resolveInfo->style()->standardIcon(
+                               QStyle::SP_MessageBoxInformation).pixmap(128));
+#endif
     leDstMac->setValidator(new QRegExpValidator(reMac, this));
     leSrcMac->setValidator(new QRegExpValidator(reMac, this));
     leDstMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
@@ -46,30 +52,50 @@ MacConfigForm* MacConfigForm::createInstance()
 
 void MacConfigForm::on_cmbDstMacMode_currentIndexChanged(int index)
 {
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leDstMacCount->setEnabled(false);
-        leDstMacStep->setEnabled(false);
+    switch (index) {
+        case OstProto::Mac::e_mm_resolve:
+            leDstMac->setEnabled(false);
+            leDstMacCount->setEnabled(false);
+            leDstMacStep->setEnabled(false);
+            break;
+        case OstProto::Mac::e_mm_fixed:
+            leDstMac->setEnabled(true);
+            leDstMacCount->setEnabled(false);
+            leDstMacStep->setEnabled(false);
+            break;
+        default:
+            leDstMac->setEnabled(true);
+            leDstMacCount->setEnabled(true);
+            leDstMacStep->setEnabled(true);
+            break;
     }
-    else
-    {
-        leDstMacCount->setEnabled(true);
-        leDstMacStep->setEnabled(true);
-    }
+    resolveInfo->setVisible(
+            cmbDstMacMode->currentIndex() == OstProto::Mac::e_mm_resolve
+            || cmbSrcMacMode->currentIndex() == OstProto::Mac::e_mm_resolve);
 }
 
 void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 {
-    if (index == OstProto::Mac::e_mm_fixed)
-    {
-        leSrcMacCount->setEnabled(false);
-        leSrcMacStep->setEnabled(false);
+    switch (index) {
+        case OstProto::Mac::e_mm_resolve:
+            leSrcMac->setEnabled(false);
+            leSrcMacCount->setEnabled(false);
+            leSrcMacStep->setEnabled(false);
+            break;
+        case OstProto::Mac::e_mm_fixed:
+            leSrcMac->setEnabled(true);
+            leSrcMacCount->setEnabled(false);
+            leSrcMacStep->setEnabled(false);
+            break;
+        default:
+            leSrcMac->setEnabled(true);
+            leSrcMacCount->setEnabled(true);
+            leSrcMacStep->setEnabled(true);
+            break;
     }
-    else
-    {
-        leSrcMacCount->setEnabled(true);
-        leSrcMacStep->setEnabled(true);
-    }
+    resolveInfo->setVisible(
+            cmbDstMacMode->currentIndex() == OstProto::Mac::e_mm_resolve
+            || cmbSrcMacMode->currentIndex() == OstProto::Mac::e_mm_resolve);
 }
 
 void MacConfigForm::loadWidget(AbstractProtocol *proto)

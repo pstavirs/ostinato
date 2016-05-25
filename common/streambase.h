@@ -33,15 +33,8 @@ class ProtocolListIterator;
 
 class StreamBase
 {
-private:
-    OstProto::StreamId         *mStreamId;
-    OstProto::StreamCore     *mCore;
-    OstProto::StreamControl    *mControl;
-
-    ProtocolList            *currentFrameProtocols;
-
 public:
-    StreamBase();
+    StreamBase(int portId = -1);
     ~StreamBase();
 
     void protoDataCopyFrom(const OstProto::Stream &stream);
@@ -143,9 +136,22 @@ public:
     int frameProtocolLength(int frameIndex) const;
     int frameCount() const;
     int frameValue(uchar *buf, int bufMaxSize, int frameIndex) const;
+
+    quint64 deviceMacAddress(int frameIndex) const;
+    quint64 neighborMacAddress(int frameIndex) const;
+
     bool preflightCheck(QString &result) const;
 
     static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
+
+private:
+    int portId_;
+
+    OstProto::StreamId      *mStreamId;
+    OstProto::StreamCore    *mCore;
+    OstProto::StreamControl *mControl;
+
+    ProtocolList *currentFrameProtocols;
 };
 
 #endif

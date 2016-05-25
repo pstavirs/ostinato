@@ -46,6 +46,12 @@ class TestSuite:
     def passed(self):
         return passed == total and self.completed
 
+class TestPreRequisiteError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
 def extract_column(text, col):
     """Given a text table, return items in the specified column as a list"""
     lines = text.splitlines()
