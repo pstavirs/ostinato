@@ -59,8 +59,17 @@
      </item>
      <item>
       <widget class="QPushButton" name="refresh" >
+       <property name="toolTip" >
+        <string>Refresh information</string>
+       </property>
+       <property name="statusTip" >
+        <string>Refresh device and neighbor information</string>
+       </property>
        <property name="text" >
-        <string>Refresh</string>
+        <string/>
+       </property>
+       <property name="icon" >
+        <iconset resource="ostinato.qrc" >:/icons/refresh.png</iconset>
        </property>
       </widget>
      </item>

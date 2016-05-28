@@ -34,6 +34,7 @@
         <file>icons/portstats_filter.png</file>
         <file>icons/preferences.png</file>
         <file>icons/qt.png</file>
+        <file>icons/refresh.png</file>
         <file>icons/sound_mute.png</file>
         <file>icons/sound_none.png</file>
         <file>icons/stream_add.png</file>
