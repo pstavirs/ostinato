@@ -103,6 +103,8 @@ DeviceGroupDialog::DeviceGroupDialog(
     // can access the items
     vlanTagCount->setValue(kMaxVlanTags);
 
+    devicePerVlanCount->setRange(1, 0x7fffffff);
+
     ipStack->insertItems(0, ipStackItems);
 
     // TODO: DeviceGroup Traversal; hide buttons for now
