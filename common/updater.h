@@ -44,6 +44,9 @@ private slots:
     void parseXml(int id, bool error);
 
 private:
+    QString userAgent();
+    QString sysInfo();
+
     QHttp *http_;
     QTemporaryFile *file_;
 };

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "updater.h"
 
+#include <QCoreApplication>
 #include <QHttp>
 #include <QTemporaryFile>
 #include <QXmlStreamReader>
@@ -47,8 +48,13 @@ Updater::~Updater()
 
 void Updater::checkForNewVersion()
 {
-    http_ = new QHttp("update.ostinato.org");
+    QString host("update.ostinato.org");
+    QHttpRequestHeader reqHdr("GET", "/update/pad.xml");
+    http_ = new QHttp(host);
     file_ = new QTemporaryFile();
+
+    reqHdr.setValue("Host", host);
+    reqHdr.setValue("UserAgent", userAgent());
 
     connect(http_, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), 
             this, SLOT(responseReceived(QHttpResponseHeader)));
@@ -60,7 +66,7 @@ void Updater::checkForNewVersion()
     file_->open();
     qDebug("Updater: PAD XML file - %s", qPrintable(file_->fileName()));
 
-    http_->get("/update/pad.xml", file_);
+    http_->request(reqHdr, NULL, file_);
     qDebug("Updater: %s", qPrintable(http_->currentRequest().toString()
                 .replace("\r\n", "\nUpdater: ")));
 }
@@ -124,4 +130,30 @@ bool Updater::isVersionNewer(QString newVersion, QString curVersion)
     return false;
 }
 
+QString Updater::userAgent()
+{
+    QString ua = QString("Mozilla/5.0 (%1) %2/%3 (Qt/%6)")
+                    .arg(sysInfo())
+                    .arg(QCoreApplication::instance()->applicationName())
+                    .arg(version)
+                    .arg(qVersion());
 
+    return ua;
+}
+
+QString Updater::sysInfo()
+{
+#if defined(Q_OS_WIN32)
+    return QString("Windows/0x%1").arg(QSysInfo::WindowsVersion, 0, 16);
+#elif defined(Q_OS_LINUX)
+    return QString("Linux");
+#elif defined(Q_OS_MAC)
+    return QString("MacOSX/0x%1").arg(QSysInfo::MacintoshVersion, 0, 16);
+#elif defined(Q_OS_BSD4)
+    return QString("BSD");
+#elif defined(Q_OS_UNIX)
+    return QString("Unix");
+#else
+    return QString("Unknown");
+#endif
+}

@@ -1,7 +1,7 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
 QT -= gui
-QT += network script
+QT += network script xml
 LIBS += \
     -lprotobuf
 
@@ -47,6 +47,7 @@ HEADERS = \
     protocollist.h \
     protocollistiterator.h \
     streambase.h \
+    updater.h \
 
 HEADERS += \
     mac.h \
@@ -85,6 +86,7 @@ SOURCES = \
     protocollist.cpp \
     protocollistiterator.cpp \
     streambase.cpp \
+    updater.cpp \
 
 SOURCES += \
     mac.cpp \
