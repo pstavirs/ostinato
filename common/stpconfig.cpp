@@ -45,7 +45,7 @@ public:
         : QValidator(parent), min_(min), max_(max){}
     virtual ~UNumberValidator(){}
 
-    virtual QValidator::State validate(QString& input, int& pos) const
+    virtual QValidator::State validate(QString& input, int& /*pos*/) const
     {
         QValidator::State state = QValidator::Acceptable;
         quint64 val = input.toULongLong();

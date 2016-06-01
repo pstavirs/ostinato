@@ -463,7 +463,6 @@
        </layout>
       </item>
      </layout>
-     <zorder></zorder>
     </widget>
    </item>
    <item>
@@ -481,8 +480,6 @@
    </item>
   </layout>
   <zorder>groupBox_4</zorder>
-  <zorder></zorder>
-  <zorder>verticalSpacer_3</zorder>
  </widget>
  <tabstops>
   <tabstop>ui_protocol_id</tabstop>
