@@ -94,7 +94,7 @@
            <item>
             <widget class="QLabel" name="CopyrightLabel" >
              <property name="text" >
-              <string>Copyright (c) 2007-2014 Srivats P.</string>
+              <string>Copyright (c) 2007-2016 Srivats P.</string>
              </property>
              <property name="alignment" >
               <set>Qt::AlignCenter</set>
