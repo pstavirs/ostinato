@@ -843,9 +843,9 @@ _invalid_port:
 }
 
 void MyService::resolveDeviceNeighbors(
-    ::google::protobuf::RpcController* controller,
+    ::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -869,9 +869,9 @@ void MyService::resolveDeviceNeighbors(
 }
 
 void MyService::clearDeviceNeighbors(
-    ::google::protobuf::RpcController* controller,
+    ::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* response,
+    ::OstProto::Ack* /*response*/,
     ::google::protobuf::Closure* done)
 {
     qDebug("In %s", __PRETTY_FUNCTION__);

@@ -50,12 +50,18 @@ void Stream::storeProtocolWidgets()
     return;
 }
 
-quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
+quint64 getDeviceMacAddress(
+        int /*portId*/,
+        int /*streamId*/,
+        int /*frameIndex*/)
 {
     return 0;
 }
 
-quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
+quint64 getNeighborMacAddress(
+        int /*portId*/,
+        int /*streamId*/,
+        int /*frameIndex*/)
 {
     return 0;
 }

@@ -984,8 +984,8 @@ void PcapPort::EmulationTransceiver::run()
     flags |= PCAP_OPENFLAG_NOCAPTURE_LOCAL;
 #endif
 
-_retry:
 #ifdef Q_OS_WIN32
+_retry:
     // NOCAPTURE_LOCAL needs windows only pcap_open()
     handle_ = pcap_open(qPrintable(device_), 65535,
                 flags, 100 /* ms */, NULL, errbuf);

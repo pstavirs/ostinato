@@ -193,9 +193,9 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
 }
 
 bool DeviceGroupModel::setData(
-        const QModelIndex &index,
-        const QVariant &value,
-        int role)
+        const QModelIndex & /*index*/,
+        const QVariant & /*value*/,
+        int /*role*/)
 {
     if (!port_)
         return false;

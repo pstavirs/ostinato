@@ -192,7 +192,7 @@ int PortsWindow::reservedPortCount()
 //! Always return true
 bool PortsWindow::openSession(
         const OstProto::SessionContent *session,
-        QString &error)
+        QString & /*error*/)
 {
     QProgressDialog progress("Opening Session", NULL,
                              0, session->port_groups_size(), mainWindow);
@@ -223,7 +223,7 @@ bool PortsWindow::openSession(
  */
 bool PortsWindow::saveSession(
         OstProto::SessionContent *session, // OUT param
-        QString &error,
+        QString & /*error*/,
         QProgressDialog *progress)
 {
     int n = portGroupCount();

@@ -438,7 +438,7 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
                                     .arg(port->userAlias())
                                     .arg(port->userName());
                         QMessageBox::warning(NULL, tr("Open Session"), warning);
-                        qWarning(qPrintable(warning));
+                        qWarning("%s", qPrintable(warning));
                         continue;
                     }
                     atConnectPortConfig_[j] = pc;
@@ -585,7 +585,7 @@ void PortGroup::processDeleteDeviceGroupAck(PbRpcController *controller)
     delete controller;
 }
 
-void PortGroup::processModifyDeviceGroupAck(int portIndex,
+void PortGroup::processModifyDeviceGroupAck(int /*portIndex*/,
         PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);

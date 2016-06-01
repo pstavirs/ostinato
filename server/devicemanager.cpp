@@ -40,7 +40,7 @@ inline UInt128 UINT128(OstEmul::Ip6Address x)
 
 inline bool isMacMcast(quint64 mac)
 {
-    return (mac >> 40) & 0x01 == 0x01;
+    return ((mac >> 40) & 0x01) == 0x01;
 }
 
 
