@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #define tr(str) QObject::tr(str)
 
-const std::string NativeFileFormat::kFileMagicValue = "\xa7\xb7OSTINATO";
+const char* NativeFileFormat::kFileMagicValue = "\xa7\xb7OSTINATO";
 
 static const int kBaseHex = 16;
 

@@ -66,7 +66,7 @@ private:
     static const int kFileMagicOffset = 0;
     static const int kFileMetaDataOffset = kFileMagicSize;
 
-    static const std::string kFileMagicValue;
+    static const char* kFileMagicValue;
 
     // Native file format version
     static const uint kFileFormatVersionMajor = 0;
