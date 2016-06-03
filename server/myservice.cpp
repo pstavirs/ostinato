@@ -50,7 +50,11 @@ MyService::MyService()
 
     for (int i = 0; i < n; i++) {
         portInfo.append(portManager->port(i));
+#if QT_VERSION >= 0x040400
+        portLock.append(new QReadWriteLock(QReadWriteLock::Recursive));
+#else
         portLock.append(new QReadWriteLock());
+#endif
     }
 }
 
@@ -945,6 +949,15 @@ quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex)
     if (!devMgr || !devMgr->deviceCount())
         return 0;
 
+    /*
+     * FIXME: We don't need lockForWrite, only lockForRead here.
+     * However, this function is called in the following sequence
+     * modifyPort() --> updatePacketList() --> frameValue()
+     * where modifyPort has already taken a write lock. Qt allows
+     * recursive locks, but not of a different type, so we are
+     * forced to use lockForWrite here - till we find a different
+     * solution.
+     */
     service->portLock[portId]->lockForWrite();
     mac = service->portInfo[portId]->deviceMacAddress(streamId, frameIndex);
     service->portLock[portId]->unlock();
@@ -967,6 +980,10 @@ quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex)
     if (!devMgr || !devMgr->deviceCount())
         return 0;
 
+    /*
+     * FIXME: We don't need lockForWrite, only lockForRead here.
+     * See comment in getDeviceMacAddress() for more
+     */
     service->portLock[portId]->lockForWrite();
     mac = service->portInfo[portId]->neighborMacAddress(streamId, frameIndex);
     service->portLock[portId]->unlock();
