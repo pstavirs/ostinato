@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "myservice.h"
 #include "rpcserver.h"
 #include "settings.h"
+#include "../common/updater.h"
 
 #include <QMetaType>
 
@@ -32,8 +33,15 @@ extern const char* revision;
 Drone::Drone(QObject *parent)
      : QObject(parent)
 {
+    Updater *updater = new Updater();
+
     rpcServer = new RpcServer();
     service = new MyService();
+
+    connect(updater, SIGNAL(newVersionAvailable(QString)),
+            this, SLOT(onNewVersion(QString)));
+    updater->checkForNewVersion();
+
 }
 
 Drone::~Drone()
@@ -74,3 +82,11 @@ MyService* Drone::rpcService()
 {
     return service;
 }
+
+void Drone::onNewVersion(QString newVersion)
+{
+    qWarning("%s", qPrintable(QString("New Ostinato version %1 available. "
+                "Visit http://ostinato.org to download").arg(newVersion)));
+}
+
+

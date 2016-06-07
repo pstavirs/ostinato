@@ -34,6 +34,9 @@ public:
     bool init();
     MyService* rpcService();
 
+private slots:
+    void onNewVersion(QString version);
+
 private:
     RpcServer               *rpcServer;
     MyService               *service;
