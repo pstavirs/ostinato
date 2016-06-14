@@ -51,7 +51,7 @@ QStringList StreamFileFormat::supportedFileTypes(Operation op)
 
     fileTypes
         << "Ostinato (*.ostm)"
-        << "PCAP (*)"
+        << "PCAP (*.pcap)"
         << "PDML (*.pdml)";
 
     if (op == kSaveFile)

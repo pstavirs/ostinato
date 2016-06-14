@@ -895,9 +895,8 @@ void PortsWindow::on_actionSave_Streams_triggered()
         current = proxyPortModel->mapToSource(current);
 
     // On Mac OS with Native Dialog, getSaveFileName() ignores fileType 
-    // which we need.On some Linux distros the native dialog can't 
-    // distinguish between Ostinato(*) and PCAP(*)
-#if defined(Q_OS_MAC) || defined(Q_OS_UNIX)
+    // which we need
+#if defined(Q_OS_MAC)
     options |= QFileDialog::DontUseNativeDialog;
 #endif
 
@@ -911,6 +910,22 @@ _retry:
             fileName, fileTypes.join(";;"), &fileType, options);
     if (fileName.isEmpty())
         goto _exit;
+
+    if (QFileInfo(fileName).suffix().isEmpty()) {
+        QString fileExt = fileType.section(QRegExp("[\\*\\)]"), 1, 1);
+        qDebug("Adding extension '%s' to '%s'",
+                qPrintable(fileExt), qPrintable(fileName));
+        fileName.append(fileExt);
+        if (QFileInfo(fileName).exists()) {
+            if (QMessageBox::warning(this, tr("Overwrite File?"), 
+                QString("The file \"%1\" already exists.\n\n"
+                    "Do you wish to overwrite it?")
+                    .arg(QFileInfo(fileName).fileName()),
+                QMessageBox::Yes|QMessageBox::No,
+                QMessageBox::No) != QMessageBox::Yes)
+                goto _retry;
+        }
+    }
 
     fileType = fileType.remove(QRegExp("\\(.*\\)")).trimmed();
     if (!fileType.startsWith("Ostinato") 

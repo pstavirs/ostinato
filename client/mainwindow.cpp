@@ -220,10 +220,27 @@ void MainWindow::on_actionSaveSession_triggered()
     if (fileTypes.size())
         fileType = fileTypes.at(0);
 
+_retry:
     fileName = QFileDialog::getSaveFileName(this, tr("Save Session"),
             fileName, fileTypes.join(";;"), &fileType, options);
     if (fileName.isEmpty())
         goto _exit;
+
+    if (QFileInfo(fileName).suffix().isEmpty()) {
+        QString fileExt = fileType.section(QRegExp("[\\*\\)]"), 1, 1);
+        qDebug("Adding extension '%s' to '%s'",
+                qPrintable(fileExt), qPrintable(fileName));
+        fileName.append(fileExt);
+        if (QFileInfo(fileName).exists()) {
+            if (QMessageBox::warning(this, tr("Overwrite File?"), 
+                QString("The file \"%1\" already exists.\n\n"
+                    "Do you wish to overwrite it?")
+                    .arg(QFileInfo(fileName).fileName()),
+                QMessageBox::Yes|QMessageBox::No,
+                QMessageBox::No) != QMessageBox::Yes)
+                goto _retry;
+        }
+    }
 
     if (!saveSession(fileName, fileType, errorStr))
         QMessageBox::critical(this, qApp->applicationName(), errorStr);
