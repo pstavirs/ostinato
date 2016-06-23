@@ -26,12 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QApplication>
 #include <QCursor>
+#include <QDesktopServices>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QProcess>
+#include <QRegExp>
 #include <QTemporaryFile>
 #include <QTimer>
 #include <QtGlobal>
+#include <QUrl>
 
 using ::google::protobuf::NewCallback;
 
@@ -299,18 +302,23 @@ void PortGroup::on_rpcChannel_notification(int notifType,
 
 void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
 {
+    QString faq("http://ostinato.org/docs/faq#q-port-group-has-no-interfaces");
     if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
     {
-        QMessageBox::warning(NULL, tr("No ports in portgroup"),
+        if (QMessageBox::warning(NULL, tr("No ports in portgroup"),
             QString("The portgroup %1:%2 does not contain any ports!\n\n"
                "Packet Transmit/Capture requires elevated privileges. "
                "Please ensure that you are running 'drone' - the server "
                "component of Ostinato with admin/root OR setuid privilege.\n\n"
-               "For more information see "
-               "http://code.google.com/p/ostinato/wiki/FAQ#"
-                   "Q._Port_group_has_no_interfaces")
+               "For help see the Ostinato FAQ (%3)")
                 .arg(serverName())
-                .arg(int(serverPort())));
+                .arg(int(serverPort()))
+                .arg(faq.remove(QRegExp("#.*$"))),
+            QMessageBox::Ok | QMessageBox::Help,
+            QMessageBox::Ok) == QMessageBox::Help)
+        {
+            QDesktopServices::openUrl(QUrl(faq));
+        }
     }
 }
 
