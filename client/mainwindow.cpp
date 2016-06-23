@@ -34,11 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "fileformat.pb.h"
 
+#include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProcess>
 #include <QProgressDialog>
+#include <QUrl>
 
 extern const char* version;
 extern const char* revision;
@@ -270,6 +272,11 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     restoreState(defaultLayout_, 0);
 
     actionViewShowMyReservedPortsOnly->setChecked(false);
+}
+
+void MainWindow::on_actionHelpOnline_triggered()
+{
+    QDesktopServices::openUrl(QUrl("http://ostinato.org/docs"));
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
