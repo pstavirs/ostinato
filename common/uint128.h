@@ -95,8 +95,8 @@ inline quint64 UInt128::lo64() const
 
 inline quint8* UInt128::toArray() const
 {
-    *(quint64*)(array_ + 0) = qToBigEndian<quint64>(hi_);
-    *(quint64*)(array_ + 8) = qToBigEndian<quint64>(lo_);
+    qToBigEndian(hi_, const_cast<uchar*>(array_ + 0));
+    qToBigEndian(lo_, const_cast<uchar*>(array_ + 8));
 
     return (quint8*)array_;
 }
