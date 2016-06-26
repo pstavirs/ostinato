@@ -20,6 +20,26 @@ QString kDiffPathDefaultValue;
 QString kAwkPathDefaultValue;
 #endif
 
+/*
+ * Dummy Stuff for successful linking
+ */
+char *version = "";
+char *revision = "";
+quint64 getDeviceMacAddress(
+        int /*portId*/,
+        int /*streamId*/,
+        int /*frameIndex*/)
+{
+    return 0;
+}
+
+quint64 getNeighborMacAddress(
+        int /*portId*/,
+        int /*streamId*/,
+        int /*frameIndex*/)
+{
+    return 0;
+}
 int usage(int /*argc*/, char* argv[])
 {
     printf("usage:\n");
@@ -29,6 +49,7 @@ int usage(int /*argc*/, char* argv[])
 
     return 255;
 }
+/* End of dummy stuff */
 
 int testImportPcap(int argc, char* argv[])
 {
@@ -45,7 +66,7 @@ int testImportPcap(int argc, char* argv[])
     OstProto::StreamConfigList streams;
     QString inFile(argv[2]);
 
-    isOk = pcapFileFormat.openStreams(inFile, streams, error);
+    isOk = pcapFileFormat.open(inFile, streams, error);
     if (!error.isEmpty())
     {
         printf("%s: %s\n", 
