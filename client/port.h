@@ -122,7 +122,7 @@ public:
         delete capFile_;
         capFile_ = new QTemporaryFile(QString(QDir::tempPath())
                                         .append("/")
-                                        .append(name())
+                                        .append(userAlias())
                                         .append(".XXXXXX"));
         return capFile_; 
     }
