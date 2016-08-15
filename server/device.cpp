@@ -414,6 +414,10 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
         }
 
         dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
+        if ((dstIp & 0xF0000000) == 0xE0000000) { // Mcast IP?
+            qDebug("mcast dst %x", dstIp);
+            return (quint64(0x01005e) << 24) | (dstIp & 0x7FFFFF);
+        }
         mask =  ~0 << (32 - ip4PrefixLength_);
         qDebug("dst %x mask %x self %x", dstIp, mask, ip4_);
         tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
@@ -430,6 +434,11 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
         }
 
         dstIp = qFromBigEndian<UInt128>(pktData + 24);
+        if (dstIp.toArray()[0] == 0xFF) { // Mcast IP?
+            qDebug("mcast dst %s",
+                    qPrintable(QHostAddress(dstIp.toArray()).toString()));
+            return (quint64(0x3333) << 32) | (dstIp.lo64() & 0xFFFFFFFF);
+        }
         mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
         qDebug("dst %s mask %s self %s",
                 qPrintable(QHostAddress(dstIp.toArray()).toString()),
