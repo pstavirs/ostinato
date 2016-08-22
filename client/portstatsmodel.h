@@ -60,11 +60,17 @@ typedef enum {
     e_STAT_BYTES_SENT_NIC,
 #endif
 
+    // Sign Stats
+    e_STAT_SIGN_FRAMES_RCVD,
+    e_STAT_SIGN_FRAMES_SENT,
+    // TODO: Other sign stats
+
     // Rx Errors 
     e_STAT_RX_DROPS,
     e_STAT_RX_ERRORS,
     e_STAT_RX_FIFO_ERRORS,
     e_STAT_RX_FRAME_ERRORS,
+
 
     e_STATISTICS_END = e_STAT_RX_FRAME_ERRORS,
 
@@ -92,6 +98,10 @@ static QStringList PortStatName = (QStringList()
     << "Bytes Received (NIC)"
     << "Bytes Sent (NIC)"
 #endif
+
+    << "(Sign) Frames Received"
+    << "(Sign) Frames Sent"
+
     << "Receive Drops"
     << "Receive Errors"
     << "Receive Fifo Errors"

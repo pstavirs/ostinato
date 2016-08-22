@@ -615,6 +615,25 @@ void AbstractPort::stats(PortStats *stats)
     stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
                         stats_.rxFrameErrors - epochStats_.rxFrameErrors :
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+
+    // Sign stats
+    stats->sign.rxPkts = (stats_.sign.rxPkts >= epochStats_.sign.rxPkts) ?
+                        stats_.sign.rxPkts - epochStats_.sign.rxPkts :
+                        stats_.sign.rxPkts + (maxStatsValue_ - epochStats_.sign.rxPkts);
+    stats->sign.rxBytes = (stats_.sign.rxBytes >= epochStats_.sign.rxBytes) ?
+                        stats_.sign.rxBytes - epochStats_.sign.rxBytes :
+                        stats_.sign.rxBytes + (maxStatsValue_ - epochStats_.sign.rxBytes);
+    stats->sign.rxPps = stats_.sign.rxPps;
+    stats->sign.rxBps = stats_.sign.rxBps;
+
+    stats->sign.txPkts = (stats_.sign.txPkts >= epochStats_.sign.txPkts) ?
+                        stats_.sign.txPkts - epochStats_.sign.txPkts :
+                        stats_.sign.txPkts + (maxStatsValue_ - epochStats_.sign.txPkts);
+    stats->sign.txBytes = (stats_.sign.txBytes >= epochStats_.sign.txBytes) ?
+                        stats_.sign.txBytes - epochStats_.sign.txBytes :
+                        stats_.sign.txBytes + (maxStatsValue_ - epochStats_.sign.txBytes);
+    stats->sign.txPps = stats_.sign.txPps;
+    stats->sign.txBps = stats_.sign.txBps;
 }
 
 void AbstractPort::clearDeviceNeighbors()

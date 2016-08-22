@@ -492,6 +492,7 @@ void MyService::getStats(::google::protobuf::RpcController* /*controller*/,
         AbstractPort::PortStats stats;
         OstProto::PortStats     *s;
         OstProto::PortState     *st;
+        OstProto::Stats         *sign;
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size()))
@@ -528,6 +529,17 @@ void MyService::getStats(::google::protobuf::RpcController* /*controller*/,
         s->set_rx_errors(stats.rxErrors);
         s->set_rx_fifo_errors(stats.rxFifoErrors);
         s->set_rx_frame_errors(stats.rxFrameErrors);
+
+        sign = s->mutable_sign();
+        sign->set_rx_pkts(stats.sign.rxPkts);
+        sign->set_rx_bytes(stats.sign.rxBytes);
+        sign->set_rx_pps(stats.sign.rxPps);
+        sign->set_rx_bps(stats.sign.rxBps);
+
+        sign->set_tx_pkts(stats.sign.txPkts);
+        sign->set_tx_bytes(stats.sign.txBytes);
+        sign->set_tx_pps(stats.sign.txPps);
+        sign->set_tx_bps(stats.sign.txBps);
     }
 
     done->Run();
