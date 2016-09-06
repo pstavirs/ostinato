@@ -40,6 +40,7 @@ SOURCES += \
     portmanager.cpp \
     abstractport.cpp \
     pcapport.cpp \
+    pcaptransmitter.cpp \
     bsdport.cpp \
     linuxport.cpp \
     winpcapport.cpp 
