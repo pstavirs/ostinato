@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PCAP_TRANSMITTER_H
 
 #include "abstractport.h"
+#include "pcapextra.h"
 
 #include <QThread>
 #include <pcap.h>
