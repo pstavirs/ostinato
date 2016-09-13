@@ -14,7 +14,7 @@ matrix:
       compiler: gcc
 
 before_install:
-  - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew install qt && brew install protobuf-2.6.0; fi"
+  - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew install qt && brew install protobuf260; fi"
 
 addons:
   apt:
