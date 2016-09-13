@@ -41,6 +41,7 @@ SOURCES += \
     abstractport.cpp \
     pcapport.cpp \
     pcaptransmitter.cpp \
+    pcaptxthread.cpp \
     bsdport.cpp \
     linuxport.cpp \
     winpcapport.cpp 

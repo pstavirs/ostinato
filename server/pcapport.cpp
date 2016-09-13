@@ -31,7 +31,7 @@ PcapPort::PcapPort(int id, const char *device)
 {
     monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
-    transmitter_ = new PortTransmitter(device);
+    transmitter_ = new PcapTransmitter(device);
     capturer_ = new PortCapturer(device);
     emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
 

@@ -163,7 +163,7 @@ protected:
     void updateNotes();
 
 private:
-    PortTransmitter *transmitter_;
+    PcapTransmitter *transmitter_;
     PortCapturer    *capturer_;
     EmulationTransceiver *emulXcvr_;
 

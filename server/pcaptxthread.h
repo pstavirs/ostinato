@@ -17,16 +17,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PCAP_TRANSMITTER_H
-#define _PCAP_TRANSMITTER_H
+#ifndef _PCAP_TX_THREAD_H
+#define _PCAP_TX_THREAD_H
 
 #include "abstractport.h"
-#include "pcaptxthread.h"
+#include "packetsequence.h"
 
-class PcapTransmitter
+#include <QThread>
+#include <pcap.h>
+
+class PcapTxThread: public QThread
 {
 public:
-    PcapTransmitter(const char *device);
+    PcapTxThread(const char *device);
+    ~PcapTxThread();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
 
@@ -40,12 +44,40 @@ public:
     void setHandle(pcap_t *handle);
     void useExternalStats(AbstractPort::PortStats *stats);
 
+    void run();
+
     void start();
     void stop();
     bool isRunning();
-
 private:
-    PcapTxThread txThread_;
+    enum State
+    {
+        kNotStarted,
+        kRunning,
+        kFinished
+    };
+
+    static void udelay(unsigned long usec);
+    int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
+                int sync);
+
+    QList<PacketSequence*> packetSequenceList_;
+    PacketSequence *currentPacketSequence_;
+    int repeatSequenceStart_;
+    quint64 repeatSize_;
+    quint64 packetCount_;
+
+    int returnToQIdx_;
+    quint64 loopDelay_;
+
+    void (*udelayFn_)(unsigned long);
+
+    bool usingInternalStats_;
+    AbstractPort::PortStats *stats_;
+    bool usingInternalHandle_;
+    pcap_t *handle_;
+    volatile bool stop_;
+    volatile State state_;
 };
 
 #endif
