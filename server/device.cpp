@@ -684,16 +684,20 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
     uchar *pktData = pktBuf->push(20);
     uchar origTtl = pktData[8];
     uchar ipProto = pktData[9];
-    quint32 srcIp, dstIp;
+    quint32 srcIp, dstIp, tgtIp, mask;
     quint32 sum;
 
     // Swap src/dst IP addresses
     dstIp = qFromBigEndian<quint32>(pktData + 12); // srcIp in original pkt
     srcIp = qFromBigEndian<quint32>(pktData + 16); // dstIp in original pkt
 
-    if (!arpTable_.contains(dstIp)) {
+    mask =  ~0 << (32 - ip4PrefixLength_);
+    qDebug("dst %x mask %x self %x", dstIp, mask, ip4_);
+    tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
+
+    if (!arpTable_.contains(tgtIp)) {
         qWarning("%s: mac not found for %s; unable to send IPv4 packet",
-                __FUNCTION__, qPrintable(QHostAddress(dstIp).toString()));
+                __FUNCTION__, qPrintable(QHostAddress(tgtIp).toString()));
         return;
     }
 
@@ -712,7 +716,7 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
         sum = (sum & 0xFFFF) + (sum >> 16);
     *(quint16*)(pktData + 10) = qToBigEndian(quint16(~sum));
 
-    encap(pktBuf, arpTable_.value(dstIp), 0x0800);
+    encap(pktBuf, arpTable_.value(tgtIp), 0x0800);
     transmitPacket(pktBuf);
 }
 
@@ -796,7 +800,7 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
 {
     int payloadLen = pktBuf->length();
     uchar *p = pktBuf->push(kIp6HdrLen);
-    quint64 dstMac = ndpTable_.value(dstIp);
+    quint64 dstMac;
 
     if (!p) {
         qWarning("%s: failed to push %d bytes [0x%p, 0x%p]", __FUNCTION__,
@@ -807,6 +811,15 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
     // In case of mcast, derive dstMac
     if ((dstIp.hi64() >> 56) == 0xff)
         dstMac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xffffffff);
+    else {
+        UInt128 mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
+        UInt128 tgtIp = ((dstIp & mask) == (ip6_ & mask)) ? dstIp : ip6Gateway_;
+        qDebug("dst %s mask %s self %s",
+                qPrintable(QHostAddress(dstIp.toArray()).toString()),
+                qPrintable(QHostAddress(mask.toArray()).toString()),
+                qPrintable(QHostAddress(ip6_.toArray()).toString()));
+        dstMac = ndpTable_.value(tgtIp);
+    }
 
     if (!dstMac) {
         qWarning("%s: mac not found for %s; unable to send IPv6 packet",
@@ -841,16 +854,22 @@ _error_exit:
 void Device::sendIp6Reply(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->push(kIp6HdrLen);
-    UInt128 srcIp, dstIp;
+    UInt128 srcIp, dstIp, tgtIp, mask;
 
     // Swap src/dst IP addresses
     dstIp = qFromBigEndian<UInt128>(pktData +  8); // srcIp in original pkt
     srcIp = qFromBigEndian<UInt128>(pktData + 24); // dstIp in original pkt
 
-    if (!ndpTable_.contains(dstIp)) {
+    mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
+    qDebug("dst %s mask %s self %s",
+            qPrintable(QHostAddress(dstIp.toArray()).toString()),
+            qPrintable(QHostAddress(mask.toArray()).toString()),
+            qPrintable(QHostAddress(ip6_.toArray()).toString()));
+    tgtIp = ((dstIp & mask) == (ip6_ & mask)) ? dstIp : ip6Gateway_;
+    if (!ndpTable_.contains(tgtIp)) {
         qWarning("%s: mac not found for %s; unable to send IPv6 packet",
                 __FUNCTION__,
-                qPrintable(QHostAddress(dstIp.toArray()).toString()));
+                qPrintable(QHostAddress(tgtIp.toArray()).toString()));
         return;
     }
 
@@ -860,7 +879,7 @@ void Device::sendIp6Reply(PacketBuffer *pktBuf)
     // Reset TTL
     pktData[7] = 64;
 
-    encap(pktBuf, ndpTable_.value(dstIp), 0x86dd);
+    encap(pktBuf, ndpTable_.value(tgtIp), 0x86dd);
     transmitPacket(pktBuf);
 }
 
