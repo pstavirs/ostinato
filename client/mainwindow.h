@@ -51,7 +51,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void on_actionOpenSession_triggered();
+    void on_actionOpenSession_triggered(QString fileName = QString());
     void on_actionSaveSession_triggered();
     void on_actionPreferences_triggered();
     void on_actionViewRestoreDefaults_triggered();

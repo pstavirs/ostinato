@@ -120,6 +120,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(updater, SIGNAL(newVersionAvailable(QString)), 
             this, SLOT(onNewVersion(QString)));
     updater->checkForNewVersion();
+
+    if (appParams.argumentCount()) {
+        QString fileName = appParams.argument(0);
+        if (QFile::exists(fileName))
+            on_actionOpenSession_triggered(fileName);
+        else
+            QMessageBox::information(NULL, qApp->applicationName(),
+                    QString("File not found: " + fileName));
+    }
+
 #if 0
     {
         DbgThread *dbg = new DbgThread(pgl);
@@ -151,17 +161,19 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::on_actionOpenSession_triggered()
+void MainWindow::on_actionOpenSession_triggered(QString fileName)
 {
-    qDebug("Open Session Action");
+    qDebug("Open Session Action (%s)", qPrintable(fileName));
 
     static QString dirName;
-    QString fileName;
     QStringList fileTypes = SessionFileFormat::supportedFileTypes(
                                                 SessionFileFormat::kOpenFile);
     QString fileType;
     QString errorStr;
     bool ret;
+
+    if (!fileName.isEmpty())
+        goto _skip_prompt;
 
     if (portsWindow->portGroupCount()) {
         if (QMessageBox::question(this,
@@ -180,6 +192,7 @@ void MainWindow::on_actionOpenSession_triggered()
     if (fileName.isEmpty())
         goto _exit;
 
+_skip_prompt:
     ret = openSession(fileName, errorStr);
     if (!ret || !errorStr.isEmpty()) {
         QMessageBox msgBox(this);
