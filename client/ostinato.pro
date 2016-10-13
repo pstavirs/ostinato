@@ -86,6 +86,7 @@ SOURCES += \
     mainwindow.cpp \
     ndpstatusmodel.cpp \
     packetmodel.cpp \
+    params.cpp \
     port.cpp \
     portconfigdialog.cpp \
     portgroup.cpp \

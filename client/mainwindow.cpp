@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dbgthread.h"
 #endif
 
+#include "params.h"
 #include "portgrouplist.h"
 #include "portstatswindow.h"
 #include "portswindow.h"
@@ -50,23 +51,28 @@ PortGroupList    *pgl;
 MainWindow::MainWindow(QWidget *parent) 
     : QMainWindow (parent)
 {
-    QString serverApp = QCoreApplication::applicationDirPath();
     Updater *updater = new Updater();
 
+    if (appParams.optLocalDrone()) {
+        QString serverApp = QCoreApplication::applicationDirPath();
 #ifdef Q_OS_MAC
-    // applicationDirPath() does not return bundle, but executable inside bundle
-    serverApp.replace("Ostinato.app", "drone.app");
+        // applicationDirPath() does not return bundle,
+        // but executable inside bundle
+        serverApp.replace("Ostinato.app", "drone.app");
 #endif
-
 #ifdef Q_OS_WIN32
-    serverApp.append("/drone.exe");
+        serverApp.append("/drone.exe");
 #else
-    serverApp.append("/drone");
+        serverApp.append("/drone");
 #endif
 
-    localServer_ = new QProcess(this);
-    localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
-    localServer_->start(serverApp, QStringList());
+        qDebug("staring local server - %s", qPrintable(serverApp));
+        localServer_ = new QProcess(this);
+        localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
+        localServer_->start(serverApp, QStringList());
+    }
+    else
+        localServer_ = NULL;
 
     pgl = new PortGroupList;
 
@@ -124,12 +130,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    if (localServer_) {
 #ifdef Q_OS_WIN32
-    //! \todo - find a way to terminate cleanly
-    localServer_->kill();
+        //! \todo - find a way to terminate cleanly
+        localServer_->kill();
 #else    
-    localServer_->terminate();
+        localServer_->terminate();
 #endif
+    }
 
     delete pgl;
 
@@ -137,8 +145,10 @@ MainWindow::~MainWindow()
     appSettings->setValue(kApplicationWindowLayout, layout);
     appSettings->setValue(kApplicationWindowGeometryKey, geometry());
 
-    localServer_->waitForFinished();
-    delete localServer_;
+    if (localServer_) {
+        localServer_->waitForFinished();
+        delete localServer_;
+    }
 }
 
 void MainWindow::on_actionOpenSession_triggered()

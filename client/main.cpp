@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/ostprotolib.h"
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
+#include "params.h"
 #include "preferences.h"
 #include "settings.h"
 
@@ -37,6 +38,7 @@ extern const char* revision;
 extern ProtocolManager *OstProtocolManager;
 extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
+Params appParams;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
@@ -49,6 +51,8 @@ int main(int argc, char* argv[])
     app.setOrganizationName("Ostinato");
     app.setProperty("version", version);
     app.setProperty("revision", revision);
+
+    appParams.parseCommandLine(argc, argv);
 
     OstProtocolManager = new ProtocolManager();
     OstProtocolWidgetFactory = new ProtocolWidgetFactory();
