@@ -21,12 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PCAP_TRANSMITTER_H
 
 #include "abstractport.h"
+#include "pcaptxstats.h"
 #include "pcaptxthread.h"
+#include "statstuple.h"
 
 class PcapTransmitter
 {
 public:
     PcapTransmitter(const char *device);
+    ~PcapTransmitter();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
 
@@ -46,6 +49,8 @@ public:
 
 private:
     PcapTxThread txThread_;
+    PcapTxStats txStats_;
+    StatsTuple stats_;
 };
 
 #endif

@@ -22,6 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PcapTransmitter::PcapTransmitter(const char *device)
     : txThread_(device)
 {
+    memset(&stats_, 0, sizeof(stats_));
+    txStats_.setTxThreadStats(&stats_);
+    txStats_.start(); // TODO: alongwith user transmit start
+
+    txThread_.setStats(&stats_);
+}
+
+PcapTransmitter::~PcapTransmitter()
+{
+    txStats_.stop(); // TODO: alongwith user transmit stop
 }
 
 bool PcapTransmitter::setRateAccuracy(
@@ -65,7 +75,7 @@ void PcapTransmitter::setPacketListLoopMode(
 
 void PcapTransmitter::useExternalStats(AbstractPort::PortStats *stats)
 {
-    txThread_.useExternalStats(stats);
+    txStats_.useExternalStats(stats);
 }
 
 void PcapTransmitter::start()

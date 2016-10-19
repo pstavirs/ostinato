@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcaptransmitter.h"
 
+#include "statstuple.h"
 #include "timestamp.h"
 
 PcapTxThread::PcapTxThread(const char *device)
@@ -37,14 +38,14 @@ PcapTxThread::PcapTxThread(const char *device)
     returnToQIdx_ = -1;
     loopDelay_ = 0;
     stop_ = false;
-    stats_ = new AbstractPort::PortStats;
-    usingInternalStats_ = true;
     handle_ = pcap_open_live(device, 64 /* FIXME */, 0, 1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
         goto _open_error;
 
     usingInternalHandle_ = true;
+
+    stats_ = NULL;
 
     return;
 
@@ -55,8 +56,6 @@ _open_error:
 
 PcapTxThread::~PcapTxThread()
 {
-    if (usingInternalStats_)
-        delete stats_;
     if (usingInternalHandle_)
         pcap_close(handle_);
 }
@@ -199,12 +198,9 @@ void PcapTxThread::setHandle(pcap_t *handle)
     usingInternalHandle_ = false;
 }
 
-void PcapTxThread::useExternalStats(AbstractPort::PortStats *stats)
+void PcapTxThread::setStats(StatsTuple *stats)
 {
-    if (usingInternalStats_)
-        delete stats_;
     stats_ = stats;
-    usingInternalStats_ = false;
 }
 
 void PcapTxThread::run()
@@ -266,8 +262,8 @@ _restart:
                             seq->sendQueue_, kSyncTransmit);
                     if (ret >= 0)
                     {
-                        stats_->txPkts += seq->packets_;
-                        stats_->txBytes += seq->bytes_;
+                        stats_->pkts += seq->packets_;
+                        stats_->bytes += seq->bytes_;
 
                         getTimeStamp(&ovrEnd);
                         overHead += seq->usecDuration_
@@ -407,8 +403,8 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
         Q_ASSERT(pktLen > 0);
 
         pcap_sendpacket(p, pkt, pktLen);
-        stats_->txPkts++;
-        stats_->txBytes += pktLen;
+        stats_->pkts++;
+        stats_->bytes += pktLen;
 
         // Step to the next packet in the buffer
         hdr = (struct pcap_pkthdr*) (pkt + pktLen);

@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QThread>
 #include <pcap.h>
 
+class StatsTuple;
+
 class PcapTxThread: public QThread
 {
 public:
@@ -42,13 +44,15 @@ public:
     void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay);
 
     void setHandle(pcap_t *handle);
-    void useExternalStats(AbstractPort::PortStats *stats);
+
+    void setStats(StatsTuple *stats);
 
     void run();
 
     void start();
     void stop();
     bool isRunning();
+
 private:
     enum State
     {
@@ -72,12 +76,12 @@ private:
 
     void (*udelayFn_)(unsigned long);
 
-    bool usingInternalStats_;
-    AbstractPort::PortStats *stats_;
     bool usingInternalHandle_;
     pcap_t *handle_;
     volatile bool stop_;
     volatile State state_;
+
+    StatsTuple *stats_;
 };
 
 #endif
