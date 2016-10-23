@@ -36,6 +36,8 @@ public:
 
     void useExternalStats(AbstractPort::PortStats *stats);
 
+    void useSignedStreams(bool enable);
+
     void start();
     void stop();
 private:
@@ -46,6 +48,7 @@ private:
     bool usingInternalStats_;
     AbstractPort::PortStats *stats_;
 
+    volatile bool usingSignedStreams_;
     volatile bool stop_;
 };
 

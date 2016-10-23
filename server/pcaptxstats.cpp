@@ -28,6 +28,8 @@ PcapTxStats::PcapTxStats()
     stats_ = new AbstractPort::PortStats;
     usingInternalStats_ = true;
 
+    usingSignedStreams_ = false;
+
     stop_ = false;
 }
 
@@ -48,6 +50,11 @@ void PcapTxStats::useExternalStats(AbstractPort::PortStats *stats)
         delete stats_;
     stats_ = stats;
     usingInternalStats_ = false;
+}
+
+void PcapTxStats::useSignedStreams(bool enable)
+{
+    usingSignedStreams_ = enable;
 }
 
 void PcapTxStats::start()
@@ -75,6 +82,15 @@ void PcapTxStats::run()
     while (1) {
         stats_->txPkts = txThreadStats_->pkts;
         stats_->txBytes = txThreadStats_->bytes;
+
+        // XXX: If port uses signed streams, we assume that all packets
+        // sent by txThread are signed packets => this requires us to
+        // set sign tx stats equal to tx stats followed by a clear stats
+        // whenever this setting changes
+        if (usingSignedStreams_) {
+            stats_->sign.txPkts = txThreadStats_->pkts;
+            stats_->sign.txBytes = txThreadStats_->bytes;
+        }
 
         if (stop_)
             break;

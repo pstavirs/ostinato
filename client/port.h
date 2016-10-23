@@ -98,6 +98,8 @@ public:
         { return d.is_exclusive_control(); }
     OstProto::TransmitMode transmitMode() 
         { return d.transmit_mode(); }
+    OstProto::StreamType streamsType()
+        { return d.streams_type(); }
     double averagePacketRate()
         { return avgPacketsPerSec_; }
     double averageBitRate()

@@ -64,6 +64,19 @@ PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
     qDebug("reservedBy_ = %d", reservedBy_);
 
     exclusiveControlButton->setChecked(portConfig_.is_exclusive_control());
+
+    switch(portConfig_.streams_type())
+    {
+    case OstProto::kUnsignedStream:
+        signedStreamsButton->setChecked(false);
+        break;
+    case OstProto::kSignedStream:
+        signedStreamsButton->setChecked(true);
+        break;
+    default:
+        Q_ASSERT(false); // Unreachable!!!
+        break;
+    }
 }
 
 void PortConfigDialog::accept()
@@ -96,6 +109,11 @@ void PortConfigDialog::accept()
 
     pc.set_is_exclusive_control(exclusiveControlButton->isChecked());
 
+    if (signedStreamsButton->isChecked())
+        pc.set_streams_type(OstProto::kSignedStream);
+    else
+        pc.set_streams_type(OstProto::kUnsignedStream);
+
     // Update fields that have changed, clear the rest
     if (pc.transmit_mode() != portConfig_.transmit_mode())
         portConfig_.set_transmit_mode(pc.transmit_mode());
@@ -111,6 +129,11 @@ void PortConfigDialog::accept()
         portConfig_.set_is_exclusive_control(pc.is_exclusive_control());
     else
         portConfig_.clear_is_exclusive_control();
+
+    if (pc.streams_type() != portConfig_.streams_type())
+        portConfig_.set_streams_type(pc.streams_type());
+    else
+        portConfig_.clear_streams_type();
 
     QDialog::accept();
 }

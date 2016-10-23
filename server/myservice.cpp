@@ -133,6 +133,9 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         id = port.port_id().id();
         if (id < portInfo.size())
         {
+            // FIXME: return error for any change in transmitMode/streamsType
+            // while transmit is on
+
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
             portLock[id]->unlock();
@@ -148,6 +151,8 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         notif->set_notif_type(OstProto::portConfigChanged);
         emit notification(notif->notif_type(), SharedProtobufMessage(notif));
     }
+
+    // FIXME: potential memory leak of notif
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,

@@ -43,6 +43,8 @@ public:
     void setHandle(pcap_t *handle);
     void useExternalStats(AbstractPort::PortStats *stats);
 
+    void useSignedStreams(bool enable);
+
     void start();
     void stop();
     bool isRunning();
