@@ -366,14 +366,7 @@ Length (x4)</string>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="leIpOptions" >
-       <property name="enabled" >
-        <bool>false</bool>
-       </property>
-       <property name="text" >
-        <string>TODO</string>
-       </property>
-      </widget>
+      <widget class="QLineEdit" name="leIpOptions" />
      </item>
      <item>
       <widget class="QToolButton" name="tbIpOptionsEdit" >

@@ -112,6 +112,7 @@ AbstractProtocol::FieldFlags Ip4Protocol::fieldFlags(int index) const
 
         case ip4_srcAddr:
         case ip4_dstAddr:
+        case ip4_options:
             break;
 
         case ip4_isOverrideVer:
@@ -168,7 +169,9 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
         {
             int hdrlen;
 
-            hdrlen = data.is_override_hdrlen() ? data.ver_hdrlen() & 0x0F : 5;
+            hdrlen = data.is_override_hdrlen() ?
+                        data.ver_hdrlen() : 5 + data.options().length()/4;
+            hdrlen &= 0x0F;
 
             switch(attrib)
             {
@@ -205,6 +208,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
             break;
         case ip4_totLen:
         {
+            int ipLen = 20 + data.options().length();
             switch(attrib)
             {
                 case FieldName:            
@@ -213,7 +217,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     int totlen;
                     totlen = data.is_override_totlen() ? data.totlen() : 
-                        (protocolFramePayloadSize(streamIndex) + 20);
+                        (protocolFramePayloadSize(streamIndex) + ipLen);
                     return totlen;
                 }
                 case FieldFrameValue:
@@ -221,7 +225,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                     QByteArray fv;
                     int totlen;
                     totlen = data.is_override_totlen() ? data.totlen() : 
-                        (protocolFramePayloadSize(streamIndex) + 20);
+                        (protocolFramePayloadSize(streamIndex) + ipLen);
                     fv.resize(2);
                     qToBigEndian((quint16) totlen, (uchar*) fv.data());
                     return fv;
@@ -230,7 +234,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     int totlen;
                     totlen = data.is_override_totlen() ? data.totlen() : 
-                        (protocolFramePayloadSize(streamIndex) + 20);
+                        (protocolFramePayloadSize(streamIndex) + ipLen);
                     return QString("%1").arg(totlen);
                 }
                 case FieldBitSize:
@@ -509,6 +513,32 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+        case ip4_options:
+        {
+            QByteArray ba;
+            switch(attrib)
+            {
+                case FieldValue:
+                case FieldFrameValue:
+                case FieldTextValue:
+                    ba.append(QString().fromStdString(data.options()));
+                default:
+                    break;
+            }
+            switch(attrib)
+            {
+                case FieldName:
+                    return QString("Options");
+                case FieldValue:
+                case FieldFrameValue:
+                    return ba;
+                case FieldTextValue:
+                    return ba.toHex();
+                default:
+                    break;
+            }
+            break;
+        }
 
         // Meta fields
         case ip4_isOverrideVer:
@@ -693,6 +723,16 @@ bool Ip4Protocol::setFieldData(int index, const QVariant &value,
             quint32 dstIp = value.toUInt(&isOk);
             if (isOk)
                 data.set_dst_ip(dstIp);
+            break;
+        }
+        case ip4_options:
+        {
+            QByteArray ba = value.toByteArray();
+            int pad = (4 - (ba.size() % 4)) % 4;
+            if (pad)
+                ba.append(QByteArray(pad, 0));
+            data.set_options(ba.constData(), ba.size());
+            isOk = true;
             break;
         }
 
