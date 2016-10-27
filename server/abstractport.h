@@ -87,6 +87,7 @@ public:
     const char* name() { return data_.name().c_str(); }
     void protoDataCopyInto(OstProto::Port *port) { port->CopyFrom(data_); }
 
+    bool canModify(const OstProto::Port &port, bool *dirty);
     bool modify(const OstProto::Port &port);
 
     virtual OstProto::LinkState linkState() { return linkState_; }

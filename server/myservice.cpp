@@ -133,12 +133,19 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         id = port.port_id().id();
         if (id < portInfo.size())
         {
-            // FIXME: return error for any change in transmitMode/streamsType
-            // while transmit is on
+            bool dirty;
+
+            if (!portInfo[id]->canModify(port, &dirty)) {
+                qDebug("Port %d cannot be modified - stop tx and retry", id);
+                continue;        //! \todo(LOW): Partial status of RPC
+            }
 
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
+            if (dirty)
+                portInfo[id]->updatePacketList();
             portLock[id]->unlock();
+
 
             notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }

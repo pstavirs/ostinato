@@ -65,6 +65,28 @@ void AbstractPort::init()
 {
 }    
 
+/*! Can we modify Port with these params? Should modify cause port dirty? */
+bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
+{
+    bool allow = true;
+
+    *dirty = false;
+
+    if (port.has_transmit_mode()
+            && (port.transmit_mode() != data_.transmit_mode())) {
+        *dirty = true;
+        allow = !isTransmitOn();
+    }
+
+    if (port.has_streams_type()
+            && (port.streams_type() != data_.streams_type())) {
+        *dirty = true;
+        allow = !isTransmitOn();
+    }
+
+    return allow;
+}
+
 bool AbstractPort::modify(const OstProto::Port &port)
 {
     bool ret = true;
