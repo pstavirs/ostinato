@@ -723,7 +723,7 @@ void PortsWindow::on_actionPort_Configuration_triggered()
     // we want only the modifiable fields populated to send to Drone
     // TODO: extend Port::protoDataCopyInto() to accept an optional param
     // which says copy only modifiable fields
-    plm->port(current).protoDataCopyInto(&config);
+    //plm->port(current).protoDataCopyInto(&config);
     config.set_transmit_mode(plm->port(current).transmitMode());
     config.set_streams_type(plm->port(current).streamsType());
     config.set_is_exclusive_control(plm->port(current).hasExclusiveControl());
