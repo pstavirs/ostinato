@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portconfigdialog.h"
 #include "settings.h"
 
-PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
+PortConfigDialog::PortConfigDialog(
+    OstProto::Port &portConfig,
+    const OstProto::PortState &portState,
+    QWidget *parent)
         : QDialog(parent), portConfig_(portConfig)
 {
     QString currentUser(portConfig_.user_name().c_str());
@@ -76,6 +79,12 @@ PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
     default:
         Q_ASSERT(false); // Unreachable!!!
         break;
+    }
+
+    // Disable UI elements based on portState
+    if (portState.is_transmit_on()) {
+        transmitModeBox->setDisabled(true);
+        signedStreamsButton->setDisabled(true);
     }
 }
 
