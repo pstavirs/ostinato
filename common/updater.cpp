@@ -55,7 +55,7 @@ void Updater::checkForNewVersion()
     file_ = new QTemporaryFile();
 
     reqHdr.setValue("Host", host);
-    reqHdr.setValue("UserAgent", userAgent());
+    reqHdr.setValue("User-Agent", userAgent());
 
     connect(http_, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), 
             this, SLOT(responseReceived(QHttpResponseHeader)));
