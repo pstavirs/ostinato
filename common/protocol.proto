@@ -128,6 +128,7 @@ message Protocol {
         kSampleFieldNumber = 102;
         kUserScriptFieldNumber = 103;
         kHexDumpFieldNumber = 104;
+        kSignFieldNumber = 105;
 
         kEth2FieldNumber = 200;
         kDot3FieldNumber = 201;

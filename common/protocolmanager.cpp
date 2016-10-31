@@ -59,6 +59,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "hexdump.h"
 #include "payload.h"
 #include "sample.h"
+#include "sign.h"
 #include "userscript.h"
 
 ProtocolManager *OstProtocolManager;
@@ -133,6 +134,8 @@ ProtocolManager::ProtocolManager()
             (void*) PayloadProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kSampleFieldNumber,
             (void*) SampleProtocol::createInstance);
+    registerProtocol(OstProto::Protocol::kSignFieldNumber,
+            (void*) SignProtocol::createInstance);
     registerProtocol(OstProto::Protocol::kUserScriptFieldNumber,
             (void*) UserScriptProtocol::createInstance);
 
