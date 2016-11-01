@@ -68,7 +68,7 @@ int PayloadProtocol::protocolFrameSize(int streamIndex) const
     int len;
 
     len = mpStream->frameLen(streamIndex) - protocolFrameOffset(streamIndex) 
-        - kFcsSize;
+        - protocolFramePayloadSize(streamIndex) - kFcsSize;
 
     if (len < 0)
         len = 0;
