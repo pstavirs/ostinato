@@ -36,19 +36,6 @@ class QIODevice;
 class AbstractPort
 {
 public:
-    struct Stats
-    {
-        quint64    rxPkts;
-        quint64    rxBytes;
-        quint64    rxPps;
-        quint64    rxBps;
-
-        quint64    txPkts;
-        quint64    txBytes;
-        quint64    txPps;
-        quint64    txBps;
-    };
-
     struct PortStats
     {
         quint64    rxPkts;
@@ -65,8 +52,6 @@ public:
         quint64    txBytes;
         quint64    txPps;
         quint64    txBps;
-
-        Stats      sign;
     };
 
     enum Accuracy

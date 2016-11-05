@@ -78,11 +78,6 @@ void PcapTransmitter::useExternalStats(AbstractPort::PortStats *stats)
     txStats_.useExternalStats(stats);
 }
 
-void PcapTransmitter::useSignedStreams(bool enable)
-{
-    txStats_.useSignedStreams(enable);
-}
-
 void PcapTransmitter::start()
 {
     txThread_.start();

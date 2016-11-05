@@ -236,19 +236,6 @@ message PortState {
     optional bool is_capture_on = 3 [default = false];
 }
 
-message Stats {
-    // FIXME: change tag numbers?
-    optional uint64 rx_pkts = 11;
-    optional uint64 rx_bytes = 12;
-    optional uint64 rx_pps = 15;
-    optional uint64 rx_bps = 16;
-
-    optional uint64 tx_pkts = 21;
-    optional uint64 tx_bytes = 22;
-    optional uint64 tx_pps = 25;
-    optional uint64 tx_bps = 26;
-}
-
 message PortStats {
 
     required PortId    port_id = 1;
@@ -273,8 +260,6 @@ message PortStats {
     optional uint64 rx_errors = 101;
     optional uint64 rx_fifo_errors = 102;
     optional uint64 rx_frame_errors = 103;
-
-    optional Stats sign = 1000;
 }
 
 message PortStatsList {

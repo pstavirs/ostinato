@@ -170,12 +170,6 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
             case e_STAT_BYTES_SENT_NIC:
                 return stats.tx_bytes_nic();
 #endif
-            // Sign Stats
-            case e_STAT_SIGN_FRAMES_RCVD:
-                return quint64(stats.sign().rx_pkts());
-            case e_STAT_SIGN_FRAMES_SENT:
-                return quint64(stats.sign().tx_pkts());
-            // TODO: Other sign stats
 
             case e_STAT_RX_DROPS : return quint64(stats.rx_drops());
             case e_STAT_RX_ERRORS: return quint64(stats.rx_errors());
