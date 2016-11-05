@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _BYTE_SWAP_H
-#define _BYTE_SWAP_H
+#ifndef _B_SWAP_H
+#define _B_SWAP_H
 
 #include <QtGlobal>
 

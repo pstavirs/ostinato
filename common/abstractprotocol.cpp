@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocollistiterator.h"
 #include "streambase.h"
 
-#include "byteswap.h"
+#include "bswap.h"
 
 #include <qendian.h>
 
