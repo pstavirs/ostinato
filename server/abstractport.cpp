@@ -78,12 +78,6 @@ bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
         allow = !isTransmitOn();
     }
 
-    if (port.has_streams_type()
-            && (port.streams_type() != data_.streams_type())) {
-        *dirty = true;
-        allow = !isTransmitOn();
-    }
-
     return allow;
 }
 
@@ -103,9 +97,6 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     if (port.has_transmit_mode())
         data_.set_transmit_mode(port.transmit_mode());
-
-    if (port.has_streams_type())
-        setStreamsType(port.streams_type());
 
     if (port.has_user_name()) {
         data_.set_user_name(port.user_name());
@@ -178,11 +169,6 @@ void AbstractPort::addNote(QString note)
     notes.append("</ul>");
 
     data_.set_notes(notes.toStdString());
-}
-
-bool AbstractPort::setStreamsType(OstProto::StreamType type)
-{
-    data_.set_streams_type(type);
 }
 
 AbstractPort::Accuracy AbstractPort::rateAccuracy()

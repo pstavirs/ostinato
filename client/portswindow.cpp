@@ -726,7 +726,6 @@ void PortsWindow::on_actionPort_Configuration_triggered()
     // which says copy only modifiable fields
     //plm->port(current).protoDataCopyInto(&config);
     config.set_transmit_mode(port.transmitMode());
-    config.set_streams_type(port.streamsType());
     config.set_is_exclusive_control(port.hasExclusiveControl());
     config.set_user_name(port.userName().toStdString());
 

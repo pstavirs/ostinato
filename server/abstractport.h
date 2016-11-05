@@ -103,8 +103,6 @@ public:
     bool isDirty() { return isSendQueueDirty_; }
     void setDirty() { isSendQueueDirty_ = true; }
 
-    virtual bool setStreamsType(OstProto::StreamType type);
-
     Accuracy rateAccuracy();
     virtual bool setRateAccuracy(Accuracy accuracy);
 

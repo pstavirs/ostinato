@@ -196,11 +196,6 @@ enum TransmitMode {
     kInterleavedTransmit = 1;
 }
 
-enum StreamType {
-    kUnsignedStream = 0; // FIXME: rename? convert to flags?
-    kSignedStream = 1;
-}
-
 message Port {
     required PortId port_id = 1;
     optional string name = 2;
@@ -210,7 +205,6 @@ message Port {
     optional bool is_exclusive_control = 6;
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
     optional string user_name = 8;
-    optional StreamType streams_type = 9 [default = kUnsignedStream];
 }
 
 message PortConfigList {

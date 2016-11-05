@@ -39,8 +39,6 @@ public:
     virtual bool hasExclusiveControl() { return false; }
     virtual bool setExclusiveControl(bool /*exclusive*/) { return false; }
 
-    virtual bool setStreamsType(OstProto::StreamType type);
-
     virtual bool setRateAccuracy(AbstractPort::Accuracy accuracy); 
 
     virtual void clearPacketList() { 

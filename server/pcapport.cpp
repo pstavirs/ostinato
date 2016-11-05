@@ -117,26 +117,6 @@ void PcapPort::updateNotes()
             arg(notes).toStdString());
 }
 
-bool PcapPort::setStreamsType(OstProto::StreamType type)
-{
-    AbstractPort::setStreamsType(type);
-    transmitter_->useSignedStreams(type == OstProto::kSignedStream);
-
-    // XXX: Because of the way we implement signed tx stats, changing
-    // streamsType requires us to set sign tx stats equal to tx stats
-    // followed by clear stats; see note in PcapTxStats::run() for details
-    // FIXME: can we get away with clearing only sign stats?
-    // FIXME: Ideally PcapPort should *NOT* know how PcapTxStats implements
-    // sign stats
-    stats_.sign.txPkts = stats_.txPkts;
-    stats_.sign.txBytes = stats_.txBytes;
-    stats_.sign.rxPkts = stats_.rxPkts;
-    stats_.sign.rxBytes = stats_.rxBytes;
-    resetStats();
-
-    return true;
-}
-
 bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
 {
     if (transmitter_->setRateAccuracy(accuracy)) {
