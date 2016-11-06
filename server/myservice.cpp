@@ -570,6 +570,28 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
     done->Run();
 }
 
+void MyService::getStreamStats(
+    ::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::StreamGuidList* request,
+    ::OstProto::StreamStatsList* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+    // TODO
+    done->Run();
+}
+
+void MyService::clearStreamStats(
+    ::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::StreamGuidList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+    // TODO
+    done->Run();
+}
+
 void MyService::checkVersion(::google::protobuf::RpcController* controller,
     const ::OstProto::VersionInfo* request,
     ::OstProto::VersionCompatibility* response,

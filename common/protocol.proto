@@ -369,9 +369,6 @@ service OstService {
     rpc getStats(PortIdList) returns (PortStatsList);
     rpc clearStats(PortIdList) returns (Ack);
 
-    rpc getStreamStats(StreamGuidList) returns (StreamStatsList);
-    rpc clearStreamStats(StreamGuidList) returns (Ack);
-
     rpc checkVersion(VersionInfo) returns (VersionCompatibility);
 
     // Device Emulation
@@ -386,5 +383,11 @@ service OstService {
     rpc resolveDeviceNeighbors(PortIdList) returns (Ack);
     rpc clearDeviceNeighbors(PortIdList) returns (Ack);
     rpc getDeviceNeighbors(PortId) returns (PortNeighborList);
+
+    // Stream Stats
+    rpc getStreamStats(StreamGuidList) returns (StreamStatsList);
+    rpc clearStreamStats(StreamGuidList) returns (Ack);
+
+    // XXX: Add new RPCs at the end only to preserve backward compatibility
 }
 

@@ -100,6 +100,16 @@ public:
         const ::OstProto::PortIdList* request,
         ::OstProto::Ack* response,
         ::google::protobuf::Closure* done);
+
+    virtual void getStreamStats(::google::protobuf::RpcController* controller,
+        const ::OstProto::StreamGuidList* request,
+        ::OstProto::StreamStatsList* response,
+        ::google::protobuf::Closure* done);
+    virtual void clearStreamStats(::google::protobuf::RpcController* controller,
+        const ::OstProto::StreamGuidList* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+
     virtual void checkVersion(::google::protobuf::RpcController* controller,
         const ::OstProto::VersionInfo* request,
         ::OstProto::VersionCompatibility* response,
