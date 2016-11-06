@@ -205,6 +205,7 @@ message Port {
     optional bool is_exclusive_control = 6;
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
     optional string user_name = 8;
+    optional bool stream_stats_tracking = 9; // FIXME: rename to is_XXX ?
 }
 
 message PortConfigList {
@@ -264,6 +265,29 @@ message PortStats {
 
 message PortStatsList {
     repeated PortStats port_stats = 1;
+}
+
+message StreamGuid {
+    required uint32 id = 1;
+}
+
+message StreamGuidList {
+    repeated StreamGuid stream_guid = 1;
+    optional PortIdList port_list = 2;
+}
+
+message StreamStats {
+    required StreamGuid stream_guid = 1;
+    required PortId port_id = 2; // FIXME: change to optional - reuse for aggr?
+
+    optional uint64 rx_pkts = 11;
+    optional uint64 rx_bytes = 12;
+    optional uint64 tx_pkts = 13;
+    optional uint64 tx_bytes = 14;
+}
+
+message StreamStatsList {
+    repeated StreamStats stream_stats = 1;
 }
 
 enum NotifType {
@@ -344,6 +368,9 @@ service OstService {
 
     rpc getStats(PortIdList) returns (PortStatsList);
     rpc clearStats(PortIdList) returns (Ack);
+
+    rpc getStreamStats(StreamGuidList) returns (StreamStatsList);
+    rpc clearStreamStats(StreamGuidList) returns (Ack);
 
     rpc checkVersion(VersionInfo) returns (VersionCompatibility);
 
