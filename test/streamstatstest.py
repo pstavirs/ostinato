@@ -20,6 +20,7 @@ from rpc import RpcError
 from protocols.mac_pb2 import mac, Mac
 from protocols.ip4_pb2 import ip4, Ip4
 from protocols.payload_pb2 import payload, Payload
+from protocols.sign_pb2 import sign
 
 # Convenience class to interwork with OstEmul::Ip6Address() and
 # the python ipaddress module
@@ -335,7 +336,7 @@ def stream(request, drone, ports):
     s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
     p = s.protocol.add()
     p.protocol_id.id = ost_pb.Protocol.kSignFieldNumber
-    # FIXME: p.Extensions[sign].stream_guid = 101
+    p.Extensions[sign].stream_guid = 101
 
     def fin():
         # delete streams
@@ -446,13 +447,6 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         log.info('--> (y_stats)' + y_stats.__str__())
         assert(y_stats.port_stats[0].rx_pkts >= 20)
 
-        # verify stream stats
-        stream_stats_list = drone.getStreamStats(stream_guids)
-        log.info('--> (stream_stats)' + stream_stats_list.__str__())
-        assert (len(stream_stats_list.stream_stats) > 0)
-
-        # FIXME: verify stream stats
-
         # dump Y capture buffer
         log.info('getting Y capture buffer')
         buff = drone.getCaptureBuffer(ports.y.port_id[0])
@@ -460,7 +454,21 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         log.info('dumping Y capture buffer')
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap'])
         print(cap_pkts)
+        filter="frame[-9:9]==00.00.00.65.61.a1.b2.c3.d4"
+        print(filter)
+        log.info('dumping Y capture buffer (filtered)')
+        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
+            '-Y', filter])
+        print(cap_pkts)
+        assert cap_pkts.count('\n') == 10
         os.remove('capture.pcap')
+
+        # verify stream stats
+        stream_stats_list = drone.getStreamStats(stream_guids)
+        log.info('--> (stream_stats)' + stream_stats_list.__str__())
+        assert (len(stream_stats_list.stream_stats) > 0)
+
+        # FIXME: verify stream stats
 
     except RpcError as e:
             raise

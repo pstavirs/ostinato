@@ -25,11 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 /*
 Sign Protocol is expected at the end of the frame (just before the Eth FCS)
-    --+-------+
- . . .| Magic |
-      |  (32) |
-    --+-------+
+   ---+--------+-------+
+ . . .| TLV(s) | Magic |
+      |  (8+)  |  (32) |
+   ---+--------+-------+
 Figures in brackets represent field width in bits
+
+TLVs are encoded as
+ +-------+-----+------+
+ | Value | Len | Type |
+ | (...) | (3) | (5)  |
+ +-------+-----+------+
+ Len does NOT include the one byte of TypeLen
+ Size of the value field varies between 0 to 7 bytes
+
+ Defined TLVs
+ Type = 0, Len = 0 (0x00): End of TLVs
+ Type = 1, Len = 3 (0x61): Stream GUID
 */
 
 class SignProtocol : public AbstractProtocol
@@ -38,7 +50,9 @@ public:
     enum samplefield
     {
         // Frame Fields
-        sign_magic = 0,
+        sign_tlv_end = 0,
+        sign_tlv_guid,
+        sign_magic,
 
         // Meta Fields
         // - None
@@ -64,9 +78,13 @@ public:
     virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,
                int streamIndex = 0) const;
+    virtual bool setFieldData(int index, const QVariant &value,
+            FieldAttrib attrib = FieldValue);
 
 private:
     static const quint32 kSignMagic = 0xa1b2c3d4; // FIXME
+    static const quint8 kTypeLenEnd = 0x00;
+    static const quint8 kTypeLenGuid = 0x61;
     OstProto::Sign data;
 };
 

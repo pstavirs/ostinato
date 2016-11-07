@@ -76,6 +76,8 @@ AbstractProtocol::FieldFlags SignProtocol::fieldFlags(int index) const
     switch (index)
     {
         case sign_magic:
+        case sign_tlv_guid:
+        case sign_tlv_end:
             break;
 
         default:
@@ -113,7 +115,49 @@ QVariant SignProtocol::fieldData(int index, FieldAttrib attrib,
                     break;
             }
             break;
-
+        }
+        case sign_tlv_guid:
+        {
+            quint32 guid = data.stream_guid() & 0xFFFFFF;
+            switch(attrib)
+            {
+                case FieldName:
+                    return QString("Stream GUID");
+                case FieldValue:
+                    return guid;
+                case FieldTextValue:
+                    return QString("%1").arg(guid);
+                case FieldFrameValue:
+                {
+                    QByteArray fv;
+                    fv.resize(4);
+                    fv[0] = (guid >> 16) & 0xff;
+                    fv[1] = (guid >>  8) & 0xff;
+                    fv[2] = (guid >>  0) & 0xff;
+                    fv[3] = kTypeLenGuid;
+                    return fv;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        case sign_tlv_end:
+        {
+            switch(attrib)
+            {
+                case FieldName:
+                    return QString("End TLV");
+                case FieldValue:
+                    return 0;
+                case FieldTextValue:
+                    return QString("NA");
+                case FieldFrameValue:
+                    return QByteArray(1, kTypeLenEnd);
+                default:
+                    break;
+            }
+            break;
         }
         default:
             qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
@@ -123,3 +167,32 @@ QVariant SignProtocol::fieldData(int index, FieldAttrib attrib,
 
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
+
+bool SignProtocol::setFieldData(int index, const QVariant &value,
+        FieldAttrib attrib)
+{
+    bool isOk = false;
+
+    if (attrib != FieldValue)
+        goto _exit;
+
+    switch (index)
+    {
+        case sign_tlv_guid:
+        {
+            uint guid = value.toUInt(&isOk);
+            if (isOk)
+                data.set_stream_guid(guid & 0xFFFFFF);
+            break;
+        }
+        default:
+            qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
+                index);
+            break;
+    }
+
+_exit:
+    return isOk;
+}
+
+

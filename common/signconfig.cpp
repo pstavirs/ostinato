@@ -37,9 +37,17 @@ SignConfigForm* SignConfigForm::createInstance()
 
 void SignConfigForm::loadWidget(AbstractProtocol *proto)
 {
+    guid->setText(
+            proto->fieldData(
+                SignProtocol::sign_tlv_guid,
+                AbstractProtocol::FieldValue
+            ).toString());
 }
 
 void SignConfigForm::storeWidget(AbstractProtocol *proto)
 {
+    proto->setFieldData(
+            SignProtocol::sign_tlv_guid,
+            guid->text());
 }
 
