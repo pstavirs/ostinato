@@ -350,9 +350,9 @@ def stream(request, drone, ports):
 @pytest.fixture(scope='module')
 def stream_guids(request, drone, ports):
     stream_guids = ost_pb.StreamGuidList()
+    stream_guids.port_id_list.port_id.add().id = ports.x.port_id[0].id;
+    stream_guids.port_id_list.port_id.add().id = ports.y.port_id[0].id;
     stream_guids.stream_guid.add().id = 101
-    stream_guids.port_list.port_id.add().id = ports.x.port_id[0].id;
-    stream_guids.port_list.port_id.add().id = ports.y.port_id[0].id;
     return stream_guids
 
 """
@@ -464,9 +464,10 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         os.remove('capture.pcap')
 
         # verify stream stats
+        stream_guids.ClearField("stream_guid");
         stream_stats_list = drone.getStreamStats(stream_guids)
         log.info('--> (stream_stats)' + stream_stats_list.__str__())
-        assert (len(stream_stats_list.stream_stats) > 0)
+        assert len(stream_stats_list.stream_stats) == 2
 
         # FIXME: verify stream stats
 

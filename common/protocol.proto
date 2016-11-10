@@ -272,8 +272,8 @@ message StreamGuid {
 }
 
 message StreamGuidList {
-    repeated StreamGuid stream_guid = 1;
-    optional PortIdList port_list = 2;
+    required PortIdList port_id_list = 1;
+    repeated StreamGuid stream_guid = 2;
 }
 
 message StreamStats {

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SERVER_ABSTRACT_PORT_H
 #define _SERVER_ABSTRACT_PORT_H
 
+#include <QHash>
 #include <QList>
 #include <QtGlobal>
 
@@ -112,6 +113,12 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
+    // FIXME: combine single and All calls?
+    void streamStats(uint guid, OstProto::StreamStatsList *stats);
+    void streamStatsAll(OstProto::StreamStatsList *stats);
+    void resetStreamStats(uint guid);
+    void resetStreamStatsAll();
+
     DeviceManager* deviceManager();
     virtual void startDeviceEmulation() = 0;
     virtual void stopDeviceEmulation() = 0;
@@ -124,6 +131,14 @@ public:
     quint64 neighborMacAddress(int streamId, int frameIndex);
 
 protected:
+    struct StreamStatsTuple
+    {
+        quint64 rx_pkts;
+        quint64 rx_bytes;
+        quint64 tx_pkts;
+        quint64 tx_bytes;
+    };
+
     void addNote(QString note);
 
     void updatePacketListSequential();
@@ -137,6 +152,7 @@ protected:
 
     quint64 maxStatsValue_;
     struct PortStats    stats_;
+    QHash<uint, StreamStatsTuple> streamStats_;
     //! \todo Need lock for stats access/update
 
     DeviceManager *deviceManager_;

@@ -54,6 +54,14 @@ AbstractPort::AbstractPort(int id, const char *device)
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
+
+    // FIXME: temporary data for testing
+    {
+        StreamStatsTuple sst;
+        streamStats_.insert(1001, sst);
+        memset(&sst, 0, sizeof(sst));
+        streamStats_.insert(1002, sst);
+    }
 }
 
 AbstractPort::~AbstractPort()
@@ -631,6 +639,54 @@ void AbstractPort::stats(PortStats *stats)
     stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
                         stats_.rxFrameErrors - epochStats_.rxFrameErrors :
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+}
+
+void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
+{
+    if (streamStats_.contains(guid))
+    {
+        StreamStatsTuple sst = streamStats_.value(guid);
+        OstProto::StreamStats *s = stats->add_stream_stats();
+
+        s->mutable_stream_guid()->set_id(guid);
+        s->mutable_port_id()->set_id(id());
+
+        s->set_tx_pkts(sst.tx_pkts);
+        s->set_tx_bytes(sst.tx_bytes);
+        s->set_rx_pkts(sst.rx_pkts);
+        s->set_rx_bytes(sst.rx_bytes);
+    }
+}
+
+void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
+{
+    // FIXME: change input param to a non-OstProto type and/or have
+    // a getFirst/Next like API?
+    QHashIterator<uint, StreamStatsTuple> i(streamStats_);
+    while (i.hasNext())
+    {
+        i.next();
+        StreamStatsTuple sst = i.value();
+        OstProto::StreamStats *s = stats->add_stream_stats();
+
+        s->mutable_stream_guid()->set_id(i.key());
+        s->mutable_port_id()->set_id(id());
+
+        s->set_tx_pkts(sst.tx_pkts);
+        s->set_tx_bytes(sst.tx_bytes);
+        s->set_rx_pkts(sst.rx_pkts);
+        s->set_rx_bytes(sst.rx_bytes);
+    }
+}
+
+void AbstractPort::resetStreamStats(uint guid)
+{
+    streamStats_.remove(guid);
+}
+
+void AbstractPort::resetStreamStatsAll()
+{
+    streamStats_.clear();
 }
 
 void AbstractPort::clearDeviceNeighbors()
