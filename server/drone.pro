@@ -31,6 +31,7 @@ win32 {
 LIBS += -lm
 LIBS += -lprotobuf
 HEADERS += drone.h \
+    pcaptransmitter.h \
     myservice.h
 SOURCES += \
     devicemanager.cpp \

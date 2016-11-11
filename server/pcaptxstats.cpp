@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcaptxstats.h"
 
+#include "pcaptxstats.h"
 #include "statstuple.h"
 
 PcapTxStats::PcapTxStats()

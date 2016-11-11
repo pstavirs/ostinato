@@ -203,6 +203,16 @@ void PcapTxThread::setStats(StatsTuple *stats)
     stats_ = stats;
 }
 
+const StreamStats& PcapTxThread::streamStats()
+{
+    return streamStats_;
+}
+
+void PcapTxThread::clearStreamStats()
+{
+    streamStats_.clear();
+}
+
 void PcapTxThread::run()
 {
     //! \todo (MED) Stream Mode - continuous: define before implement
@@ -325,6 +335,11 @@ _restart:
     }
 
 _exit:
+    // TODO: update stream stats
+    // FIXME: temporary data for testing
+    streamStats_[1001].tx_pkts = 12345;
+    streamStats_[1001].tx_bytes = 56789;
+
     state_ = kFinished;
 }
 

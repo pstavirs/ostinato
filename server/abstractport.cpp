@@ -54,14 +54,6 @@ AbstractPort::AbstractPort(int id, const char *device)
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
-
-    // FIXME: temporary data for testing
-    {
-        StreamStatsTuple sst;
-        streamStats_.insert(1001, sst);
-        memset(&sst, 0, sizeof(sst));
-        streamStats_.insert(1002, sst);
-    }
 }
 
 AbstractPort::~AbstractPort()
@@ -662,7 +654,7 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 {
     // FIXME: change input param to a non-OstProto type and/or have
     // a getFirst/Next like API?
-    QHashIterator<uint, StreamStatsTuple> i(streamStats_);
+    StreamStatsIterator i(streamStats_);
     while (i.hasNext())
     {
         i.next();

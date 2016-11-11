@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SERVER_ABSTRACT_PORT_H
 #define _SERVER_ABSTRACT_PORT_H
 
-#include <QHash>
+#include "streamstats.h"
+
 #include <QList>
 #include <QtGlobal>
 
@@ -131,13 +132,6 @@ public:
     quint64 neighborMacAddress(int streamId, int frameIndex);
 
 protected:
-    struct StreamStatsTuple
-    {
-        quint64 rx_pkts;
-        quint64 rx_bytes;
-        quint64 tx_pkts;
-        quint64 tx_bytes;
-    };
 
     void addNote(QString note);
 
@@ -152,7 +146,7 @@ protected:
 
     quint64 maxStatsValue_;
     struct PortStats    stats_;
-    QHash<uint, StreamStatsTuple> streamStats_;
+    StreamStats streamStats_;
     //! \todo Need lock for stats access/update
 
     DeviceManager *deviceManager_;

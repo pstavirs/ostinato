@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcaptxthread.h"
 #include "statstuple.h"
 
-class PcapTransmitter
+class PcapTransmitter : QObject
 {
+    Q_OBJECT
 public:
-    PcapTransmitter(const char *device);
+    PcapTransmitter(const char *device, StreamStats &portStreamStats);
     ~PcapTransmitter();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
@@ -46,8 +47,10 @@ public:
     void start();
     void stop();
     bool isRunning();
-
+private slots:
+    void updateTxThreadStreamStats();
 private:
+    StreamStats &streamStats_;
     PcapTxThread txThread_;
     PcapTxStats txStats_;
     StatsTuple stats_;

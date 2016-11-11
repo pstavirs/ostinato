@@ -19,14 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcaptransmitter.h"
 
-PcapTransmitter::PcapTransmitter(const char *device)
-    : txThread_(device)
+PcapTransmitter::PcapTransmitter(
+        const char *device,
+        StreamStats &portStreamStats)
+    : streamStats_(portStreamStats), txThread_(device)
 {
     memset(&stats_, 0, sizeof(stats_));
     txStats_.setTxThreadStats(&stats_);
     txStats_.start(); // TODO: alongwith user transmit start
 
     txThread_.setStats(&stats_);
+    connect(&txThread_, SIGNAL(finished()), SLOT(updateTxThreadStreamStats()));
 }
 
 PcapTransmitter::~PcapTransmitter()
@@ -91,4 +94,22 @@ void PcapTransmitter::stop()
 bool PcapTransmitter::isRunning()
 {
     return txThread_.isRunning();
+}
+
+void PcapTransmitter::updateTxThreadStreamStats()
+{
+    PcapTxThread *txThread = dynamic_cast<PcapTxThread*>(sender());
+    const StreamStats& threadStreamStats = txThread->streamStats();
+    StreamStatsIterator i(threadStreamStats);
+
+    while (i.hasNext())
+    {
+        i.next();
+        uint guid = i.key();
+        StreamStatsTuple sst = i.value();
+
+        streamStats_[guid].tx_pkts += sst.tx_pkts;
+        streamStats_[guid].tx_bytes += sst.tx_bytes;
+    }
+    txThread->clearStreamStats();
 }

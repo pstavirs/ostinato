@@ -47,6 +47,9 @@ public:
 
     void setStats(StatsTuple *stats);
 
+    const StreamStats& streamStats();
+    void clearStreamStats();
+
     void run();
 
     void start();
@@ -82,6 +85,7 @@ private:
     volatile State state_;
 
     StatsTuple *stats_;
+    StreamStats streamStats_;
 };
 
 #endif
