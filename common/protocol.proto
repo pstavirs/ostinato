@@ -277,8 +277,8 @@ message StreamGuidList {
 }
 
 message StreamStats {
-    required StreamGuid stream_guid = 1;
-    required PortId port_id = 2; // FIXME: change to optional - reuse for aggr?
+    required PortId port_id = 1;
+    required StreamGuid stream_guid = 2;
 
     optional uint64 rx_pkts = 11;
     optional uint64 rx_bytes = 12;

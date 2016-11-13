@@ -195,4 +195,20 @@ _exit:
     return isOk;
 }
 
+bool SignProtocol::packetGuid(const uchar *pkt, int pktLen, uint *guid)
+{
+    const uchar *p = pkt + pktLen - sizeof(kSignMagic);
+    quint32 magic = qFromBigEndian<quint32>(p);
+    if (magic != kSignMagic)
+        return false;
 
+    p--;
+    while (*p != kTypeLenEnd) {
+        if (*p == kTypeLenGuid) {
+            *guid = qFromBigEndian<quint32>(p - 3) >> 8;
+            return true;
+        }
+        p -= 1 + (*p >> 5); // move to next TLV
+    }
+    return false;
+}

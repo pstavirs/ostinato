@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PACKET_SEQUENCE_H
 
 #include "pcapextra.h"
+#include "../common/sign.h"
+#include "streamstats.h"
 
 class PacketSequence
 {
@@ -46,6 +48,7 @@ public:
     }
     int appendPacket(const struct pcap_pkthdr *pktHeader,
             const uchar *pktData) {
+        int ret;
         if (lastPacket_)
         {
             usecDuration_ += (pktHeader->ts.tv_sec
@@ -57,7 +60,15 @@ public:
         bytes_ += pktHeader->caplen;
         lastPacket_ = (struct pcap_pkthdr *)
                             (sendQueue_->buffer + sendQueue_->len);
-        return pcap_sendqueue_queue(sendQueue_, pktHeader, pktData);
+        ret = pcap_sendqueue_queue(sendQueue_, pktHeader, pktData);
+        if (ret >= 0) {
+            uint guid;
+            if (SignProtocol::packetGuid(pktData, pktHeader->caplen, &guid)) {
+                streamStatsMeta_[guid].tx_pkts++;
+                streamStatsMeta_[guid].tx_bytes += pktHeader->caplen;
+            }
+        }
+        return ret;
     }
     pcap_send_queue *sendQueue_;
     struct pcap_pkthdr *lastPacket_;
@@ -67,6 +78,7 @@ public:
     int repeatCount_;
     int repeatSize_;
     long usecDelay_;
+    StreamStats streamStatsMeta_;
 };
 
 #endif

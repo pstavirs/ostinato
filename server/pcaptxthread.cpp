@@ -247,6 +247,8 @@ void PcapTxThread::run()
                 packetSequenceList_.at(i)->usecDuration_);
     }
 
+    lastStats_ = *stats_; // used for stream stats
+
     state_ = kRunning;
     i = 0;
     while (i < packetSequenceList_.size())
@@ -335,10 +337,7 @@ _restart:
     }
 
 _exit:
-    // TODO: update stream stats
-    // FIXME: temporary data for testing
-    streamStats_[1001].tx_pkts = 12345;
-    streamStats_[1001].tx_bytes = 56789;
+    updateStreamStats();
 
     state_ = kFinished;
 }
@@ -423,7 +422,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
 
         // Step to the next packet in the buffer
         hdr = (struct pcap_pkthdr*) (pkt + pktLen);
-        pkt = (uchar*) ((uchar*)hdr + sizeof(*hdr));
+        pkt = (uchar*) ((uchar*)hdr + sizeof(*hdr)); // FIXME: superfluous?
 
         if (stop_)
         {
@@ -432,6 +431,68 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
     }
 
     return 0;
+}
+
+void PcapTxThread::updateStreamStats()
+{
+    // Number of tx packets sent during last transmit
+    quint64 pkts = stats_->pkts > lastStats_.pkts ?
+        stats_->pkts - lastStats_.pkts :
+        stats_->pkts + (ULLONG_MAX - lastStats_.pkts);
+
+    // Calculate -
+    //   number of (complete) repeats of packetList_
+    //      - this is same as number of repeats of each PacketSequence
+    //   number of pkts sent in last partial repeat of packetList_
+    //      - This encompasses 0 or more potentially partial PacketSequence
+    // FIXME: incorrect, we need to consider the expandedPacketCount_ i.e.
+    // the configured repeats of each sequence ('n')
+    int c = pkts/packetCount_;
+    int d = pkts%packetCount_;
+    foreach(PacketSequence *seq, packetSequenceList_) {
+        uint a = c;
+        if (d >= seq->packets_) {
+            // last repeat of this seq was complete - so just bump up the
+            // repeat count and reduce the full seq pkt count from the
+            // last repeat pkt sent count
+            // NOTE: if the packet sent count is an exact multiple of
+            // packetList_ count, then d will be 0 and we will never come
+            // inside this condition
+            Q_ASSERT(seq->packets_);
+            a = c + 1;
+            d -= seq->packets_;
+        }
+        else if (d) { // (d < seq->packets_)
+            // last repeat of this seq was partial, so we need to traverse
+            // this sequence upto 'd' pkts to update streamStats
+            struct pcap_pkthdr *hdr =
+                    (struct pcap_pkthdr*) seq->sendQueue_->buffer;
+            char *end = seq->sendQueue_->buffer + seq->sendQueue_->len;
+
+            while(d && ((char*) hdr < end)) {
+                uchar *pkt = (uchar*)hdr + sizeof(*hdr);
+                uint guid;
+
+                if (SignProtocol::packetGuid(pkt, hdr->caplen, &guid)) {
+                    streamStats_[guid].tx_pkts++;
+                    streamStats_[guid].tx_bytes += hdr->caplen;
+                }
+
+                // Step to the next packet in the buffer
+                hdr = (struct pcap_pkthdr*) (pkt + hdr->caplen);
+                d--;
+            }
+        }
+
+        StreamStatsIterator i(seq->streamStatsMeta_);
+        while (i.hasNext()) {
+            i.next();
+            uint guid = i.key();
+            StreamStatsTuple ssm = i.value();
+            streamStats_[guid].tx_pkts += a * ssm.tx_pkts;
+            streamStats_[guid].tx_bytes += a * ssm.tx_bytes;
+        }
+    }
 }
 
 void PcapTxThread::udelay(unsigned long usec)

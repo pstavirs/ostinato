@@ -22,11 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 #include "packetsequence.h"
+#include "statstuple.h"
 
 #include <QThread>
 #include <pcap.h>
-
-class StatsTuple;
 
 class PcapTxThread: public QThread
 {
@@ -67,6 +66,7 @@ private:
     static void udelay(unsigned long usec);
     int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
                 int sync);
+    void updateStreamStats();
 
     QList<PacketSequence*> packetSequenceList_;
     PacketSequence *currentPacketSequence_;
@@ -85,6 +85,7 @@ private:
     volatile State state_;
 
     StatsTuple *stats_;
+    StatsTuple lastStats_;
     StreamStats streamStats_;
 };
 

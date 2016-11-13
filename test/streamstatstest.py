@@ -126,8 +126,8 @@ def ports(request, drone):
     assert len(port_config_list.port) != 0
 
     # print port list and find default X/Y ports
-    port_x_num = -1
-    port_y_num = -1
+    ports.x_num = -1
+    ports.y_num = -1
     print port_config_list
     print('Port List')
     print('---------')
@@ -135,32 +135,32 @@ def ports(request, drone):
         print('%d.%s (%s)' % (port.port_id.id, port.name, port.description))
         # use a vhost port as default X/Y port
         if ('vhost' in port.name or 'sun' in port.description.lower()):
-            if port_x_num < 0:
-                port_x_num = port.port_id.id
-            elif port_y_num < 0:
-                port_y_num = port.port_id.id
+            if ports.x_num < 0:
+                ports.x_num = port.port_id.id
+            elif ports.y_num < 0:
+                ports.y_num = port.port_id.id
         if ('eth1' in port.name):
-            port_x_num = port.port_id.id
+            ports.x_num = port.port_id.id
         if ('eth2' in port.name):
-            port_y_num = port.port_id.id
+            ports.y_num = port.port_id.id
 
-    assert port_x_num >= 0
-    assert port_y_num >= 0
+    assert ports.x_num >= 0
+    assert ports.y_num >= 0
 
-    print('Using port %d as port X' % port_x_num)
-    print('Using port %d as port Y' % port_y_num)
+    print('Using port %d as port X' % ports.x_num)
+    print('Using port %d as port Y' % ports.y_num)
 
     ports.x = ost_pb.PortIdList()
-    ports.x.port_id.add().id = port_x_num;
+    ports.x.port_id.add().id = ports.x_num;
 
     ports.y = ost_pb.PortIdList()
-    ports.y.port_id.add().id = port_y_num;
+    ports.y.port_id.add().id = ports.y_num;
 
     # Enable stream stats on ports
     portConfig = ost_pb.PortConfigList()
-    portConfig.port.add().port_id.id = port_x_num;
+    portConfig.port.add().port_id.id = ports.x_num;
     portConfig.port[0].stream_stats_tracking = True;
-    portConfig.port.add().port_id.id = port_y_num;
+    portConfig.port.add().port_id.id = ports.y_num;
     portConfig.port[1].stream_stats_tracking = True;
     print('Enabling Stream Stats tracking on ports X and Y');
     drone.modifyPort(portConfig);
@@ -352,7 +352,6 @@ def stream_guids(request, drone, ports):
     stream_guids = ost_pb.StreamGuidList()
     stream_guids.port_id_list.port_id.add().id = ports.x.port_id[0].id;
     stream_guids.port_id_list.port_id.add().id = ports.y.port_id[0].id;
-    stream_guids.stream_guid.add().id = 101
     return stream_guids
 
 """
@@ -413,15 +412,22 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
                /.101         \.101
             HostX           HostY
      """
+    npkts = 14
     log.info('configuring stream %d on port X' % stream.stream[0].stream_id.id)
+    stream.stream[1].control.num_packets = npkts
+    nbytes = npkts * (stream.stream[1].core.frame_len - 4)
     drone.modifyStream(stream)
 
     # clear port X/Y stats
     log.info('clearing stats')
     drone.clearStats(ports.x)
     drone.clearStats(ports.y)
-    drone.clearStreamStats(ports.x)
-    drone.clearStreamStats(ports.y)
+    drone.clearStreamStats(stream_guids)
+
+    # verify stream strats are indeed cleared
+    ssd = drone.getStreamStatsDict(stream_guids)
+    assert len(ssd.port) == 0
+
 
     # resolve ARP/NDP on ports X/Y
     log.info('resolving Neighbors on (X, Y) ports ...')
@@ -460,16 +466,18 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capture.pcap',
             '-Y', filter])
         print(cap_pkts)
-        assert cap_pkts.count('\n') == 10
+        assert cap_pkts.count('\n') == npkts
         os.remove('capture.pcap')
 
         # verify stream stats
-        stream_guids.ClearField("stream_guid");
-        stream_stats_list = drone.getStreamStats(stream_guids)
-        log.info('--> (stream_stats)' + stream_stats_list.__str__())
-        assert len(stream_stats_list.stream_stats) == 2
-
-        # FIXME: verify stream stats
+        ssd = drone.getStreamStatsDict(stream_guids)
+        log.info('--> (stream stats)\n' + str(ssd))
+        # FIXME (temp): assert len(ssd.port) == 2
+        assert len(ssd.port[ports.x_num].sguid) == 1
+        assert ssd.port[ports.x_num].sguid[101].tx_pkts == npkts
+        assert ssd.port[ports.x_num].sguid[101].tx_bytes == nbytes
+        assert len(ssd.port[ports.y_num].sguid) == 1
+        # TODO: rx = tx
 
     except RpcError as e:
             raise
@@ -484,4 +492,7 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
 #  * Verify that bi-directional stream stats are correct for multiple streams
 #  * Verify protocol combinations - Eth, IPv4/IPv6, TCP/UDP, Pattern
 #  * Verify transmit modes
+#  * Verify tx pkts = multiple repeats of packetList + partial repeat
+#  * Verify tx pkts = multiple complete repeats of packetList + no partials
+#  * Verify tx pkts = first seq partial
 #

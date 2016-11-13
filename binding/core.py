@@ -67,3 +67,35 @@ class DroneProxy(object):
          os.fsync(f.fileno())
          f.close()
 
+    def getStreamStatsDict(self, stream_guid_list): # FIXME: rename?
+        """
+        Convenience wrapper method for getStreamStats which returns StreamStats
+        as a dictionary instead of a List
+        TODO: document dictionary structure
+        """
+        class StreamStatsDict:
+            def __repr__(self):
+                s = 'port: {\n'
+                for k, v in self.port.items():
+                    s += str(k) + ': {' + str(v) + '}\n'
+                s += '}'
+                return s
+        class StreamStatsDictPort:
+            def __repr__(self):
+                s = 'sguid: { '
+                for k, v in self.sguid.items():
+                    s += str(k) + ': {' + str(v).replace('\n', ' ') + '}\n'
+                s += '}'
+                return s
+        ssl = self.getStreamStats(stream_guid_list)
+        ssd = StreamStatsDict()
+        # TODO: ssd.aggr = dict()
+        ssd.port = dict()
+        for ss in ssl.stream_stats:
+            if ss.port_id.id not in ssd.port:
+                ssd.port[ss.port_id.id] = StreamStatsDictPort()
+                # TODO: ssd.port[ss.port_id.id].aggr = dict()
+                ssd.port[ss.port_id.id].sguid = dict()
+            assert ss.stream_guid.id not in ssd.port[ss.port_id.id].sguid
+            ssd.port[ss.port_id.id].sguid[ss.stream_guid.id] = ss
+        return ssd
