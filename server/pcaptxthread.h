@@ -68,11 +68,14 @@ private:
                 int sync);
     void updateStreamStats();
 
-    QList<PacketSequence*> packetSequenceList_;
+    // Intermediate state variables used while building the packet list
     PacketSequence *currentPacketSequence_;
     int repeatSequenceStart_;
     quint64 repeatSize_;
     quint64 packetCount_;
+
+    QList<PacketSequence*> packetSequenceList_;
+    quint64 packetListSize_; // count of pkts in packet List including repeats
 
     int returnToQIdx_;
     quint64 loopDelay_;

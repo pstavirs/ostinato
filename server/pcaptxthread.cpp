@@ -92,6 +92,7 @@ void PcapTxThread::clearPacketList()
     repeatSize_ = 0;
     packetCount_ = 0;
 
+    packetListSize_ = 0;
     returnToQIdx_ = -1;
 
     setPacketListLoopMode(false, 0, 0);
@@ -153,6 +154,8 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
     }
 
     packetCount_++;
+    packetListSize_ += repeatSize_ ?
+                                currentPacketSequence_->repeatCount_ : 1;
     if (repeatSize_ > 0 && packetCount_ == repeatSize_)
     {
         qDebug("repeatSequenceStart_=%d, repeatSize_ = %llu",
@@ -441,58 +444,99 @@ void PcapTxThread::updateStreamStats()
         stats_->pkts + (ULLONG_MAX - lastStats_.pkts);
 
     // Calculate -
-    //   number of (complete) repeats of packetList_
-    //      - this is same as number of repeats of each PacketSequence
+    //   number of complete repeats of packetList_
+    //      => each PacketSet in the packetList is repeated these many times
     //   number of pkts sent in last partial repeat of packetList_
-    //      - This encompasses 0 or more potentially partial PacketSequence
-    // FIXME: incorrect, we need to consider the expandedPacketCount_ i.e.
-    // the configured repeats of each sequence ('n')
-    int c = pkts/packetCount_;
-    int d = pkts%packetCount_;
-    foreach(PacketSequence *seq, packetSequenceList_) {
-        uint a = c;
-        if (d >= seq->packets_) {
-            // last repeat of this seq was complete - so just bump up the
-            // repeat count and reduce the full seq pkt count from the
-            // last repeat pkt sent count
-            // NOTE: if the packet sent count is an exact multiple of
-            // packetList_ count, then d will be 0 and we will never come
-            // inside this condition
-            Q_ASSERT(seq->packets_);
-            a = c + 1;
-            d -= seq->packets_;
-        }
-        else if (d) { // (d < seq->packets_)
-            // last repeat of this seq was partial, so we need to traverse
-            // this sequence upto 'd' pkts to update streamStats
-            struct pcap_pkthdr *hdr =
-                    (struct pcap_pkthdr*) seq->sendQueue_->buffer;
-            char *end = seq->sendQueue_->buffer + seq->sendQueue_->len;
+    //      - This encompasses 0 or more potentially partial PacketSets
+    // XXX: Note for the above, we consider a PacketSet to include its
+    // own repeats within itself
+    int c = pkts/packetListSize_;
+    int d = pkts%packetListSize_;
 
-            while(d && ((char*) hdr < end)) {
-                uchar *pkt = (uchar*)hdr + sizeof(*hdr);
-                uint guid;
+    int i;
 
-                if (SignProtocol::packetGuid(pkt, hdr->caplen, &guid)) {
-                    streamStats_[guid].tx_pkts++;
-                    streamStats_[guid].tx_bytes += hdr->caplen;
-                }
+    if (!c)
+        goto _last_repeat;
 
-                // Step to the next packet in the buffer
-                hdr = (struct pcap_pkthdr*) (pkt + hdr->caplen);
-                d--;
+    i = 0;
+    while (i < packetSequenceList_.size()) {
+        PacketSequence *seq = packetSequenceList_.at(i);
+        int rptSz = seq->repeatSize_;
+        int rptCnt = seq->repeatCount_;
+
+        for (int k = 0; k < rptSz; k++) {
+            seq = packetSequenceList_.at(i+k);
+            StreamStatsIterator iter(seq->streamStatsMeta_);
+            while (iter.hasNext()) {
+                iter.next();
+                uint guid = iter.key();
+                StreamStatsTuple ssm = iter.value();
+                streamStats_[guid].tx_pkts += c * rptCnt * ssm.tx_pkts;
+                streamStats_[guid].tx_bytes += c * rptCnt * ssm.tx_bytes;
             }
         }
-
-        StreamStatsIterator i(seq->streamStatsMeta_);
-        while (i.hasNext()) {
-            i.next();
-            uint guid = i.key();
-            StreamStatsTuple ssm = i.value();
-            streamStats_[guid].tx_pkts += a * ssm.tx_pkts;
-            streamStats_[guid].tx_bytes += a * ssm.tx_bytes;
-        }
+        // Move to the next Packet Set
+        i += rptSz;
     }
+
+_last_repeat:
+    if (!d)
+        goto _done;
+
+    i = 0;
+    while (i < packetSequenceList_.size()) {
+        PacketSequence *seq = packetSequenceList_.at(i);
+        int rptSz = seq->repeatSize_;
+        int rptCnt = seq->repeatCount_;
+
+        for (int j = 0; j < rptCnt; j++) {
+            for (int k = 0; k < rptSz; k++) {
+                seq = packetSequenceList_.at(i+k);
+                Q_ASSERT(seq->packets_);
+                if (d >= seq->packets_) {
+                    // All packets of this seq were sent
+                    StreamStatsIterator iter(seq->streamStatsMeta_);
+                    while (iter.hasNext()) {
+                        iter.next();
+                        uint guid = iter.key();
+                        StreamStatsTuple ssm = iter.value();
+                        streamStats_[guid].tx_pkts += ssm.tx_pkts;
+                        streamStats_[guid].tx_bytes += ssm.tx_bytes;
+                    }
+                    d -= seq->packets_;
+                }
+                else { // (d < seq->packets_)
+                    // not all packets of this seq were sent, so we need to
+                    // traverse this seq upto 'd' pkts, parse guid from the
+                    // packet and update streamStats
+                    struct pcap_pkthdr *hdr =
+                        (struct pcap_pkthdr*) seq->sendQueue_->buffer;
+                    char *end = seq->sendQueue_->buffer + seq->sendQueue_->len;
+
+                    while(d && ((char*) hdr < end)) {
+                        uchar *pkt = (uchar*)hdr + sizeof(*hdr);
+                        uint guid;
+
+                        if (SignProtocol::packetGuid(pkt, hdr->caplen, &guid)) {
+                            streamStats_[guid].tx_pkts++;
+                            streamStats_[guid].tx_bytes += hdr->caplen;
+                        }
+
+                        // Step to the next packet in the buffer
+                        hdr = (struct pcap_pkthdr*) (pkt + hdr->caplen);
+                        d--;
+                    }
+                    Q_ASSERT(d == 0);
+                    goto _done;
+                }
+            }
+        }
+        // Move to the next Packet Set
+        i += rptSz;
+    }
+
+_done:
+    return;
 }
 
 void PcapTxThread::udelay(unsigned long usec)
