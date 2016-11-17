@@ -160,9 +160,9 @@ def ports(request, drone):
     # Enable stream stats on ports
     portConfig = ost_pb.PortConfigList()
     portConfig.port.add().port_id.id = ports.x_num;
-    portConfig.port[0].stream_stats_tracking = True;
+    portConfig.port[0].track_stream_stats = True;
     portConfig.port.add().port_id.id = ports.y_num;
-    portConfig.port[1].stream_stats_tracking = True;
+    portConfig.port[1].track_stream_stats = True;
     print('Enabling Stream Stats tracking on ports X and Y');
     drone.modifyPort(portConfig);
 
@@ -586,33 +586,50 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         log.info('sign stream 102 rx cap count: %d' % (sign_stream2_cnt))
         log.info('--> (stream stats)\n' + str(ssd))
 
-        """
         # verify rx stream stats from drone is same as that from capture
         assert len(ssd.port[ports.y_num].sguid) == 2
         if sign_stream_cfg['loop']:
-            assert ssd.port[ports.y_num].sguid[101].tx_pkts \
+            assert ssd.port[ports.y_num].sguid[101].rx_pkts \
                     == sign_stream1_cnt
-            assert ssd.port[ports.y_num].sguid[101].tx_bytes \
+            assert ssd.port[ports.y_num].sguid[101].rx_bytes \
                     == (sign_stream1_cnt
                             * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.y_num].sguid[102].tx_pkts \
+            assert ssd.port[ports.y_num].sguid[102].rx_pkts \
                     == sign_stream2_cnt
-            assert ssd.port[ports.y_num].sguid[102].tx_bytes \
+            assert ssd.port[ports.y_num].sguid[102].rx_bytes \
                     == (sign_stream2_cnt
                             * (stream.stream[2].core.frame_len - 4))
         else:
-            assert ssd.port[ports.y_num].sguid[101].tx_pkts \
+            assert ssd.port[ports.y_num].sguid[101].rx_pkts \
                     == sign_stream_cfg['num_pkts'][0]
-            assert ssd.port[ports.y_num].sguid[101].tx_bytes \
+            assert ssd.port[ports.y_num].sguid[101].rx_bytes \
                     == (sign_stream_cfg['num_pkts'][0]
                             * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.y_num].sguid[102].tx_pkts \
+            assert ssd.port[ports.y_num].sguid[102].rx_pkts \
                     == sign_stream_cfg['num_pkts'][1]
-            assert ssd.port[ports.y_num].sguid[102].tx_bytes \
+            assert ssd.port[ports.y_num].sguid[102].rx_bytes \
                     == (sign_stream_cfg['num_pkts'][1]
                             * (stream.stream[2].core.frame_len - 4))
+
+        # verify tx == rx
+        assert ssd.port[ports.x_num].sguid[101].tx_pkts \
+            == ssd.port[ports.y_num].sguid[101].rx_pkts
+        assert ssd.port[ports.x_num].sguid[101].tx_bytes \
+            == ssd.port[ports.y_num].sguid[101].rx_bytes
+        assert ssd.port[ports.x_num].sguid[102].tx_pkts \
+            == ssd.port[ports.y_num].sguid[102].rx_pkts
+        assert ssd.port[ports.x_num].sguid[102].tx_bytes \
+            == ssd.port[ports.y_num].sguid[102].rx_bytes
+
+        # for unidir verify rx on tx port is 0 and vice versa
+        # FIXME: failing currently because tx pkts on tx port seem to be
+        # captured by rxStatsPoller_ on tx port
         """
-        # TODO?: rx = tx
+        assert ssd.port[ports.x_num].sguid[101].rx_pkts == 0
+        assert ssd.port[ports.x_num].sguid[101].rx_bytes == 0
+        assert ssd.port[ports.y_num].sguid[101].tx_pkts == 0
+        assert ssd.port[ports.y_num].sguid[101].tx_bytes == 0
+        """
 
     except RpcError as e:
             raise

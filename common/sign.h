@@ -81,6 +81,7 @@ public:
     virtual bool setFieldData(int index, const QVariant &value,
             FieldAttrib attrib = FieldValue);
 
+    static quint32 magic();
     static bool packetGuid(const uchar *pkt, int pktLen, uint *guid);
 private:
     static const quint32 kSignMagic = 0xa1b2c3d4; // FIXME

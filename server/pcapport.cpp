@@ -34,6 +34,7 @@ PcapPort::PcapPort(int id, const char *device)
     transmitter_ = new PcapTransmitter(device, streamStats_);
     capturer_ = new PortCapturer(device);
     emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
+    rxStatsPoller_ = new PcapRxStats(device, streamStats_);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
         isUsable_ = false;
@@ -82,6 +83,9 @@ PcapPort::~PcapPort()
     if (monitorTx_)
         monitorTx_->stop();
 
+    rxStatsPoller_->stop();
+    delete rxStatsPoller_;
+
     delete emulXcvr_;
     delete capturer_;
     delete transmitter_;
@@ -124,6 +128,16 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
         return true;
     }
     return false;
+}
+
+bool PcapPort::startStreamStatsTracking()
+{
+    return rxStatsPoller_->start();
+}
+
+bool PcapPort::stopStreamStatsTracking()
+{
+    return rxStatsPoller_->stop();
 }
 
 void PcapPort::startDeviceEmulation()

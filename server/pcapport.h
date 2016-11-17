@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 #include "pcapextra.h"
+#include "pcaprxstats.h"
 #include "pcaptransmitter.h"
 
 class PcapPort : public AbstractPort
@@ -70,6 +71,9 @@ public:
     virtual void stopCapture()  { capturer_->stop(); }
     virtual bool isCaptureOn()  { return capturer_->isRunning(); }
     virtual QIODevice* captureData() { return capturer_->captureFile(); }
+
+    virtual bool startStreamStatsTracking();
+    virtual bool stopStreamStatsTracking();
 
     virtual void startDeviceEmulation();
     virtual void stopDeviceEmulation();
@@ -166,6 +170,7 @@ private:
     PcapTransmitter *transmitter_;
     PortCapturer    *capturer_;
     EmulationTransceiver *emulXcvr_;
+    PcapRxStats *rxStatsPoller_;
 
     static pcap_if_t *deviceList_;
 };

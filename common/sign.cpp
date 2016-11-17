@@ -195,6 +195,11 @@ _exit:
     return isOk;
 }
 
+quint32 SignProtocol::magic()
+{
+    return kSignMagic;
+}
+
 bool SignProtocol::packetGuid(const uchar *pkt, int pktLen, uint *guid)
 {
     const uchar *p = pkt + pktLen - sizeof(kSignMagic);

@@ -102,6 +102,16 @@ bool AbstractPort::modify(const OstProto::Port &port)
         data_.set_user_name(port.user_name());
     }
 
+    if (port.has_track_stream_stats()) {
+        bool val = port.track_stream_stats() ?
+            startStreamStatsTracking() : stopStreamStatsTracking();
+
+        if (val)
+            data_.set_track_stream_stats(port.track_stream_stats());
+
+        ret |= val;
+    }
+
     return ret;
 }    
 

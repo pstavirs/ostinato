@@ -114,6 +114,8 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
+    virtual bool startStreamStatsTracking() = 0;
+    virtual bool stopStreamStatsTracking() = 0;
     // FIXME: combine single and All calls?
     void streamStats(uint guid, OstProto::StreamStatsList *stats);
     void streamStatsAll(OstProto::StreamStatsList *stats);
