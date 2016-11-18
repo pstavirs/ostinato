@@ -50,34 +50,14 @@ void PcapRxStats::run()
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
-#ifdef Q_OS_WIN32
-    flags |= PCAP_OPENFLAG_NOCAPTURE_LOCAL; // FIXME: needed?
-#endif
-
-#ifdef Q_OS_WIN32
-_retry:
-    // NOCAPTURE_LOCAL needs windows only pcap_open()
-    handle_ = pcap_open(qPrintable(device_), 65535,
-                flags, 100 /* ms */, NULL, errbuf);
-#else
     handle_ = pcap_open_live(qPrintable(device_), 65535,
                     flags, 100 /* ms */, errbuf);
-#endif
-
     if (handle_ == NULL) {
         if (flags && QString(errbuf).contains("promiscuous")) {
             notify("Unable to set promiscuous mode on <%s> - "
                     "stream stats rx will not work", qPrintable(device_));
             goto _exit;
         }
-#ifdef Q_OS_WIN32
-        else if ((flags & PCAP_OPENFLAG_NOCAPTURE_LOCAL)
-                && QString(errbuf).contains("loopback")) {
-            qDebug("Can't set no local capture mode %s", qPrintable(device_));
-            flags &= ~PCAP_OPENFLAG_NOCAPTURE_LOCAL;
-            goto _retry;
-        }
-#endif
         else {
             notify("Unable to open <%s> [%s] - stream stats rx will not work",
                     qPrintable(device_), errbuf);
