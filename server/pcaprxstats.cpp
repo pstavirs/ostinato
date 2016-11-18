@@ -85,6 +85,17 @@ _retry:
         }
     }
 
+#ifdef Q_OS_WIN32
+    // pcap_setdirection() API is not supported in Windows.
+    // NOTE: WinPcap 4.1.1 and above exports a dummy API that returns -1
+    // but since we would like to work with previous versions of WinPcap
+    // also, we assume the API does not exist
+#else
+    if (pcap_setdirection(handle_, PCAP_D_IN) < 0)
+        qDebug("RxStats: Error setting IN direction %s: %s\n",
+                device, pcap_geterr(handle_));
+#endif
+
     if (pcap_compile(handle_, &bpf, qPrintable(capture_filter),
                      optimize, 0) < 0) {
         qWarning("%s: error compiling filter: %s", qPrintable(device_),
