@@ -73,7 +73,7 @@ void PcapRxStats::run()
 #else
     if (pcap_setdirection(handle_, PCAP_D_IN) < 0)
         qDebug("RxStats: Error setting IN direction %s: %s\n",
-                device, pcap_geterr(handle_));
+                qPrintable(device_), pcap_geterr(handle_));
 #endif
 
     if (pcap_compile(handle_, &bpf, qPrintable(capture_filter),
