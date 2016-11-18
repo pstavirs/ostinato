@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "pcaprxstats.h"
+
+#include "pcapextra.h"
 #include "../common/sign.h"
 
 #define notify qWarning // FIXME
