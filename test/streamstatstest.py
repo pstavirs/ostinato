@@ -20,6 +20,7 @@ from core import ost_pb, emul, DroneProxy
 from rpc import RpcError
 from protocols.mac_pb2 import mac, Mac
 from protocols.ip4_pb2 import ip4, Ip4
+from protocols.ip6_pb2 import ip6, Ip6
 from protocols.payload_pb2 import payload, Payload
 from protocols.sign_pb2 import sign
 
@@ -86,11 +87,11 @@ if len(sys.argv) > 1:
         print(' -h --help           show this help')
         sys.exit(0)
 
-print(' +-------+           +-------+')
+print(' +-------+          +-------+')
 print(' |       |X--<-->--X|-+     |')
 print(' | Drone |          | | DUT |')
 print(' |       |Y--<-->--Y|-+     |')
-print(' +-------+           +-------+')
+print(' +-------+          +-------+')
 print('')
 print('Drone has 2 ports connected to DUT. Packets sent on port X')
 print('are expected to be forwarded by the DUT and received back on')
@@ -291,81 +292,83 @@ def stream_clear(request, drone, ports):
     # delete existing streams, if any, on all ports
     sid_list = drone.getStreamIdList(ports.x.port_id[0])
     drone.deleteStream(sid_list)
+    sid_list = drone.getStreamIdList(ports.y.port_id[0])
+    drone.deleteStream(sid_list)
 
 @pytest.fixture
 def stream(request, drone, ports, sign_stream_cfg):
 
+    sscfg = sign_stream_cfg
+    num_streams = sscfg['num_streams']
+
     # add stream(s)
     stream_id = ost_pb.StreamIdList()
     stream_id.port_id.CopyFrom(ports.x.port_id[0])
-    stream_id.stream_id.add().id = 1  # Unsigned stream
-    stream_id.stream_id.add().id = 2  # Signed stream
-    stream_id.stream_id.add().id = 3  # Signed stream
+    for i in range(num_streams):
+        stream_id.stream_id.add().id = 1+i
     log.info('adding X stream(s) ' + str(stream_id))
     drone.addStream(stream_id)
 
     # configure the stream(s)
     stream_cfg = ost_pb.StreamConfigList()
     stream_cfg.port_id.CopyFrom(ports.x.port_id[0])
-    s = stream_cfg.stream.add()
-    s.stream_id.id = stream_id.stream_id[0].id
-    s.core.is_enabled = True
-    # On Win32, packets in a seq that take less than 1s to transmit
-    # are transmitted in one shot using pcap_send_queue; this means that
-    # stopTransmit() cannot stop them in the middle of the sequence and
-    # stop will happen only at the pktSeq boundary
-    # Since we want to test cases where stop is trigerred in the middle of
-    # a sequence, we set pps < 1000
-    # FIXME: for some reason values such as 100pps is also leading to
-    # stop only at seq boundary - need to debug
-    s.control.packets_per_sec = 523
+    for i in range(num_streams):
+        s = stream_cfg.stream.add()
+        s.stream_id.id = stream_id.stream_id[i].id
+        s.core.is_enabled = True
+        # On Win32, packets in a seq that take less than 1s to transmit
+        # are transmitted in one shot using pcap_send_queue; this means that
+        # stopTransmit() cannot stop them in the middle of the sequence and
+        # stop will happen only at the pktSeq boundary
+        # Since we want to test cases where stop is trigerred in the middle of
+        # a sequence, we set pps < 1000
+        # FIXME: for some reason values such as 100pps is also leading to
+        # stop only at seq boundary - need to debug
+        s.control.packets_per_sec = 523
 
-    # setup (unsigned) stream protocols as mac:eth2:ip:payload
-    p = s.protocol.add()
-    s.control.num_packets = 10
-    p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
-    p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
-    p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
+        # setup stream protocols
+        p = s.protocol.add()
+        s.control.num_packets = sscfg['num_pkts'][i]
+        p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
+        p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
+        p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
 
-    s.protocol.add().protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
+        s.protocol.add().protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
 
-    p = s.protocol.add()
-    p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
-    p.Extensions[ip4].src_ip = 0x0a0a0165
-    p.Extensions[ip4].dst_ip = 0x0a0a0265
+        p = s.protocol.add()
+        if i & 0x1: # odd numbered stream
+            p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
+            ip = p.Extensions[ip4]
+            ip.src_ip = 0x0a0a0165
+            ip.dst_ip = 0x0a0a0265
+            if sscfg['num_var_pkts'][i]:
+                ip4.src_ip_mode = Ip4.e_im_inc_host
+                ip4.src_ip_count = sscfg['num_var_pkts'][i]
+            s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
+        else:       # even numbered stream
+            s.core.frame_len = 96 # IPv6 needs a larger frame
+            p.protocol_id.id = ost_pb.Protocol.kIp6FieldNumber
+            ip = p.Extensions[ip6]
+            ip6addr = ip6_address('1234:1::65/96')
+            ip.src_addr_hi = ip6addr.ip6.hi
+            ip.src_addr_lo = ip6addr.ip6.lo
+            ip6addr = ip6_address('1234:2::65/96')
+            ip.dst_addr_hi = ip6addr.ip6.hi
+            ip.dst_addr_lo = ip6addr.ip6.lo
+            if sscfg['num_var_pkts'][i]:
+                ip.dst_addr_mode = Ip6.kIncHost
+                ip.dst_addr_count = sscfg['num_var_pkts'][i]
+                ip.dst_addr_prefix = ip6addr.prefixlen
+            s.protocol.add().protocol_id.id = ost_pb.Protocol.kTcpFieldNumber
 
-    s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
-
-    # setup (signed) stream protocols as mac:eth2:ip:udp|tcp:payload
-    # Remove payload, add udp, payload and sign protocol to signed stream(s)
-    sscfg = sign_stream_cfg
-    s = stream_cfg.stream.add()
-    s.CopyFrom(stream_cfg.stream[0])
-    s.stream_id.id = stream_id.stream_id[1].id
-    s.control.num_packets = sscfg['num_pkts'][0]
-    if sscfg['num_var_pkts'][0]:
-        s.protocol[2].Extensions[ip4].src_ip_mode = Ip4.e_im_inc_host
-        s.protocol[2].Extensions[ip4].src_ip_count = sscfg['num_var_pkts'][0]
-    del s.protocol[-1]
-    s.protocol.add().protocol_id.id = ost_pb.Protocol.kUdpFieldNumber
-    s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
-    p = s.protocol.add()
-    p.protocol_id.id = ost_pb.Protocol.kSignFieldNumber
-    p.Extensions[sign].stream_guid = 101
-
-    s = stream_cfg.stream.add()
-    s.CopyFrom(stream_cfg.stream[1])
-    s.stream_id.id = stream_id.stream_id[2].id
-    s.core.frame_len = 128
-    s.control.num_packets = sscfg['num_pkts'][1]
-    if sscfg['num_var_pkts'][1]:
-        s.protocol[2].Extensions[ip4].src_ip_mode = Ip4.e_im_inc_host
-        s.protocol[2].Extensions[ip4].src_ip_count = sscfg['num_var_pkts'][1]
-    s.protocol[-3].protocol_id.id = ost_pb.Protocol.kTcpFieldNumber
-    s.protocol[-1].Extensions[sign].stream_guid = 102
+        s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
+        if sscfg['guid'][i] > 0:
+            p = s.protocol.add()
+            p.protocol_id.id = ost_pb.Protocol.kSignFieldNumber
+            p.Extensions[sign].stream_guid = sscfg['guid'][i]
 
     if sscfg['loop']:
-        s.control.next = ost_pb.StreamControl.e_nw_goto_id
+        stream_cfg.stream[-1].control.next = ost_pb.StreamControl.e_nw_goto_id
 
     drone.modifyStream(stream_cfg)
 
@@ -385,45 +388,6 @@ def stream_guids(request, drone, ports):
     stream_guids.port_id_list.port_id.add().id = ports.y.port_id[0].id;
     return stream_guids
 
-"""
-# FIXME: remove if not required
-protolist=['mac eth2 ip4 udp payload', 'mac eth2 ip4 udp']
-@pytest.fixture(scope='module', params=protolist)
-def stream_toggle_payload(request, drone, ports):
-    global proto_number
-
-    # add a stream
-    stream_id = ost_pb.StreamIdList()
-    stream_id.port_id.CopyFrom(ports.x.port_id[0])
-    stream_id.stream_id.add().id = 1
-    log.info('adding tx_stream %d' % stream_id.stream_id[0].id)
-    drone.addStream(stream_id)
-
-    # configure the stream
-    stream_cfg = ost_pb.StreamConfigList()
-    stream_cfg.port_id.CopyFrom(ports.x.port_id[0])
-    s = stream_cfg.stream.add()
-    s.stream_id.id = stream_id.stream_id[0].id
-    s.core.is_enabled = True
-    s.control.packets_per_sec = 100
-    s.control.num_packets = 10
-
-    # setup stream protocols
-    s.ClearField("protocol")
-    protos = request.param.split()
-    for p in protos:
-        s.protocol.add().protocol_id.id = proto_number[p]
-
-    def fin():
-        # delete streams
-        log.info('deleting tx_stream %d' % stream_id.stream_id[0].id)
-        drone.deleteStream(stream_id)
-
-    request.addfinalizer(fin)
-
-    return stream_cfg
-"""
-
 # ================================================================= #
 # ----------------------------------------------------------------- #
 #                            TEST CASES
@@ -431,9 +395,17 @@ def stream_toggle_payload(request, drone, ports):
 # ================================================================= #
 
 @pytest.mark.parametrize('sign_stream_cfg', [
-    {'num_pkts': [270, 512], 'num_var_pkts': [0, 0], 'loop': False},
-    {'num_pkts': [276, 510], 'num_var_pkts': [0, 0], 'loop': True},
-    #{'num_pkts': [19, 30], 'num_var_pkts': [0, 0], 'loop': True},
+    # Min Seq Size = 256 on Win32 and 16 on other platforms, keep this in
+    # mind while configuring the below num_pkts
+    # Verify tx pkts = multiple complete repeats of packetList + no partials
+    {'num_streams': 3, 'num_pkts': [10, 270, 512], 'num_var_pkts': [0, 0, 0],
+        'guid': [-1, 101, 102], 'loop': False},
+    # Verify tx pkts = multiple repeats of packetList + partial repeat
+    {'num_streams': 3, 'num_pkts': [10, 276, 510], 'num_var_pkts': [0, 0, 0],
+        'guid': [-1, 101, 102], 'loop': True},
+    # Verify tx pkts = first seq partial
+    {'num_streams': 1, 'num_pkts': [12], 'num_var_pkts': [0],
+        'guid': [101], 'loop': True},
 ])
 def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         sign_stream_cfg, stream_clear, stream, stream_guids):
@@ -445,25 +417,32 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             10.10.1/24  10.10.2/24
             1234::1/96  1234::2/96
                 /           \
-               /.101         \.101
+               /.101-105     \.101-105
             HostX           HostY
      """
 
     # calculate tx pkts
-    total_tx_pkts = 10 + sign_stream_cfg['num_pkts'][0] \
-                       + sign_stream_cfg['num_pkts'][1]
+    total_tx_pkts = 0
+    for pkts in sign_stream_cfg['num_pkts']:
+        total_tx_pkts += pkts
+
+    num_sign_streams = sum(1 for i in sign_stream_cfg['guid'] if i > 0)
+
     # clear port X/Y stats
     log.info('clearing stats')
     drone.clearStats(ports.x)
     drone.clearStats(ports.y)
-    drone.clearStreamStats(stream_guids)
 
-    # verify stream strats are indeed cleared
+    # clear and verify stream strats are indeed cleared
+    drone.clearStreamStats(stream_guids)
     ssd = drone.getStreamStatsDict(stream_guids)
     assert len(ssd.port) == 0
 
     # resolve ARP/NDP on ports X/Y
     log.info('resolving Neighbors on (X, Y) ports ...')
+    # wait for interface to do DAD? Otherwise we don't get replies for NS
+    # FIXME: find alternative to sleep
+    time.sleep(5)
     drone.resolveDeviceNeighbors(emul_ports)
     time.sleep(3)
 
@@ -493,143 +472,110 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             assert(y_stats.port_stats[0].rx_pkts >= total_tx_pkts)
 
         ssd = drone.getStreamStatsDict(stream_guids)
-        # FIXME (temp): assert len(ssd.port) == 2
+        log.info('--> (stream stats)\n' + str(ssd))
+        assert len(ssd.port) == 2
+        assert len(ssd.port[ports.x_num].sguid) == num_sign_streams
+        assert len(ssd.port[ports.y_num].sguid) == num_sign_streams
 
         # dump X capture buffer
         log.info('getting X capture buffer')
         buff = drone.getCaptureBuffer(ports.x.port_id[0])
         drone.saveCaptureBuffer(buff, 'capX.pcap')
-        log.info('dumping X capture buffer')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap'])
-        print(cap_pkts)
+        #log.info('dumping X capture buffer')
+        #cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap'])
+        #print(cap_pkts)
 
-        # get sign stream #1 Tx stats from capture
-        filter="frame[-9:9]==00.00.00.65.61.a1.b2.c3.d4"
-        print(filter)
-        log.info('dumping X capture buffer (filtered)')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap',
-            '-Y', filter])
-        print(cap_pkts)
-        sign_stream1_cnt = cap_pkts.count('\n')
+        # get and verify each sign stream Tx stats from capture
+        for i in range(sign_stream_cfg['num_streams']):
+            guid = sign_stream_cfg['guid'][i]
+            if guid < 0:
+                continue
+            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'
+            print(filter)
+            cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap',
+                '-Y', filter])
+            #log.info('dumping X capture buffer (filtered)')
+            #print(cap_pkts)
+            sign_stream_cnt = cap_pkts.count('\n')
 
-        # get sign stream #2 Tx stats from capture
-        filter="frame[-9:9]==00.00.00.66.61.a1.b2.c3.d4"
-        print(filter)
-        log.info('dumping Y capture buffer (filtered)')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap',
-            '-Y', filter])
-        print(cap_pkts)
-        sign_stream2_cnt = cap_pkts.count('\n')
+            log.info('guid %d tx cap count: %d' % (guid, sign_stream_cnt))
+            #log.info('--> (stream stats)\n' + str(ssd))
 
+            # verify tx stream stats from drone is same as that from capture
+            assert ssd.port[ports.x_num].sguid[guid].tx_pkts \
+                    == sign_stream_cnt
+            assert ssd.port[ports.x_num].sguid[guid].tx_bytes \
+                    == (sign_stream_cnt
+                            * (stream.stream[i].core.frame_len - 4))
+
+            # verify tx stream stats from drone is same as configured
+            if not sign_stream_cfg['loop']:
+                assert ssd.port[ports.x_num].sguid[guid].tx_pkts \
+                        == sign_stream_cfg['num_pkts'][i]
+                assert ssd.port[ports.x_num].sguid[guid].tx_bytes \
+                        == (sign_stream_cfg['num_pkts'][i]
+                                * (stream.stream[i].core.frame_len - 4))
         os.remove('capX.pcap')
-
-        log.info('sign stream 101 tx cap count: %d' % (sign_stream1_cnt))
-        log.info('sign stream 102 tx cap count: %d' % (sign_stream2_cnt))
-        log.info('--> (stream stats)\n' + str(ssd))
-
-        # verify tx stream stats from drone is same as that from capture
-        assert len(ssd.port[ports.x_num].sguid) == 2
-        if sign_stream_cfg['loop']:
-            assert ssd.port[ports.x_num].sguid[101].tx_pkts \
-                    == sign_stream1_cnt
-            assert ssd.port[ports.x_num].sguid[101].tx_bytes \
-                    == (sign_stream1_cnt
-                            * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.x_num].sguid[102].tx_pkts \
-                    == sign_stream2_cnt
-            assert ssd.port[ports.x_num].sguid[102].tx_bytes \
-                    == (sign_stream2_cnt
-                            * (stream.stream[2].core.frame_len - 4))
-        else:
-            assert ssd.port[ports.x_num].sguid[101].tx_pkts \
-                    == sign_stream_cfg['num_pkts'][0]
-            assert ssd.port[ports.x_num].sguid[101].tx_bytes \
-                    == (sign_stream_cfg['num_pkts'][0]
-                            * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.x_num].sguid[102].tx_pkts \
-                    == sign_stream_cfg['num_pkts'][1]
-            assert ssd.port[ports.x_num].sguid[102].tx_bytes \
-                    == (sign_stream_cfg['num_pkts'][1]
-                            * (stream.stream[2].core.frame_len - 4))
 
         # dump Y capture buffer
         log.info('getting Y capture buffer')
         buff = drone.getCaptureBuffer(ports.y.port_id[0])
         drone.saveCaptureBuffer(buff, 'capY.pcap')
-        log.info('dumping Y capture buffer')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap'])
-        print(cap_pkts)
+        #log.info('dumping Y capture buffer')
+        #cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap'])
+        #print(cap_pkts)
 
-        # get sign stream #1 Rx stats from capture
-        filter="frame[-9:9]==00.00.00.65.61.a1.b2.c3.d4"
-        print(filter)
-        log.info('dumping Y capture buffer (filtered)')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap',
-            '-Y', filter])
-        print(cap_pkts)
-        sign_stream1_cnt = cap_pkts.count('\n')
+        # get and verify each sign stream Rx stats from capture
+        for i in range(sign_stream_cfg['num_streams']):
+            guid = sign_stream_cfg['guid'][i]
+            if guid < 0:
+                continue
+            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'
+            print(filter)
+            cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap',
+                '-Y', filter])
+            #log.info('dumping X capture buffer (filtered)')
+            #print(cap_pkts)
+            sign_stream_cnt = cap_pkts.count('\n')
 
-        # get sign stream #2 Rx stats from capture
-        filter="frame[-9:9]==00.00.00.66.61.a1.b2.c3.d4"
-        print(filter)
-        log.info('dumping Y capture buffer (filtered)')
-        cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap',
-            '-Y', filter])
-        print(cap_pkts)
-        sign_stream2_cnt = cap_pkts.count('\n')
+            log.info('guid %d rx cap count: %d' % (guid, sign_stream_cnt))
+            #log.info('--> (stream stats)\n' + str(ssd))
 
+            # verify rx stream stats from drone is same as that from capture
+            assert ssd.port[ports.y_num].sguid[guid].rx_pkts \
+                    == sign_stream_cnt
+            assert ssd.port[ports.y_num].sguid[guid].rx_bytes \
+                    == (sign_stream_cnt
+                            * (stream.stream[i].core.frame_len - 4))
+
+            # verify rx stream stats from drone is same as configured
+            if not sign_stream_cfg['loop']:
+                assert ssd.port[ports.y_num].sguid[guid].rx_pkts \
+                        == sign_stream_cfg['num_pkts'][i]
+                assert ssd.port[ports.y_num].sguid[guid].rx_bytes \
+                        == (sign_stream_cfg['num_pkts'][i]
+                                * (stream.stream[i].core.frame_len - 4))
         os.remove('capY.pcap')
 
-        log.info('--> (x_stats)' + x_stats.__str__())
-        log.info('--> (y_stats)' + y_stats.__str__())
-        log.info('sign stream 101 rx cap count: %d' % (sign_stream1_cnt))
-        log.info('sign stream 102 rx cap count: %d' % (sign_stream2_cnt))
-        log.info('--> (stream stats)\n' + str(ssd))
-
-        # verify rx stream stats from drone is same as that from capture
-        assert len(ssd.port[ports.y_num].sguid) == 2
-        if sign_stream_cfg['loop']:
-            assert ssd.port[ports.y_num].sguid[101].rx_pkts \
-                    == sign_stream1_cnt
-            assert ssd.port[ports.y_num].sguid[101].rx_bytes \
-                    == (sign_stream1_cnt
-                            * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.y_num].sguid[102].rx_pkts \
-                    == sign_stream2_cnt
-            assert ssd.port[ports.y_num].sguid[102].rx_bytes \
-                    == (sign_stream2_cnt
-                            * (stream.stream[2].core.frame_len - 4))
-        else:
-            assert ssd.port[ports.y_num].sguid[101].rx_pkts \
-                    == sign_stream_cfg['num_pkts'][0]
-            assert ssd.port[ports.y_num].sguid[101].rx_bytes \
-                    == (sign_stream_cfg['num_pkts'][0]
-                            * (stream.stream[1].core.frame_len - 4))
-            assert ssd.port[ports.y_num].sguid[102].rx_pkts \
-                    == sign_stream_cfg['num_pkts'][1]
-            assert ssd.port[ports.y_num].sguid[102].rx_bytes \
-                    == (sign_stream_cfg['num_pkts'][1]
-                            * (stream.stream[2].core.frame_len - 4))
-
         # verify tx == rx
-        assert ssd.port[ports.x_num].sguid[101].tx_pkts \
-            == ssd.port[ports.y_num].sguid[101].rx_pkts
-        assert ssd.port[ports.x_num].sguid[101].tx_bytes \
-            == ssd.port[ports.y_num].sguid[101].rx_bytes
-        assert ssd.port[ports.x_num].sguid[102].tx_pkts \
-            == ssd.port[ports.y_num].sguid[102].rx_pkts
-        assert ssd.port[ports.x_num].sguid[102].tx_bytes \
-            == ssd.port[ports.y_num].sguid[102].rx_bytes
+        for i in range(sign_stream_cfg['num_streams']):
+            guid = sign_stream_cfg['guid'][i]
+            if guid < 0:
+                continue
+            assert ssd.port[ports.x_num].sguid[guid].tx_pkts \
+                == ssd.port[ports.y_num].sguid[guid].rx_pkts
+            assert ssd.port[ports.x_num].sguid[guid].tx_bytes \
+                == ssd.port[ports.y_num].sguid[guid].rx_bytes
 
-        # for unidir verify rx on tx port is 0 and vice versa
-        # FIXME: failing currently because tx pkts on tx port seem to be
-        # captured by rxStatsPoller_ on tx port
-        """
-        assert ssd.port[ports.x_num].sguid[101].rx_pkts == 0
-        assert ssd.port[ports.x_num].sguid[101].rx_bytes == 0
-        assert ssd.port[ports.y_num].sguid[101].tx_pkts == 0
-        assert ssd.port[ports.y_num].sguid[101].tx_bytes == 0
-        """
+            # for unidir verify rx on tx port is 0 and vice versa
+            # FIXME: failing currently because tx pkts on tx port seem to be
+            # captured by rxStatsPoller_ on tx port
+            """
+            assert ssd.port[ports.x_num].sguid[guid].rx_pkts == 0
+            assert ssd.port[ports.x_num].sguid[guid].rx_bytes == 0
+            """
+            assert ssd.port[ports.y_num].sguid[guid].tx_pkts == 0
+            assert ssd.port[ports.y_num].sguid[guid].tx_bytes == 0
 
     except RpcError as e:
             raise
@@ -638,13 +584,6 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
 
 #
 # TODO
-#  * Verify that uni-directional stream stats are correct for a single stream
-#  * Verify that uni-directional stream stats are correct for multiple streams
-#  * Verify that bi-directional stream stats are correct for a single stream
 #  * Verify that bi-directional stream stats are correct for multiple streams
-#  * Verify protocol combinations - Eth, IPv4/IPv6, TCP/UDP, Pattern
 #  * Verify transmit modes
-#  * Verify tx pkts = multiple repeats of packetList + partial repeat
-#  * Verify tx pkts = multiple complete repeats of packetList + no partials
-#  * Verify tx pkts = first seq partial
 #

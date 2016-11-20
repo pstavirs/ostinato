@@ -77,15 +77,16 @@ class DroneProxy(object):
             def __repr__(self):
                 s = 'port: {\n'
                 for k, v in self.port.items():
-                    s += str(k) + ': {' + str(v) + '}\n'
-                s += '}'
+                    s += str(k) + ': {\n' + str(v) + '}\n'
+                s += '}\n'
                 return s
         class StreamStatsDictPort:
             def __repr__(self):
-                s = 'sguid: { '
+                s = '  sguid: { \n'
                 for k, v in self.sguid.items():
-                    s += str(k) + ': {' + str(v).replace('\n', ' ') + '}\n'
-                s += '}'
+                    s += '    ' + str(k) + ': {\n      ' \
+                            + str(v).replace('\n', '\n      ') + '}\n'
+                s += '  }\n'
                 return s
         ssl = self.getStreamStats(stream_guid_list)
         ssd = StreamStatsDict()
