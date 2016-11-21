@@ -90,6 +90,8 @@ public:
     bool isDirty() { return isSendQueueDirty_; }
     void setDirty() { isSendQueueDirty_ = true; }
 
+    virtual bool setTrackStreamStats(bool enable);
+
     Accuracy rateAccuracy();
     virtual bool setRateAccuracy(Accuracy accuracy);
 

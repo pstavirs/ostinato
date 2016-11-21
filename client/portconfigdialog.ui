@@ -70,6 +70,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="streamStatsButton" >
+     <property name="text" >
+      <string>Stream Statistics</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer>
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
