@@ -1594,3 +1594,46 @@ void PortGroup::processClearStatsAck(PbRpcController *controller)
     delete controller;
 }
 
+bool PortGroup::getStreamStats(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return false;
+
+    OstProto::StreamGuidList *guidList = new OstProto::StreamGuidList;
+    OstProto::StreamStatsList *statsList = new OstProto::StreamStatsList;
+    PbRpcController *controller = new PbRpcController(guidList, statsList);
+
+    if (portList == NULL)
+        guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
+    else
+        for (int i = 0; i < portList->size(); i++)
+            guidList->mutable_port_id_list()->add_port_id()
+                ->set_id(portList->at(i));
+
+    serviceStub->getStreamStats(controller, guidList, statsList,
+            NewCallback(this, &PortGroup::processStreamStatsList, controller));
+
+    return true;
+}
+
+void PortGroup::processStreamStatsList(PbRpcController *controller)
+{
+    using OstProto::StreamStatsList;
+
+    qDebug("In %s", __FUNCTION__);
+
+    StreamStatsList *streamStatsList =
+        static_cast<StreamStatsList*>(controller->response());
+
+    // XXX: It is required to emit the signal even if the returned
+    // streamStatsList contains no records since the recipient
+    // StreamStatsModel slot needs to disconnect this signal-slot
+    // connection to prevent future stream stats for this portgroup
+    // to be sent to it
+    emit streamStatsReceived(mPortGroupId, streamStatsList);
+
+    delete controller;
+}
+

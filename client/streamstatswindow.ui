@@ -1,0 +1,23 @@
+<ui version="4.0" >
+ <class>StreamStatsWindow</class>
+ <widget class="QWidget" name="streamStatsWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>551</width>
+    <height>452</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" >
+   <item>
+    <widget class="QListView" name="streamStats" />
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

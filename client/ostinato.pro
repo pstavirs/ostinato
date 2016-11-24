@@ -58,6 +58,8 @@ HEADERS += \
     streamconfigdialog.h \
     streamlistdelegate.h \
     streammodel.h \
+    streamstatsmodel.h \
+    streamstatswindow.h \
     variablefieldswidget.h
 
 FORMS += \
@@ -71,6 +73,7 @@ FORMS += \
     portswindow.ui \
     preferences.ui \
     streamconfigdialog.ui \
+    streamstatswindow.ui \
     variablefieldswidget.ui
 
 SOURCES += \
@@ -99,6 +102,8 @@ SOURCES += \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp \
+    streamstatsmodel.cpp \
+    streamstatswindow.cpp \
     variablefieldswidget.cpp
 
 

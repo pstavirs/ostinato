@@ -87,6 +87,22 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="tbGetStreamStats" >
+        <property name="toolTip" >
+         <string>Fetch Selected Port Stream Stats</string>
+        </property>
+        <property name="statusTip" >
+         <string>Fetches stream statistics from the selected port(s)</string>
+        </property>
+        <property name="text" >
+         <string>Fetch Stream Stats</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="ostinato.qrc" >:/icons/stream_stats.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QToolButton" name="tbStartCapture" >
         <property name="toolTip" >
          <string>Start Capture</string>

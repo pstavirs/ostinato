@@ -49,6 +49,7 @@ private slots:
 
     void on_tbClear_clicked();
     void on_tbClearAll_clicked();
+    void on_tbGetStreamStats_clicked();
 
     void on_tbResolveNeighbors_clicked();
     void on_tbClearNeighbors_clicked();

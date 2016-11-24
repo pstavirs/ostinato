@@ -76,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setObjectName("portsDock");
     portsDock->setFeatures(
                 portsDock->features() & ~QDockWidget::DockWidgetClosable);
-    statsDock = new QDockWidget(tr("Statistics"), this);
+    statsDock = new QDockWidget(tr("Port Statistics"), this);
     statsDock->setObjectName("statsDock");
     statsDock->setFeatures(
                 statsDock->features() & ~QDockWidget::DockWidgetClosable);
@@ -132,6 +132,12 @@ MainWindow::~MainWindow()
 #endif
 
     delete pgl;
+
+    // We don't want to save state for Stream Stats Docks - so close them
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks)
+        dock->close(); // this dock is already set to delete on close
 
     QByteArray layout = saveState(0);
     appSettings->setValue(kApplicationWindowLayout, layout);
