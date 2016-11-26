@@ -20,24 +20,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _STREAM_STATS_MODEL_H
 #define _STREAM_STATS_MODEL_H
 
-#include <QStringListModel> // FIXME: remove
+#include <QAbstractTableModel>
+#include <QHash>
+#include <QList>
+#include <QPair>
+#include <QStringList>
 
 namespace OstProto {
     class StreamStatsList;
 }
 
-class StreamStatsModel: public QStringListModel // FIXME: change to TableModel
+class StreamStatsModel: public QAbstractTableModel
 {
     Q_OBJECT
 public:
     StreamStatsModel(QObject *parent = 0);
+
+    int rowCount(const QModelIndex &parent=QModelIndex()) const;
+    int columnCount(const QModelIndex &parent=QModelIndex()) const;
+
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
 public slots:
     void clearStats();
     void appendStreamStatsList(quint32 portGroupId,
                                const OstProto::StreamStatsList *stats);
 private:
-    QList<QString> stats_; // FIXME: remove
+    typedef QPair<uint, uint> PortGroupPort; // Pair = (PortGroupId, PortId)
+    typedef uint Guid;
+    struct StreamStats {
+        quint64 rxPkts;
+        quint64 txPkts;
+        quint64 rxBytes;
+        quint64 txBytes;
+    };
+    QList<Guid> guidList_;
+    QList<PortGroupPort> portList_;
+    QHash<Guid, QHash<PortGroupPort, StreamStats> > streamStats_;
 };
 #endif
 

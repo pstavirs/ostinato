@@ -1,6 +1,6 @@
 <ui version="4.0" >
  <class>StreamStatsWindow</class>
- <widget class="QWidget" name="streamStatsWindow" >
+ <widget class="QWidget" name="StreamStatsWindow" >
   <property name="geometry" >
    <rect>
     <x>0</x>
@@ -14,7 +14,7 @@
   </property>
   <layout class="QHBoxLayout" >
    <item>
-    <widget class="QListView" name="streamStats" />
+    <widget class="QTableView" name="streamStats" />
    </item>
   </layout>
  </widget>
