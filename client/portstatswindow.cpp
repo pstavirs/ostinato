@@ -234,14 +234,18 @@ void PortStatsWindow::on_tbGetStreamStats_clicked()
     model->portListFromIndex(selectedColumns(), portList);
 
     if (portList.size()) {
-        QDockWidget *dock = new QDockWidget(tr("Stream Statistics"),
-                                                mainWindow);
+        QDockWidget *dock = new QDockWidget(mainWindow);
         streamStatsModel = new StreamStatsModel(dock);
         dock->setWidget(new StreamStatsWindow(streamStatsModel, dock));
+        dock->setWindowTitle(dock->widget()->windowTitle());
         dock->setObjectName("streamStatsDock");
-        dock->setFloating(true);
         dock->setAttribute(Qt::WA_DeleteOnClose);
+        QDockWidget *statsDock = mainWindow->findChild<QDockWidget*>(
+                                                            "statsDock");
         mainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+        mainWindow->tabifyDockWidget(statsDock, dock);
+        dock->show();
+        dock->raise();
     }
 
     // Get stream stats for selected ports, portgroup by portgroup

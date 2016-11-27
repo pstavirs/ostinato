@@ -29,6 +29,7 @@ class StreamStatsWindow: public QWidget, private Ui::StreamStatsWindow
     Q_OBJECT
 public:
     StreamStatsWindow(QAbstractItemModel *model, QWidget *parent = 0);
+    ~StreamStatsWindow();
 };
 
 #endif

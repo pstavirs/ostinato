@@ -22,14 +22,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QAbstractItemModel>
 #include <QHeaderView>
 
+static int id;
+static int count;
+
 StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
+
+    if (id)
+        setWindowTitle(windowTitle() + QString("(%1)").arg(id));
+    id++;
+    count++;
 
     streamStats->setModel(model);
 
     streamStats->verticalHeader()->setHighlightSections(false);
     streamStats->verticalHeader()->setDefaultSectionSize(
             streamStats->verticalHeader()->minimumSectionSize());
+}
+
+StreamStatsWindow::~StreamStatsWindow()
+{
+    count--;
+    if (count == 0)
+        id = 0;
 }
