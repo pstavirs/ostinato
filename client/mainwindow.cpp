@@ -133,11 +133,12 @@ MainWindow::~MainWindow()
 
     delete pgl;
 
-    // We don't want to save state for Stream Stats Docks - so close them
+    // We don't want to save state for Stream Stats Docks - so delete them
     QList<QDockWidget*> streamStatsDocks
             = findChildren<QDockWidget*>("streamStatsDock");
     foreach(QDockWidget *dock, streamStatsDocks)
-        dock->close(); // this dock is already set to delete on close
+        delete dock;
+    Q_ASSERT(findChildren<QDockWidget*>("streamStatsDock").size() == 0);
 
     QByteArray layout = saveState(0);
     appSettings->setValue(kApplicationWindowLayout, layout);
