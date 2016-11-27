@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "statstuple.h"
 #include "timestamp.h"
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 PcapTxThread::PcapTxThread(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE] = "";
