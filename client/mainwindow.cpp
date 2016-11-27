@@ -278,6 +278,16 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     setGeometry(defaultGeometry_);
     restoreState(defaultLayout_, 0);
 
+    // Add streamStats as tabs
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks) {
+        dock->setFloating(false);
+        tabifyDockWidget(statsDock, dock);
+    }
+    statsDock->show();
+    statsDock->raise();
+
     actionViewShowMyReservedPortsOnly->setChecked(false);
 }
 
