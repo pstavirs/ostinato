@@ -73,6 +73,9 @@ QVariant StreamStatsModel::headerData(
 
 QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
 {
+    if (role == Qt::TextAlignmentRole)
+        return Qt::AlignRight;
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
@@ -82,13 +85,13 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
 
     switch (stat) {
     case kRxPkts:
-        return streamStats_.value(guid).value(pgp).rxPkts;
+        return QString("%L1").arg(streamStats_.value(guid).value(pgp).rxPkts);
     case kTxPkts:
-        return streamStats_.value(guid).value(pgp).txPkts;
+        return QString("%L1").arg(streamStats_.value(guid).value(pgp).txPkts);
     case kRxBytes:
-        return streamStats_.value(guid).value(pgp).rxBytes;
+        return QString("%L1").arg(streamStats_.value(guid).value(pgp).rxBytes);
     case kTxBytes:
-        return streamStats_.value(guid).value(pgp).txBytes;
+        return QString("%L1").arg(streamStats_.value(guid).value(pgp).txBytes);
     default:
         break;
     }

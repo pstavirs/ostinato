@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamstatswindow.h"
 
 #include <QAbstractItemModel>
+#include <QHeaderView>
 
 StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     : QWidget(parent)
@@ -27,4 +28,8 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     setupUi(this);
 
     streamStats->setModel(model);
+
+    streamStats->verticalHeader()->setHighlightSections(false);
+    streamStats->verticalHeader()->setDefaultSectionSize(
+            streamStats->verticalHeader()->minimumSectionSize());
 }
