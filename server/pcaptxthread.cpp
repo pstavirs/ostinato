@@ -453,6 +453,10 @@ void PcapTxThread::updateStreamStats()
     int c = pkts/packetListSize_;
     int d = pkts%packetListSize_;
 
+    qDebug("%s:", __FUNCTION__);
+    qDebug("txPkts = %" PRIu64, pkts);
+    qDebug("c = %d, d = %d\n", c, d);
+
     int i;
 
     if (!c)
