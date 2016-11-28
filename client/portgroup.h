@@ -164,7 +164,9 @@ public:
     void getPortStats();
     void processPortStatsList();
     void clearPortStats(QList<uint> *portList = NULL);
-    void processClearStatsAck(PbRpcController *controller);
+    void processClearPortStatsAck(PbRpcController *controller);
+    bool clearStreamStats(QList<uint> *portList = NULL);
+    void processClearStreamStatsAck(PbRpcController *controller);
     bool getStreamStats(QList<uint> *portList = NULL);
     void processStreamStatsList(PbRpcController *controller);
 

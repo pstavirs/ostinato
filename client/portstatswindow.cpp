@@ -196,6 +196,8 @@ void PortStatsWindow::on_tbClear_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId).
+            clearStreamStats(&portList[i].portList);
     }
 }
 
@@ -222,6 +224,8 @@ void PortStatsWindow::on_tbClearAll_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId)
                     .clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId)
+                    .clearStreamStats(&portList[i].portList);
     }
 }
 

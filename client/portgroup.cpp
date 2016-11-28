@@ -1578,18 +1578,51 @@ void PortGroup::clearPortStats(QList<uint> *portList)
         }
 
         serviceStub->clearStats(controller, portIdList, ack,
-            NewCallback(this, &PortGroup::processClearStatsAck, controller));
+            NewCallback(this, &PortGroup::processClearPortStatsAck,
+                        controller));
     }
 _exit:
     return;
 }
 
-void PortGroup::processClearStatsAck(PbRpcController *controller)
+void PortGroup::processClearPortStatsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
     // Refresh stats immediately after a stats clear/reset
     getPortStats();
+
+    delete controller;
+}
+
+bool PortGroup::clearStreamStats(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return false;
+
+    OstProto::StreamGuidList *guidList = new OstProto::StreamGuidList;
+    OstProto::Ack *ack = new OstProto::Ack;
+    PbRpcController *controller = new PbRpcController(guidList, ack);
+
+    if (portList == NULL)
+        guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
+    else
+        for (int i = 0; i < portList->size(); i++)
+            guidList->mutable_port_id_list()->add_port_id()
+                ->set_id(portList->at(i));
+
+    serviceStub->clearStreamStats(controller, guidList, ack,
+            NewCallback(this, &PortGroup::processClearStreamStatsAck,
+                        controller));
+
+    return true;
+}
+
+void PortGroup::processClearStreamStatsAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
 
     delete controller;
 }
