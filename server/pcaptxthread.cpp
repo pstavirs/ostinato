@@ -38,9 +38,8 @@ PcapTxThread::PcapTxThread(const char *device)
                 "This Win32 platform does not support performance counter");
 #endif
     state_ = kNotStarted;
-    returnToQIdx_ = -1;
-    loopDelay_ = 0;
     stop_ = false;
+    clearPacketList();
     handle_ = pcap_open_live(device, 64 /* FIXME */, 0, 1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
@@ -441,7 +440,11 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
 
 void PcapTxThread::updateStreamStats()
 {
-    // Number of tx packets sent during last transmit
+    // If no packets in list, nothing to be done
+    if (!packetListSize_)
+        return;
+
+    // Get number of tx packets sent during last transmit
     quint64 pkts = stats_->pkts > lastStats_.pkts ?
         stats_->pkts - lastStats_.pkts :
         stats_->pkts + (ULLONG_MAX - lastStats_.pkts);
@@ -458,6 +461,7 @@ void PcapTxThread::updateStreamStats()
 
     qDebug("%s:", __FUNCTION__);
     qDebug("txPkts = %" PRIu64, pkts);
+    qDebug("packetListSize_ = %" PRIu64, packetListSize_);
     qDebug("c = %d, d = %d\n", c, d);
 
     int i;
