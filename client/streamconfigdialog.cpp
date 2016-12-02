@@ -83,8 +83,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbFtOther, SIGNAL(toggled(bool)), gbL3Proto, SLOT(setDisabled(bool)));
     connect(rbL3Other, SIGNAL(toggled(bool)), rbL4Other, SLOT(setChecked(bool)));
     connect(rbL3Other, SIGNAL(toggled(bool)), gbL4Proto, SLOT(setDisabled(bool)));
-    connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
-    connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
+    connect(rbL4Other, SIGNAL(toggled(bool)), rbL5Other, SLOT(setChecked(bool)));
+    connect(rbL4Other, SIGNAL(toggled(bool)), gbL5Proto, SLOT(setDisabled(bool)));
+    connect(rbL5Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
+    connect(rbL5Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
 
     // Setup valid subsequent protocols for L2 to L4 protocols
     for (int i = ProtoL2; i <= ProtoL4; i++)
