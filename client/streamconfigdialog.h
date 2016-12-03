@@ -64,6 +64,8 @@ private:
         ProtoL4 = 4,
         ProtoL5 = 5,
         ProtoPayload = 6,
+        ProtoSign = 7,
+        ProtoTrailer = 8,
         ProtoMax
     };
 

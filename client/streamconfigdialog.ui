@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>634</width>
-    <height>507</height>
+    <width>647</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -146,8 +146,8 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>592</width>
-            <height>269</height>
+            <width>605</width>
+            <height>311</height>
            </rect>
           </property>
           <attribute name="label" >
@@ -193,7 +193,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item rowspan="2" row="0" column="1" >
+           <item rowspan="3" row="0" column="1" >
             <widget class="QGroupBox" name="gbFrameType" >
              <property name="enabled" >
               <bool>true</bool>
@@ -376,49 +376,7 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="0" column="3" >
-            <widget class="QGroupBox" name="gbL5Proto" >
-             <property name="enabled" >
-              <bool>true</bool>
-             </property>
-             <property name="title" >
-              <string>L5</string>
-             </property>
-             <layout class="QVBoxLayout" >
-              <item>
-               <widget class="QRadioButton" name="rbL5None" >
-                <property name="text" >
-                 <string>None</string>
-                </property>
-                <property name="checked" >
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="rbL5Text" >
-                <property name="enabled" >
-                 <bool>false</bool>
-                </property>
-                <property name="text" >
-                 <string>Text</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="rbL5Other" >
-                <property name="enabled" >
-                 <bool>false</bool>
-                </property>
-                <property name="text" >
-                 <string>Other</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0" >
+           <item rowspan="2" row="1" column="0" >
             <widget class="QGroupBox" name="gbVlan" >
              <property name="enabled" >
               <bool>true</bool>
@@ -542,7 +500,49 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
              </layout>
             </widget>
            </item>
-           <item row="1" column="3" >
+           <item row="2" column="2" >
+            <widget class="QGroupBox" name="gbL5Proto" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>L5</string>
+             </property>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbL5None" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL5Text" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Text</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbL5Other" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="3" >
             <widget class="QGroupBox" name="gbPayloadProto" >
              <property name="enabled" >
               <bool>true</bool>
@@ -580,6 +580,67 @@ QLineEdit:enabled[inputMask = "HH HH HH HH HH HH; "] { background-color: #ccccff
               </item>
               <item>
                <widget class="QRadioButton" name="rbPayloadOther" >
+                <property name="enabled" >
+                 <bool>false</bool>
+                </property>
+                <property name="text" >
+                 <string>Other</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="3" >
+            <widget class="QGroupBox" name="gbSpecial" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>Special</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbSpecialNone" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbSignature" >
+                <property name="text" >
+                 <string>Signature</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="3" >
+            <widget class="QGroupBox" name="gbTrailer" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="title" >
+              <string>Trailer</string>
+             </property>
+             <layout class="QVBoxLayout" >
+              <item>
+               <widget class="QRadioButton" name="rbTrailerNone" >
+                <property name="text" >
+                 <string>None</string>
+                </property>
+                <property name="checked" >
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbTrailerOther" >
                 <property name="enabled" >
                  <bool>false</bool>
                 </property>

@@ -69,13 +69,14 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // Time to play match the signals and slots!
 
-    // If L1/L2(FT)/L3 = None, force subsequent protocol level(s) also to None
+    // If L1/L2(FT)/L3/L4 = None,
+    // force subsequent protocol level(s) also to None
     connect(rbL1None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbFtNone, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbL3None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbL4None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
 
-    // If L1/L2(FT)/L3/L4 = Other, force subsequent protocol to Other and 
+    // If L1/L2(FT)/L3/L4/L5 = Other, force subsequent protocol to Other and
     // disable the subsequent protocol group as well
     connect(rbL1Other, SIGNAL(toggled(bool)), rbFtOther, SLOT(setChecked(bool)));
     connect(rbL1Other, SIGNAL(toggled(bool)), gbFrameType, SLOT(setDisabled(bool)));
@@ -283,6 +284,17 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoPayload]->addButton(rbPayloadHexDump, OstProto::Protocol::kHexDumpFieldNumber);
     bgProto[ProtoPayload]->addButton(rbPayloadOther, ButtonIdOther);
 #endif
+
+    // Special
+    bgProto[ProtoSign] = new QButtonGroup();
+    bgProto[ProtoSign]->addButton(rbSpecialNone, ButtonIdNone);
+    bgProto[ProtoSign]->addButton(rbSignature,
+                                  OstProto::Protocol::kSignFieldNumber);
+    // Trailer
+    bgProto[ProtoTrailer] = new QButtonGroup();
+    bgProto[ProtoTrailer]->addButton(rbTrailerNone, ButtonIdNone);
+    bgProto[ProtoTrailer]->addButton(rbTrailerOther, ButtonIdOther);
+
     /*
     ** Setup Validators
     */    
@@ -794,6 +806,8 @@ void StreamConfigDialog::forceProtocolNone(bool checked)
     }
 }
 
+// Button 'newId' has been clicked
+// - update the protocol list correspondingly
 void StreamConfigDialog::updateProtocol(int newId)
 {
     int level;
@@ -808,6 +822,8 @@ void StreamConfigDialog::updateProtocol(int newId)
     __updateProtocol(level, newId);
 }
 
+// Button 'newId' belonging to layer 'level' has been clicked
+// - update the protocol list correspondingly
 void StreamConfigDialog::__updateProtocol(int level, int newId)
 {
     int oldId;
@@ -855,7 +871,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
                 // Free both protocol and associated widget
                 delete _protocolWidgets.take(p);
                 delete p;
-                if (level == ProtoPayload)
+                if (level == ProtoTrailer)
                 {
                     while (_iter->hasNext())
                     {
@@ -874,6 +890,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
     return;
 }
 
+//! Traverse the ProtocolList and update the SelectProtocols (Simple) widget
 void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
 {
     int i;
@@ -899,7 +916,7 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
         id = _iter->next()->protocolNumber();
         btn = bgProto[i]->button(id);
 
-        if (btn)
+        if (btn) // we have a button for this protocol
         {
             if (btn->isEnabled())
                 btn->click();
@@ -909,23 +926,32 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
                 __updateProtocol(i, id);
             }
         }
-        else
+        else // we don't have a button for this protocol
         {
             switch (i)
             {
                 case ProtoVlan:
+                    // No vlan - proto may belong to next layer
+                    _iter->previous();
+                    break;
+
+                case ProtoSign:
+                    // No sign - but we have a trailer
                     _iter->previous();
                     break;
 
                 case ProtoPayload:
                     goto _other;
 
-                default:
+                default: // viz. L1, L2, L3, L4, L5, Trailer
+                    // Is this a Payload layer protocol?
+                    // (maybe intermediate layers are not present)
                     btn = bgProto[ProtoPayload]->button(id);
                     if (btn && btn->isEnabled())
                     {
                         btn->click();
-                        break;
+                        i = ProtoPayload;
+                        continue;
                     }
                     else
                         goto _other;
@@ -933,20 +959,22 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
         }
     }
 
-    // If more protocol(s) beyond payload ...
+    // If more protocol(s) beyond trailer ...
     if (_iter->hasNext())
     {
-        i = ProtoPayload;
+        i = ProtoTrailer;
         goto _other;
     }
 
+    Q_ASSERT(!_iter->hasNext()); // At end of the ProtocolList
     goto _done;
 
 _other:
+    // Set remaining protocols as 'Other'
     for (int j = i; j < ProtoMax; j++)
     {
-        // VLAN doesn't have a "Other" button
-        if (j == ProtoVlan)
+        // VLAN/Sign doesn't have a "Other" button
+        if ((j == ProtoVlan) || (j == ProtoSign))
             continue;
 
         bgProto[j]->button(ButtonIdOther)->setChecked(true);
