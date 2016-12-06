@@ -105,20 +105,10 @@ bool AbstractPort::modify(const OstProto::Port &port)
         data_.set_transmit_mode(port.transmit_mode());
 
     if (port.has_track_stream_stats())
-        setTrackStreamStats(port.track_stream_stats());
+        ret |= setTrackStreamStats(port.track_stream_stats());
 
     if (port.has_user_name()) {
         data_.set_user_name(port.user_name());
-    }
-
-    if (port.has_track_stream_stats()) {
-        bool val = port.track_stream_stats() ?
-            startStreamStatsTracking() : stopStreamStatsTracking();
-
-        if (val)
-            data_.set_track_stream_stats(port.track_stream_stats());
-
-        ret |= val;
     }
 
     return ret;
@@ -192,7 +182,12 @@ void AbstractPort::addNote(QString note)
 
 bool AbstractPort::setTrackStreamStats(bool enable)
 {
-    data_.set_track_stream_stats(enable);
+    bool val = enable ? startStreamStatsTracking() : stopStreamStatsTracking();
+
+    if (val)
+        data_.set_track_stream_stats(enable);
+
+    return val;
 }
 
 AbstractPort::Accuracy AbstractPort::rateAccuracy()
