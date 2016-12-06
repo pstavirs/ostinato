@@ -132,12 +132,32 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
 
 bool PcapPort::startStreamStatsTracking()
 {
-    return rxStatsPoller_->start();
+    if (!transmitter_->setStreamStatsTracking(true))
+        goto _tx_fail;
+    if (!rxStatsPoller_->start())
+        goto _rx_fail;
+    return true;
+
+_rx_fail:
+    transmitter_->setStreamStatsTracking(false);
+_tx_fail:
+    qWarning("failed to start stream stats tracking");
+    return false;
 }
 
 bool PcapPort::stopStreamStatsTracking()
 {
-    return rxStatsPoller_->stop();
+    if (!transmitter_->setStreamStatsTracking(false))
+        goto _tx_fail;
+    if (!rxStatsPoller_->stop())
+        goto _rx_fail;
+    return true;
+
+_rx_fail:
+    transmitter_->setStreamStatsTracking(true);
+_tx_fail:
+    qWarning("failed to stop stream stats tracking");
+    return false;
 }
 
 void PcapPort::startDeviceEmulation()

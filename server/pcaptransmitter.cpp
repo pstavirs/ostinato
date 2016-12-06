@@ -43,6 +43,11 @@ bool PcapTransmitter::setRateAccuracy(
     return txThread_.setRateAccuracy(accuracy);
 }
 
+bool PcapTransmitter::setStreamStatsTracking(bool enable)
+{
+    return txThread_.setStreamStatsTracking(enable);
+}
+
 void PcapTransmitter::clearPacketList()
 {
     txThread_.clearPacketList();

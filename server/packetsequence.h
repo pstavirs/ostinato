@@ -27,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class PacketSequence
 {
 public:
-    PacketSequence() {
+    PacketSequence(bool trackGuidStats) {
+        trackGuidStats_ = trackGuidStats;
         sendQueue_ = pcap_sendqueue_alloc(1*1024*1024);
         lastPacket_ = NULL;
         packets_ = 0;
@@ -61,7 +62,7 @@ public:
         lastPacket_ = (struct pcap_pkthdr *)
                             (sendQueue_->buffer + sendQueue_->len);
         ret = pcap_sendqueue_queue(sendQueue_, pktHeader, pktData);
-        if (ret >= 0) {
+        if (trackGuidStats_ && (ret >= 0)) {
             uint guid;
             if (SignProtocol::packetGuid(pktData, pktHeader->caplen, &guid)) {
                 streamStatsMeta_[guid].tx_pkts++;
@@ -79,6 +80,9 @@ public:
     int repeatSize_;
     long usecDelay_;
     StreamStats streamStatsMeta_;
+
+private:
+    bool trackGuidStats_;
 };
 
 #endif

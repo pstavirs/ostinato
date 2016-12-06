@@ -34,6 +34,7 @@ public:
     ~PcapTxThread();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
+    bool setStreamStatsTracking(bool enable);
 
     void clearPacketList();
     void loopNextPacketSet(qint64 size, qint64 repeats,
@@ -87,6 +88,7 @@ private:
     volatile bool stop_;
     volatile State state_;
 
+    bool trackStreamStats_;
     StatsTuple *stats_;
     StatsTuple lastStats_;
     StreamStats streamStats_;

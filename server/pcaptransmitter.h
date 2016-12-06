@@ -33,6 +33,7 @@ public:
     ~PcapTransmitter();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
+    bool setStreamStatsTracking(bool enable);
 
     void clearPacketList();
     void loopNextPacketSet(qint64 size, qint64 repeats,

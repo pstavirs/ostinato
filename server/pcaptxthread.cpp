@@ -39,6 +39,7 @@ PcapTxThread::PcapTxThread(const char *device)
 #endif
     state_ = kNotStarted;
     stop_ = false;
+    trackStreamStats_ = false;
     clearPacketList();
     handle_ = pcap_open_live(device, 64 /* FIXME */, 0, 1000 /* ms */, errbuf);
 
@@ -82,6 +83,12 @@ bool PcapTxThread::setRateAccuracy(
     return true;
 }
 
+bool PcapTxThread::setStreamStatsTracking(bool enable)
+{
+    trackStreamStats_ = enable;
+    return true;
+}
+
 void PcapTxThread::clearPacketList()
 {
     Q_ASSERT(!isRunning());
@@ -103,7 +110,7 @@ void PcapTxThread::clearPacketList()
 void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
         long repeatDelaySec, long repeatDelayNsec)
 {
-    currentPacketSequence_ = new PacketSequence;
+    currentPacketSequence_ = new PacketSequence(trackStreamStats_);
     currentPacketSequence_->repeatCount_ = repeats;
     currentPacketSequence_->usecDelay_ = repeatDelaySec * long(1e6)
                                             + repeatDelayNsec/1000;
@@ -141,7 +148,7 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
         }
 
         //! \todo (LOW): calculate sendqueue size
-        currentPacketSequence_ = new PacketSequence;
+        currentPacketSequence_ = new PacketSequence(trackStreamStats_);
 
         packetSequenceList_.append(currentPacketSequence_);
 
@@ -342,7 +349,8 @@ _restart:
     }
 
 _exit:
-    updateStreamStats();
+    if (trackStreamStats_)
+        updateStreamStats();
 
     state_ = kFinished;
 }
