@@ -121,6 +121,16 @@ void PcapPort::updateNotes()
             arg(notes).toStdString());
 }
 
+bool PcapPort::setTrackStreamStats(bool enable)
+{
+    bool val = enable ? startStreamStatsTracking() : stopStreamStatsTracking();
+
+    if (val)
+        AbstractPort::setTrackStreamStats(enable);
+
+    return val;
+}
+
 bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
 {
     if (transmitter_->setRateAccuracy(accuracy)) {
@@ -128,6 +138,21 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
         return true;
     }
     return false;
+}
+
+void PcapPort::startDeviceEmulation()
+{
+    emulXcvr_->start();
+}
+
+void PcapPort::stopDeviceEmulation()
+{
+    emulXcvr_->stop();
+}
+
+int PcapPort::sendEmulationPacket(PacketBuffer *pktBuf)
+{
+    return emulXcvr_->transmitPacket(pktBuf);
 }
 
 bool PcapPort::startStreamStatsTracking()
@@ -158,21 +183,6 @@ _rx_fail:
 _tx_fail:
     qWarning("failed to stop stream stats tracking");
     return false;
-}
-
-void PcapPort::startDeviceEmulation()
-{
-    emulXcvr_->start();
-}
-
-void PcapPort::stopDeviceEmulation()
-{
-    emulXcvr_->stop();
-}
-
-int PcapPort::sendEmulationPacket(PacketBuffer *pktBuf)
-{
-    return emulXcvr_->transmitPacket(pktBuf);
 }
 
 /*

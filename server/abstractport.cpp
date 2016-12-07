@@ -182,12 +182,9 @@ void AbstractPort::addNote(QString note)
 
 bool AbstractPort::setTrackStreamStats(bool enable)
 {
-    bool val = enable ? startStreamStatsTracking() : stopStreamStatsTracking();
+    data_.set_track_stream_stats(enable);
 
-    if (val)
-        data_.set_track_stream_stats(enable);
-
-    return val;
+    return true;
 }
 
 AbstractPort::Accuracy AbstractPort::rateAccuracy()

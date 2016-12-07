@@ -40,6 +40,7 @@ public:
     virtual bool hasExclusiveControl() { return false; }
     virtual bool setExclusiveControl(bool /*exclusive*/) { return false; }
 
+    virtual bool setTrackStreamStats(bool enable);
     virtual bool setRateAccuracy(AbstractPort::Accuracy accuracy); 
 
     virtual void clearPacketList() { 
@@ -71,9 +72,6 @@ public:
     virtual void stopCapture()  { capturer_->stop(); }
     virtual bool isCaptureOn()  { return capturer_->isRunning(); }
     virtual QIODevice* captureData() { return capturer_->captureFile(); }
-
-    virtual bool startStreamStatsTracking();
-    virtual bool stopStreamStatsTracking();
 
     virtual void startDeviceEmulation();
     virtual void stopDeviceEmulation();
@@ -167,6 +165,9 @@ protected:
     void updateNotes();
 
 private:
+    bool startStreamStatsTracking();
+    bool stopStreamStatsTracking();
+
     PcapTransmitter *transmitter_;
     PortCapturer    *capturer_;
     EmulationTransceiver *emulXcvr_;
