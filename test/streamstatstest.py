@@ -490,7 +490,8 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             guid = sign_stream_cfg['guid'][i]
             if guid < 0:
                 continue
-            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'
+            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'\
+                    + ' && !icmp && !icmpv6'
             print(filter)
             cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap',
                 '-Y', filter])
@@ -530,7 +531,8 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             guid = sign_stream_cfg['guid'][i]
             if guid < 0:
                 continue
-            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'
+            filter='frame[-9:9]==00.00.00.'+format(guid, 'x')+'.61.a1.b2.c3.d4'\
+                    + ' && !icmp && !icmpv6'
             print(filter)
             cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap',
                 '-Y', filter])
