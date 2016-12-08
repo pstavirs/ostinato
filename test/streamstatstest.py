@@ -446,9 +446,24 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
     drone.resolveDeviceNeighbors(emul_ports)
     time.sleep(3)
 
+    # clear ARP/NDP cache before ping from DUT to devices
+    #  - this helps set up ARP/NDP on DUT so that it doesn't age out
+    #    while traffic is flowing
+    sudo('ip neigh flush all')
+    out = run('ping -c3 10.10.1.101', warn_only=True)
+    assert '100% packet loss' not in out
+    out = run('ping -c3 10.10.2.101', warn_only=True)
+    assert '100% packet loss' not in out
+    out = run('ping -6 -c3 1234:1::65', warn_only=True)
+    assert '100% packet loss' not in out
+    out = run('ping -6 -c3 1234:2::65', warn_only=True)
+    assert '100% packet loss' not in out
+
     # FIXME: dump ARP/NDP table on devices and DUT
 
     try:
+        #run('ip -6 neigh show')
+
         drone.startCapture(ports.y)
         drone.startCapture(ports.x)
         time.sleep(1)
@@ -459,6 +474,8 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         time.sleep(1)
         drone.stopCapture(ports.x)
         drone.stopCapture(ports.y)
+
+        #run('ip -6 neigh show')
 
         # verify port stats
         x_stats = drone.getStats(ports.x)
