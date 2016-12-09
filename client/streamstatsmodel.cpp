@@ -23,17 +23,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 // XXX: Keep the enum in sync with it's string
 enum {
-    kRxPkts,
     kTxPkts,
-    kRxBytes,
+    kRxPkts,
     kTxBytes,
+    kRxBytes,
     kMaxStreamStats
 };
 static QStringList statTitles = QStringList()
-    << "Rx Pkts"
     << "Tx Pkts"
-    << "Rx Bytes"
-    << "Tx Bytes";
+    << "Rx Pkts"
+    << "Tx Bytes"
+    << "Rx Bytes";
 
 StreamStatsModel::StreamStatsModel(QObject *parent)
     : QAbstractTableModel(parent)
