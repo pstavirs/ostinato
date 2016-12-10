@@ -1236,15 +1236,15 @@ void StreamConfigDialog::on_pbOk_clicked()
     if ((mPort.transmitMode() == OstProto::kInterleavedTransmit)
             && (mpStream->isFrameVariable()))
     {
-        log += "In 'Interleaved Streams' transmit mode, the count for "
+        log += "* In 'Interleaved Streams' transmit mode, the count for "
             "varying fields at transmit time may not be same as configured\n";
     }
 
     if (!mPort.trackStreamStats()
             && mpStream->hasProtocol(OstProto::Protocol::kSignFieldNumber))
     {
-        log += "Stream contains special signature, but per stream statistics "
-            "will not be available till it is enabled on the port.\n";
+        log += "* Stream contains special signature, but per stream statistics "
+            "will not be available till it is enabled on the port\n";
     }
 
     mpStream->preflightCheck(log);

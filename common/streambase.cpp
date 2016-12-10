@@ -611,8 +611,8 @@ bool StreamBase::preflightCheck(QString &result) const
 
         if (chkTrunc && (pktLen < (frameProtocolLength(i) + kFcsSize)))
         {
-            result += QString("One or more frames may be truncated - "
-                "frame length should be at least %1.\n")
+            result += QString("* One or more frames may be truncated - "
+                "frame length should be at least %1\n")
                 .arg(frameProtocolLength(i) + kFcsSize);
             chkTrunc = false;
             pass = false;
@@ -620,8 +620,8 @@ bool StreamBase::preflightCheck(QString &result) const
 
         if (chkJumbo && (pktLen > 1522))
         {
-            result += QString("Jumbo frames may be truncated or dropped "
-                "if not supported by the hardware.\n");
+            result += QString("* Jumbo frames may be truncated or dropped "
+                "if not supported by the hardware\n");
             chkJumbo = false;
             pass = false;
         }
