@@ -140,6 +140,15 @@ void StreamBase::setFrameProtocol(ProtocolList protocolList)
 }
 #endif
 
+bool StreamBase::hasProtocol(quint32 protocolNumber)
+{
+    foreach(const AbstractProtocol *proto, *currentFrameProtocols)
+        if (proto->protocolNumber() == protocolNumber)
+            return true;
+
+    return false;
+}
+
 ProtocolListIterator*  StreamBase::createProtocolListIterator() const
 {
     return new ProtocolListIterator(*currentFrameProtocols);

@@ -1240,6 +1240,13 @@ void StreamConfigDialog::on_pbOk_clicked()
             "varying fields at transmit time may not be same as configured\n";
     }
 
+    if (!mPort.trackStreamStats()
+            && mpStream->hasProtocol(OstProto::Protocol::kSignFieldNumber))
+    {
+        log += "Stream contains special signature, but per stream statistics "
+            "will not be available till it is enabled on the port.\n";
+    }
+
     mpStream->preflightCheck(log);
 
     if (log.length())
