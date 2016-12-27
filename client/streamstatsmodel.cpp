@@ -35,9 +35,23 @@ static QStringList statTitles = QStringList()
     << "Tx Bytes"
     << "Rx Bytes";
 
+// XXX: Keep the enum in sync with it's string
+enum {
+    kAggrTxPkts,
+    kAggrRxPkts,
+    kAggrPktLoss,
+    kMaxAggrStreamStats
+};
+static QStringList aggrStatTitles = QStringList()
+    << "Aggregate\nTx Pkts"
+    << "Aggregate\nRx Pkts"
+    << "Aggregate\nPkt Loss";
+
+
 StreamStatsModel::StreamStatsModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
+    clearStats();
 }
 
 int StreamStatsModel::rowCount(const QModelIndex &parent) const
@@ -47,7 +61,10 @@ int StreamStatsModel::rowCount(const QModelIndex &parent) const
 
 int StreamStatsModel::columnCount(const QModelIndex &parent) const
 {
-    return portList_.size() * kMaxStreamStats;
+    if (!portList_.size())
+        return 0;
+
+    return kMaxAggrStreamStats + portList_.size() * kMaxStreamStats;
 }
 
 QVariant StreamStatsModel::headerData(
@@ -58,6 +75,10 @@ QVariant StreamStatsModel::headerData(
 
     switch (orientation) {
     case Qt::Horizontal: // Column Header
+        if (section < kMaxAggrStreamStats)
+            return aggrStatTitles.at(section % kMaxAggrStreamStats);
+
+        section -= kMaxAggrStreamStats;
         return QString("Port %1-%2\n%3")
                         .arg(portList_.at(section/kMaxStreamStats).first)
                         .arg(portList_.at(section/kMaxStreamStats).second)
@@ -80,8 +101,24 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     Guid guid = guidList_.at(index.row());
-    PortGroupPort pgp = portList_.at(index.column()/kMaxStreamStats);
-    int stat = index.column() % kMaxStreamStats;
+    if (index.column() < kMaxAggrStreamStats) {
+        int stat = index.column() % kMaxAggrStreamStats;
+        switch (stat) {
+        case kAggrRxPkts:
+            return QString("%L1").arg(aggrStreamStats_.value(guid).rxPkts);
+        case kAggrTxPkts:
+            return QString("%L1").arg(aggrStreamStats_.value(guid).txPkts);
+        case kAggrPktLoss:
+            return QString("%L1").arg(aggrStreamStats_.value(guid).pktLoss);
+        default:
+            break;
+        };
+        return QVariant();
+    }
+
+    int portColumn = index.column() - kMaxAggrStreamStats;
+    PortGroupPort pgp = portList_.at(portColumn/kMaxStreamStats);
+    int stat = portColumn % kMaxStreamStats;
 
     switch (stat) {
     case kRxPkts:
@@ -111,6 +148,7 @@ void StreamStatsModel::clearStats()
     guidList_.clear();
     portList_.clear();
     streamStats_.clear();
+    aggrStreamStats_.clear();
 
 #if QT_VERSION >= 0x040600
     endResetModel();
@@ -134,11 +172,16 @@ void StreamStatsModel::appendStreamStatsList(
         PortGroupPort pgp = PortGroupPort(portGroupId, s.port_id().id());
         Guid guid = s.stream_guid().id();
         StreamStats &ss = streamStats_[guid][pgp];
+        AggrStreamStats &aggrStats = aggrStreamStats_[guid];
 
         ss.rxPkts = s.rx_pkts();
         ss.txPkts = s.tx_pkts();
         ss.rxBytes = s.rx_bytes();
         ss.txBytes = s.tx_bytes();
+
+        aggrStats.rxPkts += ss.rxPkts;
+        aggrStats.txPkts += ss.txPkts;
+        aggrStats.pktLoss += ss.txPkts - ss.rxPkts;
 
         if (!portList_.contains(pgp))
             portList_.append(pgp);

@@ -56,9 +56,15 @@ private:
         quint64 rxBytes;
         quint64 txBytes;
     };
+    struct AggrStreamStats {
+        quint64 rxPkts;
+        quint64 txPkts;
+        qint64 pktLoss;
+    };
     QList<Guid> guidList_;
     QList<PortGroupPort> portList_;
     QHash<Guid, QHash<PortGroupPort, StreamStats> > streamStats_;
+    QHash<Guid, AggrStreamStats> aggrStreamStats_;
 };
 #endif
 
