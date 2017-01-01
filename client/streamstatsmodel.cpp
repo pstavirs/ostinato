@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
+#include <QBrush>
+
 // XXX: Keep the enum in sync with it's string
 enum {
     kTxPkts,
@@ -97,6 +99,14 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
     if (role == Qt::TextAlignmentRole)
         return Qt::AlignRight;
 
+    int portColumn = index.column() - kMaxAggrStreamStats;
+    if (role == Qt::BackgroundRole) {
+        if (portColumn < 0) // Aggregate Column
+            return QBrush(QColor("#dbe5f1"));
+        else if ((portColumn/kMaxStreamStats) & 1) // Alternate Ports
+            return QBrush(QColor("#eeeeee"));
+    }
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
@@ -116,7 +126,6 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    int portColumn = index.column() - kMaxAggrStreamStats;
     PortGroupPort pgp = portList_.at(portColumn/kMaxStreamStats);
     int stat = portColumn % kMaxStreamStats;
 
