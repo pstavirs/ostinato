@@ -3,7 +3,6 @@ language: cpp
 os:
   - linux
   - osx
-      osx_image: xcode8.2 # force sierra for cartr/qt4
 
 compiler:
   - gcc
@@ -13,6 +12,8 @@ matrix:
   exclude:
     - os: osx
       compiler: gcc
+    - os: osx
+      osx_image: xcode8.2
 
 before_install:
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew tap cartr/qt4 && brew tap-pin cartr/qt4 && brew install qt && brew install protobuf && ls -lR /usr/local/include; fi"
