@@ -3,6 +3,7 @@ language: cpp
 os:
   - linux
   - osx
+      osx_image: xcode8.2 # force sierra for cartr/qt4
 
 compiler:
   - gcc
@@ -11,7 +12,6 @@ compiler:
 matrix:
   exclude:
     - os: osx
-      osx_image: xcode8.2 # force sierra for cartr/qt4
       compiler: gcc
 
 before_install:
