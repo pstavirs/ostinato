@@ -69,9 +69,13 @@ class DroneProxy(object):
 
     def getStreamStatsDict(self, stream_guid_list): # FIXME: rename?
         """
-        Convenience wrapper method for getStreamStats which returns StreamStats
-        as a dictionary instead of a List
-        TODO: document dictionary structure
+        Convenience method for fetching stream stats which returns an object
+        containing port/sguid dictionaries for easier access e.g. assuming
+        the return value of this function is assigned to stream_stats,
+
+        stream_stats.port[1].sguid[101].tx_pkts
+
+        This method is a wrapper around the actual getStreamStats() RPC
         """
         class StreamStatsDict:
             def __repr__(self):
