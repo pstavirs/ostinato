@@ -34,6 +34,7 @@ public:
     bool start();
     bool stop();
     bool isRunning();
+    bool isDirectional();
 
 private:
     enum State {
@@ -47,6 +48,7 @@ private:
     volatile bool stop_;
     pcap_t *handle_;
     volatile State state_;
+    bool isDirectional_;
 };
 
 #endif

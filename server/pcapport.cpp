@@ -161,6 +161,14 @@ bool PcapPort::startStreamStatsTracking()
         goto _tx_fail;
     if (!rxStatsPoller_->start())
         goto _rx_fail;
+    /*
+     * If RxPoller receives both IN and OUT packets, packets Tx on this
+     * port will also be received by it and we consider it to be a Rx (IN)
+     * packet incorrectly - so adjust Rx stats for this case
+     * XXX - ideally, RxPoller should do this adjustment, but given our
+     * design, it is easier to implement in transmitter
+     */
+    transmitter_->adjustRxStreamStats(!rxStatsPoller_->isDirectional());
     return true;
 
 _rx_fail:

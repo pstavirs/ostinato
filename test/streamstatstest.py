@@ -592,10 +592,8 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             # for unidir verify rx on tx port is 0 and vice versa
             # FIXME: failing currently because tx pkts on tx port seem to be
             # captured by rxStatsPoller_ on tx port
-            """
             assert ssd.port[ports.x_num].sguid[guid].rx_pkts == 0
             assert ssd.port[ports.x_num].sguid[guid].rx_bytes == 0
-            """
             assert ssd.port[ports.y_num].sguid[guid].tx_pkts == 0
             assert ssd.port[ports.y_num].sguid[guid].tx_bytes == 0
 

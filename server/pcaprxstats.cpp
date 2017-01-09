@@ -30,6 +30,7 @@ PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats)
     device_ = QString::fromAscii(device);
     stop_ = false;
     state_ = kNotStarted;
+    isDirectional_ = true;
 
     handle_ = NULL;
 }
@@ -70,10 +71,13 @@ void PcapRxStats::run()
     // NOTE: WinPcap 4.1.1 and above exports a dummy API that returns -1
     // but since we would like to work with previous versions of WinPcap
     // also, we assume the API does not exist
+    isDirectional_ = false;
 #else
-    if (pcap_setdirection(handle_, PCAP_D_IN) < 0)
+    if (pcap_setdirection(handle_, PCAP_D_IN) < 0) {
         qDebug("RxStats: Error setting IN direction %s: %s\n",
                 qPrintable(device_), pcap_geterr(handle_));
+        isDirectional_ = false;
+    }
 #endif
 
     if (pcap_compile(handle_, &bpf, qPrintable(capture_filter),
@@ -164,4 +168,9 @@ bool PcapRxStats::stop()
 bool PcapRxStats::isRunning()
 {
     return (state_ == kRunning);
+}
+
+bool PcapRxStats::isDirectional()
+{
+    return isDirectional_;
 }

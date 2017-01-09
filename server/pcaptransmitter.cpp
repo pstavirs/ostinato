@@ -24,6 +24,7 @@ PcapTransmitter::PcapTransmitter(
         StreamStats &portStreamStats)
     : streamStats_(portStreamStats), txThread_(device)
 {
+    adjustRxStreamStats_ = false;
     memset(&stats_, 0, sizeof(stats_));
     txStats_.setTxThreadStats(&stats_);
     txStats_.start(); // TODO: alongwith user transmit start
@@ -41,6 +42,11 @@ bool PcapTransmitter::setRateAccuracy(
         AbstractPort::Accuracy accuracy)
 {
     return txThread_.setRateAccuracy(accuracy);
+}
+
+void PcapTransmitter::adjustRxStreamStats(bool enable)
+{
+    adjustRxStreamStats_ = enable;
 }
 
 bool PcapTransmitter::setStreamStatsTracking(bool enable)
@@ -115,6 +121,10 @@ void PcapTransmitter::updateTxThreadStreamStats()
 
         streamStats_[guid].tx_pkts += sst.tx_pkts;
         streamStats_[guid].tx_bytes += sst.tx_bytes;
+        if (adjustRxStreamStats_) {
+            streamStats_[guid].rx_pkts -= sst.tx_pkts;
+            streamStats_[guid].rx_bytes -= sst.tx_bytes;
+        }
     }
     txThread->clearStreamStats();
 }
