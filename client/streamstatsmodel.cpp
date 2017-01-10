@@ -49,6 +49,7 @@ static QStringList aggrStatTitles = QStringList()
     << "Aggregate\nRx Pkts"
     << "Aggregate\nPkt Loss";
 
+static const uint kAggrGuid = 0xffffffff;
 
 StreamStatsModel::StreamStatsModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -86,6 +87,8 @@ QVariant StreamStatsModel::headerData(
                         .arg(portList_.at(section/kMaxStreamStats).second)
                         .arg(statTitles.at(section % kMaxStreamStats));
     case Qt::Vertical:   // Row Header
+        if (section == (guidList_.size() - 1))
+            return QString("GUID Aggregate");
         return QString("Stream GUID %1")
                         .arg(guidList_.at(section));
     default:
@@ -101,10 +104,10 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
 
     int portColumn = index.column() - kMaxAggrStreamStats;
     if (role == Qt::BackgroundRole) {
-        if (portColumn < 0) // Aggregate Column
-            return QBrush(QColor("#dbe5f1"));
-        else if ((portColumn/kMaxStreamStats) & 1) // Alternate Ports
-            return QBrush(QColor("#eeeeee"));
+        if ((index.row() == (guidList_.size() - 1)) || (portColumn < 0))
+            return QBrush(QColor("#dbe5f1")); // Aggregate Row or Column
+        else if ((portColumn/kMaxStreamStats) & 1)
+            return QBrush(QColor("#eeeeee")); // Color alternate Ports
     }
 
     Guid guid = guidList_.at(index.row());
@@ -187,22 +190,36 @@ void StreamStatsModel::appendStreamStatsList(
         PortGroupPort pgp = PortGroupPort(portGroupId, s.port_id().id());
         Guid guid = s.stream_guid().id();
         StreamStats &ss = streamStats_[guid][pgp];
+        StreamStats &aggrPort = streamStats_[kAggrGuid][pgp];
         AggrGuidStats &aggrGuid = aggrGuidStats_[guid];
+        AggrGuidStats &aggrAggr = aggrGuidStats_[kAggrGuid];
 
         ss.rxPkts = s.rx_pkts();
         ss.txPkts = s.tx_pkts();
         ss.rxBytes = s.rx_bytes();
         ss.txBytes = s.tx_bytes();
 
+        aggrPort.rxPkts += ss.rxPkts;
+        aggrPort.txPkts += ss.txPkts;
+        aggrPort.rxBytes += ss.rxBytes;
+        aggrPort.txBytes += ss.txBytes;
+
         aggrGuid.rxPkts += ss.rxPkts;
         aggrGuid.txPkts += ss.txPkts;
         aggrGuid.pktLoss += ss.txPkts - ss.rxPkts;
+
+        aggrAggr.rxPkts += ss.rxPkts;
+        aggrAggr.txPkts += ss.txPkts;
+        aggrAggr.pktLoss += ss.txPkts - ss.rxPkts;
 
         if (!portList_.contains(pgp))
             portList_.append(pgp);
         if (!guidList_.contains(guid))
             guidList_.append(guid);
     }
+
+    if (guidList_.size())
+        guidList_.append(kAggrGuid);
 
 #if QT_VERSION >= 0x040600
     endResetModel();
