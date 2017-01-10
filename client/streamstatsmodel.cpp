@@ -110,7 +110,7 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
     Guid guid = guidList_.at(index.row());
     if (role == Qt::ForegroundRole) {
         if ((index.column() == kAggrPktLoss)
-                && aggrStreamStats_.value(guid).pktLoss)
+                && aggrGuidStats_.value(guid).pktLoss)
             return QBrush(QColor("red"));
     }
 
@@ -121,11 +121,11 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         int stat = index.column() % kMaxAggrStreamStats;
         switch (stat) {
         case kAggrRxPkts:
-            return QString("%L1").arg(aggrStreamStats_.value(guid).rxPkts);
+            return QString("%L1").arg(aggrGuidStats_.value(guid).rxPkts);
         case kAggrTxPkts:
-            return QString("%L1").arg(aggrStreamStats_.value(guid).txPkts);
+            return QString("%L1").arg(aggrGuidStats_.value(guid).txPkts);
         case kAggrPktLoss:
-            return QString("%L1").arg(aggrStreamStats_.value(guid).pktLoss);
+            return QString("%L1").arg(aggrGuidStats_.value(guid).pktLoss);
         default:
             break;
         };
@@ -163,7 +163,7 @@ void StreamStatsModel::clearStats()
     guidList_.clear();
     portList_.clear();
     streamStats_.clear();
-    aggrStreamStats_.clear();
+    aggrGuidStats_.clear();
 
 #if QT_VERSION >= 0x040600
     endResetModel();
@@ -187,16 +187,16 @@ void StreamStatsModel::appendStreamStatsList(
         PortGroupPort pgp = PortGroupPort(portGroupId, s.port_id().id());
         Guid guid = s.stream_guid().id();
         StreamStats &ss = streamStats_[guid][pgp];
-        AggrStreamStats &aggrStats = aggrStreamStats_[guid];
+        AggrGuidStats &aggrGuid = aggrGuidStats_[guid];
 
         ss.rxPkts = s.rx_pkts();
         ss.txPkts = s.tx_pkts();
         ss.rxBytes = s.rx_bytes();
         ss.txBytes = s.tx_bytes();
 
-        aggrStats.rxPkts += ss.rxPkts;
-        aggrStats.txPkts += ss.txPkts;
-        aggrStats.pktLoss += ss.txPkts - ss.rxPkts;
+        aggrGuid.rxPkts += ss.rxPkts;
+        aggrGuid.txPkts += ss.txPkts;
+        aggrGuid.pktLoss += ss.txPkts - ss.rxPkts;
 
         if (!portList_.contains(pgp))
             portList_.append(pgp);
