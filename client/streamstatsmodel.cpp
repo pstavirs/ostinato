@@ -107,10 +107,16 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
             return QBrush(QColor("#eeeeee"));
     }
 
+    Guid guid = guidList_.at(index.row());
+    if (role == Qt::ForegroundRole) {
+        if ((index.column() == kAggrPktLoss)
+                && aggrStreamStats_.value(guid).pktLoss)
+            return QBrush(QColor("red"));
+    }
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    Guid guid = guidList_.at(index.row());
     if (index.column() < kMaxAggrStreamStats) {
         int stat = index.column() % kMaxAggrStreamStats;
         switch (stat) {
