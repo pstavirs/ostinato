@@ -104,17 +104,19 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
 
     int portColumn = index.column() - kMaxAggrStreamStats;
     if (role == Qt::BackgroundRole) {
-        if ((index.row() == (guidList_.size() - 1)) || (portColumn < 0))
-            return QBrush(QColor("#dbe5f1")); // Aggregate Row or Column
+        if (portColumn < 0)
+            return QBrush(QColor("lavender")); // Aggregate Column
+        if (index.row() == (guidList_.size() - 1))
+            return QBrush(QColor("burlywood")); // Aggregate Row
         else if ((portColumn/kMaxStreamStats) & 1)
-            return QBrush(QColor("#eeeeee")); // Color alternate Ports
+            return QBrush(QColor("beige")); // Color alternate Ports
     }
 
     Guid guid = guidList_.at(index.row());
     if (role == Qt::ForegroundRole) {
         if ((index.column() == kAggrPktLoss)
                 && aggrGuidStats_.value(guid).pktLoss)
-            return QBrush(QColor("red"));
+            return QBrush(QColor("firebrick"));
     }
 
     if (role != Qt::DisplayRole)
