@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ui_streamstatswindow.h"
 
 class QAbstractItemModel;
+class QSortFilterProxyModel;
 
 class StreamStatsWindow: public QWidget, private Ui::StreamStatsWindow
 {
@@ -30,6 +31,12 @@ class StreamStatsWindow: public QWidget, private Ui::StreamStatsWindow
 public:
     StreamStatsWindow(QAbstractItemModel *model, QWidget *parent = 0);
     ~StreamStatsWindow();
+
+private slots:
+    void on_actionShowByteCounters_triggered(bool checked);
+
+private:
+    QSortFilterProxyModel *filterModel_;
 };
 
 #endif

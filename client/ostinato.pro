@@ -58,6 +58,7 @@ HEADERS += \
     streamconfigdialog.h \
     streamlistdelegate.h \
     streammodel.h \
+    streamstatsfiltermodel.h \
     streamstatsmodel.h \
     streamstatswindow.h \
     variablefieldswidget.h

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streamstatswindow.h"
 
+#include "streamstatsfiltermodel.h"
+
 #include <QAbstractItemModel>
 #include <QHeaderView>
 
@@ -29,13 +31,17 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
+    streamStats->addAction(actionShowByteCounters);
 
     if (id)
         setWindowTitle(windowTitle() + QString("(%1)").arg(id));
     id++;
     count++;
 
-    streamStats->setModel(model);
+    filterModel_ = new StreamStatsFilterModel(this);
+    filterModel_->setFilterRegExp(QRegExp(".*Pkt.*"));
+    filterModel_->setSourceModel(model);
+    streamStats->setModel(filterModel_);
 
     streamStats->verticalHeader()->setHighlightSections(false);
     streamStats->verticalHeader()->setDefaultSectionSize(
@@ -44,7 +50,16 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
 
 StreamStatsWindow::~StreamStatsWindow()
 {
+    delete filterModel_;
     count--;
     if (count == 0)
         id = 0;
+}
+
+void StreamStatsWindow::on_actionShowByteCounters_triggered(bool checked)
+{
+    if (checked)
+        filterModel_->setFilterRegExp(QRegExp(".*"));
+    else
+        filterModel_->setFilterRegExp(QRegExp(".*Pkt.*"));
 }

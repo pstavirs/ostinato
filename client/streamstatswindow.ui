@@ -14,9 +14,21 @@
   </property>
   <layout class="QHBoxLayout" >
    <item>
-    <widget class="QTableView" name="streamStats" />
+    <widget class="QTableView" name="streamStats" >
+     <property name="contextMenuPolicy" >
+      <enum>Qt::ActionsContextMenu</enum>
+     </property>
+    </widget>
    </item>
   </layout>
+  <action name="actionShowByteCounters" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Show Byte Counters</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
