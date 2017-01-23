@@ -45,9 +45,9 @@ enum {
     kMaxAggrStreamStats
 };
 static QStringList aggrStatTitles = QStringList()
-    << "Aggregate\nTx Pkts"
-    << "Aggregate\nRx Pkts"
-    << "Aggregate\nPkt Loss";
+    << "Total\nTx Pkts"
+    << "Total\nRx Pkts"
+    << "Total\nPkt Loss";
 
 static const uint kAggrGuid = 0xffffffff;
 
@@ -88,7 +88,7 @@ QVariant StreamStatsModel::headerData(
                         .arg(statTitles.at(section % kMaxStreamStats));
     case Qt::Vertical:   // Row Header
         if (section == (guidList_.size() - 1))
-            return QString("GUID Aggregate");
+            return QString("GUID Total");
         return QString("Stream GUID %1")
                         .arg(guidList_.at(section));
     default:
