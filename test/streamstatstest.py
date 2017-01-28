@@ -494,6 +494,7 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
         assert len(ssd.port) == 2
         assert len(ssd.port[ports.x_num].sguid) == num_sign_streams
         assert len(ssd.port[ports.y_num].sguid) == num_sign_streams
+        assert len(ssd.sguid) == num_sign_streams
 
         # dump X capture buffer
         log.info('getting X capture buffer')
@@ -589,9 +590,11 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
             assert ssd.port[ports.x_num].sguid[guid].tx_bytes \
                 == ssd.port[ports.y_num].sguid[guid].rx_bytes
 
+            assert ssd.sguid[guid].total.tx_pkts \
+                    == ssd.sguid[guid].total.rx_pkts
+            assert ssd.sguid[guid].total.pkt_loss == 0
+
             # for unidir verify rx on tx port is 0 and vice versa
-            # FIXME: failing currently because tx pkts on tx port seem to be
-            # captured by rxStatsPoller_ on tx port
             assert ssd.port[ports.x_num].sguid[guid].rx_pkts == 0
             assert ssd.port[ports.x_num].sguid[guid].rx_bytes == 0
             assert ssd.port[ports.y_num].sguid[guid].tx_pkts == 0
