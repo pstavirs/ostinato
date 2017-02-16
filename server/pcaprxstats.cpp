@@ -45,9 +45,19 @@ void PcapRxStats::run()
     int flags = PCAP_OPENFLAG_PROMISCUOUS;
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
-    QString capture_filter = QString("ether[len - 4:4] == 0x%1").arg(
-            SignProtocol::magic(), 0, BASE_HEX);
     const int optimize = 1;
+    QString capture_filter = QString("(ether[len - 4:4] == 0x%1)").arg(
+            SignProtocol::magic(), 0, BASE_HEX);
+    // XXX: Exclude ICMP packets which contain an embedded signed packet
+    //      For now we check upto 4 vlan tags
+    capture_filter.append(
+        "and not ("
+            "icmp or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) "
+        ")");
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
