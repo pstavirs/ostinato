@@ -48,7 +48,7 @@ private:
     void populateDump(QByteArray &dump, int &selOfs, int &selSize, 
             QModelIndex parent = QModelIndex());
     bool inline isPrintable(char c) 
-        {if ((c > 48) && (c < 126)) return true; else return false; }
+        {if ((c >= 32) && (c <= 126)) return true; else return false; }
 
 private:
     QRect        mOffsetPaneTopRect;
