@@ -143,7 +143,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
             switch(attrib)
             {
                 case FieldName:            
-                    return QString("Desination");
+                    return QString("Destination");
                 case FieldValue:
                     return dstMac;
                 case FieldTextValue:
