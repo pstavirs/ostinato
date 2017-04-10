@@ -40,5 +40,5 @@ message Stp {
 }
 
 extend Protocol {
-    optional Stp stp = 210;
+    optional Stp stp = 209;
 }
