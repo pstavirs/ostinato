@@ -23,9 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 #include "ip4.pb.h"
 
-#define IP_FLAG_MF        0x1
-#define IP_FLAG_DF        0x2
-#define IP_FLAG_UNUSED    0x4
+#define IP_FLAG_MF        0x20
+#define IP_FLAG_DF        0x40
+#define IP_FLAG_UNUSED    0x80
+#define IP_FLAGS          0xE0
+#define IP_FRAG_OFS       0x1FFF
 
 class Ip4Protocol : public AbstractProtocol
 {
