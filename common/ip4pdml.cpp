@@ -26,7 +26,6 @@ PdmlIp4Protocol::PdmlIp4Protocol()
 {
     ostProtoId_ = OstProto::Protocol::kIp4FieldNumber;
 
-    fieldMap_.insert("ip.version", OstProto::Ip4::kVerHdrlenFieldNumber);
     fieldMap_.insert("ip.dsfield", OstProto::Ip4::kTosFieldNumber);
     fieldMap_.insert("ip.len", OstProto::Ip4::kTotlenFieldNumber);
     fieldMap_.insert("ip.id", OstProto::Ip4::kIdFieldNumber);
@@ -50,7 +49,18 @@ void PdmlIp4Protocol::unknownFieldHandler(QString name, int /*pos*/,
 {
     bool isOk;
 
-    if ((name == "ip.options") ||
+    if (name == "ip.version")
+    {
+        OstProto::Ip4 *ip4 = pbProto->MutableExtension(OstProto::ip4);
+
+        if (!attributes.value("unmaskedvalue").isEmpty())
+            ip4->set_ver_hdrlen(attributes.value("unmaskedvalue")
+                    .toString().toUInt(&isOk, kBaseHex));
+        else
+            ip4->set_ver_hdrlen(attributes.value("value")
+                    .toString().toUInt(&isOk, kBaseHex));
+    }
+    else if ((name == "ip.options") ||
             attributes.value("show").toString().startsWith("Options"))
     {
         options_ = QByteArray::fromHex(
