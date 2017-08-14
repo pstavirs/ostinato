@@ -52,8 +52,8 @@ message StreamCore {
     optional bool is_enabled = 2;
     optional uint32 ordinal = 3;
 
-    // Frame Length (includes CRC)
     optional FrameLengthMode len_mode = 14 [default = e_fl_fixed];
+    /// Frame Length (includes CRC)
     optional uint32 frame_len = 15 [default = 64];
     optional uint32 frame_len_min = 16 [default = 64];
     optional uint32 frame_len_max = 17 [default = 1518];

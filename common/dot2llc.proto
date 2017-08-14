@@ -1,3 +1,4 @@
+/// (802.2 LLC)
 /*
 Copyright (C) 2010 Srivats P.
 
@@ -23,7 +24,6 @@ import "llc.proto";
 
 package OstProto;
 
-// 802.2 LLC
 message Dot2Llc {
     // Empty since this is a 'combo' protocol
 }
