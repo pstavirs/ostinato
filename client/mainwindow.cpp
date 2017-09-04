@@ -299,7 +299,8 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
 
 void MainWindow::on_actionHelpOnline_triggered()
 {
-    QDesktopServices::openUrl(QUrl("http://ostinato.org/docs"));
+    QDesktopServices::openUrl(
+            QUrl("http://ostinato.org/docs/?utm_source=app&utm_medium=menu&utm_campaign=help"));
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
