@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "ui_mainwindow.h"
 #include <QMainWindow>
+#include <QProcess>
 
 class PortsWindow;
 class PortStatsWindow;
@@ -59,6 +60,8 @@ public slots:
     void on_actionHelpAbout_triggered();
 
 private slots:
+    void onLocalServerStarted();
+    void onLocalServerError(QProcess::ProcessError error);
     void onNewVersion(QString version);
 };
 

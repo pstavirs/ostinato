@@ -43,6 +43,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QProgressDialog>
 #include <QUrl>
 
+#ifdef Q_OS_WIN32
+#define WIN32_NO_STATUS
+#include <windows.h>
+#undef WIN32_NO_STATUS
+#include <ntstatus.h>
+#endif
+
 extern const char* version;
 extern const char* revision;
 
@@ -68,6 +75,9 @@ MainWindow::MainWindow(QWidget *parent)
 
         qDebug("staring local server - %s", qPrintable(serverApp));
         localServer_ = new QProcess(this);
+        connect(localServer_, SIGNAL(started()), SLOT(onLocalServerStarted()));
+        connect(localServer_, SIGNAL(error(QProcess::ProcessError)),
+                SLOT(onLocalServerError(QProcess::ProcessError)));
         localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
         localServer_->start(serverApp, QStringList());
     }
@@ -315,6 +325,41 @@ void MainWindow::on_actionHelpAbout_triggered()
     aboutDialog->exec();
 
     delete aboutDialog;
+}
+
+void MainWindow::onLocalServerStarted()
+{
+    // We are only interested in startup errors
+    disconnect(localServer_, SIGNAL(error(QProcess::ProcessError)),
+            this, SLOT(onLocalServerError(QProcess::ProcessError)));
+}
+
+void MainWindow::onLocalServerError(QProcess::ProcessError error)
+{
+    QMessageBox msgBox(this);
+    msgBox.setIcon(QMessageBox::Warning);
+    msgBox.setTextFormat(Qt::RichText);
+    msgBox.setStyleSheet("messagebox-text-interaction-flags: 5"); // mouse copy
+    QString errorStr = tr("<p>Failed to start the local drone agent - "
+                          "error 0x%1, exit code 0x%2.</p>")
+            .arg(error, 0, 16)
+            .arg(localServer_->exitCode(), 0, 16);
+#ifdef Q_OS_WIN32
+    if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
+        errorStr.append(tr("<p>This is most likely because Packet.dll "
+                           "was not found - make sure you have "
+                           "<a href='http://www.winpcap.org'>WinPcap</a> "
+                           "installed.</p>"));
+#endif
+    msgBox.setText(errorStr);
+    msgBox.setInformativeText(tr("Run drone directly for more information."));
+    msgBox.exec();
+
+    QMessageBox::information(this, QString(),
+        tr("<p>If you have remote drone agents running, you can still add "
+           "and connect to them.</p>"
+           "<p>If you don't want to start the local drone agent at startup, "
+           "provide the <b>-s</b> option to Ostinato on the command line</p>"));
 }
 
 void MainWindow::onNewVersion(QString newVersion)
