@@ -349,8 +349,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
 
     if (!current.isValid())
     {    
-        qDebug("setting stacked widget to blank page");
-        swDetail->setCurrentIndex(2); // blank page
+        qDebug("setting stacked widget to welcome page");
+        swDetail->setCurrentIndex(0); // welcome page
     }
     else
     {
@@ -360,7 +360,7 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
         }
         else if (plm->isPort(current))
         {
-            swDetail->setCurrentIndex(0);    // port detail page
+            swDetail->setCurrentIndex(2);    // port detail page
             updatePortRates();
             connect(&(plm->port(current)), SIGNAL(portRateChanged(int, int)),
                     SLOT(updatePortRates()));
