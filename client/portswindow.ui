@@ -54,7 +54,7 @@
            <string>&lt;p&gt;&lt;b&gt;How to use Ostinato&lt;/b&gt;&lt;/p&gt;
 &lt;p&gt;The port list on the left contains all the ports on which you can transmit packets.&lt;/p&gt;
 &lt;p&gt;Ports belong to a port group. Make sure the Port Group has a &lt;img src=&quot;:/icons/bullet_green.png&quot;/&gt; next to it, then double click the port group to show or hide the ports in the port group.&lt;/p&gt;
-&lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more same or similar packets.&lt;/p&gt;
+&lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
 &lt;p&gt;To create a stream, select the port on which you want to send packets.&lt;/p&gt;
 &lt;hr/&gt;
 &lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;http://ostinato.org/docs/faq&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
@@ -93,7 +93,7 @@
            <string>&lt;p&gt;You have selected a port group in the port list on the left.&lt;/p&gt;
 &lt;p&gt;You can transmit packets on any of the ports within the port group.&lt;/p&gt;
 &lt;p&gt;Make sure the port group has a &lt;img src=&quot;:/icons/bullet_green.png&quot;/&gt; next to it and then double click the port group to show or hide the ports in the port group.&lt;/p&gt;
-&lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more same or similar packets.&lt;/p&gt;
+&lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
 &lt;p&gt;To create a stream, select the port on which you want to send packets. &lt;/p&gt;</string>
           </property>
           <property name="alignment">
@@ -152,7 +152,7 @@
            <item>
             <widget class="QLabel" name="label_3">
              <property name="text">
-              <string>Right click in the blank area below to configure streams. Click Apply on the right to activate the changes</string>
+              <string>Configuration Changed? Click Apply on the right to activate the changes</string>
              </property>
             </widget>
            </item>
@@ -221,7 +221,7 @@
              </layout>
             </item>
             <item>
-             <widget class="QTableView" name="tvStreamList">
+             <widget class="XTableView" name="tvStreamList">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -230,6 +230,13 @@
               </property>
               <property name="contextMenuPolicy">
                <enum>Qt::ActionsContextMenu</enum>
+              </property>
+              <property name="whatsThis">
+               <string>This is the stream list for the selected port
+
+A stream is a sequence of one or more packets
+
+Right-click to create a stream</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::StyledPanel</enum>
@@ -372,6 +379,11 @@
    <class>XTreeView</class>
    <extends>QTreeView</extends>
    <header>xtreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>XTableView</class>
+   <extends>QTableView</extends>
+   <header>xtableview.h</header>
   </customwidget>
  </customwidgets>
  <resources>
