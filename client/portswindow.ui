@@ -22,7 +22,7 @@
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
-     <widget class="QTreeView" name="tvPortList">
+     <widget class="XTreeView" name="tvPortList">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>1</horstretch>
@@ -367,6 +367,11 @@
    <extends>QWidget</extends>
    <header>deviceswidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>XTreeView</class>
+   <extends>QTreeView</extends>
+   <header>xtreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -373,7 +373,22 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
 void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
     const QModelIndex& bottomRight)
 {
-    qDebug("In %s", __FUNCTION__);
+    qDebug("In %s %d:(%d, %d) - %d:(%d, %d)", __FUNCTION__,
+            topLeft.parent().isValid(), topLeft.row(), topLeft.column(),
+            bottomRight.parent().isValid(), bottomRight.row(), bottomRight.column());
+
+    if (!topLeft.isValid() || !bottomRight.isValid())
+        return;
+
+    if (topLeft.parent() != bottomRight.parent())
+        return;
+
+    // If a port has changed, expand the port group
+    if (topLeft.parent().isValid())
+        tvPortList->expand(proxyPortModel ? 
+                proxyPortModel->mapFromSource(topLeft.parent()) : 
+                topLeft.parent());
+
 #if 0 // not sure why the >= <= operators are not overloaded in QModelIndex
     if ((tvPortList->currentIndex() >= topLeft) &&
         (tvPortList->currentIndex() <= bottomRight))
