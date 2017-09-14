@@ -345,6 +345,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     {
         disconnect(&(plm->port(previous)), SIGNAL(portRateChanged(int, int)),
                 this, SLOT(updatePortRates()));
+        disconnect(&(plm->port(previous)), SIGNAL(localConfigChanged(bool)),
+                this, SLOT(updateApplyHint(bool)));
     }
 
     if (!current.isValid())
@@ -364,6 +366,15 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
             updatePortRates();
             connect(&(plm->port(current)), SIGNAL(portRateChanged(int, int)),
                     SLOT(updatePortRates()));
+            connect(&(plm->port(current)), SIGNAL(localConfigChanged(bool)),
+                    SLOT(updateApplyHint(bool)));
+            if (plm->port(current).isDirty())
+                updateApplyHint(true);
+            else if (plm->port(current).numStreams())
+                applyHint->setText("Use the Statistics window to transmit "
+                                   "packets");
+            else
+                applyHint->setText("");
         }
     }
 
@@ -509,6 +520,16 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
+}
+
+void PortsWindow::updateApplyHint(bool configChanged)
+{
+    if (configChanged)
+        applyHint->setText("Configuration has changed - <b>click Apply</b> "
+                           "to activate the changes");
+    else
+        applyHint->setText("Configuration activated. Use the Statistics "
+                           "window to transmit packets");
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)

@@ -68,7 +68,7 @@ public:
         e_nw_goto_id
     };
 
-    quint32    id();
+    quint32    id() const;
     bool setId(quint32 id);
 
 #if 0 // FIXME(HI): needed?

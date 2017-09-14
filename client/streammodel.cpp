@@ -155,19 +155,21 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
         {
         // Edit Supported Fields
         case StreamName:
-            mCurrentPort->streamByIndex(index.row())->setName(value.toString());
+            mCurrentPort->mutableStreamByIndex(index.row())
+                                        ->setName(value.toString());
             emit(dataChanged(index, index));
             return true;
 
         case StreamStatus:
-            mCurrentPort->streamByIndex(index.row())->setEnabled(value.toBool());
+            mCurrentPort->mutableStreamByIndex(index.row())
+                                        ->setEnabled(value.toBool());
             emit(dataChanged(index, index));
             return true;
 
         case StreamNextWhat:
             if (role == Qt::EditRole)
             {    
-                mCurrentPort->streamByIndex(index.row())->setNextWhat(
+                mCurrentPort->mutableStreamByIndex(index.row())->setNextWhat(
                         (Stream::NextWhat)value.toInt());
                 emit(dataChanged(index, index));
                 return true;

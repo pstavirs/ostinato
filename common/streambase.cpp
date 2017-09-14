@@ -145,7 +145,7 @@ ProtocolListIterator*  StreamBase::createProtocolListIterator() const
     return new ProtocolListIterator(*currentFrameProtocols);
 }
 
-quint32    StreamBase::id()
+quint32 StreamBase::id() const
 {
     return mStreamId->id();
 }

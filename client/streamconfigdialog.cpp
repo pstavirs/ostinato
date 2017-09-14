@@ -1222,7 +1222,7 @@ void StreamConfigDialog::on_pbOk_clicked()
 
     // Copy the data from the "local working copy of stream" to "actual stream"
     mpStream->protoDataCopyInto(s);
-    mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyFrom(s);
+    mPort.mutableStreamByIndex(mCurrentStreamIndex)->protoDataCopyFrom(s);
 
     qDebug("stream stored");
 
