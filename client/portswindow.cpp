@@ -769,8 +769,8 @@ void PortsWindow::on_actionNew_Stream_triggered()
 {
     qDebug("New Stream Action");
 
-    // In case nothing is selected, insert 1 row at the top
-    int row = 0, count = 1;
+    // In case nothing is selected, insert 1 row at the end
+    int row = plm->getStreamModel()->rowCount(), count = 1;
 
     // In case we have a single range selected; insert as many rows as
     // in the singe selected range before the top of the selected range
