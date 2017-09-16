@@ -39,13 +39,20 @@ int StreamConfigDialog::lastProtocolDataIndex = 0;
 
 static const uint kEthFrameOverHead = 20;
 
-StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
-    QWidget *parent) : QDialog (parent), mPort(port)
+StreamConfigDialog::StreamConfigDialog(
+        QList<Stream*> &streamList,
+        const Port &port,
+        QWidget *parent)
+    : QDialog (parent), streamList_(streamList), mPort(port)
 {
     OstProto::Stream s;
-    mCurrentStreamIndex = streamIndex;
+    mCurrentStreamIndex = 0;
+
+    // FIXME: temporary till we support a list
+    Q_ASSERT(streamList_.size() == 1);
+
     mpStream = new Stream;
-    mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyInto(s);
+    streamList_.at(mCurrentStreamIndex)->protoDataCopyInto(s);
     mpStream->protoDataCopyFrom(s);
     _iter = mpStream->createProtocolListIterator();
     isUpdateInProgress = false;
@@ -1222,7 +1229,7 @@ void StreamConfigDialog::on_pbOk_clicked()
 
     // Copy the data from the "local working copy of stream" to "actual stream"
     mpStream->protoDataCopyInto(s);
-    mPort.mutableStreamByIndex(mCurrentStreamIndex)->protoDataCopyFrom(s);
+    streamList_[mCurrentStreamIndex]->protoDataCopyFrom(s);
 
     qDebug("stream stored");
 

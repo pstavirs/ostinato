@@ -94,15 +94,15 @@ public:
         { return QString().fromStdString(d.notes()); }
     const QString userName() const 
         { return QString().fromStdString(d.user_name()); }
-    AdminStatus adminStatus() 
+    AdminStatus adminStatus() const
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
-    bool hasExclusiveControl() 
+    bool hasExclusiveControl() const
         { return d.is_exclusive_control(); }
-    OstProto::TransmitMode transmitMode() 
+    OstProto::TransmitMode transmitMode() const
         { return d.transmit_mode(); }
-    double averagePacketRate()
+    double averagePacketRate() const
         { return avgPacketsPerSec_; }
-    double averageBitRate()
+    double averageBitRate() const
         { return avgBitsPerSec_; }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }

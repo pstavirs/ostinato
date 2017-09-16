@@ -43,7 +43,8 @@ class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
     Q_OBJECT
 public:
-    StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
+    StreamConfigDialog(QList<Stream*> &streamList, const Port &port,
+            QWidget *parent = 0);
     ~StreamConfigDialog();
 
 private: 
@@ -72,7 +73,8 @@ private:
     QStringListModel *mpAvailableProtocolsModel;
     QStringListModel *mpSelectedProtocolsModel;
 
-    Port&            mPort;
+    QList<Stream*>  streamList_;
+    const Port&     mPort;
     uint            mCurrentStreamIndex;
 
     Stream                    *mpStream;

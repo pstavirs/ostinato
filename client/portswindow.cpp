@@ -314,7 +314,10 @@ void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
         qDebug("%s: invalid index", __FUNCTION__);
         return;
     }
-    scd = new StreamConfigDialog(plm->port(currentPort), index.row(), this);
+
+    QList<Stream*> streams;
+    streams.append(plm->port(currentPort).mutableStreamByIndex(index.row()));
+    scd = new StreamConfigDialog(streams, plm->port(currentPort), this);
     qDebug("stream list activated\n");
     ret = scd->exec();
 
