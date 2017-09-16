@@ -345,8 +345,10 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     {
         disconnect(&(plm->port(previous)), SIGNAL(portRateChanged(int, int)),
                 this, SLOT(updatePortRates()));
-        disconnect(&(plm->port(previous)), SIGNAL(localConfigChanged(bool)),
-                this, SLOT(updateApplyHint(bool)));
+        disconnect(&(plm->port(previous)),
+                   SIGNAL(localConfigChanged(int, int, bool)),
+                   this,
+                   SLOT(updateApplyHint(int, int, bool)));
     }
 
     if (!current.isValid())
@@ -366,10 +368,12 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
             updatePortRates();
             connect(&(plm->port(current)), SIGNAL(portRateChanged(int, int)),
                     SLOT(updatePortRates()));
-            connect(&(plm->port(current)), SIGNAL(localConfigChanged(bool)),
-                    SLOT(updateApplyHint(bool)));
+            connect(&(plm->port(current)),
+                    SIGNAL(localConfigChanged(int, int, bool)),
+                    SLOT(updateApplyHint(int, int, bool)));
             if (plm->port(current).isDirty())
-                updateApplyHint(true);
+                updateApplyHint(plm->port(current).portGroupId(),
+                                plm->port(current).id(), true);
             else if (plm->port(current).numStreams())
                 applyHint->setText("Use the Statistics window to transmit "
                                    "packets");
@@ -522,7 +526,8 @@ void PortsWindow::updateStreamViewActions()
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
-void PortsWindow::updateApplyHint(bool configChanged)
+void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
+        bool configChanged)
 {
     if (configChanged)
         applyHint->setText("Configuration has changed - <b>click Apply</b> "

@@ -107,7 +107,7 @@ void Port::setDirty(bool dirty)
         return;
 
     dirty_ = dirty;
-    emit localConfigChanged(dirty_);
+    emit localConfigChanged(mPortGroupId, mPortId, dirty_);
 }
 
 void Port::recalculateAverageRates()

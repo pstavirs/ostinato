@@ -347,6 +347,8 @@ void PortGroup::processPortIdList(PbRpcController *controller)
         p = new Port(portIdList->port_id(i).id(), mPortGroupId);
         connect(p, SIGNAL(portDataChanged(int, int)), 
                 this, SIGNAL(portGroupDataChanged(int, int)));
+        connect(p, SIGNAL(localConfigChanged(int, int, bool)),
+                this, SIGNAL(portGroupDataChanged(int, int)));
         qDebug("before port append\n");
         mPorts.append(p);
         atConnectPortConfig_.append(NULL); // will be filled later

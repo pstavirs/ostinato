@@ -238,7 +238,7 @@ signals:
     //! Used when local config changed
     //@{
     void streamListChanged(int portGroupId, int portId);
-    void localConfigChanged(bool changed);
+    void localConfigChanged(int portGroupId, int portId, bool changed);
     //@}
 };
 
