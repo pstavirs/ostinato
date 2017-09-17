@@ -302,29 +302,26 @@ void PortsWindow::showMyReservedPortsOnly(bool enabled)
 
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 {
-    QModelIndex currentPort = tvPortList->currentIndex();
-    StreamConfigDialog    *scd;
-    int ret;
-
-    if (proxyPortModel)
-        currentPort = proxyPortModel->mapToSource(currentPort);
-
     if (!index.isValid())
     {
         qDebug("%s: invalid index", __FUNCTION__);
         return;
     }
 
-    QList<Stream*> streams;
-    streams.append(plm->port(currentPort).mutableStreamByIndex(index.row()));
-    scd = new StreamConfigDialog(streams, plm->port(currentPort), this);
     qDebug("stream list activated\n");
-    ret = scd->exec();
 
-    if (ret == QDialog::Accepted)
-        plm->port(currentPort).recalculateAverageRates();
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
 
-    delete scd;
+    QList<Stream*> streams;
+    streams.append(curPort.mutableStreamByIndex(index.row(), false));
+
+    StreamConfigDialog scd(streams, curPort, this);
+    if (scd.exec() == QDialog::Accepted) {
+        curPort.recalculateAverageRates();
+        curPort.setLocalConfigChanged(true);
+    }
 }
 
 void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
@@ -493,21 +490,15 @@ void PortsWindow::updateStreamViewActions()
             tvStreamList->selectionModel()->selection().size());
 
         // If more than one non-contiguous ranges selected,
-        // disable "New" and "Edit"
+        // disable "New"
         if (tvStreamList->selectionModel()->selection().size() > 1)
         {
             actionNew_Stream->setDisabled(true);
-            actionEdit_Stream->setDisabled(true);
         }
         else
         {
             actionNew_Stream->setEnabled(true);
-
-            // Enable "Edit" only if the single range has a single row
-            if (tvStreamList->selectionModel()->selection().at(0).height() > 1)
-                actionEdit_Stream->setDisabled(true);
-            else
-                actionEdit_Stream->setEnabled(true);
+            actionEdit_Stream->setEnabled(true);
         }
 
         // Duplicate/Delete are always enabled as long as we have a selection
@@ -795,12 +786,22 @@ void PortsWindow::on_actionEdit_Stream_triggered()
 {
     qDebug("Edit Stream Action");
 
-    // Ensure we have only one range selected which contains only one row
-    if ((tvStreamList->selectionModel()->selection().size() == 1) &&
-        (tvStreamList->selectionModel()->selection().at(0).height() == 1))
-    {
-        on_tvStreamList_activated(tvStreamList->selectionModel()->
-                selection().at(0).topLeft());
+    QItemSelectionModel* streamModel = tvStreamList->selectionModel();
+    if (!streamModel->hasSelection())
+        return;
+
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
+
+    QList<Stream*> streams;
+    foreach(QModelIndex index, streamModel->selectedRows())
+        streams.append(curPort.mutableStreamByIndex(index.row(), false));
+
+    StreamConfigDialog scd(streams, curPort, this);
+    if (scd.exec() == QDialog::Accepted) {
+        curPort.recalculateAverageRates();
+        curPort.setLocalConfigChanged(true);
     }
 }
 

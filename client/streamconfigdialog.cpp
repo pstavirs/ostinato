@@ -43,17 +43,24 @@ StreamConfigDialog::StreamConfigDialog(
         QList<Stream*> &streamList,
         const Port &port,
         QWidget *parent)
-    : QDialog (parent), streamList_(streamList), mPort(port)
+    : QDialog (parent), _userStreamList(streamList), mPort(port)
 {
-    OstProto::Stream s;
     mCurrentStreamIndex = 0;
 
-    // FIXME: temporary till we support a list
-    Q_ASSERT(streamList_.size() == 1);
+    Q_ASSERT(_userStreamList.size() > 0);
 
-    mpStream = new Stream;
-    streamList_.at(mCurrentStreamIndex)->protoDataCopyInto(s);
-    mpStream->protoDataCopyFrom(s);
+    // Create a copy of the user provided stream list
+    //   We need a copy because user may edit multiple streams and then
+    //   discard the edit - in this case the user provided stream list
+    //   should not be modified on return
+    foreach(Stream* stm, _userStreamList) {
+        OstProto::Stream s;
+        stm->protoDataCopyInto(s);
+        _streamList.append(new Stream());
+        _streamList.last()->protoDataCopyFrom(s);
+    }
+
+    mpStream = _streamList.at(mCurrentStreamIndex);
     _iter = mpStream->createProtocolListIterator();
     isUpdateInProgress = false;
 
@@ -158,8 +165,6 @@ StreamConfigDialog::StreamConfigDialog(
         this, SLOT(when_lvSelectedProtocols_currentChanged(const QModelIndex&,
             const QModelIndex&)));
 
-    variableFieldsWidget->setStream(mpStream);
-
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
@@ -172,10 +177,9 @@ StreamConfigDialog::StreamConfigDialog(
     vwPacketDump->setModel(mpPacketModel);
     vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
-    // TODO(MED):
-    //! \todo Enable navigation of streams
-    pbPrev->setHidden(true);
-    pbNext->setHidden(true);
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+
     //! \todo Support Goto Stream Id
     leStreamId->setHidden(true);
     disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
@@ -325,7 +329,8 @@ StreamConfigDialog::~StreamConfigDialog()
     }
 
     delete _iter;
-    delete mpStream;
+    while (!_streamList.isEmpty())
+        delete _streamList.takeFirst();
 }
 
 void StreamConfigDialog::loadProtocolWidgets()
@@ -404,30 +409,6 @@ void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
     {
         qWarning("Unhandled/Unknown PktLenMode = %s", mode.toAscii().data());
     }
-}
-
-void StreamConfigDialog::on_pbPrev_clicked()
-{
-#if 0
-    StoreCurrentStream(currStreamIdx);
-    currStreamIdx--;
-    LoadCurrentStream(currStreamIdx);
-
-    pbPrev->setDisabled((currStreamIdx == 0));
-    pbNext->setDisabled((currStreamIdx == 2));
-#endif
-}
-
-void StreamConfigDialog::on_pbNext_clicked()
-{
-#if 0
-    StoreCurrentStream(currStreamIdx);
-    currStreamIdx++;
-    LoadCurrentStream(currStreamIdx);
-
-    pbPrev->setDisabled((currStreamIdx == 0));
-    pbNext->setDisabled((currStreamIdx == 2));
-#endif
 }
 
 void StreamConfigDialog::on_tbSelectProtocols_currentChanged(int index)
@@ -967,6 +948,7 @@ void StreamConfigDialog::LoadCurrentStream()
     QString    str;
 
     qDebug("loading mpStream %p", mpStream);
+    variableFieldsWidget->setStream(mpStream);
 
     // Meta Data
     {
@@ -986,6 +968,7 @@ void StreamConfigDialog::LoadCurrentStream()
 
     // Variable Fields
     {
+        variableFieldsWidget->clear();
         variableFieldsWidget->load();
     }
 
@@ -1202,13 +1185,9 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
     }
 }
 
-void StreamConfigDialog::on_pbOk_clicked()
+bool StreamConfigDialog::isCurrentStreamValid()
 {
     QString log;
-    OstProto::Stream s;
-
-    // Store dialog contents into stream
-    StoreCurrentStream();
 
     if ((mPort.transmitMode() == OstProto::kInterleavedTransmit)
             && (mpStream->isFrameVariable()))
@@ -1224,12 +1203,68 @@ void StreamConfigDialog::on_pbOk_clicked()
         if (QMessageBox::warning(this, "Preflight Check", log + "\nContinue?",
                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) 
                 == QMessageBox::No)
-            return;
+            return false;
     }
 
-    // Copy the data from the "local working copy of stream" to "actual stream"
-    mpStream->protoDataCopyInto(s);
-    streamList_[mCurrentStreamIndex]->protoDataCopyFrom(s);
+    return true;
+}
+
+void StreamConfigDialog::on_pbPrev_clicked()
+{
+    Q_ASSERT(mCurrentStreamIndex > 0);
+
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    delete _iter;
+    mpStream = _streamList.at(--mCurrentStreamIndex);
+    _iter = mpStream->createProtocolListIterator();
+
+    LoadCurrentStream();
+    on_twTopLevel_currentChanged(twTopLevel->currentIndex());
+
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+}
+
+void StreamConfigDialog::on_pbNext_clicked()
+{
+    Q_ASSERT(int(mCurrentStreamIndex) < (_streamList.size()-1));
+
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    delete _iter;
+    mpStream = _streamList.at(++mCurrentStreamIndex);
+    _iter = mpStream->createProtocolListIterator();
+
+    LoadCurrentStream();
+    on_twTopLevel_currentChanged(twTopLevel->currentIndex());
+
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+
+}
+
+void StreamConfigDialog::on_pbOk_clicked()
+{
+    // Store dialog contents into current stream
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    // Copy the working copy of streams to user provided streams
+    Q_ASSERT(_userStreamList.size() == _streamList.size());
+    for (int i = 0; i < _streamList.size(); i++) {
+        OstProto::Stream s;
+        _streamList.at(i)->protoDataCopyInto(s);
+        _userStreamList[i]->protoDataCopyFrom(s);
+    }
 
     qDebug("stream stored");
 

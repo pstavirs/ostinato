@@ -115,11 +115,16 @@ public:
         Q_ASSERT(index < mStreams.size());
         return mStreams[index];
     }
-    Stream* mutableStreamByIndex(int index)
+    Stream* mutableStreamByIndex(int index, bool assumeChange = true)
     {
         Q_ASSERT(index < mStreams.size());
-        setDirty(true); // assume - that's the best we can do atm
+        if (assumeChange)
+            setDirty(true);
         return mStreams[index];
+    }
+    void setLocalConfigChanged(bool changed)
+    {
+        setDirty(changed);
     }
     OstProto::LinkState linkState()
         { return stats.state().link_state(); }

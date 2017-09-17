@@ -73,7 +73,8 @@ private:
     QStringListModel *mpAvailableProtocolsModel;
     QStringListModel *mpSelectedProtocolsModel;
 
-    QList<Stream*>  streamList_;
+    QList<Stream*>  _userStreamList;
+    QList<Stream*>  _streamList;
     const Port&     mPort;
     uint            mCurrentStreamIndex;
 
@@ -94,6 +95,7 @@ private:
     static int lastProtocolDataIndex;
 
     void setupUiExtra();
+    bool isCurrentStreamValid();
     void LoadCurrentStream();
     void StoreCurrentStream();
     void loadProtocolWidgets();
