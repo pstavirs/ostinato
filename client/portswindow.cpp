@@ -490,10 +490,11 @@ void PortsWindow::updateStreamViewActions()
             tvStreamList->selectionModel()->selection().size());
 
         // If more than one non-contiguous ranges selected,
-        // disable "New"
+        // disable "New" and "Edit"
         if (tvStreamList->selectionModel()->selection().size() > 1)
         {
             actionNew_Stream->setDisabled(true);
+            actionEdit_Stream->setDisabled(true);
         }
         else
         {
