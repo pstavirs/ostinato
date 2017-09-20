@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 
 class PortGroupList;
+class Stream;
 
 class StreamModel : public QAbstractTableModel
 {
@@ -44,6 +45,7 @@ class StreamModel : public QAbstractTableModel
             int role = Qt::EditRole);
         QVariant headerData(int section, Qt::Orientation orientation,
             int role = Qt::DisplayRole) const;
+        bool insert(int row, QList<Stream*> &streams);
         bool insertRows (int row, int count,
             const QModelIndex & parent = QModelIndex());
         bool removeRows (int row, int count,

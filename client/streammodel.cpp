@@ -223,6 +223,30 @@ QVariant StreamModel::headerData(int section, Qt::Orientation orientation, int r
     return QVariant();
 }
 
+/*!
+ * Inserts streams before the given row
+ *
+ * StreamModel takes ownership of the passed streams; caller should
+ * not try to access them after calling this function
+ */
+bool StreamModel::insert(int row, QList<Stream*> &streams)
+{
+    int count = streams.size();
+    qDebug("insert row = %d", row);
+    qDebug("insert count = %d", count);
+    beginInsertRows(QModelIndex(), row, row+count-1);
+    for (int i = 0; i < count; i++) {
+        OstProto::Stream s;
+        streams.at(i)->protoDataCopyInto(s);
+        mCurrentPort->newStreamAt(row+i, &s);
+        delete streams.at(i);
+    }
+    streams.clear();
+    endInsertRows();
+
+    return true;
+}
+
 bool StreamModel::insertRows(int row, int count, const QModelIndex &/*parent*/) 
 {
     qDebug("insertRows() row = %d", row);

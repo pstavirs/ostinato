@@ -768,18 +768,37 @@ void PortsWindow::on_actionNew_Stream_triggered()
 {
     qDebug("New Stream Action");
 
+    QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
+    if (selectionModel->selection().size() > 1) {
+        qDebug("%s: Unexpected selection size %d, can't add",
+                selectionModel->selection().size());
+        return;
+    }
+
     // In case nothing is selected, insert 1 row at the end
-    int row = plm->getStreamModel()->rowCount(), count = 1;
+    StreamModel *streamModel = plm->getStreamModel();
+    int row = streamModel->rowCount(), count = 1;
 
     // In case we have a single range selected; insert as many rows as
     // in the singe selected range before the top of the selected range
-    if (tvStreamList->selectionModel()->selection().size() == 1)
+    if (selectionModel->selection().size() == 1)
     {
-        row = tvStreamList->selectionModel()->selection().at(0).top();
-        count = tvStreamList->selectionModel()->selection().at(0).height();
+        row = selectionModel->selection().at(0).top();
+        count = selectionModel->selection().at(0).height();
     }
 
-    plm->getStreamModel()->insertRows(row, count);    
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
+
+    QList<Stream*> streams;
+    for (int i = 0; i < count; i++)
+        streams.append(new Stream);
+
+    StreamConfigDialog scd(streams, curPort, this);
+    scd.setWindowTitle(tr("Add Stream(s)"));
+    if (scd.exec() == QDialog::Accepted)
+        streamModel->insert(row, streams);
 }
 
 void PortsWindow::on_actionEdit_Stream_triggered()
