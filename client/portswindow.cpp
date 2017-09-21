@@ -771,7 +771,7 @@ void PortsWindow::on_actionNew_Stream_triggered()
 
     QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
     if (selectionModel->selection().size() > 1) {
-        qDebug("%s: Unexpected selection size %d, can't add",
+        qDebug("%s: Unexpected selection size %d, can't add", __FUNCTION__,
                 selectionModel->selection().size());
         return;
     }
