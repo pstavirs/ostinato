@@ -51,7 +51,7 @@
         <item>
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>&lt;p&gt;&lt;b&gt;How to use Ostinato&lt;/b&gt;&lt;/p&gt;
+           <string>&lt;p&gt;&lt;b&gt;Welcome to Ostinato&lt;/b&gt;&lt;/p&gt;
 &lt;p&gt;The port list on the left contains all the ports on which you can transmit packets.&lt;/p&gt;
 &lt;p&gt;Ports belong to a port group. Make sure the Port Group has a &lt;img src=&quot;:/icons/bullet_green.png&quot;/&gt; next to it, then double click the port group to show or hide the ports in the port group.&lt;/p&gt;
 &lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
