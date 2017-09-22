@@ -47,6 +47,8 @@ public:
             QWidget *parent = 0);
     ~StreamConfigDialog();
 
+    void setWindowTitle(const QString &title);
+
 private: 
 
     enum ButtonId
@@ -76,6 +78,7 @@ private:
     QList<Stream*>  _userStreamList;
     QList<Stream*>  _streamList;
     const Port&     mPort;
+    QString         _windowTitle;
     uint            mCurrentStreamIndex;
 
     Stream                    *mpStream;

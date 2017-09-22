@@ -67,6 +67,8 @@ StreamConfigDialog::StreamConfigDialog(
     setupUi(this);
     setupUiExtra();
 
+    _windowTitle = windowTitle();
+
     for (int i = ProtoMin; i < ProtoMax; i++)
     {
         bgProto[i]->setProperty("ProtocolLevel", i);
@@ -331,6 +333,12 @@ StreamConfigDialog::~StreamConfigDialog()
     delete _iter;
     while (!_streamList.isEmpty())
         delete _streamList.takeFirst();
+}
+
+void StreamConfigDialog::setWindowTitle(const QString &title)
+{
+    _windowTitle = title;
+    QDialog::setWindowTitle(title);
 }
 
 void StreamConfigDialog::loadProtocolWidgets()
@@ -950,8 +958,14 @@ void StreamConfigDialog::LoadCurrentStream()
     qDebug("loading mpStream %p", mpStream);
     variableFieldsWidget->setStream(mpStream);
 
+    QDialog::setWindowTitle(QString("%1 [%2]").arg(_windowTitle)
+                .arg(mpStream->name().isEmpty() ?
+                            tr("<unnamed>") : mpStream->name()));
+
     // Meta Data
     {
+        name->setText(mpStream->name());
+        enabled->setChecked(mpStream->isEnabled());
         cmbPktLenMode->setCurrentIndex(mpStream->lenMode());
         lePktLen->setText(str.setNum(mpStream->frameLen()));
         lePktLenMin->setText(str.setNum(mpStream->frameLenMin()));
@@ -1037,6 +1051,8 @@ void StreamConfigDialog::StoreCurrentStream()
     qDebug("storing pStream %p", pStream);
 
     // Meta Data
+    pStream->setName(name->text());
+    pStream->setEnabled(enabled->isChecked());
     pStream->setLenMode((Stream::FrameLengthMode) cmbPktLenMode->currentIndex());
     pStream->setFrameLen(lePktLen->text().toULong(&isOk));
     pStream->setFrameLenMin(lePktLenMin->text().toULong(&isOk));

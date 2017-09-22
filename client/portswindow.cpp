@@ -797,7 +797,7 @@ void PortsWindow::on_actionNew_Stream_triggered()
         streams.append(new Stream);
 
     StreamConfigDialog scd(streams, curPort, this);
-    scd.setWindowTitle(tr("Add Stream(s)"));
+    scd.setWindowTitle(tr("Add Stream"));
     if (scd.exec() == QDialog::Accepted)
         streamModel->insert(row, streams);
 }
