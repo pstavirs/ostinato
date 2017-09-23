@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 #include <QProcess>
 #include <QProgressDialog>
+#include <QTimer>
 #include <QUrl>
 
 #ifdef Q_OS_WIN32
@@ -75,11 +76,11 @@ MainWindow::MainWindow(QWidget *parent)
 
         qDebug("staring local server - %s", qPrintable(serverApp));
         localServer_ = new QProcess(this);
-        connect(localServer_, SIGNAL(started()), SLOT(onLocalServerStarted()));
         connect(localServer_, SIGNAL(error(QProcess::ProcessError)),
                 SLOT(onLocalServerError(QProcess::ProcessError)));
         localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
         localServer_->start(serverApp, QStringList());
+        QTimer::singleShot(5000, this, SLOT(onLocalServerStarted()));
     }
     else
         localServer_ = NULL;
