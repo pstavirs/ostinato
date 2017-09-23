@@ -364,8 +364,11 @@ void MainWindow::onLocalServerError(QProcess::ProcessError error)
 
 void MainWindow::onNewVersion(QString newVersion)
 {
-    statusBar()->showMessage(QString("New Ostinato version %1 available. "
-                "Visit http://ostinato.org to download").arg(newVersion));
+    QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
+                   "<a href='http://ostinato.org'>ostinato.org</a> to download")
+                .arg(newVersion));
+    msg->setOpenExternalLinks(true);
+    statusBar()->addPermanentWidget(msg);
 }
 
 //! Returns true on success (or user cancel) and false on failure
