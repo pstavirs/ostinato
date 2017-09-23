@@ -305,20 +305,20 @@ void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
     QString faq("http://ostinato.org/docs/faq#q-port-group-has-no-interfaces");
     if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
     {
-        if (QMessageBox::warning(NULL, tr("No ports in portgroup"),
-            QString("The portgroup %1:%2 does not contain any ports!\n\n"
-               "Packet Transmit/Capture requires elevated privileges. "
-               "Please ensure that you are running 'drone' - the server "
-               "component of Ostinato with admin/root OR setuid privilege.\n\n"
-               "For help see the Ostinato FAQ (%3)")
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setTextFormat(Qt::RichText);
+        msgBox.setStyleSheet("messagebox-text-interaction-flags: 5");
+        QString msg = tr("<p>The portgroup %1:%2 does not contain any ports!<p>"
+               "<p>Packet Transmit/Capture requires special privileges. "
+               "Please ensure that you are running 'drone' - the agent "
+               "component of Ostinato with required privileges.<p>")
                 .arg(serverName())
-                .arg(int(serverPort()))
-                .arg(faq.remove(QRegExp("#.*$"))),
-            QMessageBox::Ok | QMessageBox::Help,
-            QMessageBox::Ok) == QMessageBox::Help)
-        {
-            QDesktopServices::openUrl(QUrl(faq));
-        }
+                .arg(int(serverPort()));
+        msgBox.setText(msg);
+        msgBox.setInformativeText(tr("See the <a href='%1'>Ostinato FAQ</a> "
+                "for instructions to fix this problem").arg(faq));
+        msgBox.exec();
     }
 }
 
