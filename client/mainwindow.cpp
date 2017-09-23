@@ -345,6 +345,11 @@ void MainWindow::onLocalServerError(QProcess::ProcessError error)
                           "error 0x%1, exit code 0x%2.</p>")
             .arg(error, 0, 16)
             .arg(localServer_->exitCode(), 0, 16);
+    if (error == QProcess::FailedToStart)
+        errorStr.append(tr("<p>The drone program does not exist at %1 or you "
+                           "don't have sufficient permissions to execute it."
+                           "</p>")
+                        .arg(QCoreApplication::applicationDirPath()));
 #ifdef Q_OS_WIN32
     if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
         errorStr.append(tr("<p>This is most likely because Packet.dll "
@@ -353,14 +358,17 @@ void MainWindow::onLocalServerError(QProcess::ProcessError error)
                            "installed.</p>"));
 #endif
     msgBox.setText(errorStr);
-    msgBox.setInformativeText(tr("Run drone directly for more information."));
+    msgBox.setInformativeText(tr("Try running drone directly."));
     msgBox.exec();
 
+    QString archUrl("https://userguide.ostinato.org/Architecture.html");
     QMessageBox::information(this, QString(),
         tr("<p>If you have remote drone agents running, you can still add "
            "and connect to them.</p>"
            "<p>If you don't want to start the local drone agent at startup, "
-           "provide the <b>-s</b> option to Ostinato on the command line</p>"));
+           "provide the <b>-s</b> option to Ostinato on the command line.</p>"
+           "<p>Learn about Ostinato's <a href='%1'>Controller-Agent "
+           "architecture</a></p>").arg(archUrl));
 }
 
 void MainWindow::onNewVersion(QString newVersion)
