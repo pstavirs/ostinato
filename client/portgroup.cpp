@@ -200,6 +200,19 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
                 qPrintable(QString::fromStdString(verCompat->notes())));
         compat = kIncompatible;
         emit portGroupDataChanged(mPortGroupId);
+
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setTextFormat(Qt::RichText);
+        msgBox.setStyleSheet("messagebox-text-interaction-flags: 5");
+        msgBox.setText(tr("The Drone agent at %1:%2 is incompatible with this "
+                          "Ostinato version - %3")
+                              .arg(serverName())
+                              .arg(int(serverPort()))
+                              .arg(version));
+        msgBox.setInformativeText(QString::fromStdString(verCompat->notes()));
+        msgBox.exec();
+
         goto _error_exit;
     }
 

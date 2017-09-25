@@ -590,7 +590,7 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
     }
     else {
         response->set_result(OstProto::VersionCompatibility::kIncompatible);
-        response->set_notes(QString("Drone needs client version %1.%2.x")
+        response->set_notes(QString("Drone needs controller version %1.%2.x")
                 .arg(my[0], my[1]).toStdString());
         static_cast<PbRpcController*>(controller)->TriggerDisconnect();
     }
