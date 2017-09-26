@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
     if (!drone->init())
     {
-        exitCode = -1;
+        exitCode = 1;
         goto _exit;
     }
 

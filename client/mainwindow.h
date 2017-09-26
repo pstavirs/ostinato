@@ -60,8 +60,10 @@ public slots:
     void on_actionHelpAbout_triggered();
 
 private slots:
-    void onLocalServerStarted();
+    void stopLocalServerMonitor();
+    void onLocalServerFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onLocalServerError(QProcess::ProcessError error);
+    void reportLocalServerError();
     void onNewVersion(QString version);
 };
 

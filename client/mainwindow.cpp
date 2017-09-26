@@ -76,11 +76,13 @@ MainWindow::MainWindow(QWidget *parent)
 
         qDebug("staring local server - %s", qPrintable(serverApp));
         localServer_ = new QProcess(this);
+        connect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
+                SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
         connect(localServer_, SIGNAL(error(QProcess::ProcessError)),
                 SLOT(onLocalServerError(QProcess::ProcessError)));
         localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
         localServer_->start(serverApp, QStringList());
-        QTimer::singleShot(5000, this, SLOT(onLocalServerStarted()));
+        QTimer::singleShot(5000, this, SLOT(stopLocalServerMonitor()));
     }
     else
         localServer_ = NULL;
@@ -151,6 +153,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    stopLocalServerMonitor();
     if (localServer_) {
 #ifdef Q_OS_WIN32
         //! \todo - find a way to terminate cleanly
@@ -328,28 +331,47 @@ void MainWindow::on_actionHelpAbout_triggered()
     delete aboutDialog;
 }
 
-void MainWindow::onLocalServerStarted()
+void MainWindow::stopLocalServerMonitor()
 {
     // We are only interested in startup errors
     disconnect(localServer_, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(onLocalServerError(QProcess::ProcessError)));
+    disconnect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
+            this, SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
 }
 
-void MainWindow::onLocalServerError(QProcess::ProcessError error)
+void MainWindow::onLocalServerFinished(int exitCode,
+                                       QProcess::ExitStatus /*exitStatus*/)
+{
+    if (exitCode)
+        reportLocalServerError();
+}
+
+void MainWindow::onLocalServerError(QProcess::ProcessError /*error*/)
+{
+    reportLocalServerError();
+}
+
+void MainWindow::reportLocalServerError()
 {
     QMessageBox msgBox(this);
     msgBox.setIcon(QMessageBox::Warning);
     msgBox.setTextFormat(Qt::RichText);
     msgBox.setStyleSheet("messagebox-text-interaction-flags: 5"); // mouse copy
     QString errorStr = tr("<p>Failed to start the local drone agent - "
-                          "error 0x%1, exit code 0x%2.</p>")
-            .arg(error, 0, 16)
+                          "error 0x%1, exit status 0x%2 exit code 0x%3.</p>")
+            .arg(localServer_->error(), 0, 16)
+            .arg(localServer_->exitStatus(), 0, 16)
             .arg(localServer_->exitCode(), 0, 16);
-    if (error == QProcess::FailedToStart)
+    if (localServer_->error() == QProcess::FailedToStart)
         errorStr.append(tr("<p>The drone program does not exist at %1 or you "
                            "don't have sufficient permissions to execute it."
                            "</p>")
                         .arg(QCoreApplication::applicationDirPath()));
+    if (localServer_->exitCode() == 1)
+        errorStr.append(tr("<p>The drone program was not able to bind to "
+                           "TCP port 7878 - maybe a drone process is already "
+                           "running?</p>"));
 #ifdef Q_OS_WIN32
     if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
         errorStr.append(tr("<p>This is most likely because Packet.dll "
