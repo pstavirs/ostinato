@@ -609,6 +609,20 @@ bool StreamBase::preflightCheck(QString &result) const
         }
     }
 
+    if (frameCount() <= averagePacketRate() && nextWhat() != e_nw_goto_id)
+    {
+        result += QObject::tr("Only %L1 frames at the rate of "
+                "%L2 frames/sec are configured to be transmitted - "
+                "transmission will last for only %L3 second "
+                "(if you wish to transmit for a longer duration, "
+                "increase the number of bursts/packets and/or set the "
+                "'After this stream' action as 'Goto First').\n")
+            .arg(frameCount())
+            .arg(averagePacketRate(), 0, 'f', 2)
+            .arg(frameCount()/averagePacketRate(), 0, 'f');
+        pass = false;
+    }
+
     return pass;
 }
 
