@@ -1203,20 +1203,26 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
 
 bool StreamConfigDialog::isCurrentStreamValid()
 {
-    QString log;
+    QStringList log;
 
     if ((mPort.transmitMode() == OstProto::kInterleavedTransmit)
             && (mpStream->isFrameVariable()))
     {
-        log += "In 'Interleaved Streams' transmit mode, the count for "
-            "varying fields at transmit time may not be same as configured\n";
+        log << tr("In 'Interleaved Streams' transmit mode, the count for "
+            "varying fields at transmit time may not be same as configured");
     }
 
     mpStream->preflightCheck(log);
 
-    if (log.length())
+    if (log.size())
     {
-        if (QMessageBox::warning(this, "Preflight Check", log + "\nContinue?",
+        if (QMessageBox::warning(this, "Preflight Check",
+                    tr("<p>We found possible problems with this stream -</p>")
+                    + "<ul>"
+                    + log.replaceInStrings(QRegExp("(.*)"), "<li>\\1</li>")
+                        .join("\n")
+                    + "</ul>"
+                    + tr("<p>Ignore?</p>"),
                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) 
                 == QMessageBox::No)
             return false;

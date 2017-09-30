@@ -581,7 +581,7 @@ quint64 StreamBase::neighborMacAddress(int frameIndex) const
     return getNeighborMacAddress(portId_, int(mStreamId->id()), frameIndex);
 }
 
-bool StreamBase::preflightCheck(QString &result) const
+bool StreamBase::preflightCheck(QStringList &result) const
 {
     bool pass = true;
     int count = isFrameSizeVariable() ? frameCount() : 1;
@@ -590,8 +590,8 @@ bool StreamBase::preflightCheck(QString &result) const
     {
         if (frameLen(i) < (frameProtocolLength(i) + kFcsSize))
         {
-            result += QString("One or more frames may be truncated - "
-                "frame length should be at least %1.\n")
+            result << QObject::tr("One or more frames may be truncated - "
+                "frame length should be at least %1")
                 .arg(frameProtocolLength(i) + kFcsSize);
             pass = false;
             break;
@@ -602,8 +602,8 @@ bool StreamBase::preflightCheck(QString &result) const
     {
         if (frameLen(i) > 1522)
         {
-            result += QString("Jumbo frames may be truncated or dropped "
-                "if not supported by the hardware\n");
+            result << QObject::tr("Jumbo frames may be truncated or dropped "
+                "if not supported by the hardware");
             pass = false;
             break;
         }
@@ -611,12 +611,12 @@ bool StreamBase::preflightCheck(QString &result) const
 
     if (frameCount() <= averagePacketRate() && nextWhat() != e_nw_goto_id)
     {
-        result += QObject::tr("Only %L1 frames at the rate of "
-                "%L2 frames/sec are configured to be transmitted - "
-                "transmission will last for only %L3 second "
-                "(if you wish to transmit for a longer duration, "
-                "increase the number of bursts/packets and/or set the "
-                "'After this stream' action as 'Goto First').\n")
+        result << QObject::tr("Only %L1 frames at the rate of "
+                "%L2 frames/sec are configured to be transmitted. "
+                "Transmission will last for only %L3 second - "
+                "to transmit for a longer duration, "
+                "increase the number of packets (bursts) and/or "
+                "set the 'After this stream' action as 'Goto First'")
             .arg(frameCount())
             .arg(averagePacketRate(), 0, 'f', 2)
             .arg(frameCount()/averagePacketRate(), 0, 'f');

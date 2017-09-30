@@ -140,7 +140,7 @@ public:
     quint64 deviceMacAddress(int frameIndex) const;
     quint64 neighborMacAddress(int frameIndex) const;
 
-    bool preflightCheck(QString &result) const;
+    bool preflightCheck(QStringList &result) const;
 
     static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
 
