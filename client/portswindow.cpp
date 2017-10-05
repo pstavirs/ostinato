@@ -525,7 +525,8 @@ void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
         bool configChanged)
 {
     if (configChanged)
-        applyHint->setText("Configuration has changed - <b>click Apply</b> "
+        applyHint->setText("Configuration has changed - "
+                           "<font color='red'><b>click Apply</b></font> "
                            "to activate the changes");
     else
         applyHint->setText("Configuration activated. Use the Statistics "
