@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dbgthread.h"
 #endif
 
+#include "jumpurl.h"
 #include "params.h"
 #include "portgrouplist.h"
 #include "portstatswindow.h"
@@ -313,8 +314,7 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
 
 void MainWindow::on_actionHelpOnline_triggered()
 {
-    QDesktopServices::openUrl(
-            QUrl("http://ostinato.org/docs/?utm_source=app&utm_medium=menu&utm_campaign=help"));
+    QDesktopServices::openUrl(QUrl(jumpUrl("help", "app", "menu")));
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
@@ -376,28 +376,29 @@ void MainWindow::reportLocalServerError()
     if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
         errorStr.append(tr("<p>This is most likely because Packet.dll "
                            "was not found - make sure you have "
-                           "<a href='http://www.winpcap.org'>WinPcap</a> "
-                           "installed.</p>"));
+                           "<a href='%1'>WinPcap"
+                           "</a> installed.</p>")
+                                .arg(jumpUrl("winpcap")));
 #endif
     msgBox.setText(errorStr);
     msgBox.setInformativeText(tr("Try running drone directly."));
     msgBox.exec();
 
-    QString archUrl("https://userguide.ostinato.org/Architecture.html");
     QMessageBox::information(this, QString(),
         tr("<p>If you have remote drone agents running, you can still add "
            "and connect to them.</p>"
            "<p>If you don't want to start the local drone agent at startup, "
            "provide the <b>-s</b> option to Ostinato on the command line.</p>"
            "<p>Learn about Ostinato's <a href='%1'>Controller-Agent "
-           "architecture</a></p>").arg(archUrl));
+           "architecture</a></p>").arg(jumpUrl("arch")));
 }
 
 void MainWindow::onNewVersion(QString newVersion)
 {
     QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
-                   "<a href='http://ostinato.org'>ostinato.org</a> to download")
-                .arg(newVersion));
+                   "<a href='%2'>ostinato.org</a> to download")
+                .arg(newVersion)
+                .arg(jumpUrl("download", "app", "status", "update")));
     msg->setOpenExternalLinks(true);
     statusBar()->addPermanentWidget(msg);
 }

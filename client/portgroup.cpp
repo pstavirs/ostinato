@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portgroup.h"
 
+#include "jumpurl.h"
 #include "settings.h"
 
 #include "emulproto.pb.h"
@@ -315,7 +316,6 @@ void PortGroup::on_rpcChannel_notification(int notifType,
 
 void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
 {
-    QString faq("http://ostinato.org/docs/faq#q-port-group-has-no-interfaces");
     if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
     {
         QMessageBox msgBox;
@@ -330,7 +330,7 @@ void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
                 .arg(int(serverPort()));
         msgBox.setText(msg);
         msgBox.setInformativeText(tr("See the <a href='%1'>Ostinato FAQ</a> "
-                "for instructions to fix this problem").arg(faq));
+                "for instructions to fix this problem").arg(jumpUrl("noports")));
         msgBox.exec();
     }
 }
