@@ -94,12 +94,17 @@
 &lt;p&gt;You can transmit packets on any of the ports within the port group.&lt;/p&gt;
 &lt;p&gt;Make sure the port group has a &lt;img src=&quot;:/icons/bullet_green.png&quot;/&gt; next to it and then double click the port group to show or hide the ports in the port group.&lt;/p&gt;
 &lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
-&lt;p&gt;To create a stream, select the port on which you want to send packets. &lt;/p&gt;</string>
+&lt;p&gt;To create a stream, select the port on which you want to send packets. &lt;/p&gt;
+&lt;hr/&gt;
+&lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;http://jump.ostinato.org/noports&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
           </property>
           <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="openExternalLinks">
            <bool>true</bool>
           </property>
          </widget>
