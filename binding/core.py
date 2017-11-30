@@ -67,9 +67,9 @@ class DroneProxy(object):
          os.fsync(f.fileno())
          f.close()
 
-    def getStreamStatsDict(self, stream_guid_list): # FIXME: rename?
+    def getStreamStatsDict(self, stream_guid_list):
         """
-        Convenience method for fetching stream stats which returns an object
+        Convenience method for fetching stream stats. Returns an object
         containing port/sguid dictionaries for easier access e.g.
 
         stream_stats = drone.getStreamStatsDict(guid_list)
