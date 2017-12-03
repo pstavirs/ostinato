@@ -137,7 +137,7 @@ def ports(request, drone):
     for port in port_config_list.port:
         print('%d.%s (%s)' % (port.port_id.id, port.name, port.description))
         # use a vhost port as default X/Y port
-        if ('vhost' in port.name or 'sun' in port.description.lower()):
+        if ('vhost' in port.name or 'oracle' in port.description.lower()):
             if ports.x_num < 0:
                 ports.x_num = port.port_id.id
             elif ports.y_num < 0:
