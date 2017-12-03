@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,26 +17,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PORT_CONFIG_DIALOG_H
-#define _PORT_CONFIG_DIALOG_H
+#ifndef _PCAP_TX_STATS_H
+#define _PCAP_TX_STATS_H
 
-#include "ui_portconfigdialog.h"
-#include "protocol.pb.h"
-#include <QDialog>
+#include "abstractport.h"
 
-class PortConfigDialog : public QDialog, public Ui::PortConfigDialog
+#include <QThread>
+
+class StatsTuple;
+
+class PcapTxStats : public QThread
 {
 public:
-    PortConfigDialog(OstProto::Port &portConfig,
-                     const OstProto::PortState& portState,
-                     QWidget *parent);
+    PcapTxStats();
+    ~PcapTxStats();
 
+    void setTxThreadStats(StatsTuple *stats);
+
+    void useExternalStats(AbstractPort::PortStats *stats);
+
+    void start();
+    void stop();
 private:
-    virtual void accept();
+    void run();
 
-    OstProto::Port &portConfig_;
-    enum { kNone, kSelf, kOther } reservedBy_;
-    QString myself_;
+    StatsTuple *txThreadStats_;
+
+    bool usingInternalStats_;
+    AbstractPort::PortStats *stats_;
+
+    volatile bool stop_;
 };
 
 #endif

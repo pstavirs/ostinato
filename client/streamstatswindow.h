@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,26 +17,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PORT_CONFIG_DIALOG_H
-#define _PORT_CONFIG_DIALOG_H
+#ifndef _STREAM_STATS_WINDOW_H
+#define _STREAM_STATS_WINDOW_H
 
-#include "ui_portconfigdialog.h"
-#include "protocol.pb.h"
-#include <QDialog>
+#include "ui_streamstatswindow.h"
 
-class PortConfigDialog : public QDialog, public Ui::PortConfigDialog
+class QAbstractItemModel;
+class QSortFilterProxyModel;
+
+class StreamStatsWindow: public QWidget, private Ui::StreamStatsWindow
 {
+    Q_OBJECT
 public:
-    PortConfigDialog(OstProto::Port &portConfig,
-                     const OstProto::PortState& portState,
-                     QWidget *parent);
+    StreamStatsWindow(QAbstractItemModel *model, QWidget *parent = 0);
+    ~StreamStatsWindow();
+
+private slots:
+    void on_actionShowByteCounters_triggered(bool checked);
 
 private:
-    virtual void accept();
-
-    OstProto::Port &portConfig_;
-    enum { kNone, kSelf, kOther } reservedBy_;
-    QString myself_;
+    QSortFilterProxyModel *filterModel_;
 };
 
 #endif

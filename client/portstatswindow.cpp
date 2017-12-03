@@ -23,9 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsfilterdialog.h"
 #include "portstatsmodel.h"
 #include "portstatsproxymodel.h"
+#include "streamstatsmodel.h"
+#include "streamstatswindow.h"
 #include "settings.h"
 
+#include <QDockWidget>
 #include <QHeaderView>
+#include <QMainWindow>
+
+extern QMainWindow *mainWindow;
 
 PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent), proxyStatsModel(NULL)
@@ -227,6 +233,8 @@ void PortStatsWindow::on_tbClear_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId).
+            clearStreamStats(&portList[i].portList);
     }
 }
 
@@ -253,6 +261,44 @@ void PortStatsWindow::on_tbClearAll_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId)
                     .clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId)
+                    .clearStreamStats(&portList[i].portList);
+    }
+}
+
+void PortStatsWindow::on_tbGetStreamStats_clicked()
+{
+    QList<PortStatsModel::PortGroupAndPortList> portList;
+    StreamStatsModel *streamStatsModel;
+
+    // Get selected ports
+    model->portListFromIndex(selectedColumns, portList);
+
+    if (portList.size()) {
+        QDockWidget *dock = new QDockWidget(mainWindow);
+        streamStatsModel = new StreamStatsModel(dock);
+        dock->setWidget(new StreamStatsWindow(streamStatsModel, dock));
+        dock->setWindowTitle(dock->widget()->windowTitle());
+        dock->setObjectName("streamStatsDock");
+        dock->setAttribute(Qt::WA_DeleteOnClose);
+        QDockWidget *statsDock = mainWindow->findChild<QDockWidget*>(
+                                                            "statsDock");
+        mainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+        mainWindow->tabifyDockWidget(statsDock, dock);
+        dock->show();
+        dock->raise();
+    }
+
+    // Get stream stats for selected ports, portgroup by portgroup
+    for (int i = 0; i < portList.size(); i++)
+    {
+        PortGroup &pg = pgl->portGroupByIndex(portList.at(i).portGroupId);
+        if (pg.getStreamStats(&portList[i].portList)) {
+            connect(&pg,SIGNAL(streamStatsReceived(
+                                  quint32, const OstProto::StreamStatsList*)),
+                    streamStatsModel, SLOT(appendStreamStatsList(
+                                  quint32, const OstProto::StreamStatsList*)));
+        }
     }
 }
 

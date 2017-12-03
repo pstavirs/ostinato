@@ -31,20 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QTemporaryFile>
 #include <QtGlobal>
 
-static inline quint32 swap32(quint32 val)
-{
-    return (((val >> 24) && 0x000000FF) |
-            ((val >> 16) && 0x0000FF00) |
-            ((val << 16) && 0x00FF0000) |
-            ((val << 24) && 0xFF000000));
-}
-
-static inline quint16 swap16(quint16 val)
-{
-    return (((val >> 8) && 0x00FF) |
-            ((val << 8) && 0xFF00));
-}
-
 const quint32 kPcapFileMagic = 0xa1b2c3d4;
 const quint32 kPcapFileMagicSwapped = 0xd4c3b2a1;
 const quint16 kPcapFileVersionMajor = 2;

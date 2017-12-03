@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,27 +17,38 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PORT_CONFIG_DIALOG_H
-#define _PORT_CONFIG_DIALOG_H
+#ifndef _PCAP_RX_STATS_H
+#define _PCAP_RX_STATS_H
 
-#include "ui_portconfigdialog.h"
-#include "protocol.pb.h"
-#include <QDialog>
+#include "streamstats.h"
 
-class PortConfigDialog : public QDialog, public Ui::PortConfigDialog
+#include <QThread>
+#include <pcap.h>
+
+class PcapRxStats: public QThread
 {
 public:
-    PortConfigDialog(OstProto::Port &portConfig,
-                     const OstProto::PortState& portState,
-                     QWidget *parent);
+    PcapRxStats(const char *device, StreamStats &portStreamStats);
+    pcap_t* handle();
+    void run();
+    bool start();
+    bool stop();
+    bool isRunning();
+    bool isDirectional();
 
 private:
-    virtual void accept();
+    enum State {
+        kNotStarted,
+        kRunning,
+        kFinished
+    };
 
-    OstProto::Port &portConfig_;
-    enum { kNone, kSelf, kOther } reservedBy_;
-    QString myself_;
+    QString device_;
+    StreamStats &streamStats_;
+    volatile bool stop_;
+    pcap_t *handle_;
+    volatile State state_;
+    bool isDirectional_;
 };
 
 #endif
-

@@ -66,6 +66,7 @@ typedef enum {
     e_STAT_RX_FIFO_ERRORS,
     e_STAT_RX_FRAME_ERRORS,
 
+
     e_STATISTICS_END = e_STAT_RX_FRAME_ERRORS,
 
     e_STAT_MAX
@@ -92,6 +93,7 @@ static QStringList PortStatName = (QStringList()
     << "Bytes Received (NIC)"
     << "Bytes Sent (NIC)"
 #endif
+
     << "Receive Drops"
     << "Receive Errors"
     << "Receive Fifo Errors"

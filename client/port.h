@@ -100,6 +100,8 @@ public:
         { return d.is_exclusive_control(); }
     OstProto::TransmitMode transmitMode() const
         { return d.transmit_mode(); }
+    bool trackStreamStats() const
+        { return d.is_tracking_stream_stats(); }
     double averagePacketRate() const
         { return avgPacketsPerSec_; }
     double averageBitRate() const

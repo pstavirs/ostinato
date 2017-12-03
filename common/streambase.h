@@ -40,6 +40,7 @@ public:
     void protoDataCopyFrom(const OstProto::Stream &stream);
     void protoDataCopyInto(OstProto::Stream &stream) const;
 
+    bool hasProtocol(quint32 protocolNumber);
     ProtocolListIterator* createProtocolListIterator() const;
 
     //! \todo (LOW) should we have a copy constructor??

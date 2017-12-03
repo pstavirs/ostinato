@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2010-2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,27 +17,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PORT_CONFIG_DIALOG_H
-#define _PORT_CONFIG_DIALOG_H
+#ifndef _B_SWAP_H
+#define _B_SWAP_H
 
-#include "ui_portconfigdialog.h"
-#include "protocol.pb.h"
-#include <QDialog>
+#include <QtGlobal>
 
-class PortConfigDialog : public QDialog, public Ui::PortConfigDialog
+static inline quint32 swap32(quint32 val)
 {
-public:
-    PortConfigDialog(OstProto::Port &portConfig,
-                     const OstProto::PortState& portState,
-                     QWidget *parent);
+    return (((val >> 24) & 0x000000FF) |
+            ((val >> 16) & 0x0000FF00) |
+            ((val << 16) & 0x00FF0000) |
+            ((val << 24) & 0xFF000000));
+}
 
-private:
-    virtual void accept();
-
-    OstProto::Port &portConfig_;
-    enum { kNone, kSelf, kOther } reservedBy_;
-    QString myself_;
-};
+static inline quint16 swap16(quint16 val)
+{
+    return (((val >> 8) & 0x00FF) |
+            ((val << 8) & 0xFF00));
+}
 
 #endif
-
