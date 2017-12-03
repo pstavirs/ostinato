@@ -60,18 +60,7 @@ env.user = 'tc'
 env.password = 'tc'
 env.host_string = 'localhost:50022'
 
-tshark = get_tshark(minversion = '1.2.0') # FIXME: do we need a minversion?
-
-# setup protocol number dictionary
-# FIXME: remove if not reqd.
-proto_number = {}
-proto_number['mac'] = ost_pb.Protocol.kMacFieldNumber
-proto_number['vlan'] = ost_pb.Protocol.kVlanFieldNumber
-proto_number['eth2'] = ost_pb.Protocol.kEth2FieldNumber
-proto_number['ip4'] = ost_pb.Protocol.kIp4FieldNumber
-proto_number['ip6'] = ost_pb.Protocol.kIp6FieldNumber
-proto_number['udp'] = ost_pb.Protocol.kUdpFieldNumber
-proto_number['payload'] = ost_pb.Protocol.kPayloadFieldNumber
+tshark = get_tshark(minversion = '2')
 
 # setup logging
 log = logging.getLogger(__name__)
@@ -162,9 +151,9 @@ def ports(request, drone):
     # Enable stream stats on ports
     portConfig = ost_pb.PortConfigList()
     portConfig.port.add().port_id.id = ports.x_num;
-    portConfig.port[0].track_stream_stats = True;
+    portConfig.port[0].is_tracking_stream_stats = True;
     portConfig.port.add().port_id.id = ports.y_num;
-    portConfig.port[1].track_stream_stats = True;
+    portConfig.port[1].is_tracking_stream_stats = True;
     print('Enabling Stream Stats tracking on ports X and Y');
     drone.modifyPort(portConfig);
 
@@ -511,7 +500,7 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
                 continue
             filter='frame[-9:9]==00.' \
                         + re.sub('..', '\g<0>.', format(guid, '06x')) \
-                        + '61.a1.b2.c3.d4 && !icmp && !icmpv6'
+                        + '61.1d.10.c0.da && !icmp && !icmpv6'
             print(filter)
             cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capX.pcap',
                 '-Y', filter])
@@ -553,7 +542,7 @@ def test_unidir(drone, ports, dut, dut_ports, dut_ip, emul_ports, dgid_list,
                 continue
             filter='frame[-9:9]==00.' \
                         + re.sub('..', '\g<0>.', format(guid, '06x')) \
-                        + '61.a1.b2.c3.d4 && !icmp && !icmpv6'
+                        + '61.1d.10.c0.da && !icmp && !icmpv6'
             print(filter)
             cap_pkts = subprocess.check_output([tshark, '-n', '-r', 'capY.pcap',
                 '-Y', filter])

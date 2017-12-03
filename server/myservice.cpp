@@ -158,8 +158,8 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         notif->set_notif_type(OstProto::portConfigChanged);
         emit notification(notif->notif_type(), SharedProtobufMessage(notif));
     }
-
-    // FIXME: potential memory leak of notif
+    else
+        delete notif;
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,

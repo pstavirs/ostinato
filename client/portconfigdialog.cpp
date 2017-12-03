@@ -67,7 +67,7 @@ PortConfigDialog::PortConfigDialog(
     qDebug("reservedBy_ = %d", reservedBy_);
 
     exclusiveControlButton->setChecked(portConfig_.is_exclusive_control());
-    streamStatsButton->setChecked(portConfig_.track_stream_stats());
+    streamStatsButton->setChecked(portConfig_.is_tracking_stream_stats());
 
     // Disable UI elements based on portState
     if (portState.is_transmit_on()) {
@@ -105,7 +105,7 @@ void PortConfigDialog::accept()
     }
 
     pc.set_is_exclusive_control(exclusiveControlButton->isChecked());
-    pc.set_track_stream_stats(streamStatsButton->isChecked());
+    pc.set_is_tracking_stream_stats(streamStatsButton->isChecked());
 
     // Update fields that have changed, clear the rest
     if (pc.transmit_mode() != portConfig_.transmit_mode())
@@ -123,10 +123,10 @@ void PortConfigDialog::accept()
     else
         portConfig_.clear_is_exclusive_control();
 
-    if (pc.track_stream_stats() != portConfig_.track_stream_stats())
-        portConfig_.set_track_stream_stats(pc.track_stream_stats());
+    if (pc.is_tracking_stream_stats() != portConfig_.is_tracking_stream_stats())
+        portConfig_.set_is_tracking_stream_stats(pc.is_tracking_stream_stats());
     else
-        portConfig_.clear_track_stream_stats();
+        portConfig_.clear_is_tracking_stream_stats();
 
     QDialog::accept();
 }

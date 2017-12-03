@@ -99,7 +99,7 @@ public:
     OstProto::TransmitMode transmitMode() 
         { return d.transmit_mode(); }
     bool trackStreamStats()
-        { return d.track_stream_stats(); }
+        { return d.is_tracking_stream_stats(); }
     double averagePacketRate()
         { return avgPacketsPerSec_; }
     double averageBitRate()

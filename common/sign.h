@@ -84,7 +84,7 @@ public:
     static quint32 magic();
     static bool packetGuid(const uchar *pkt, int pktLen, uint *guid);
 private:
-    static const quint32 kSignMagic = 0xa1b2c3d4; // FIXME
+    static const quint32 kSignMagic = 0x1d10c0da; // coda! (unicode - 0x1d10c)
     static const quint8 kTypeLenEnd = 0x00;
     static const quint8 kTypeLenGuid = 0x61;
     OstProto::Sign data;

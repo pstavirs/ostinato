@@ -205,7 +205,7 @@ message Port {
     optional bool is_exclusive_control = 6;
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
     optional string user_name = 8;
-    optional bool track_stream_stats = 9; // FIXME: rename to is_XXX ?
+    optional bool is_tracking_stream_stats = 9;
 }
 
 message PortConfigList {

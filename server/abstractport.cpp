@@ -78,8 +78,9 @@ bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
         allow = !isTransmitOn();
     }
 
-    if (port.has_track_stream_stats()
-            && (port.track_stream_stats() != data_.track_stream_stats())) {
+    if (port.has_is_tracking_stream_stats()
+            && (port.is_tracking_stream_stats()
+                    != data_.is_tracking_stream_stats())) {
         *dirty = true;
         allow = !isTransmitOn();
     }
@@ -104,8 +105,8 @@ bool AbstractPort::modify(const OstProto::Port &port)
     if (port.has_transmit_mode())
         data_.set_transmit_mode(port.transmit_mode());
 
-    if (port.has_track_stream_stats())
-        ret |= setTrackStreamStats(port.track_stream_stats());
+    if (port.has_is_tracking_stream_stats())
+        ret |= setTrackStreamStats(port.is_tracking_stream_stats());
 
     if (port.has_user_name()) {
         data_.set_user_name(port.user_name());
@@ -182,7 +183,7 @@ void AbstractPort::addNote(QString note)
 
 bool AbstractPort::setTrackStreamStats(bool enable)
 {
-    data_.set_track_stream_stats(enable);
+    data_.set_is_tracking_stream_stats(enable);
 
     return true;
 }
