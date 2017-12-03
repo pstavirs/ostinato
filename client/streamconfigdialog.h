@@ -43,8 +43,11 @@ class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
     Q_OBJECT
 public:
-    StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
+    StreamConfigDialog(QList<Stream*> &streamList, const Port &port,
+            QWidget *parent = 0);
     ~StreamConfigDialog();
+
+    void setWindowTitle(const QString &title);
 
 private: 
 
@@ -74,7 +77,10 @@ private:
     QStringListModel *mpAvailableProtocolsModel;
     QStringListModel *mpSelectedProtocolsModel;
 
-    Port&            mPort;
+    QList<Stream*>  _userStreamList;
+    QList<Stream*>  _streamList;
+    const Port&     mPort;
+    QString         _windowTitle;
     uint            mCurrentStreamIndex;
 
     Stream                    *mpStream;
@@ -94,6 +100,7 @@ private:
     static int lastProtocolDataIndex;
 
     void setupUiExtra();
+    bool isCurrentStreamValid();
     void LoadCurrentStream();
     void StoreCurrentStream();
     void loadProtocolWidgets();

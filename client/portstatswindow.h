@@ -40,6 +40,9 @@ public slots:
     void showMyReservedPortsOnly(bool enabled);
 
 private slots:
+    void when_tvPortStats_selectionChanged(const QItemSelection &selected,
+                                           const QItemSelection &deselected);
+
     void on_tbStartTransmit_clicked();
     void on_tbStopTransmit_clicked();
 
@@ -57,11 +60,10 @@ private slots:
     void on_tbFilter_clicked();
 
 private:
-    QModelIndexList selectedColumns();
-
     PortGroupList           *pgl;
     PortStatsModel          *model;
     QSortFilterProxyModel   *proxyStatsModel;
+    QModelIndexList         selectedColumns;
 
 };
 

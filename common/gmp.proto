@@ -21,7 +21,7 @@ import "protocol.proto";
 
 package OstProto;
 
-// Group Management Protocol (i.e. IGMP and MLD)
+/// Group Management Protocol (i.e. IGMP and MLD)
 message Gmp {
     //
     // Common fields for both ASM and SSM messages

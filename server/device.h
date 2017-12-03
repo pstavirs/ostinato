@@ -107,11 +107,15 @@ private: // data
     quint32 ip4_;
     int ip4PrefixLength_;
     quint32 ip4Gateway_;
+    quint32 ip4Mask_;
+    quint32 ip4Subnet_;
 
     bool hasIp6_;
     UInt128 ip6_;
     int ip6PrefixLength_;
     UInt128 ip6Gateway_;
+    UInt128 ip6Mask_;
+    UInt128 ip6Subnet_;
 
     DeviceKey key_;
 

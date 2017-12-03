@@ -1,6 +1,5 @@
-/// (802.2 LLC)
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2017 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -18,16 +17,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-import "protocol.proto";
-import "dot3.proto";
-import "llc.proto";
+#ifndef _X_TREE_VIEW_H
+#define _X_TREE_VIEW_H
 
-package OstProto;
+#include <QTreeView>
 
-message Dot2Llc {
-    // Empty since this is a 'combo' protocol
-}
+#include <QMouseEvent>
 
-extend Protocol {
-    optional Dot2Llc dot2Llc = 206;
-}
+#if QT_VERSION >= 0x050000
+#error "Do we even need this anymore?"
+#endif
+
+class XTreeView : public QTreeView
+{
+public:
+    XTreeView(QWidget *parent) : QTreeView(parent) {}
+    virtual ~XTreeView() {}
+
+private:
+    virtual void mousePressEvent(QMouseEvent *event)
+    {
+        QModelIndex item = indexAt(event->pos());
+
+        if (!item.isValid())
+            setCurrentIndex(QModelIndex());
+
+        QTreeView::mousePressEvent(event);
+    }
+};
+
+#endif
+

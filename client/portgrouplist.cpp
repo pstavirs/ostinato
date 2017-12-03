@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portgrouplist.h"
 
+#include "params.h"
+
 // TODO(LOW): Remove
 #include <modeltest.h>
 
@@ -29,8 +31,6 @@ PortGroupList::PortGroupList()
       mDeviceGroupModel(this),
       mDeviceModel(this)
 {
-    PortGroup    *pg;
-
 #ifdef QT_NO_DEBUG
     streamModelTester_ = NULL;
     portModelTester_ = NULL;
@@ -46,8 +46,10 @@ PortGroupList::PortGroupList()
 #endif 
 
     // Add the "Local" Port Group
-    pg = new PortGroup;
-    addPortGroup(*pg);
+    if (appParams.optLocalDrone()) {
+        PortGroup *pg = new PortGroup;
+        addPortGroup(*pg);
+    }
 }
 
 PortGroupList::~PortGroupList()

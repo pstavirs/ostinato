@@ -14,6 +14,11 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
+"""
+This is the core module for the Ostinato Python API.
+All drone configuration is done by creating an instance of the
+`DroneProxy` class and calling its various methods subsequently.
+"""
 
 import os
 from rpc import OstinatoRpcChannel, OstinatoRpcController, RpcError
@@ -22,8 +27,16 @@ import protocols.emulproto_pb2 as emul
 from __init__ import __version__
 
 class DroneProxy(object):
+    """
+    DroneProxy acts as a proxy to a Drone instance. A method invoked on this
+    class will be trigerred on the actual Drone instance being proxied
+    """
 
     def __init__(self, host_name, port_number=7878):
+        """
+        Create a DroneProxy object as a proxy to the Drone instance
+        running at the specified host and port
+        """
         self.host = host_name
         self.port = port_number
         self.channel = OstinatoRpcChannel()
@@ -34,14 +47,26 @@ class DroneProxy(object):
             fn = lambda request=self.void, method_name=method.name: \
                 self.callRpcMethod(method_name, request)
             self.__dict__[method.name] = fn
+            self.__dict__[method.name].__doc__ = 'This is a protobuf API'
 
     def hostName(self):
+        """
+        Returns the hostname of the Drone which is being proxied by
+        this DroneProxy object
+        """
         return self.host
 
     def portNumber(self):
+        """
+        Returns the TCP port number of the Drone which is being proxied by
+        this DroneProxy object
+        """
         return self.port
 
     def connect(self):
+        """
+        Connect to the Drone instance
+        """
         self.channel.connect(self.host, self.port)
         ver = ost_pb.VersionInfo()
         ver.client_name = 'python-ostinato'
@@ -52,6 +77,9 @@ class DroneProxy(object):
                     (ver.version, compat.notes))
 
     def disconnect(self):
+        """
+        Disconnect from the Drone instance
+        """
         self.channel.disconnect()
 
     def callRpcMethod(self, method_name, request):
@@ -61,11 +89,14 @@ class DroneProxy(object):
         return controller.response
 
     def saveCaptureBuffer(self, buffer, file_name):
-         f= open(file_name, 'wb')
-         f.write(buffer)
-         f.flush()
-         os.fsync(f.fileno())
-         f.close()
+        """
+        Save the capture buffer in a PCAP file
+        """
+        f= open(file_name, 'wb')
+        f.write(buffer)
+        f.flush()
+        os.fsync(f.fileno())
+        f.close()
 
     def getStreamStatsDict(self, stream_guid_list):
         """

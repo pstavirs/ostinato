@@ -154,7 +154,7 @@ ProtocolListIterator*  StreamBase::createProtocolListIterator() const
     return new ProtocolListIterator(*currentFrameProtocols);
 }
 
-quint32    StreamBase::id()
+quint32 StreamBase::id() const
 {
     return mStreamId->id();
 }
@@ -598,7 +598,7 @@ quint64 StreamBase::neighborMacAddress(int frameIndex) const
   All errors found are returned. However, each type of error is reported
   only once, even if multiple packets may have that error.
 */
-bool StreamBase::preflightCheck(QString &result) const
+bool StreamBase::preflightCheck(QStringList &result) const
 {
     bool pass = true;
     bool chkTrunc = true;
@@ -611,8 +611,8 @@ bool StreamBase::preflightCheck(QString &result) const
 
         if (chkTrunc && (pktLen < (frameProtocolLength(i) + kFcsSize)))
         {
-            result += QString("* One or more frames may be truncated - "
-                "frame length should be at least %1\n")
+            result << QObject::tr("One or more frames may be truncated - "
+                "frame length should be at least %1")
                 .arg(frameProtocolLength(i) + kFcsSize);
             chkTrunc = false;
             pass = false;
@@ -620,9 +620,8 @@ bool StreamBase::preflightCheck(QString &result) const
 
         if (chkJumbo && (pktLen > 1522))
         {
-            result += QString("* Jumbo frames may be truncated or dropped "
-                "if not supported by the hardware\n");
-            chkJumbo = false;
+            result << QObject::tr("Jumbo frames may be truncated or dropped "
+                "if not supported by the hardware");
             pass = false;
         }
 
@@ -630,6 +629,20 @@ bool StreamBase::preflightCheck(QString &result) const
         // the above errors
         if (!chkTrunc && !chkJumbo)
             break;
+    }
+
+    if (frameCount() <= averagePacketRate() && nextWhat() != e_nw_goto_id)
+    {
+        result << QObject::tr("Only %L1 frames at the rate of "
+                "%L2 frames/sec are configured to be transmitted. "
+                "Transmission will last for only %L3 second - "
+                "to transmit for a longer duration, "
+                "increase the number of packets (bursts) and/or "
+                "set the 'After this stream' action as 'Goto First'")
+            .arg(frameCount())
+            .arg(averagePacketRate(), 0, 'f', 2)
+            .arg(frameCount()/averagePacketRate(), 0, 'f');
+        pass = false;
     }
 
     return pass;

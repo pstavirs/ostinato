@@ -44,6 +44,7 @@ public:
         ip4_cksum,
         ip4_srcAddr,
         ip4_dstAddr,
+        ip4_options,
 
         // Meta-fields
         ip4_isOverrideVer,

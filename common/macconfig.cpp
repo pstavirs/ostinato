@@ -20,12 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "macconfig.h"
 #include "mac.h"
 
-#define MAX_MAC_ITER_COUNT  256
-
 MacConfigForm::MacConfigForm(QWidget *parent)
     : AbstractProtocolConfigForm(parent)
 {
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
     setupUi(this);
     resolveInfo->hide();
@@ -34,10 +31,10 @@ MacConfigForm::MacConfigForm(QWidget *parent)
     resolveInfo->setPixmap(resolveInfo->style()->standardIcon(
                                QStyle::SP_MessageBoxInformation).pixmap(128));
 #endif
-    leDstMac->setValidator(new QRegExpValidator(reMac, this));
-    leSrcMac->setValidator(new QRegExpValidator(reMac, this));
-    leDstMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
-    leSrcMacCount->setValidator(new QIntValidator(1, MAX_MAC_ITER_COUNT, this));
+    leDstMacCount->setMinimum(1);
+    leSrcMacCount->setMinimum(1);
+    leDstMacStep->setMinimum(0);
+    leSrcMacStep->setMinimum(0);
 }
 
 MacConfigForm::~MacConfigForm()
@@ -100,75 +97,75 @@ void MacConfigForm::on_cmbSrcMacMode_currentIndexChanged(int index)
 
 void MacConfigForm::loadWidget(AbstractProtocol *proto)
 {
-    leDstMac->setText(
+    leDstMac->setValue(
             proto->fieldData(
                 MacProtocol::mac_dstAddr, 
-                AbstractProtocol::FieldTextValue
-            ).toString());
+                AbstractProtocol::FieldValue
+            ).toULongLong());
     cmbDstMacMode->setCurrentIndex(
             proto->fieldData(
                 MacProtocol::mac_dstMacMode,
                 AbstractProtocol::FieldValue
             ).toUInt());
-    leDstMacCount->setText(
+    leDstMacCount->setValue(
             proto->fieldData(
                 MacProtocol::mac_dstMacCount,
                 AbstractProtocol::FieldValue
-            ).toString());
-    leDstMacStep->setText(
+            ).toUInt());
+    leDstMacStep->setValue(
             proto->fieldData(
                 MacProtocol::mac_dstMacStep,
                 AbstractProtocol::FieldValue
-            ).toString());
+            ).toUInt());
 
-    leSrcMac->setText(
+    leSrcMac->setValue(
             proto->fieldData(
                 MacProtocol::mac_srcAddr, 
-                AbstractProtocol::FieldTextValue
-            ).toString());
+                AbstractProtocol::FieldValue
+            ).toULongLong());
     cmbSrcMacMode->setCurrentIndex(
             proto->fieldData(
                 MacProtocol::mac_srcMacMode,
                 AbstractProtocol::FieldValue
             ).toUInt());
-    leSrcMacCount->setText(
+    leSrcMacCount->setValue(
             proto->fieldData(
                 MacProtocol::mac_srcMacCount,
                 AbstractProtocol::FieldValue
-            ).toString());
-    leSrcMacStep->setText(
+            ).toUInt());
+    leSrcMacStep->setValue(
             proto->fieldData(
                 MacProtocol::mac_srcMacStep,
                 AbstractProtocol::FieldValue
-            ).toString());
+            ).toUInt());
 }
 
 void MacConfigForm::storeWidget(AbstractProtocol *proto)
 {
     proto->setFieldData(
             MacProtocol::mac_dstAddr,
-            leDstMac->text().remove(QChar(' ')));
+            leDstMac->value());
     proto->setFieldData(
             MacProtocol::mac_dstMacMode,
             cmbDstMacMode->currentIndex());
     proto->setFieldData(
             MacProtocol::mac_dstMacCount,
-            leDstMacCount->text());
+            leDstMacCount->value());
     proto->setFieldData(
             MacProtocol::mac_dstMacStep,
-            leDstMacStep->text());
+            leDstMacStep->value());
 
     proto->setFieldData(
             MacProtocol::mac_srcAddr,
-            leSrcMac->text().remove(QChar(' ')));
+            leSrcMac->value());
     proto->setFieldData(
             MacProtocol::mac_srcMacMode,
             cmbSrcMacMode->currentIndex());
     proto->setFieldData(
             MacProtocol::mac_srcMacCount,
-            leSrcMacCount->text());
+            leSrcMacCount->value());
     proto->setFieldData(
             MacProtocol::mac_srcMacStep,
-            leSrcMacStep->text());
+            leSrcMacStep->value());
 }
 

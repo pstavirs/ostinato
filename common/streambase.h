@@ -69,7 +69,7 @@ public:
         e_nw_goto_id
     };
 
-    quint32    id();
+    quint32    id() const;
     bool setId(quint32 id);
 
 #if 0 // FIXME(HI): needed?
@@ -141,7 +141,7 @@ public:
     quint64 deviceMacAddress(int frameIndex) const;
     quint64 neighborMacAddress(int frameIndex) const;
 
-    bool preflightCheck(QString &result) const;
+    bool preflightCheck(QStringList &result) const;
 
     static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
 

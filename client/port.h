@@ -50,6 +50,7 @@ class Port : public QObject {
     quint32        mPortId;
     quint32        mPortGroupId;
     QString        mUserAlias;            // user defined
+    bool           dirty_;
 
     double avgPacketsPerSec_; 
     double avgBitsPerSec_;
@@ -70,6 +71,7 @@ class Port : public QObject {
     void updateStreamOrdinalsFromIndex();
     void reorderStreamsByOrdinals();
 
+    void setDirty(bool dirty);
 
 public:
     enum AdminStatus    { AdminDisable, AdminEnable };
@@ -92,17 +94,17 @@ public:
         { return QString().fromStdString(d.notes()); }
     const QString userName() const 
         { return QString().fromStdString(d.user_name()); }
-    AdminStatus adminStatus() 
+    AdminStatus adminStatus() const
         { return (d.is_enabled()?AdminEnable:AdminDisable); }
-    bool hasExclusiveControl() 
+    bool hasExclusiveControl() const
         { return d.is_exclusive_control(); }
-    OstProto::TransmitMode transmitMode() 
+    OstProto::TransmitMode transmitMode() const
         { return d.transmit_mode(); }
-    bool trackStreamStats()
+    bool trackStreamStats() const
         { return d.is_tracking_stream_stats(); }
-    double averagePacketRate()
+    double averagePacketRate() const
         { return avgPacketsPerSec_; }
-    double averageBitRate()
+    double averageBitRate() const
         { return avgBitsPerSec_; }
 
     //void setAdminEnable(AdminStatus status) { mAdminStatus = status; }
@@ -110,10 +112,21 @@ public:
     //void setExclusive(bool flag);
 
     int numStreams() { return mStreams.size(); }
-    Stream* streamByIndex(int index)
+    const Stream* streamByIndex(int index) const
     {
         Q_ASSERT(index < mStreams.size());
         return mStreams[index];
+    }
+    Stream* mutableStreamByIndex(int index, bool assumeChange = true)
+    {
+        Q_ASSERT(index < mStreams.size());
+        if (assumeChange)
+            setDirty(true);
+        return mStreams[index];
+    }
+    void setLocalConfigChanged(bool changed)
+    {
+        setDirty(changed);
     }
     OstProto::LinkState linkState()
         { return stats.state().link_state(); }
@@ -131,6 +144,7 @@ public:
 
     void protoDataCopyInto(OstProto::Port *data);
 
+    //! Used when config received from server
     // FIXME(MED): naming inconsistency - PortConfig/Stream; also retVal
     void updatePortConfig(OstProto::Port *port);
     
@@ -146,6 +160,7 @@ public:
     bool updateStream(uint streamId, OstProto::Stream *stream);
     //@}
 
+    bool isDirty() { return dirty_; }
     void getDeletedStreamsSinceLastSync(OstProto::StreamIdList &streamIdList);
     void getNewStreamsSinceLastSync(OstProto::StreamIdList &streamIdList);
     void getModifiedStreamsSinceLastSync(
@@ -180,7 +195,7 @@ public:
     int numDeviceGroups() const;
     const OstProto::DeviceGroup* deviceGroupByIndex(int index) const;
     OstProto::DeviceGroup* mutableDeviceGroupByIndex(int index);
-    OstProto::DeviceGroup* deviceGroupById(uint deviceGroupId);
+    const OstProto::DeviceGroup* deviceGroupById(uint deviceGroupId) const;
 
     //! Used by StreamModel
     //@{
@@ -218,11 +233,20 @@ public:
     void deviceInfoRefreshed();
 
 signals:
+    //! Used when local config changed and when config received from server
     void portRateChanged(int portGroupId, int portId);
-    void portDataChanged(int portGroupId, int portId);
-    void streamListChanged(int portGroupId, int portId);
-    void deviceInfoChanged();
 
+    //! Used by MyService::Stub to update from config received from server
+    //@{
+    void portDataChanged(int portGroupId, int portId);
+    void deviceInfoChanged();
+    //@}
+
+    //! Used when local config changed
+    //@{
+    void streamListChanged(int portGroupId, int portId);
+    void localConfigChanged(int portGroupId, int portId, bool changed);
+    //@}
 };
 
 #endif

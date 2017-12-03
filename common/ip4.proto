@@ -58,7 +58,7 @@ message Ip4 {
     optional uint32        dst_ip_count = 20 [default = 16];
     optional fixed32    dst_ip_mask = 21 [default = 0xFFFFFF00];
 
-    //! \todo (LOW) IPv4 Options
+    optional bytes      options = 22;
 }
 
 extend Protocol {

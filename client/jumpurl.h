@@ -1,6 +1,5 @@
-/// (802.2 LLC)
 /*
-Copyright (C) 2010 Srivats P.
+Copyright (C) 2017 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -18,16 +17,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-import "protocol.proto";
-import "dot3.proto";
-import "llc.proto";
+#ifndef _JUMP_URL_H
+#define _JUMP_URL_H
 
-package OstProto;
+#include <QString>
 
-message Dot2Llc {
-    // Empty since this is a 'combo' protocol
+inline QString jumpUrl(
+        QString keyword,
+        QString source="app",
+        QString medium="hint",
+        QString name="help")
+{
+    return QString("http://jump.ostinato.org/" + keyword + "?"
+            + "utm_source=" + source + "&"
+            + "utm_medium=" + medium + "&"
+            + "utm_campaign=" + name);
 }
 
-extend Protocol {
-    optional Dot2Llc dot2Llc = 206;
-}
+#endif
+

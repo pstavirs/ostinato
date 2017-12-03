@@ -111,6 +111,10 @@ void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
     ip4PrefixLength_ = prefixLength;
     ip4Gateway_ = gateway;
     hasIp4_ = true;
+
+    // Precalculate our mask 'n subnet to avoid doing so at pkt rx/tx time
+    ip4Mask_ = ~0 << (32 - ip4PrefixLength_);
+    ip4Subnet_ = ip4_ & ip4Mask_;
 }
 
 void Device::setIp6(UInt128 address, int prefixLength, UInt128 gateway)
@@ -119,6 +123,10 @@ void Device::setIp6(UInt128 address, int prefixLength, UInt128 gateway)
     ip6PrefixLength_ = prefixLength;
     ip6Gateway_ = gateway;
     hasIp6_ = true;
+
+    // Precalculate our mask 'n subnet to avoid doing so at pkt rx/tx time
+    ip6Mask_ = ~UInt128(0, 0) << (128 - ip6PrefixLength_);
+    ip6Subnet_ = ip6_ & ip6Mask_;
 }
 
 void Device::getConfig(OstEmul::Device *deviceConfig)
@@ -405,7 +413,7 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
     // We know only about IP packets
     if ((ethType == 0x0800) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
-        quint32 dstIp, tgtIp, mask;
+        quint32 dstIp, tgtIp;
 
         if (pktBuf->length() < ipHdrLen) {
             qDebug("incomplete IPv4 header: expected %d, actual %d",
@@ -418,14 +426,12 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
             qDebug("mcast dst %x", dstIp);
             return (quint64(0x01005e) << 24) | (dstIp & 0x7FFFFF);
         }
-        mask =  ~0 << (32 - ip4PrefixLength_);
-        qDebug("dst %x mask %x self %x", dstIp, mask, ip4_);
-        tgtIp = ((dstIp & mask) == (ip4_ & mask)) ? dstIp : ip4Gateway_;
+        tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
 
         return arpTable_.value(tgtIp);
     }
     else if ((ethType == kEthTypeIp6) && hasIp6_) { // IPv6
-        UInt128 dstIp, tgtIp, mask;
+        UInt128 dstIp, tgtIp;
 
         if (pktBuf->length() < (kIp6HdrLen+2)) {
             qDebug("incomplete IPv6 header: expected %d, actual %d",
@@ -439,12 +445,7 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
                     qPrintable(QHostAddress(dstIp.toArray()).toString()));
             return (quint64(0x3333) << 32) | (dstIp.lo64() & 0xFFFFFFFF);
         }
-        mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
-        qDebug("dst %s mask %s self %s",
-                qPrintable(QHostAddress(dstIp.toArray()).toString()),
-                qPrintable(QHostAddress(mask.toArray()).toString()),
-                qPrintable(QHostAddress(ip6_.toArray()).toString()));
-        tgtIp = ((dstIp & mask) == (ip6_ & mask)) ? dstIp : ip6Gateway_;
+        tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
 
         return ndpTable_.value(tgtIp);
     }
@@ -568,7 +569,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     int ipHdrLen = (pktData[0] & 0x0F) << 2;
-    quint32 srcIp = ip4_, dstIp, mask, tgtIp;
+    quint32 dstIp, tgtIp;
 
     if (pktBuf->length() < ipHdrLen) {
         qDebug("incomplete IPv4 header: expected %d, actual %d",
@@ -578,9 +579,7 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
 
-    mask =  ~0 << (32 - ip4PrefixLength_);
-    qDebug("dst %x src %x mask %x", dstIp, srcIp, mask);
-    tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip4Gateway_;
+    tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
 
     sendArpRequest(tgtIp);
 
@@ -684,16 +683,18 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
     uchar *pktData = pktBuf->push(20);
     uchar origTtl = pktData[8];
     uchar ipProto = pktData[9];
-    quint32 srcIp, dstIp;
+    quint32 srcIp, dstIp, tgtIp, mask;
     quint32 sum;
 
     // Swap src/dst IP addresses
     dstIp = qFromBigEndian<quint32>(pktData + 12); // srcIp in original pkt
     srcIp = qFromBigEndian<quint32>(pktData + 16); // dstIp in original pkt
 
-    if (!arpTable_.contains(dstIp)) {
+    tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
+
+    if (!arpTable_.contains(tgtIp)) {
         qWarning("%s: mac not found for %s; unable to send IPv4 packet",
-                __FUNCTION__, qPrintable(QHostAddress(dstIp).toString()));
+                __FUNCTION__, qPrintable(QHostAddress(tgtIp).toString()));
         return;
     }
 
@@ -712,7 +713,7 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
         sum = (sum & 0xFFFF) + (sum >> 16);
     *(quint16*)(pktData + 10) = qToBigEndian(quint16(~sum));
 
-    encap(pktBuf, arpTable_.value(dstIp), 0x0800);
+    encap(pktBuf, arpTable_.value(tgtIp), 0x0800);
     transmitPacket(pktBuf);
 }
 
@@ -796,7 +797,7 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
 {
     int payloadLen = pktBuf->length();
     uchar *p = pktBuf->push(kIp6HdrLen);
-    quint64 dstMac = ndpTable_.value(dstIp);
+    quint64 dstMac;
 
     if (!p) {
         qWarning("%s: failed to push %d bytes [0x%p, 0x%p]", __FUNCTION__,
@@ -807,6 +808,10 @@ bool Device::sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol)
     // In case of mcast, derive dstMac
     if ((dstIp.hi64() >> 56) == 0xff)
         dstMac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xffffffff);
+    else {
+        UInt128 tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_)? dstIp : ip6Gateway_;
+        dstMac = ndpTable_.value(tgtIp);
+    }
 
     if (!dstMac) {
         qWarning("%s: mac not found for %s; unable to send IPv6 packet",
@@ -841,16 +846,17 @@ _error_exit:
 void Device::sendIp6Reply(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->push(kIp6HdrLen);
-    UInt128 srcIp, dstIp;
+    UInt128 srcIp, dstIp, tgtIp;
 
     // Swap src/dst IP addresses
     dstIp = qFromBigEndian<UInt128>(pktData +  8); // srcIp in original pkt
     srcIp = qFromBigEndian<UInt128>(pktData + 24); // dstIp in original pkt
 
-    if (!ndpTable_.contains(dstIp)) {
+    tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
+    if (!ndpTable_.contains(tgtIp)) {
         qWarning("%s: mac not found for %s; unable to send IPv6 packet",
                 __FUNCTION__,
-                qPrintable(QHostAddress(dstIp.toArray()).toString()));
+                qPrintable(QHostAddress(tgtIp.toArray()).toString()));
         return;
     }
 
@@ -860,7 +866,7 @@ void Device::sendIp6Reply(PacketBuffer *pktBuf)
     // Reset TTL
     pktData[7] = 64;
 
-    encap(pktBuf, ndpTable_.value(dstIp), 0x86dd);
+    encap(pktBuf, ndpTable_.value(tgtIp), 0x86dd);
     transmitPacket(pktBuf);
 }
 
@@ -950,7 +956,7 @@ _invalid_exit:
 void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
-    UInt128 srcIp = ip6_, dstIp, mask, tgtIp;
+    UInt128 dstIp, tgtIp;
 
     if (pktBuf->length() < kIp6HdrLen) {
         qDebug("incomplete IPv6 header: expected %d, actual %d",
@@ -960,12 +966,7 @@ void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
 
     dstIp = qFromBigEndian<UInt128>(pktData + 24);
 
-    mask =  ~UInt128(0, 0) << (128 - ip6PrefixLength_);
-    qDebug("%s: dst %s src %s mask %s", __FUNCTION__,
-            qPrintable(QHostAddress(dstIp.toArray()).toString()),
-            qPrintable(QHostAddress(srcIp.toArray()).toString()),
-            qPrintable(QHostAddress(mask.toArray()).toString()));
-    tgtIp = ((dstIp & mask) == (srcIp & mask)) ? dstIp : ip6Gateway_;
+    tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
 
     sendNeighborSolicit(tgtIp);
 }

@@ -170,12 +170,12 @@ void DevicesWidget::on_deviceInfo_toggled(bool checked)
 
 void DevicesWidget::on_actionNewDeviceGroup_triggered()
 {
-    // In case nothing is selected, insert 1 row at the top
-    int row = 0, count = 1;
-    QItemSelection selection = deviceGroupList->selectionModel()->selection();
-
     if (!portGroups_)
        return;
+
+    // In case nothing is selected, insert 1 row at the end
+    int row = portGroups_->getDeviceGroupModel()->rowCount(), count = 1;
+    QItemSelection selection = deviceGroupList->selectionModel()->selection();
 
     // In case we have a single range selected; insert as many rows as
     // in the singe selected range before the top of the selected range

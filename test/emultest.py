@@ -21,6 +21,7 @@ from rpc import RpcError
 from protocols.mac_pb2 import mac, Mac
 from protocols.ip4_pb2 import ip4, Ip4
 from protocols.ip6_pb2 import ip6, Ip6
+from protocols.icmp_pb2 import icmp, Icmp
 from protocols.vlan_pb2 import vlan
 
 use_defaults = True
@@ -348,6 +349,106 @@ def dut_vlans(request, dut_ports):
 
     request.addfinalizer(delete_vdev)
 
+@pytest.fixture
+def ping(request, drone, ip_ver, port_id, src_ip, dst_ip):
+    # create ICMP stream
+    stream_id = ost_pb.StreamIdList()
+    stream_id.port_id.CopyFrom(port_id)
+    stream_id.stream_id.add().id = 0
+    log.info('adding ping tx_stream %d' % stream_id.stream_id[0].id)
+
+    drone.addStream(stream_id)
+
+    # configure the ICMP echo tx stream(s)
+    stream_cfg = ost_pb.StreamConfigList()
+    stream_cfg.port_id.CopyFrom(port_id)
+    s = stream_cfg.stream.add()
+    s.stream_id.id = stream_id.stream_id[0].id
+    s.core.is_enabled = True
+    s.core.frame_len = 128
+    s.control.packets_per_sec = 1
+    s.control.num_packets = 3
+
+    # setup stream protocols as mac:eth2:ip:icmp:payload
+    p = s.protocol.add()
+    p.protocol_id.id = ost_pb.Protocol.kMacFieldNumber
+    p.Extensions[mac].dst_mac_mode = Mac.e_mm_resolve
+    p.Extensions[mac].src_mac_mode = Mac.e_mm_resolve
+
+    p = s.protocol.add()
+    p.protocol_id.id = ost_pb.Protocol.kEth2FieldNumber
+
+    if ip_ver == 4:
+        p = s.protocol.add()
+        p.protocol_id.id = ost_pb.Protocol.kIp4FieldNumber
+        ip = None
+        ip = p.Extensions[ip4]
+        ip.src_ip = src_ip
+        ip.dst_ip = dst_ip
+    elif ip_ver == 6:
+        p = s.protocol.add()
+        p.protocol_id.id = ost_pb.Protocol.kIp6FieldNumber
+        ip = p.Extensions[ip6]
+        ip.src_addr_hi = src_ip.hi
+        ip.src_addr_lo = src_ip.lo
+        ip.dst_addr_hi = dst_ip.hi
+        ip.dst_addr_lo = dst_ip.lo
+    else:
+        assert False # unreachable
+
+    p = s.protocol.add()
+    p.protocol_id.id = ost_pb.Protocol.kIcmpFieldNumber
+    if ip_ver == 6:
+        p.Extensions[icmp].icmp_version = Icmp.kIcmp6
+        p.Extensions[icmp].type = 128 # icmpv6 echo request
+
+    s.protocol.add().protocol_id.id = ost_pb.Protocol.kPayloadFieldNumber
+
+    log.info('configuring ping tx_stream %d' % stream_id.stream_id[0].id)
+
+    drone.modifyStream(stream_cfg)
+
+    # send ping packets
+    ports = ost_pb.PortIdList()
+    ports.port_id.add().id = port_id.id
+    drone.startCapture(ports)
+    drone.startTransmit(ports)
+    time.sleep(5)
+    drone.stopCapture(ports)
+
+    # delete ping stream
+    drone.deleteStream(stream_id)
+
+    # FIXME: workaround for bug#179
+    stream_cfg.ClearField("stream")
+    drone.modifyStream(stream_cfg)
+
+    # verify ICMP Replies are received
+    buff = drone.getCaptureBuffer(port_id)
+    drone.saveCaptureBuffer(buff, 'capture.pcap')
+    log.info('dumping Rx capture buffer (all)')
+    cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap'])
+    print(cap_pkts)
+    if ip_ver == 4:
+        filter = '(icmp.type == 0)' \
+            ' && (icmp.code == 0)' \
+            ' && (ip.src == ' + str(ipaddress.ip_address(dst_ip)) + ')' \
+            ' && (ip.dst == ' + str(ipaddress.ip_address(src_ip)) + ')' \
+            ' && !expert.severity'
+    elif ip_ver == 6:
+        filter = '(icmpv6.type == 129)' \
+            ' && (icmpv6.code == 0)' \
+            ' && (ipv6.src == ' \
+                + str(ip6_address(dst_ip)) + ')' \
+            ' && (ipv6.dst == ' \
+                + str(ip6_address(src_ip)) + ')' \
+            ' && !expert.severity'
+    log.info('dumping Rx capture buffer (filtered)')
+    print filter
+    cap_pkts = subprocess.check_output([tshark, '-nr', 'capture.pcap',
+                '-Y', filter])
+    print(cap_pkts)
+    return cap_pkts.count('\n') > 1
 
 # ================================================================= #
 # ----------------------------------------------------------------- #
@@ -360,7 +461,7 @@ def dut_vlans(request, dut_ports):
     {'ip_ver': [6], 'mac_step': 1, 'ip_step': 1},
     {'ip_ver': [4, 6], 'mac_step': 2, 'ip_step': 5},
 ])
-def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
+def test_multiEmulDevNoVlan(request, drone, ports, dut, dut_ports, dut_ip,
         stream_clear, emul_ports, dgid_list, dev_cfg):
     # ----------------------------------------------------------------- #
     # TESTCASE: Emulate multiple IPv4 devices (no vlans)
@@ -381,9 +482,9 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
     ip_step = dev_cfg['ip_step']
 
     # configure the tx device(s)
-    devgrp_cfg = ost_pb.DeviceGroupConfigList()
-    devgrp_cfg.port_id.CopyFrom(ports.tx.port_id[0])
-    dg = devgrp_cfg.device_group.add()
+    tx_devgrp_cfg = ost_pb.DeviceGroupConfigList()
+    tx_devgrp_cfg.port_id.CopyFrom(ports.tx.port_id[0])
+    dg = tx_devgrp_cfg.device_group.add()
     dg.device_group_id.id = dgid_list.tx.device_group_id[0].id
     dg.core.name = "Host1"
     dg.device_count = num_devs
@@ -406,12 +507,12 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             ip.step.CopyFrom(ip6_address(ip_step).ip6)
         ip.default_gateway.CopyFrom(ip6addr.gateway)
 
-    drone.modifyDeviceGroup(devgrp_cfg)
+    drone.modifyDeviceGroup(tx_devgrp_cfg)
 
     # configure the rx device(s)
-    devgrp_cfg = ost_pb.DeviceGroupConfigList()
-    devgrp_cfg.port_id.CopyFrom(ports.rx.port_id[0])
-    dg = devgrp_cfg.device_group.add()
+    rx_devgrp_cfg = ost_pb.DeviceGroupConfigList()
+    rx_devgrp_cfg.port_id.CopyFrom(ports.rx.port_id[0])
+    dg = rx_devgrp_cfg.device_group.add()
     dg.device_group_id.id = dgid_list.rx.device_group_id[0].id
     dg.core.name = "Host1"
     dg.device_count = num_devs
@@ -434,7 +535,25 @@ def test_multiEmulDevNoVlan(drone, ports, dut, dut_ports, dut_ip,
             ip.step.CopyFrom(ip6_address(ip_step).ip6)
         ip.default_gateway.CopyFrom(ip6addr.gateway)
 
-    drone.modifyDeviceGroup(devgrp_cfg)
+    drone.modifyDeviceGroup(rx_devgrp_cfg)
+
+    # test end-to-end reachability - after resolving ARP/NDP
+    # FIXME: if and when ping RPC is added, move to where we ping DUT below
+    # FIXME: also add ping test to vlan case
+    time.sleep(10) # wait for DAD? otherwise we don't get replies for NS
+    drone.clearDeviceNeighbors(emul_ports)
+    drone.resolveDeviceNeighbors(emul_ports)
+    time.sleep(3) # wait for ARP resolution
+    # FIXME: if ping6/ping4 order is swapped, DUT does not send NS - have
+    # spent several hours trying to figure out why - to no avail :(
+    if has_ip6:
+        assert ping(request, drone, 6, emul_ports.port_id[0],
+                    tx_devgrp_cfg.device_group[0].Extensions[emul.ip6].address,
+                    rx_devgrp_cfg.device_group[0].Extensions[emul.ip6].address)
+    if has_ip4:
+        assert ping(request, drone, 4, emul_ports.port_id[0],
+                    tx_devgrp_cfg.device_group[0].Extensions[emul.ip4].address,
+                    rx_devgrp_cfg.device_group[0].Extensions[emul.ip4].address)
 
     # add the tx stream(s) - we may need more than one
     stream_id = ost_pb.StreamIdList()

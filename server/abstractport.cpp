@@ -410,10 +410,15 @@ void AbstractPort::updatePacketListInterleaved()
 
     qDebug("In %s", __FUNCTION__);
 
+    clearPacketList();
+    if (streamList_.size() == 0)
+    {
+        isSendQueueDirty_ = false;
+        return;
+    }
+
     // First sort the streams by ordinalValue
     qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
-
-    clearPacketList();
 
     for (int i = 0; i < streamList_.size(); i++)
     {

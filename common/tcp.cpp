@@ -55,7 +55,7 @@ void TcpProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
 
 QString TcpProtocol::name() const
 {
-    return QString("Transmission Control Protocol");
+    return QString("Transmission Control Protocol (state less)");
 }
 
 QString TcpProtocol::shortName() const

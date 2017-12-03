@@ -302,26 +302,26 @@ void PortsWindow::showMyReservedPortsOnly(bool enabled)
 
 void PortsWindow::on_tvStreamList_activated(const QModelIndex & index)
 {
-    QModelIndex currentPort = tvPortList->currentIndex();
-    StreamConfigDialog    *scd;
-    int ret;
-
-    if (proxyPortModel)
-        currentPort = proxyPortModel->mapToSource(currentPort);
-
     if (!index.isValid())
     {
         qDebug("%s: invalid index", __FUNCTION__);
         return;
     }
-    scd = new StreamConfigDialog(plm->port(currentPort), index.row(), this);
+
     qDebug("stream list activated\n");
-    ret = scd->exec();
 
-    if (ret == QDialog::Accepted)
-        plm->port(currentPort).recalculateAverageRates();
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
 
-    delete scd;
+    QList<Stream*> streams;
+    streams.append(curPort.mutableStreamByIndex(index.row(), false));
+
+    StreamConfigDialog scd(streams, curPort, this);
+    if (scd.exec() == QDialog::Accepted) {
+        curPort.recalculateAverageRates();
+        curPort.setLocalConfigChanged(true);
+    }
 }
 
 void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
@@ -345,12 +345,16 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
     {
         disconnect(&(plm->port(previous)), SIGNAL(portRateChanged(int, int)),
                 this, SLOT(updatePortRates()));
+        disconnect(&(plm->port(previous)),
+                   SIGNAL(localConfigChanged(int, int, bool)),
+                   this,
+                   SLOT(updateApplyHint(int, int, bool)));
     }
 
     if (!current.isValid())
     {    
-        qDebug("setting stacked widget to blank page");
-        swDetail->setCurrentIndex(2); // blank page
+        qDebug("setting stacked widget to welcome page");
+        swDetail->setCurrentIndex(0); // welcome page
     }
     else
     {
@@ -360,10 +364,21 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
         }
         else if (plm->isPort(current))
         {
-            swDetail->setCurrentIndex(0);    // port detail page
+            swDetail->setCurrentIndex(2);    // port detail page
             updatePortRates();
             connect(&(plm->port(current)), SIGNAL(portRateChanged(int, int)),
                     SLOT(updatePortRates()));
+            connect(&(plm->port(current)),
+                    SIGNAL(localConfigChanged(int, int, bool)),
+                    SLOT(updateApplyHint(int, int, bool)));
+            if (plm->port(current).isDirty())
+                updateApplyHint(plm->port(current).portGroupId(),
+                                plm->port(current).id(), true);
+            else if (plm->port(current).numStreams())
+                applyHint->setText("Use the Statistics window to transmit "
+                                   "packets");
+            else
+                applyHint->setText("");
         }
     }
 
@@ -373,7 +388,22 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
 void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
     const QModelIndex& bottomRight)
 {
-    qDebug("In %s", __FUNCTION__);
+    qDebug("In %s %d:(%d, %d) - %d:(%d, %d)", __FUNCTION__,
+            topLeft.parent().isValid(), topLeft.row(), topLeft.column(),
+            bottomRight.parent().isValid(), bottomRight.row(), bottomRight.column());
+
+    if (!topLeft.isValid() || !bottomRight.isValid())
+        return;
+
+    if (topLeft.parent() != bottomRight.parent())
+        return;
+
+    // If a port has changed, expand the port group
+    if (topLeft.parent().isValid())
+        tvPortList->expand(proxyPortModel ? 
+                proxyPortModel->mapFromSource(topLeft.parent()) : 
+                topLeft.parent());
+
 #if 0 // not sure why the >= <= operators are not overloaded in QModelIndex
     if ((tvPortList->currentIndex() >= topLeft) &&
         (tvPortList->currentIndex() <= bottomRight))
@@ -469,12 +499,7 @@ void PortsWindow::updateStreamViewActions()
         else
         {
             actionNew_Stream->setEnabled(true);
-
-            // Enable "Edit" only if the single range has a single row
-            if (tvStreamList->selectionModel()->selection().at(0).height() > 1)
-                actionEdit_Stream->setDisabled(true);
-            else
-                actionEdit_Stream->setEnabled(true);
+            actionEdit_Stream->setEnabled(true);
         }
 
         // Duplicate/Delete are always enabled as long as we have a selection
@@ -494,6 +519,18 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
+}
+
+void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
+        bool configChanged)
+{
+    if (configChanged)
+        applyHint->setText("Configuration has changed - "
+                           "<font color='red'><b>click Apply</b></font> "
+                           "to activate the changes");
+    else
+        applyHint->setText("Configuration activated. Use the Statistics "
+                           "window to transmit packets");
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
@@ -740,30 +777,59 @@ void PortsWindow::on_actionNew_Stream_triggered()
 {
     qDebug("New Stream Action");
 
-    // In case nothing is selected, insert 1 row at the top
-    int row = 0, count = 1;
+    QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
+    if (selectionModel->selection().size() > 1) {
+        qDebug("%s: Unexpected selection size %d, can't add", __FUNCTION__,
+                selectionModel->selection().size());
+        return;
+    }
+
+    // In case nothing is selected, insert 1 row at the end
+    StreamModel *streamModel = plm->getStreamModel();
+    int row = streamModel->rowCount(), count = 1;
 
     // In case we have a single range selected; insert as many rows as
     // in the singe selected range before the top of the selected range
-    if (tvStreamList->selectionModel()->selection().size() == 1)
+    if (selectionModel->selection().size() == 1)
     {
-        row = tvStreamList->selectionModel()->selection().at(0).top();
-        count = tvStreamList->selectionModel()->selection().at(0).height();
+        row = selectionModel->selection().at(0).top();
+        count = selectionModel->selection().at(0).height();
     }
 
-    plm->getStreamModel()->insertRows(row, count);    
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
+
+    QList<Stream*> streams;
+    for (int i = 0; i < count; i++)
+        streams.append(new Stream);
+
+    StreamConfigDialog scd(streams, curPort, this);
+    scd.setWindowTitle(tr("Add Stream"));
+    if (scd.exec() == QDialog::Accepted)
+        streamModel->insert(row, streams);
 }
 
 void PortsWindow::on_actionEdit_Stream_triggered()
 {
     qDebug("Edit Stream Action");
 
-    // Ensure we have only one range selected which contains only one row
-    if ((tvStreamList->selectionModel()->selection().size() == 1) &&
-        (tvStreamList->selectionModel()->selection().at(0).height() == 1))
-    {
-        on_tvStreamList_activated(tvStreamList->selectionModel()->
-                selection().at(0).topLeft());
+    QItemSelectionModel* streamModel = tvStreamList->selectionModel();
+    if (!streamModel->hasSelection())
+        return;
+
+    Port &curPort = plm->port(proxyPortModel ?
+        proxyPortModel->mapToSource(tvPortList->currentIndex()) :
+        tvPortList->currentIndex());
+
+    QList<Stream*> streams;
+    foreach(QModelIndex index, streamModel->selectedRows())
+        streams.append(curPort.mutableStreamByIndex(index.row(), false));
+
+    StreamConfigDialog scd(streams, curPort, this);
+    if (scd.exec() == QDialog::Accepted) {
+        curPort.recalculateAverageRates();
+        curPort.setLocalConfigChanged(true);
     }
 }
 

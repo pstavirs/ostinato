@@ -155,19 +155,21 @@ bool StreamModel::setData(const QModelIndex &index, const QVariant &value, int r
         {
         // Edit Supported Fields
         case StreamName:
-            mCurrentPort->streamByIndex(index.row())->setName(value.toString());
+            mCurrentPort->mutableStreamByIndex(index.row())
+                                        ->setName(value.toString());
             emit(dataChanged(index, index));
             return true;
 
         case StreamStatus:
-            mCurrentPort->streamByIndex(index.row())->setEnabled(value.toBool());
+            mCurrentPort->mutableStreamByIndex(index.row())
+                                        ->setEnabled(value.toBool());
             emit(dataChanged(index, index));
             return true;
 
         case StreamNextWhat:
             if (role == Qt::EditRole)
             {    
-                mCurrentPort->streamByIndex(index.row())->setNextWhat(
+                mCurrentPort->mutableStreamByIndex(index.row())->setNextWhat(
                         (Stream::NextWhat)value.toInt());
                 emit(dataChanged(index, index));
                 return true;
@@ -219,6 +221,30 @@ QVariant StreamModel::headerData(int section, Qt::Orientation orientation, int r
         return QString("%1").arg(section+1);
 
     return QVariant();
+}
+
+/*!
+ * Inserts streams before the given row
+ *
+ * StreamModel takes ownership of the passed streams; caller should
+ * not try to access them after calling this function
+ */
+bool StreamModel::insert(int row, QList<Stream*> &streams)
+{
+    int count = streams.size();
+    qDebug("insert row = %d", row);
+    qDebug("insert count = %d", count);
+    beginInsertRows(QModelIndex(), row, row+count-1);
+    for (int i = 0; i < count; i++) {
+        OstProto::Stream s;
+        streams.at(i)->protoDataCopyInto(s);
+        mCurrentPort->newStreamAt(row+i, &s);
+        delete streams.at(i);
+    }
+    streams.clear();
+    endInsertRows();
+
+    return true;
 }
 
 bool StreamModel::insertRows(int row, int count, const QModelIndex &/*parent*/) 

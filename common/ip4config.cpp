@@ -28,6 +28,8 @@ Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
     setupUi(this);
 
     leIpVersion->setValidator(new QIntValidator(0, 15, this));
+    leIpOptions->setValidator(new QRegExpValidator(QRegExp("[0-9a-fA-F]*"),
+                                                   this));
 
     connect(cmbIpSrcAddrMode, SIGNAL(currentIndexChanged(int)),
         this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));
@@ -176,6 +178,11 @@ void Ip4ConfigForm::loadWidget(AbstractProtocol *proto)
                 Ip4Protocol::ip4_dstAddrMask,
                 AbstractProtocol::FieldValue
             ).toUInt()).toString());
+    leIpOptions->setText(
+            proto->fieldData(
+                Ip4Protocol::ip4_options,
+                AbstractProtocol::FieldValue
+            ).toByteArray().toHex());
 }
 
 void Ip4ConfigForm::storeWidget(AbstractProtocol *proto)
@@ -263,6 +270,9 @@ void Ip4ConfigForm::storeWidget(AbstractProtocol *proto)
     proto->setFieldData(
             Ip4Protocol::ip4_dstAddrMask,
             QHostAddress(leIpDstAddrMask->text()).toIPv4Address());
+    proto->setFieldData(
+            Ip4Protocol::ip4_options,
+            QByteArray::fromHex(QByteArray().append(leIpOptions->text())));
 }
 
 /*

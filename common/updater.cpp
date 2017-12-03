@@ -37,6 +37,7 @@ Updater::Updater()
     Q_ASSERT(isVersionNewer("10.1", "2") == true);
     Q_ASSERT(isVersionNewer("0.10", "0.2") == true);
     Q_ASSERT(isVersionNewer("1.10.1", "1.2.3") == true);
+    Q_ASSERT(isVersionNewer("0.7.1", "0.8") == false);
 #endif
 }
 
@@ -54,7 +55,7 @@ void Updater::checkForNewVersion()
     file_ = new QTemporaryFile();
 
     reqHdr.setValue("Host", host);
-    reqHdr.setValue("UserAgent", userAgent());
+    reqHdr.setValue("User-Agent", userAgent());
 
     connect(http_, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), 
             this, SLOT(responseReceived(QHttpResponseHeader)));
@@ -120,8 +121,12 @@ bool Updater::isVersionNewer(QString newVersion, QString curVersion)
 
     for (int i = 0; i < qMin(curVer.size(), newVer.size()); i++) {
         bool isOk;
-        if (newVer.at(i).toUInt(&isOk) > curVer.at(i).toUInt(&isOk))
+        uint n = newVer.at(i).toUInt(&isOk);
+        uint c = curVer.at(i).toUInt(&isOk);
+        if (n > c)
             return true;
+        else if (n < c)
+            return false;
     }
     
     if (newVer.size() > curVer.size())

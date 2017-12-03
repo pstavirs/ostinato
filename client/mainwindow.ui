@@ -104,6 +104,9 @@
    </property>
   </action>
   <action name="actionHelpOnline" >
+   <property name="icon" >
+    <iconset resource="ostinato.qrc" >:/icons/help.png</iconset>
+   </property>
    <property name="text" >
     <string>Help (Online)</string>
    </property>

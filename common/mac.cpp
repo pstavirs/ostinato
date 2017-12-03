@@ -143,7 +143,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
             switch(attrib)
             {
                 case FieldName:            
-                    return QString("Desination");
+                    return QString("Destination");
                 case FieldValue:
                     return dstMac;
                 case FieldTextValue:
@@ -278,16 +278,14 @@ bool MacProtocol::setFieldData(int index, const QVariant &value,
     {
         case mac_dstAddr:
         {
-            quint64 mac = value.toString().toULongLong(&isOk, BASE_HEX);
-            if (isOk)
-                data.set_dst_mac(mac);
+            quint64 mac = value.toULongLong();
+            data.set_dst_mac(mac);
             break;
         }
         case mac_srcAddr:
         {
-            quint64 mac = value.toString().toULongLong(&isOk, BASE_HEX);
-            if (isOk)
-                data.set_src_mac(mac);
+            quint64 mac = value.toULongLong();
+            data.set_src_mac(mac);
             break;
         }
 
