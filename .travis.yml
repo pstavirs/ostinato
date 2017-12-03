@@ -15,7 +15,7 @@ matrix:
       compiler: gcc
 
 before_install:
-  - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew tap cartr/qt4 && brew tap-pin cartr/qt4 && brew install qt && brew install protobuf && ls -lR /usr/local/include; fi"
+  - "if [ $TRAVIS_OS_NAME = 'osx' ]; then brew update && brew tap cartr/qt4 && brew tap-pin cartr/qt4 && brew install qt@4 && brew install protobuf && brew install libpcap && ls -lR /usr/local/include; fi"
 
 addons:
   apt:
