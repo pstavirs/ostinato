@@ -21,11 +21,7 @@ before_install:
        brew tap-pin cartr/qt4 && \
        brew install qt@4 && \
        brew install protobuf && \
-       brew install libpcap && \
        ls -lR /usr/local/include; \
-       ls -lR /usr/local/opt; \
-       export CPLUS_INCLUDE_PATH=/usr/local/opt/libpcap/include/pcap; \
-       export LIBRARY_PATH=/usr/local/opt/libpcap/lib; \
      fi"
 
 addons:
