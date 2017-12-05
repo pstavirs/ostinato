@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = client server ostproto ostprotogui rpc binding extra
+SUBDIRS = client server ostproto ostprotogui rpc extra
 
 client.target = client
 client.file = client/ostinato.pro
@@ -15,6 +15,3 @@ ostprotogui.file = common/ostprotogui.pro
 ostprotogui.depends = extra
 
 rpc.file = rpc/pbrpc.pro
-
-binding.target = binding
-binding.depends = ostproto
