@@ -170,6 +170,7 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
             case e_STAT_BYTES_SENT_NIC:
                 return stats.tx_bytes_nic();
 #endif
+
             case e_STAT_RX_DROPS : return quint64(stats.rx_drops());
             case e_STAT_RX_ERRORS: return quint64(stats.rx_errors());
             case e_STAT_RX_FIFO_ERRORS: return quint64(stats.rx_fifo_errors());

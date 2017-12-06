@@ -27,6 +27,7 @@ FORMS += \
     hexdump.ui \
     payload.ui \
     sample.ui \
+    sign.ui \
     userscript.ui
 
 PROTOS = \
@@ -79,6 +80,7 @@ HEADERS += \
     hexdumpconfig.h \
     payloadconfig.h \
     sampleconfig.h \
+    signconfig.h \
     userscriptconfig.h
 
 SOURCES += \
@@ -118,6 +120,7 @@ SOURCES += \
     hexdumpconfig.cpp \
     payloadconfig.cpp \
     sampleconfig.cpp \
+    signconfig.cpp \
     userscriptconfig.cpp
 
 SOURCES += \

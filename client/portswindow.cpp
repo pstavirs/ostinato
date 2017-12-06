@@ -755,12 +755,19 @@ void PortsWindow::on_actionPort_Configuration_triggered()
     if (!plm->isPort(current))
         return;
 
+    Port &port = plm->port(current);
     OstProto::Port config;
-    config.set_transmit_mode(plm->port(current).transmitMode());
-    config.set_is_exclusive_control(plm->port(current).hasExclusiveControl());
-    config.set_user_name(plm->port(current).userName().toStdString());
+    // XXX: we don't call Port::protoDataCopyInto() to get config b'coz
+    // we want only the modifiable fields populated to send to Drone
+    // TODO: extend Port::protoDataCopyInto() to accept an optional param
+    // which says copy only modifiable fields
+    //plm->port(current).protoDataCopyInto(&config);
+    config.set_transmit_mode(port.transmitMode());
+    config.set_is_tracking_stream_stats(port.trackStreamStats());
+    config.set_is_exclusive_control(port.hasExclusiveControl());
+    config.set_user_name(port.userName().toStdString());
 
-    PortConfigDialog dialog(config, this);
+    PortConfigDialog dialog(config, port.getStats().state(), this);
 
     if (dialog.exec() == QDialog::Accepted)
         plm->portGroup(current.parent()).modifyPort(current.row(), config);

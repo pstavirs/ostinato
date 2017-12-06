@@ -27,7 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class PortConfigDialog : public QDialog, public Ui::PortConfigDialog
 {
 public:
-    PortConfigDialog(OstProto::Port &portConfig, QWidget *parent);
+    PortConfigDialog(OstProto::Port &portConfig,
+                     const OstProto::PortState& portState,
+                     QWidget *parent);
 
 private:
     virtual void accept();

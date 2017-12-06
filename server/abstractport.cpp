@@ -65,6 +65,29 @@ void AbstractPort::init()
 {
 }    
 
+/*! Can we modify Port with these params? Should modify cause port dirty? */
+bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
+{
+    bool allow = true;
+
+    *dirty = false;
+
+    if (port.has_transmit_mode()
+            && (port.transmit_mode() != data_.transmit_mode())) {
+        *dirty = true;
+        allow = !isTransmitOn();
+    }
+
+    if (port.has_is_tracking_stream_stats()
+            && (port.is_tracking_stream_stats()
+                    != data_.is_tracking_stream_stats())) {
+        *dirty = true;
+        allow = !isTransmitOn();
+    }
+
+    return allow;
+}
+
 bool AbstractPort::modify(const OstProto::Port &port)
 {
     bool ret = true;
@@ -81,6 +104,9 @@ bool AbstractPort::modify(const OstProto::Port &port)
 
     if (port.has_transmit_mode())
         data_.set_transmit_mode(port.transmit_mode());
+
+    if (port.has_is_tracking_stream_stats())
+        ret |= setTrackStreamStats(port.is_tracking_stream_stats());
 
     if (port.has_user_name()) {
         data_.set_user_name(port.user_name());
@@ -153,6 +179,13 @@ void AbstractPort::addNote(QString note)
     notes.append("</ul>");
 
     data_.set_notes(notes.toStdString());
+}
+
+bool AbstractPort::setTrackStreamStats(bool enable)
+{
+    data_.set_is_tracking_stream_stats(enable);
+
+    return true;
 }
 
 AbstractPort::Accuracy AbstractPort::rateAccuracy()
@@ -620,6 +653,54 @@ void AbstractPort::stats(PortStats *stats)
     stats->rxFrameErrors = (stats_.rxFrameErrors >= epochStats_.rxFrameErrors) ?
                         stats_.rxFrameErrors - epochStats_.rxFrameErrors :
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
+}
+
+void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
+{
+    if (streamStats_.contains(guid))
+    {
+        StreamStatsTuple sst = streamStats_.value(guid);
+        OstProto::StreamStats *s = stats->add_stream_stats();
+
+        s->mutable_stream_guid()->set_id(guid);
+        s->mutable_port_id()->set_id(id());
+
+        s->set_tx_pkts(sst.tx_pkts);
+        s->set_tx_bytes(sst.tx_bytes);
+        s->set_rx_pkts(sst.rx_pkts);
+        s->set_rx_bytes(sst.rx_bytes);
+    }
+}
+
+void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
+{
+    // FIXME: change input param to a non-OstProto type and/or have
+    // a getFirst/Next like API?
+    StreamStatsIterator i(streamStats_);
+    while (i.hasNext())
+    {
+        i.next();
+        StreamStatsTuple sst = i.value();
+        OstProto::StreamStats *s = stats->add_stream_stats();
+
+        s->mutable_stream_guid()->set_id(i.key());
+        s->mutable_port_id()->set_id(id());
+
+        s->set_tx_pkts(sst.tx_pkts);
+        s->set_tx_bytes(sst.tx_bytes);
+        s->set_rx_pkts(sst.rx_pkts);
+        s->set_rx_bytes(sst.rx_bytes);
+    }
+}
+
+void AbstractPort::resetStreamStats(uint guid)
+{
+    streamStats_.remove(guid);
+}
+
+void AbstractPort::resetStreamStatsAll()
+{
+    streamStats_.clear();
 }
 
 void AbstractPort::clearDeviceNeighbors()

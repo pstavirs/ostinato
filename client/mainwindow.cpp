@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setObjectName("portsDock");
     portsDock->setFeatures(
                 portsDock->features() & ~QDockWidget::DockWidgetClosable);
-    statsDock = new QDockWidget(tr("Statistics"), this);
+    statsDock = new QDockWidget(tr("Port Statistics"), this);
     statsDock->setObjectName("statsDock");
     statsDock->setFeatures(
                 statsDock->features() & ~QDockWidget::DockWidgetClosable);
@@ -165,6 +165,13 @@ MainWindow::~MainWindow()
     }
 
     delete pgl;
+
+    // We don't want to save state for Stream Stats Docks - so delete them
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks)
+        delete dock;
+    Q_ASSERT(findChildren<QDockWidget*>("streamStatsDock").size() == 0);
 
     QByteArray layout = saveState(0);
     appSettings->setValue(kApplicationWindowLayout, layout);
@@ -308,6 +315,16 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     defaultGeometry_.moveTo(geometry().topLeft());
     setGeometry(defaultGeometry_);
     restoreState(defaultLayout_, 0);
+
+    // Add streamStats as tabs
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks) {
+        dock->setFloating(false);
+        tabifyDockWidget(statsDock, dock);
+    }
+    statsDock->show();
+    statsDock->raise();
 
     actionViewShowMyReservedPortsOnly->setChecked(false);
 }

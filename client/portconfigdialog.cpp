@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portconfigdialog.h"
 #include "settings.h"
 
-PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
+PortConfigDialog::PortConfigDialog(
+    OstProto::Port &portConfig,
+    const OstProto::PortState &portState,
+    QWidget *parent)
         : QDialog(parent), portConfig_(portConfig)
 {
     QString currentUser(portConfig_.user_name().c_str());
@@ -64,6 +67,13 @@ PortConfigDialog::PortConfigDialog(OstProto::Port &portConfig, QWidget *parent)
     qDebug("reservedBy_ = %d", reservedBy_);
 
     exclusiveControlButton->setChecked(portConfig_.is_exclusive_control());
+    streamStatsButton->setChecked(portConfig_.is_tracking_stream_stats());
+
+    // Disable UI elements based on portState
+    if (portState.is_transmit_on()) {
+        transmitModeBox->setDisabled(true);
+        streamStatsButton->setDisabled(true);
+    }
 }
 
 void PortConfigDialog::accept()
@@ -95,6 +105,7 @@ void PortConfigDialog::accept()
     }
 
     pc.set_is_exclusive_control(exclusiveControlButton->isChecked());
+    pc.set_is_tracking_stream_stats(streamStatsButton->isChecked());
 
     // Update fields that have changed, clear the rest
     if (pc.transmit_mode() != portConfig_.transmit_mode())
@@ -111,6 +122,11 @@ void PortConfigDialog::accept()
         portConfig_.set_is_exclusive_control(pc.is_exclusive_control());
     else
         portConfig_.clear_is_exclusive_control();
+
+    if (pc.is_tracking_stream_stats() != portConfig_.is_tracking_stream_stats())
+        portConfig_.set_is_tracking_stream_stats(pc.is_tracking_stream_stats());
+    else
+        portConfig_.clear_is_tracking_stream_stats();
 
     QDialog::accept();
 }
