@@ -108,6 +108,7 @@ void PortStatsWindow::when_tvPortStats_selectionChanged(
     tbViewCapture->setDisabled(isEmpty);
 
     tbClear->setDisabled(isEmpty);
+    tbGetStreamStats->setDisabled(isEmpty);
 
     tbResolveNeighbors->setDisabled(isEmpty);
     tbClearNeighbors->setDisabled(isEmpty);
