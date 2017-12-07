@@ -20,3 +20,23 @@ ver_info {
     POST_TARGETDEPS += $$APP_VERSION_FILE 
     QMAKE_DISTCLEAN += $$APP_VERSION_FILE
 }
+
+pkg_info {
+    PKG_INFO_FILE = pkg_info.json
+    pkginfo.target = $$PKG_INFO_FILE
+    pkginfo.CONFIG = recursive
+    win32:pkginfo.commands = echo "{" \ 
+            " \"version\": \"$$APP_VERSION\"," \
+            " \"revision\": \"$$APP_REVISION\"" \
+            "}" \
+            > $$PKG_INFO_FILE
+    unix:pkginfo.commands = echo "\"{" \
+            " \\\"version\\\": \\\"$$APP_VERSION\\\"," \
+            " \\\"revision\\\": \\\"$$APP_REVISION\\\"" \
+            "}\"" \
+            > $$PKG_INFO_FILE
+
+    QMAKE_EXTRA_TARGETS += pkginfo
+    POST_TARGETDEPS += $$PKG_INFO_FILE
+    QMAKE_DISTCLEAN += $$PKG_INFO_FILE
+}
