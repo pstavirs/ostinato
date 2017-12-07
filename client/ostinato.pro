@@ -6,6 +6,7 @@ macx:ICON = icons/logo.icns
 QT += network script xml
 INCLUDEPATH += "../rpc/" "../common/"
 win32 {
+    QMAKE_LFLAGS += -static
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostprotogui -lostproto
         LIBS += -L"../rpc/debug" -lpbrpc

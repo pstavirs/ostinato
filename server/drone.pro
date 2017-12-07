@@ -8,6 +8,7 @@ linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
 INCLUDEPATH += "../rpc"
 win32 {
     CONFIG += console
+    QMAKE_LFLAGS += -static
     LIBS += -lwpcap -lpacket
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostproto
