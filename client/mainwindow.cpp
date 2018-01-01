@@ -405,7 +405,7 @@ void MainWindow::reportLocalServerError()
         tr("<p>If you have remote drone agents running, you can still add "
            "and connect to them.</p>"
            "<p>If you don't want to start the local drone agent at startup, "
-           "provide the <b>-s</b> option to Ostinato on the command line.</p>"
+           "provide the <b>-c</b> option to Ostinato on the command line.</p>"
            "<p>Learn about Ostinato's <a href='%1'>Controller-Agent "
            "architecture</a></p>").arg(jumpUrl("arch")));
 }
