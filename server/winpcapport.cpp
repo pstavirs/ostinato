@@ -170,8 +170,8 @@ void WinPcapPort::PortMonitor::run()
                 case kDirectionRx:
                     stats_->rxPkts += pkts;
                     stats_->rxBytes += bytes;
-                    stats_->rxPps = (pkts  * 1000000) / usec;
-                    stats_->rxBps = (bytes * 1000000) / usec;
+                    stats_->rxPps = qRound64(pkts  * 1e6 / usec);
+                    stats_->rxBps = qRound64(bytes * 1e6 / usec);
                     break;
 
                 case kDirectionTx:
@@ -192,8 +192,8 @@ void WinPcapPort::PortMonitor::run()
                         lastTxPkts = txPkts;
                         lastTxBytes = txBytes;
                     }
-                    stats_->txPps = (pkts  * 1000000) / usec;
-                    stats_->txBps = (bytes * 1000000) / usec;
+                    stats_->txPps = qRound64(pkts  * 1e6 / usec);
+                    stats_->txBps = qRound64(bytes * 1e6 / usec);
                     break;
 
                 default:

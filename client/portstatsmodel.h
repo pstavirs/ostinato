@@ -53,6 +53,8 @@ typedef enum {
     e_STAT_BYTES_SENT,
     e_STAT_BYTE_SEND_RATE,
     e_STAT_BYTE_RECV_RATE,
+    e_STAT_BIT_SEND_RATE,
+    e_STAT_BIT_RECV_RATE,
 #if 0
     e_STAT_FRAMES_RCVD_NIC,
     e_STAT_FRAMES_SENT_NIC,
@@ -87,6 +89,8 @@ static QStringList PortStatName = (QStringList()
     << "Bytes Sent"
     << "Byte Send Rate (Bps)"
     << "Byte Receive Rate (Bps)"
+    << "Bit Send Rate (bps)"
+    << "Bit Receive Rate (bps)"
 #if 0
     << "Frames Received (NIC)"
     << "Frames Sent (NIC)"
