@@ -295,8 +295,8 @@ void VariableFieldsWidget::on_type_currentIndexChanged(int index)
         bitmask->setInputMask("HHHHHHHH");
         bitmask->setText("FFFFFFFF");
         valueRange_->setRange(0, 0xFFFFFFFF);
-        count->setRange(0, 0xFFFF);
-        step->setRange(0, 0xFFFF);
+        count->setRange(0, 0x7FFFFFFF);
+        step->setRange(0, 0x7FFFFFFF);
         break;
     default:
         Q_ASSERT(false); // unreachable
