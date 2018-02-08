@@ -49,6 +49,7 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     else
         tvPortStats->setModel(model);
 
+    tvPortStats->setAlternatingRowColors(true);
     tvPortStats->verticalHeader()->setHighlightSections(false);
     tvPortStats->verticalHeader()->setDefaultSectionSize(
         tvPortStats->verticalHeader()->minimumSectionSize());
