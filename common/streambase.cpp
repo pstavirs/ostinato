@@ -631,6 +631,38 @@ bool StreamBase::preflightCheck(QStringList &result) const
             break;
     }
 
+    if (isFrameVariable()) {
+        if (frameVariableCount() > frameCount())
+        {
+            if (frameCount() == 1)
+            {
+                result << QObject::tr("Variable fields won't change since "
+                        "only 1 frame%1 is configured to be transmitted - "
+                        "increase number of packets to %L2 to have variable "
+                        "fields change across the configured range")
+                    .arg(sendUnit() == e_su_bursts ?
+                            " (number of bursts * packets per burst)" :
+                            "")
+                    .arg(frameVariableCount());
+                pass = false;
+            }
+            else if (frameCount() > 1)
+            {
+                result << QObject::tr("Variable fields will change for "
+                        "%L1 counts since only %L1 frames%2 are configured "
+                        "to be transmitted - increase number of packets "
+                        "from %L1 to %L3 to have variable fields change "
+                        "across the configured range")
+                    .arg(frameCount())
+                    .arg(sendUnit() == e_su_bursts ?
+                            " (number of bursts * packets per burst)" :
+                            "")
+                    .arg(frameVariableCount());
+                pass = false;
+            }
+        }
+    }
+
     if (frameCount() <= averagePacketRate() && nextWhat() != e_nw_goto_id)
     {
         result << QObject::tr("Only %L1 frames at the rate of "
