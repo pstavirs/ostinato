@@ -215,7 +215,7 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 
 bool PayloadProtocol::isProtocolFrameValueVariable() const
 {
-    return (AbstractProtocol::isProtocolFrameSizeVariable()
+    return (AbstractProtocol::isProtocolFrameValueVariable()
                ||  isProtocolFrameSizeVariable());
 }
 
