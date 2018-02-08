@@ -38,6 +38,7 @@ PortManager::PortManager()
     char errbuf[PCAP_ERRBUF_SIZE];
     AbstractPort::Accuracy txRateAccuracy;
 
+    qDebug("PCAP Lib: %s", pcap_lib_version());
     qDebug("Retrieving the device list from the local machine\n"); 
 
     if (pcap_findalldevs(&deviceList, errbuf) == -1)
