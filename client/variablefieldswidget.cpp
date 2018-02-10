@@ -63,7 +63,6 @@ VariableFieldsWidget::VariableFieldsWidget(QWidget *parent)
     stream_ = NULL;
     isProgLoad_ = false;
     lastSelectedProtocolIndex_ = 0;
-    lastSelectedVariableFieldIndex_ = 0;
 
     setupUi(this);
     attribGroup->setHidden(true);
@@ -109,8 +108,11 @@ void VariableFieldsWidget::load()
         AbstractProtocol *proto = iter->next();
         QListWidgetItem *protoItem = new QListWidgetItem;
 
-        protoItem->setData(Qt::UserRole, QVariant::fromValue(proto));
+        protoItem->setData(kProtocolPtrRole, QVariant::fromValue(proto));
+        protoItem->setData(kCurrentVarFieldRole,
+                QVariant::fromValue(proto->variableFieldCount() ? 0 : -1));
         protoItem->setText(proto->shortName());
+        decorateProtocolItem(protoItem);
 
         protocolList->addItem(protoItem);
     }
@@ -121,9 +123,6 @@ void VariableFieldsWidget::load()
 
     // XXX: protocolList->setCurrentRow() above will emit currentItemChanged
     // which will load variableFieldsList - no need to load it explicitly
-
-    if (lastSelectedVariableFieldIndex_  < variableFieldList->count())
-        variableFieldList->setCurrentRow(lastSelectedVariableFieldIndex_);
 }
 
 void VariableFieldsWidget::store()
@@ -148,7 +147,7 @@ void VariableFieldsWidget::on_protocolList_currentItemChanged(
     if (current == NULL)
         goto _exit;
 
-    proto = current->data(Qt::UserRole).value<AbstractProtocol*>();
+    proto = current->data(kProtocolPtrRole).value<AbstractProtocol*>();
     loadProtocolFields(proto);
 
     variableFieldList->clear();
@@ -166,6 +165,9 @@ void VariableFieldsWidget::on_protocolList_currentItemChanged(
     // now so that signals are emitted when we add/select a VF
     field->setCurrentIndex(-1);
     type->setCurrentIndex(-1);
+
+    variableFieldList->setCurrentRow(
+            current->data(kCurrentVarFieldRole).value<int>());
 
     lastSelectedProtocolIndex_ = protocolList->currentRow();
 
@@ -185,7 +187,7 @@ void VariableFieldsWidget::on_variableFieldList_currentItemChanged(
     if (current == NULL)
         goto _exit;
 
-    vf = current->data(Qt::UserRole).value<OstProto::VariableField>();
+    vf = current->data(kVarFieldRole).value<OstProto::VariableField>();
 
     isProgLoad_ = true;
     
@@ -200,8 +202,9 @@ void VariableFieldsWidget::on_variableFieldList_currentItemChanged(
 
     isProgLoad_ = false;
 
-    lastSelectedVariableFieldIndex_ = variableFieldList->currentRow();
-
+    protocolList->currentItem()->setData(
+            kCurrentVarFieldRole,
+            QVariant::fromValue(variableFieldList->currentRow()));
 _exit:
     attribGroup->setHidden(current == NULL);
     deleteButton->setEnabled(current != NULL);
@@ -214,7 +217,7 @@ void VariableFieldsWidget::on_addButton_clicked()
     if (!protoItem)
         return;
 
-    AbstractProtocol *proto = protoItem->data(Qt::UserRole)
+    AbstractProtocol *proto = protoItem->data(kProtocolPtrRole)
                                             .value<AbstractProtocol*>();
     OstProto::VariableField vf;
     QListWidgetItem *vfItem = new QListWidgetItem;
@@ -222,6 +225,9 @@ void VariableFieldsWidget::on_addButton_clicked()
     proto->appendVariableField(vf);
     setVariableFieldItem(vfItem, proto, vf);
     variableFieldList->addItem(vfItem);
+    variableFieldList->setCurrentItem(vfItem);
+
+    decorateProtocolItem(protoItem);
 }
 
 void VariableFieldsWidget::on_deleteButton_clicked()
@@ -232,10 +238,21 @@ void VariableFieldsWidget::on_deleteButton_clicked()
     if (!protoItem || (vfIdx < 0))
         return;
 
-    AbstractProtocol *proto = protoItem->data(Qt::UserRole)
+    AbstractProtocol *proto = protoItem->data(kProtocolPtrRole)
                                             .value<AbstractProtocol*>();
     proto->removeVariableField(vfIdx);
     delete variableFieldList->takeItem(vfIdx);
+
+    // XXX: takeItem() above triggers a currentChanged, but the signal
+    // is emitted after the "current" is changed to an item after
+    // or before the item(s) to be deleted but before the item(s)
+    // are actually deleted - so the current inside that slot is not
+    // correct and we need to re-save it again
+    protocolList->currentItem()->setData(
+            kCurrentVarFieldRole,
+            QVariant::fromValue(variableFieldList->currentRow()));
+
+    decorateProtocolItem(protoItem);
 }
 
 void VariableFieldsWidget::on_field_currentIndexChanged(int index)
@@ -268,8 +285,9 @@ void VariableFieldsWidget::on_type_currentIndexChanged(int index)
     if ((index < 0) || !protocolList->currentItem())
         return;
 
-    AbstractProtocol *proto = protocolList->currentItem()->data(Qt::UserRole)
-                                    .value<AbstractProtocol*>();
+    AbstractProtocol *proto = protocolList->currentItem()
+                                    ->data(kProtocolPtrRole)
+                                        .value<AbstractProtocol*>();
     int protoSize = proto->protocolFrameSize();
 
     switch (index)
@@ -326,10 +344,19 @@ void VariableFieldsWidget::updateCurrentVariableField()
     vf.set_step(step->value());
 
     QListWidgetItem *protoItem = protocolList->currentItem();
-    AbstractProtocol *proto = protoItem->data(Qt::UserRole)
+    AbstractProtocol *proto = protoItem->data(kProtocolPtrRole)
                                             .value<AbstractProtocol*>();
     proto->mutableVariableField(variableFieldList->currentRow())->CopyFrom(vf);
     setVariableFieldItem(variableFieldList->currentItem(), proto, vf);
+}
+
+void VariableFieldsWidget::decorateProtocolItem(QListWidgetItem *item)
+{
+    AbstractProtocol *proto = item->data(kProtocolPtrRole)
+                                            .value<AbstractProtocol*>();
+    QFont font = item->font();
+    font.setBold(proto->variableFieldCount() > 0);
+    item->setFont(font);
 }
 
 void VariableFieldsWidget::loadProtocolFields(
@@ -419,7 +446,7 @@ void VariableFieldsWidget::setVariableFieldItem(
     else
         to = (vf.value() + (vf.count()-1)*vf.step()) & vf.mask();
 
-    item->setData(Qt::UserRole, QVariant::fromValue(vf));
+    item->setData(kVarFieldRole, QVariant::fromValue(vf));
     itemText = QString("%1 %2 %3 from %4 to %5")
             .arg(protocol->shortName())
             .arg(fieldName)
