@@ -2,11 +2,8 @@
 
 [![Build Status](https://travis-ci.org/pstavirs/ostinato.svg?branch=master)](https://travis-ci.org/pstavirs/ostinato)
 
-Ostinato is an open-source, cross-platform network packet crafter/traffic generator and analyzer with a friendly GUI and powerful python API. Craft and send packets of several streams with different protocols at different rates. 
+This is the code repository for the Ostinato network packet crafter and traffic generator
 
-Ostinato aims to be "Wireshark in Reverse" and become complementary to Wireshark.
+Visit https://ostinato.org for demo video and details
 
 License: GPLv3+ (see [COPYING](https://raw.githubusercontent.com/pstavirs/ostinato/master/COPYING))
-
-For more information visit http://ostinato.org.
-
