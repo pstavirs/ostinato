@@ -101,7 +101,13 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="variableFieldList" />
+        <widget class="XListWidget" name="variableFieldList" >
+         <property name="whatsThis" >
+          <string>A variable field is a protocol field which you want to vary across packets
+
+To create one, select the protocol on the left and click '+' above</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -264,6 +270,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XListWidget</class>
+   <extends>QListWidget</extends>
+   <header>xlistwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>protocolList</tabstop>
   <tabstop>variableFieldList</tabstop>
