@@ -663,7 +663,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
         }
     }
 
-    if (frameCount() <= averagePacketRate() && nextWhat() != e_nw_goto_id)
+    if (frameCount() < averagePacketRate() && nextWhat() != e_nw_goto_id)
     {
         result << QObject::tr("Only %L1 frames at the rate of "
                 "%L2 frames/sec are configured to be transmitted. "
