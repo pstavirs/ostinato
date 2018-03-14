@@ -846,7 +846,7 @@ void PortsWindow::on_actionDuplicate_Stream_triggered()
     if (model->hasSelection())
     {
         bool isOk;
-        int count = QInputDialog::getInteger(this, "Duplicate Streams",
+        int count = QInputDialog::getInt(this, "Duplicate Streams",
                 "Count", 1, 1, 9999, 1, &isOk);
 
         if (!isOk)

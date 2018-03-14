@@ -620,9 +620,9 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
             else
                 field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
             qDebug("<<< (%d, %db) %s >>>", proto.size(), lastbitpos,
-                    QString(proto.toHex()).toAscii().constData());
+                    qPrintable(QString(proto.toHex())));
             qDebug("  < %d: (%db/%dB) %s >", i, bits, field.size(),
-                    QString(field.toHex()).toAscii().constData());
+                    qPrintable(QString(field.toHex())));
 
             if (bits == (uint) field.size() * 8)
             {

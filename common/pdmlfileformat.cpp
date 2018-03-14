@@ -91,7 +91,7 @@ bool PdmlFileFormat::save(const OstProto::StreamConfigList streams,
         goto _fail;
     }
 
-    qDebug("intermediate PCAP %s", pcapFile.fileName().toAscii().constData());
+    qDebug("intermediate PCAP %s", qPrintable(pcapFile.fileName()));
 
     connect(fmt, SIGNAL(target(int)), this, SIGNAL(target(int)));
     connect(fmt, SIGNAL(progress(int)), this, SIGNAL(progress(int)));
@@ -99,7 +99,7 @@ bool PdmlFileFormat::save(const OstProto::StreamConfigList streams,
     emit status("Writing intermediate PCAP file...");
     isOk = fmt->save(streams, pcapFile.fileName(), error);
 
-    qDebug("generating PDML %s", fileName.toAscii().constData());
+    qDebug("generating PDML %s", qPrintable(fileName));
     emit status("Converting PCAP to PDML...");
     emit target(0);
 

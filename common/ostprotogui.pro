@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += network xml script
+QT += widgets network xml script
 INCLUDEPATH += "../extra/qhexedit2/src"
 LIBS += \
     -lprotobuf

@@ -3,7 +3,7 @@ CONFIG += qt ver_info
 macx: TARGET = Ostinato
 win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
-QT += network script xml
+QT += widgets network script xml
 INCLUDEPATH += "../rpc/" "../common/"
 win32 {
     QMAKE_LFLAGS += -static

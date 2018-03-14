@@ -115,7 +115,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _err_unzip_fail;
         }
 
-        qDebug("decompressing to %s", file2.fileName().toAscii().constData());
+        qDebug("decompressing to %s", qPrintable(file2.fileName()));
 
         gzip.setStandardOutputFile(file2.fileName());
         gzip.start(OstProtoLib::gzipPath(), 
@@ -195,7 +195,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _non_pdml;
         }
 
-        qDebug("generating PDML %s", pdmlFile.fileName().toAscii().constData());
+        qDebug("generating PDML %s", qPrintable(pdmlFile.fileName()));
         emit status("Generating PDML...");
         emit target(0);
 
@@ -265,7 +265,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("generating text file (original) %s", 
-                originalTextFile.fileName().toAscii().constData());
+                qPrintable(originalTextFile.fileName()));
 
         emit status("Preparing original PCAP for diff...");
         emit target(0);
@@ -325,7 +325,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("generating text file (imported) %s", 
-                importedTextFile.fileName().toAscii().constData());
+                qPrintable(importedTextFile.fileName()));
 
         emit status("Preparing imported PCAP for diff...");
         emit target(0);
@@ -370,9 +370,9 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("diffing %s and %s > %s", 
-                originalTextFile.fileName().toAscii().constData(),
-                importedTextFile.fileName().toAscii().constData(),
-                diffFile.fileName().toAscii().constData());
+                qPrintable(originalTextFile.fileName()),
+                qPrintable(importedTextFile.fileName()),
+                qPrintable(diffFile.fileName()));
 
         emit status("Taking diff...");
         emit target(0);

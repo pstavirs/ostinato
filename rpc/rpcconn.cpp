@@ -59,7 +59,7 @@ RpcConnection::RpcConnection(int socketDescriptor,
 RpcConnection::~RpcConnection()
 { 
     qDebug("destroying connection to %s: %d", 
-            clientSock->peerAddress().toString().toAscii().constData(),
+            qPrintable(clientSock->peerAddress().toString()),
             clientSock->peerPort());
 
     // If still connected, disconnect 
@@ -89,7 +89,7 @@ void RpcConnection::start()
                                       .arg(clientSock->peerPort())));
 
     qDebug("accepting new connection from %s: %d", 
-            clientSock->peerAddress().toString().toAscii().constData(),
+            qPrintable(clientSock->peerAddress().toString()),
             clientSock->peerPort());
     inStream = new google::protobuf::io::CopyingInputStreamAdaptor(
                             new PbQtInputStream(clientSock));
@@ -240,7 +240,7 @@ void RpcConnection::sendNotification(int notifType,
 void RpcConnection::on_clientSock_disconnected()
 {
     qDebug("connection closed from %s: %d",
-            clientSock->peerAddress().toString().toAscii().constData(),
+            qPrintable(clientSock->peerAddress().toString()),
             clientSock->peerPort());
 
     deleteLater();
@@ -249,8 +249,7 @@ void RpcConnection::on_clientSock_disconnected()
 
 void RpcConnection::on_clientSock_error(QAbstractSocket::SocketError socketError)
 {
-    qDebug("%s (%d)", clientSock->errorString().toAscii().constData(), 
-            socketError);
+    qDebug("%s (%d)", qPrintable(clientSock->errorString()), socketError);
 }
 
 void RpcConnection::on_clientSock_dataAvail()
@@ -399,7 +398,8 @@ _error_exit2:
     return;
 }
 
-void RpcConnection::connIdMsgHandler(QtMsgType /*type*/, const char* msg)
+void RpcConnection::connIdMsgHandler(QtMsgType /*type*/,
+        const QMessageLogContext &/*context*/, const QString &msg)
 {
     if (connId.hasLocalData()) {
         QString newMsg(*connId.localData());
@@ -410,6 +410,6 @@ void RpcConnection::connIdMsgHandler(QtMsgType /*type*/, const char* msg)
         return;
     }
 
-    fprintf(stderr, "%s\n", msg);
+    fprintf(stderr, "%s\n", qPrintable(msg));
     fflush(stderr);
 }

@@ -277,6 +277,7 @@ bool StreamModel::removeRows(int row, int count, const QModelIndex &/*parent*/)
 
 void StreamModel::setCurrentPortIndex(const QModelIndex &current)
 {
+    beginResetModel();
     if (!current.isValid() || !pgl->isPort(current))
     {
         qDebug("current is either invalid or not a port");
@@ -298,7 +299,7 @@ void StreamModel::setCurrentPortIndex(const QModelIndex &current)
         connect(mCurrentPort, SIGNAL(streamListChanged(int, int)),
                 this, SLOT(when_mCurrentPort_streamListChanged(int, int)));
     }
-    reset();
+    endResetModel();
 }
 
 void StreamModel::when_mCurrentPort_streamListChanged(int portGroupId, 
@@ -309,6 +310,9 @@ void StreamModel::when_mCurrentPort_streamListChanged(int portGroupId,
     {
         if ((quint32(portGroupId) == mCurrentPort->portGroupId())
                 && (quint32(portId) == mCurrentPort->id()))
-            reset();
+        {
+            beginResetModel();
+            endResetModel();
+        }
     }
 }

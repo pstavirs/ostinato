@@ -308,6 +308,8 @@ void PortStatsModel::when_portListChanged()
 {
     int i, count = 0;
 
+    beginResetModel();
+
     // recalc numPorts
     while (numPorts.size())
         numPorts.removeFirst();
@@ -318,7 +320,7 @@ void PortStatsModel::when_portListChanged()
         numPorts.append(count);
     }
 
-    reset();
+    endResetModel();
 }
 
 // FIXME: unused? if used, the index calculation row/column needs to be swapped

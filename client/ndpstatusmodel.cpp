@@ -142,14 +142,17 @@ QVariant NdpStatusModel::data(const QModelIndex &index, int role) const
 
 void NdpStatusModel::setDeviceIndex(Port *port, int deviceIndex)
 {
+    beginResetModel();
     port_ = port;
     deviceIndex_ = deviceIndex;
     if (port_)
         neighbors_ = port_->deviceNeighbors(deviceIndex);
-    reset();
+    endResetModel();
 }
 
 void NdpStatusModel::updateNdpStatus()
 {
-    reset();
+    // FIXME: why needed?
+    beginResetModel();
+    endResetModel();
 }

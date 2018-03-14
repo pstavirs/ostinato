@@ -1412,7 +1412,7 @@ void PortGroup::viewCapture(QList<uint> *portList)
         portId->set_id(portList->at(i));
 
         capFile->open(QIODevice::ReadWrite|QIODevice::Truncate);
-        qDebug("Temp CapFile = %s", capFile->fileName().toAscii().constData());
+        qDebug("Temp CapFile = %s", qPrintable(capFile->fileName()));
         controller->setBinaryBlob(capFile);
 
         serviceStub->getCaptureBuffer(controller, portId, buf,

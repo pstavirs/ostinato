@@ -343,5 +343,7 @@ void PortModel::portGroupRemoved()
 
 void PortModel::when_portListChanged()
 {
-    reset();
+    // FIXME: why needed?
+    beginResetModel();
+    endResetModel();
 }

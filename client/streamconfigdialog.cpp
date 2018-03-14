@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
 
+#include <QMessageBox>
+
 extern ProtocolManager *OstProtocolManager;
 extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
@@ -429,7 +431,7 @@ void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
     }
     else
     {
-        qWarning("Unhandled/Unknown PktLenMode = %s", mode.toAscii().data());
+        qWarning("Unhandled/Unknown PktLenMode = %s", qPrintable(mode));
     }
 }
 
@@ -710,9 +712,9 @@ void StreamConfigDialog::on_lePattern_editingFinished()
     QString    str;
 
     num = lePattern->text().remove(QChar(' ')).toULong(&isOk, 16);
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
     lePattern->setText(uintToHexStr(num, str, 4));
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
 }
 #endif
 
@@ -1186,7 +1188,7 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
     uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
     uint frameLen;
 
-    qDebug("start of %s(%s)", __FUNCTION__, text.toAscii().constData());
+    qDebug("start of %s(%s)", __FUNCTION__, qPrintable(text));
     if (pStream->lenMode() == Stream::e_fl_fixed)
         frameLen = pStream->frameLen();
     else

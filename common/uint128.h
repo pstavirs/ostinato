@@ -157,12 +157,12 @@ inline UInt128 UInt128::operator|(const UInt128 &other) const
     return UInt128(hi_ | other.hi_, lo_ | other.lo_);
 }
 
-template <> inline UInt128 qFromBigEndian<UInt128>(const uchar *src)
+template <> inline UInt128 qFromBigEndian<UInt128>(const void *src)
 {
     quint64 hi, lo;
 
     hi = qFromBigEndian<quint64>(src);
-    lo = qFromBigEndian<quint64>(src+8);
+    lo = qFromBigEndian<quint64>((uchar*)src+8);
 
     return UInt128(hi, lo);
 }

@@ -177,7 +177,7 @@ bool StreamListDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
         if ((event->type() == QEvent::MouseButtonRelease)
             || (event->type() == QEvent::MouseButtonDblClick))
         {
-            QRect checkRect = check(option, option.rect, Qt::Checked);
+            QRect checkRect = doCheck(option, option.rect, Qt::Checked);
             QRect emptyRect;
             doLayout(option, &checkRect, &emptyRect, &emptyRect, false);
             if (!checkRect.contains(static_cast<QMouseEvent*>(event)->pos()))
