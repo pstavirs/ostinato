@@ -17,9 +17,7 @@ matrix:
 before_install:
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then \
        brew update && \
-       brew tap cartr/qt4 && \
-       brew tap-pin cartr/qt4 && \
-       brew install qt@4 && \
+       brew install qt && \
        brew install protobuf && \
        ls -lR /usr/local/include; \
      fi"
@@ -27,8 +25,7 @@ before_install:
 addons:
   apt:
     packages:
-      - libqt4-dev
-      - qt4-qmake
+      - qtbase5-dev
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
