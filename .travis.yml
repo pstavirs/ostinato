@@ -26,6 +26,7 @@ addons:
   apt:
     packages:
       - qtbase5-dev
+      - qtscript5-dev
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
