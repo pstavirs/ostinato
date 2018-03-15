@@ -157,7 +157,11 @@ inline UInt128 UInt128::operator|(const UInt128 &other) const
     return UInt128(hi_ | other.hi_, lo_ | other.lo_);
 }
 
+#if QT_VERSION >= 0x050700
 template <> inline UInt128 qFromBigEndian<UInt128>(const void *src)
+#else
+template <> inline UInt128 qFromBigEndian<UInt128>(const uchar *src)
+#endif
 {
     quint64 hi, lo;
 
