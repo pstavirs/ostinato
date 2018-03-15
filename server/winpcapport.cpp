@@ -88,7 +88,7 @@ bool WinPcapPort::hasExclusiveControl()
                 + "/bindconfig.exe");
     int exitCode;
 
-    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+    qDebug("%s: %s", __FUNCTION__, qPrintable(portName));
 
     if (!QFile::exists(bindConfigFilePath))
         return false;
@@ -111,7 +111,7 @@ bool WinPcapPort::setExclusiveControl(bool exclusive)
                 + "/bindconfig.exe");
     QString status;
 
-    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+    qDebug("%s: %s", __FUNCTION__, qPrintable(portName));
 
     if (!QFile::exists(bindConfigFilePath))
         return false;

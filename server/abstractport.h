@@ -33,7 +33,7 @@ class PacketBuffer;
 class QIODevice;
 
 // TODO: send notification back to client(s)
-#define notify qWarning
+#define Xnotify qWarning
 
 class AbstractPort
 {

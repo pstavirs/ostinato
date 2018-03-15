@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcapextra.h"
 #include "../common/sign.h"
 
-#define notify qWarning // FIXME
+#define Xnotify qWarning // FIXME
 
 PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats)
     : streamStats_(portStreamStats)
 {
-    device_ = QString::fromAscii(device);
+    device_ = QString::fromLatin1(device);
     stop_ = false;
     state_ = kNotStarted;
     isDirectional_ = true;
@@ -65,12 +65,12 @@ void PcapRxStats::run()
                     flags, 100 /* ms */, errbuf);
     if (handle_ == NULL) {
         if (flags && QString(errbuf).contains("promiscuous")) {
-            notify("Unable to set promiscuous mode on <%s> - "
+            Xnotify("Unable to set promiscuous mode on <%s> - "
                     "stream stats rx will not work", qPrintable(device_));
             goto _exit;
         }
         else {
-            notify("Unable to open <%s> [%s] - stream stats rx will not work",
+            Xnotify("Unable to open <%s> [%s] - stream stats rx will not work",
                     qPrintable(device_), errbuf);
             goto _exit;
         }
