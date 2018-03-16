@@ -20,7 +20,7 @@ before_install:
        brew install qt5 && \
        brew link qt5 --force && \
        brew install protobuf && \
-       ls -lR /usr/local/include; \
+       ls -lR /usr/local/include/google/protobuf; \
      fi"
 
 addons:
