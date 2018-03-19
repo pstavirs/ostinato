@@ -22,7 +22,7 @@ before_install:
        brew install protobuf && \
        ls -lR /usr/local/include/google/protobuf; \
        which clang++; \
-       clang++ -E -x c++ - -v < /dev/null \
+       clang++ -E -x c++ - -v < /dev/null; \
      fi"
 
 addons:
