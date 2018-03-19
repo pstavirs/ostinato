@@ -15,13 +15,13 @@ matrix:
 
 before_install:
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then \
-       brew update && \
        brew install qt5 && \
        brew link qt5 --force && \
        brew install protobuf && \
        ls -lR /usr/local/include/google/protobuf; \
        which clang++; \
        clang++ -E -x c++ - -v < /dev/null; \
+       export CPLUS_INCLUDE_PATH=/usr/local/include; \
      fi"
 
 addons:
