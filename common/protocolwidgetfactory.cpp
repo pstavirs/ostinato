@@ -187,7 +187,7 @@ AbstractProtocolConfigForm* ProtocolWidgetFactory::createConfigWidget(
     
     Q_ASSERT_X(pc != NULL, 
                __FUNCTION__, 
-               QString(protoNumber).toAscii().constData());
+               qPrintable(QString(protoNumber)));
 
     p = (*pc)();
 

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 #include "stream.h"
 #include "packetmodel.h"
-#include "modeltest.h"
 
 #include <QFileDialog>
 #include <QProgressDialog>
@@ -42,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 class AbstractProtocolConfigForm;
+class ModelTest;
 
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {

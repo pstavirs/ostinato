@@ -116,4 +116,6 @@ include(../install.pri)
 include(../version.pri)
 
 # TODO(LOW): Test only
-CONFIG(debug, debug|release):include(modeltest.pri)
+INCLUDEPATH += "../extra/modeltest"
+CONFIG(debug, debug|release): LIBS += -L"../extra/modeltest/$(OBJECTS_DIR)/" -lmodeltest
+CONFIG(debug, debug|release): QT += testlib

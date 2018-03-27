@@ -203,8 +203,8 @@ AbstractProtocol* ProtocolManager::createProtocol(int protoNumber,
     
     Q_ASSERT_X(pc != NULL, 
                __FUNCTION__, 
-               QString("No Protocol Creator registered for protocol %1")
-                    .arg(protoNumber).toAscii().constData());
+               qPrintable(QString("No Protocol Creator registered for protocol %1")
+                    .arg(protoNumber)));
 
     p = (*pc)(stream, parent);
 

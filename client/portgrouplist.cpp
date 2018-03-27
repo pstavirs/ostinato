@@ -21,8 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "params.h"
 
-// TODO(LOW): Remove
-#include <modeltest.h>
+#include "modeltest.h"
 
 PortGroupList::PortGroupList()
     : mPortGroupListModel(this), 
