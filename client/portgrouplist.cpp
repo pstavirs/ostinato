@@ -30,7 +30,7 @@ PortGroupList::PortGroupList()
       mDeviceGroupModel(this),
       mDeviceModel(this)
 {
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     streamModelTester_ = NULL;
     portModelTester_ = NULL;
     portStatsModelTester_ = NULL;

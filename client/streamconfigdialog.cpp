@@ -175,7 +175,7 @@ StreamConfigDialog::StreamConfigDialog(
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     mpPacketModelTester = NULL;
 #else
     mpPacketModelTester = new ModelTest(mpPacketModel);

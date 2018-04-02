@@ -115,7 +115,8 @@ QMAKE_DISTCLEAN += object_script.*
 include(../install.pri)
 include(../version.pri)
 
-# TODO(LOW): Test only
 INCLUDEPATH += "../extra/modeltest"
+greaterThan(QT_MINOR_VERSION, 6) {
 CONFIG(debug, debug|release): LIBS += -L"../extra/modeltest/$(OBJECTS_DIR)/" -lmodeltest
 CONFIG(debug, debug|release): QT += testlib
+}
