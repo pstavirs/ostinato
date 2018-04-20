@@ -114,6 +114,7 @@ QMAKE_DISTCLEAN += object_script.*
 
 include(../install.pri)
 include(../version.pri)
+include(../options.pri)
 
 INCLUDEPATH += "../extra/modeltest"
 greaterThan(QT_MINOR_VERSION, 6) {

@@ -57,12 +57,12 @@ StreamStatsModel::StreamStatsModel(QObject *parent)
     clearStats();
 }
 
-int StreamStatsModel::rowCount(const QModelIndex &parent) const
+int StreamStatsModel::rowCount(const QModelIndex &/*parent*/) const
 {
     return guidList_.size();
 }
 
-int StreamStatsModel::columnCount(const QModelIndex &parent) const
+int StreamStatsModel::columnCount(const QModelIndex &/*parent*/) const
 {
     if (!portList_.size())
         return 0;

@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 import "protocol.proto";
-import "dot3.proto";
-import "llc.proto";
 
 package OstProto;
 

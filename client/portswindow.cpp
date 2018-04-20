@@ -553,7 +553,7 @@ void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
         goto _EXIT;
     }
 
-    qDebug("currentChanged %llx", current.internalId());
+    qDebug("currentChanged %p", (void*)current.internalId());
 
     if (plm->isPortGroup(current))
     {

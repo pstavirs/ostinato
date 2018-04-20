@@ -144,3 +144,4 @@ SOURCES += \
 QMAKE_DISTCLEAN += object_script.*
 
 include(../protobuf.pri)
+include(../options.pri)
