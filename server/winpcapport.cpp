@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
-WinPcapPort::WinPcapPort(int id, const char *device)
-    : PcapPort(id, device) 
+WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
+    : PcapPort(id, device)
 {
     monitorRx_->stop();
     monitorTx_->stop();
@@ -39,6 +39,8 @@ WinPcapPort::WinPcapPort(int id, const char *device)
 
     monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
+
+    data_.set_description(description);
 
     adapter_ = PacketOpenAdapter((CHAR*)device);
     if (!adapter_)

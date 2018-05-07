@@ -26,25 +26,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "winpcapport.h"
 
 #include <QStringList>
-#include <pcap.h>
 
 PortManager *PortManager::instance_ = NULL;
+
+#if defined(Q_OS_WIN32)
+#include <QUuid>
+#include <ipHlpApi.h>
+#define NETIO_STATUS NTSTATUS
+// Define the function prototypes since they are not defined in ipHlpApi.h
+NETIO_STATUS WINAPI ConvertInterfaceGuidToLuid(
+        const GUID *InterfaceGuid, PNET_LUID InterfaceLuid);
+NETIO_STATUS WINAPI ConvertInterfaceLuidToAlias(
+        const NET_LUID *InterfaceLuid, PWSTR InterfaceAlias, SIZE_T Length);
+
+#define MyGetProcAddress(hDll, function) \
+    hDll ? reinterpret_cast<decltype(&function)> (GetProcAddress(hDll, #function)) : NULL;
+#endif
 
 PortManager::PortManager()
 {
     int i;
-    pcap_if_t *deviceList;
     pcap_if_t *device;
-    char errbuf[PCAP_ERRBUF_SIZE];
     AbstractPort::Accuracy txRateAccuracy;
 
     qDebug("PCAP Lib: %s", pcap_lib_version());
     qDebug("Retrieving the device list from the local machine\n"); 
 
-    if (pcap_findalldevs(&deviceList, errbuf) == -1)
-        qDebug("Error in pcap_findalldevs_ex: %s\n", errbuf);
-
     txRateAccuracy = rateAccuracy();
+
+    pcap_if_t *deviceList = GetPortList();
 
     for(device = deviceList, i = 0; device != NULL; device = device->next, i++)
     {
@@ -67,7 +77,7 @@ PortManager::PortManager()
         }
 
 #if defined(Q_OS_WIN32)
-        port = new WinPcapPort(i, device->name);
+        port = new WinPcapPort(i, device->name, device->description);
 #elif defined(Q_OS_LINUX)
         port = new LinuxPort(i, device->name);
 #elif defined(Q_OS_BSD4)
@@ -91,7 +101,7 @@ PortManager::PortManager()
         portList_.append(port);
     }
 
-    pcap_freealldevs(deviceList);
+    FreePortList(deviceList);
 
     foreach(AbstractPort *port, portList_)
         port->init();
@@ -111,6 +121,65 @@ PortManager* PortManager::instance()
         instance_ = new PortManager;
 
     return instance_;       
+}
+
+pcap_if_t* PortManager::GetPortList()
+{
+    pcap_if_t *deviceList = NULL;
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    if (pcap_findalldevs(&deviceList, errbuf) == -1)
+        qDebug("Error in pcap_findalldevs_ex: %s\n", errbuf);
+
+#if defined(Q_OS_WIN32)
+    // Use windows' connection name as the description for a better UX
+    ipHlpApi_ = LoadLibrary(TEXT("ipHlpApi.dll"));
+    auto guid2Luid = MyGetProcAddress(ipHlpApi_, ConvertInterfaceGuidToLuid);
+    auto luid2Alias = MyGetProcAddress(ipHlpApi_, ConvertInterfaceLuidToAlias);
+
+    if (guid2Luid && luid2Alias) {
+        pcap_if_t *device;
+        for(device = deviceList; device != NULL; device = device->next) {
+            GUID guid = static_cast<GUID>(QUuid(
+                            QString(device->name).remove("\\Device\\NPF_")));
+            NET_LUID luid;
+
+            oldDescriptions_.append(device->description);
+            newDescriptions_.append(new QByteArray());
+            if (guid2Luid(&guid, &luid) == NO_ERROR) {
+                WCHAR conn[256];
+                if (luid2Alias(&luid, conn, 256) == NO_ERROR) {
+                    *(newDescriptions_.last()) = QString().fromWCharArray(conn)
+                                                            .toLocal8Bit();
+                    device->description = newDescriptions_.last()->data();
+                }
+            }
+        }
+    }
+#endif
+
+    return deviceList;
+}
+
+void PortManager::FreePortList(pcap_if_t *deviceList)
+{
+#if defined(Q_OS_WIN32)
+    int i = 0;
+    pcap_if_t *device;
+    if (oldDescriptions_.size()) {
+        for(device = deviceList; device != NULL; device = device->next)
+            device->description = oldDescriptions_.at(i++);
+    }
+    oldDescriptions_.clear();
+
+    while (newDescriptions_.size())
+        delete newDescriptions_.takeFirst();
+
+    if (ipHlpApi_)
+        FreeLibrary(ipHlpApi_);
+#endif
+
+    pcap_freealldevs(deviceList);
 }
 
 AbstractPort::Accuracy PortManager::rateAccuracy()
