@@ -407,11 +407,19 @@ void AbstractPort::updatePacketListInterleaved()
     QList<bool> isVariable;
     QList<QByteArray> pktBuf;
     QList<ulong> pktLen;
+    int activeStreamCount = 0;
 
     qDebug("In %s", __FUNCTION__);
 
     clearPacketList();
-    if (streamList_.size() == 0)
+
+    for (int i = 0; i < streamList_.size(); i++)
+    {
+        if (streamList_[i]->isEnabled())
+            activeStreamCount++;
+    }
+
+    if (activeStreamCount == 0)
     {
         isSendQueueDirty_ = false;
         return;
