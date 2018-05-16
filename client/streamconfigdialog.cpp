@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
 
+#include <QButtonGroup>
 #include <QMessageBox>
 
 extern ProtocolManager *OstProtocolManager;
