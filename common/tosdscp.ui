@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TosDscp</class>
+ <widget class="QWidget" name="TosDscp">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>232</width>
+    <height>38</height>
+   </rect>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QComboBox" name="cosType">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>TOS</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DSCP</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Custom</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="page">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QComboBox" name="precedence">
+         <property name="toolTip">
+          <string>Precedence</string>
+         </property>
+         <property name="minimumContentsLength">
+          <number>2</number>
+         </property>
+         <item>
+          <property name="text">
+           <string>Routine</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Priority</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Immediate</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Flash</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Flash Override</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Critical</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Internetwork Control</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Network Control</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="lowDelay">
+         <property name="toolTip">
+          <string>Low Delay</string>
+         </property>
+         <property name="text">
+          <string>D</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="highThroughput">
+         <property name="toolTip">
+          <string>High Throughput</string>
+         </property>
+         <property name="text">
+          <string>T</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="highReliability">
+         <property name="toolTip">
+          <string>High Reliability</string>
+         </property>
+         <property name="text">
+          <string>R</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QComboBox" name="dscp">
+         <property name="toolTip">
+          <string>DSCP</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="ecn">
+         <property name="toolTip">
+          <string>ECN</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Not-ECT</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ECT (1)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ECT (0)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>CE</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_3">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="IntEdit" name="customValue">
+         <property name="toolTip">
+          <string>Enter value in hexadecimal</string>
+         </property>
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IntEdit</class>
+   <extends>QSpinBox</extends>
+   <header>intedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cosType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>58</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>110</x>
+     <y>36</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

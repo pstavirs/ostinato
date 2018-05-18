@@ -24,6 +24,7 @@ FORMS += \
     tcp.ui \
     udp.ui \
     textproto.ui \
+    tosdscp.ui \
     hexdump.ui \
     payload.ui \
     sample.ui \
@@ -50,6 +51,9 @@ HEADERS = \
     sessionfileformat.h \
     streamfileformat.h \
     spinboxdelegate.h
+
+HEADERS += \
+    tosdscp.h
 
 HEADERS += \
     abstractprotocolconfig.h \
@@ -97,6 +101,9 @@ SOURCES += \
     sessionfileformat.cpp \
     streamfileformat.cpp \
     spinboxdelegate.cpp
+
+SOURCES += \
+    tosdscp.cpp
 
 SOURCES += \
     protocolwidgetfactory.cpp \

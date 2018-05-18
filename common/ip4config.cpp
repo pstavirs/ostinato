@@ -71,11 +71,11 @@ void Ip4ConfigForm::loadWidget(AbstractProtocol *proto)
                 AbstractProtocol::FieldValue
             ).toString());
 
-    leIpTos->setText(uintToHexStr(
+    tosDscp->setValue(
             proto->fieldData(
                 Ip4Protocol::ip4_tos,
                 AbstractProtocol::FieldValue
-            ).toUInt(), 1));
+            ).toUInt());
 
     cbIpLengthOverride->setChecked(
             proto->fieldData(
@@ -205,7 +205,7 @@ void Ip4ConfigForm::storeWidget(AbstractProtocol *proto)
 
     proto->setFieldData(
             Ip4Protocol::ip4_tos,
-            hexStrToUInt(leIpTos->text()));
+            tosDscp->value());
 
     proto->setFieldData(
             Ip4Protocol::ip4_totLen,
