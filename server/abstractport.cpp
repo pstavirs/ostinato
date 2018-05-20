@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#define __STDC_FORMAT_MACROS
-
 #include "abstractport.h"
 
 #include "../common/abstractprotocol.h"
@@ -29,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QString>
 #include <QIODevice>
 
-#include <inttypes.h>
 #include <limits.h>
 #include <math.h>
 
@@ -295,18 +292,18 @@ void AbstractPort::updatePacketListSequential()
                     n, x, y, burstSize);
 
             qDebug("ibg  = %g", ibg);
-            qDebug("ibg1 = %" PRIu64, ibg1);
-            qDebug("nb1  = %" PRIu64, nb1);
-            qDebug("ibg2 = %" PRIu64, ibg2);
-            qDebug("nb2  = %" PRIu64 "\n", nb2);
+            qDebug("ibg1 = %llu", ibg1);
+            qDebug("nb1  = %llu", nb1);
+            qDebug("ibg2 = %llu", ibg2);
+            qDebug("nb2  = %llu\n", nb2);
 
             qDebug("ipg  = %g", ipg);
-            qDebug("ipg1 = %" PRIu64, ipg1);
-            qDebug("npx1 = %" PRIu64, npx1);
-            qDebug("npy1 = %" PRIu64, npy1);
-            qDebug("ipg2 = %" PRIu64, ipg2);
-            qDebug("npx2 = %" PRIu64, npx2);
-            qDebug("npy2 = %" PRIu64 "\n", npy2);
+            qDebug("ipg1 = %llu", ipg1);
+            qDebug("npx1 = %llu", npx1);
+            qDebug("npy1 = %llu", npy1);
+            qDebug("ipg2 = %llu", ipg2);
+            qDebug("npx2 = %llu", npx2);
+            qDebug("npy2 = %llu\n", npy2);
 
             if (n > 1)
                 loopNextPacketSet(x, n, 0, loopDelay);
@@ -478,16 +475,16 @@ void AbstractPort::updatePacketListInterleaved()
         qDebug("numBursts = %g, numPackets = %g\n", numBursts, numPackets);
 
         qDebug("ibg  = %g", ibg);
-        qDebug("ibg1 = %" PRIu64, _ibg1);
-        qDebug("nb1  = %" PRIu64, _nb1);
-        qDebug("ibg2 = %" PRIu64, _ibg2);
-        qDebug("nb2  = %" PRIu64 "\n", _nb2);
+        qDebug("ibg1 = %llu", _ibg1);
+        qDebug("nb1  = %llu", _nb1);
+        qDebug("ibg2 = %llu", _ibg2);
+        qDebug("nb2  = %llu\n", _nb2);
 
         qDebug("ipg  = %g", ipg);
-        qDebug("ipg1 = %" PRIu64, _ipg1);
-        qDebug("np1  = %" PRIu64, _np1);
-        qDebug("ipg2 = %" PRIu64, _ipg2);
-        qDebug("np2  = %" PRIu64 "\n", _np2);
+        qDebug("ipg1 = %llu", _ipg1);
+        qDebug("np1  = %llu", _np1);
+        qDebug("ipg2 = %llu", _ipg2);
+        qDebug("np2  = %llu\n", _np2);
 
 
         if (_ibg2 && (_ibg2 < minGap))
@@ -548,8 +545,8 @@ void AbstractPort::updatePacketListInterleaved()
         numStreams++;
     } // for i
 
-    qDebug("minGap   = %" PRIu64, minGap);
-    qDebug("duration = %" PRIu64, duration);
+    qDebug("minGap   = %llu", minGap);
+    qDebug("duration = %llu", duration);
 
     uchar* buf;
     int len;
@@ -584,7 +581,7 @@ void AbstractPort::updatePacketListInterleaved()
                 if (len <= 0)
                     continue;
 
-                qDebug("q(%d) sec = %" PRIu64 " nsec = %" PRIu64, i, sec, nsec);
+                qDebug("q(%d) sec = %llu nsec = %llu", i, sec, nsec);
                 appendToPacketList(sec, nsec, buf, len); 
                 lastPktTxSec = sec;
                 lastPktTxNsec = nsec;
@@ -624,7 +621,7 @@ void AbstractPort::updatePacketListInterleaved()
         delayNsec += long(1e9);
         delaySec--;
     }
-    qDebug("loop Delay = %" PRId64 "/%" PRId64, delaySec, delayNsec);
+    qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
     setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
 }
