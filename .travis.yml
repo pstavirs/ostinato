@@ -36,7 +36,7 @@ addons:
       - protobuf-compiler
 
 script:
-  - QT_SELECT=qt5 qmake
+  - QT_SELECT=qt5 qmake -config debug
   - make
 
 notifications:
