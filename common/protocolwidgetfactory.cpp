@@ -51,6 +51,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "hexdumpconfig.h"
 #include "payloadconfig.h"
 #include "sampleconfig.h"
+#include "signconfig.h"
 #include "userscriptconfig.h"
 
 ProtocolWidgetFactory *OstProtocolWidgetFactory;
@@ -155,6 +156,9 @@ ProtocolWidgetFactory::ProtocolWidgetFactory()
             OstProto::Protocol::kSampleFieldNumber, 
             (void*) SampleConfigForm::createInstance);
     OstProtocolWidgetFactory->registerProtocolConfigWidget(
+            OstProto::Protocol::kSignFieldNumber,
+            (void*) SignConfigForm::createInstance);
+    OstProtocolWidgetFactory->registerProtocolConfigWidget(
             OstProto::Protocol::kUserScriptFieldNumber, 
             (void*) UserScriptConfigForm::createInstance);
 }
@@ -183,7 +187,7 @@ AbstractProtocolConfigForm* ProtocolWidgetFactory::createConfigWidget(
     
     Q_ASSERT_X(pc != NULL, 
                __FUNCTION__, 
-               QString(protoNumber).toAscii().constData());
+               qPrintable(QString(protoNumber)));
 
     p = (*pc)();
 

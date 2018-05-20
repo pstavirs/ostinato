@@ -243,10 +243,11 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
 
 void DeviceModel::setPort(Port *port)
 {
+    beginResetModel();
     port_ = port;
     if (port_)
         connect(port_, SIGNAL(deviceInfoChanged()), SLOT(updateDeviceList()));
-    reset();
+    endResetModel();
 }
 
 QAbstractItemModel* DeviceModel::detailModel(const QModelIndex &index)
@@ -268,7 +269,8 @@ QAbstractItemModel* DeviceModel::detailModel(const QModelIndex &index)
 
 void DeviceModel::updateDeviceList()
 {
-    reset();
+    beginResetModel();
+    endResetModel();
 }
 
 // Style roles for drillable fields

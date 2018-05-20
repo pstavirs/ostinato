@@ -94,7 +94,7 @@ void PdmlIcmp6Protocol::unknownFieldHandler(QString name,
     }
     else
     {
-        qDebug("unexpected field %s", name.toAscii().constData());
+        qDebug("unexpected field %s", qPrintable(name));
     }
 }
 

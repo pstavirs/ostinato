@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portgroup.h"
 
+#include "jumpurl.h"
 #include "settings.h"
 
 #include "emulproto.pb.h"
@@ -200,6 +201,19 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
                 qPrintable(QString::fromStdString(verCompat->notes())));
         compat = kIncompatible;
         emit portGroupDataChanged(mPortGroupId);
+
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setTextFormat(Qt::RichText);
+        msgBox.setStyleSheet("messagebox-text-interaction-flags: 5");
+        msgBox.setText(tr("The Drone agent at %1:%2 is incompatible with this "
+                          "Ostinato version - %3")
+                              .arg(serverName())
+                              .arg(int(serverPort()))
+                              .arg(version));
+        msgBox.setInformativeText(QString::fromStdString(verCompat->notes()));
+        msgBox.exec();
+
         goto _error_exit;
     }
 
@@ -302,23 +316,22 @@ void PortGroup::on_rpcChannel_notification(int notifType,
 
 void PortGroup::when_portListChanged(quint32 /*portGroupId*/)
 {
-    QString faq("http://ostinato.org/docs/faq#q-port-group-has-no-interfaces");
     if (state() == QAbstractSocket::ConnectedState && numPorts() <= 0)
     {
-        if (QMessageBox::warning(NULL, tr("No ports in portgroup"),
-            QString("The portgroup %1:%2 does not contain any ports!\n\n"
-               "Packet Transmit/Capture requires elevated privileges. "
-               "Please ensure that you are running 'drone' - the server "
-               "component of Ostinato with admin/root OR setuid privilege.\n\n"
-               "For help see the Ostinato FAQ (%3)")
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setTextFormat(Qt::RichText);
+        msgBox.setStyleSheet("messagebox-text-interaction-flags: 5");
+        QString msg = tr("<p>The portgroup %1:%2 does not contain any ports!<p>"
+               "<p>Packet Transmit/Capture requires special privileges. "
+               "Please ensure that you are running 'drone' - the agent "
+               "component of Ostinato with required privileges.<p>")
                 .arg(serverName())
-                .arg(int(serverPort()))
-                .arg(faq.remove(QRegExp("#.*$"))),
-            QMessageBox::Ok | QMessageBox::Help,
-            QMessageBox::Ok) == QMessageBox::Help)
-        {
-            QDesktopServices::openUrl(QUrl(faq));
-        }
+                .arg(int(serverPort()));
+        msgBox.setText(msg);
+        msgBox.setInformativeText(tr("See the <a href='%1'>Ostinato FAQ</a> "
+                "for instructions to fix this problem").arg(jumpUrl("noports")));
+        msgBox.exec();
     }
 }
 
@@ -346,6 +359,8 @@ void PortGroup::processPortIdList(PbRpcController *controller)
         
         p = new Port(portIdList->port_id(i).id(), mPortGroupId);
         connect(p, SIGNAL(portDataChanged(int, int)), 
+                this, SIGNAL(portGroupDataChanged(int, int)));
+        connect(p, SIGNAL(localConfigChanged(int, int, bool)),
                 this, SIGNAL(portGroupDataChanged(int, int)));
         qDebug("before port append\n");
         mPorts.append(p);
@@ -1397,7 +1412,7 @@ void PortGroup::viewCapture(QList<uint> *portList)
         portId->set_id(portList->at(i));
 
         capFile->open(QIODevice::ReadWrite|QIODevice::Truncate);
-        qDebug("Temp CapFile = %s", capFile->fileName().toAscii().constData());
+        qDebug("Temp CapFile = %s", qPrintable(capFile->fileName()));
         controller->setBinaryBlob(capFile);
 
         serviceStub->getCaptureBuffer(controller, portId, buf,
@@ -1578,18 +1593,94 @@ void PortGroup::clearPortStats(QList<uint> *portList)
         }
 
         serviceStub->clearStats(controller, portIdList, ack,
-            NewCallback(this, &PortGroup::processClearStatsAck, controller));
+            NewCallback(this, &PortGroup::processClearPortStatsAck,
+                        controller));
     }
 _exit:
     return;
 }
 
-void PortGroup::processClearStatsAck(PbRpcController *controller)
+void PortGroup::processClearPortStatsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
     // Refresh stats immediately after a stats clear/reset
     getPortStats();
+
+    delete controller;
+}
+
+bool PortGroup::clearStreamStats(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return false;
+
+    OstProto::StreamGuidList *guidList = new OstProto::StreamGuidList;
+    OstProto::Ack *ack = new OstProto::Ack;
+    PbRpcController *controller = new PbRpcController(guidList, ack);
+
+    if (portList == NULL)
+        guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
+    else
+        for (int i = 0; i < portList->size(); i++)
+            guidList->mutable_port_id_list()->add_port_id()
+                ->set_id(portList->at(i));
+
+    serviceStub->clearStreamStats(controller, guidList, ack,
+            NewCallback(this, &PortGroup::processClearStreamStatsAck,
+                        controller));
+
+    return true;
+}
+
+void PortGroup::processClearStreamStatsAck(PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    delete controller;
+}
+
+bool PortGroup::getStreamStats(QList<uint> *portList)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    if (state() != QAbstractSocket::ConnectedState)
+        return false;
+
+    OstProto::StreamGuidList *guidList = new OstProto::StreamGuidList;
+    OstProto::StreamStatsList *statsList = new OstProto::StreamStatsList;
+    PbRpcController *controller = new PbRpcController(guidList, statsList);
+
+    if (portList == NULL)
+        guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
+    else
+        for (int i = 0; i < portList->size(); i++)
+            guidList->mutable_port_id_list()->add_port_id()
+                ->set_id(portList->at(i));
+
+    serviceStub->getStreamStats(controller, guidList, statsList,
+            NewCallback(this, &PortGroup::processStreamStatsList, controller));
+
+    return true;
+}
+
+void PortGroup::processStreamStatsList(PbRpcController *controller)
+{
+    using OstProto::StreamStatsList;
+
+    qDebug("In %s", __FUNCTION__);
+
+    StreamStatsList *streamStatsList =
+        static_cast<StreamStatsList*>(controller->response());
+
+    // XXX: It is required to emit the signal even if the returned
+    // streamStatsList contains no records since the recipient
+    // StreamStatsModel slot needs to disconnect this signal-slot
+    // connection to prevent future stream stats for this portgroup
+    // to be sent to it
+    emit streamStatsReceived(mPortGroupId, streamStatsList);
 
     delete controller;
 }

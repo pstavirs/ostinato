@@ -38,7 +38,8 @@ PROTOS += \
     textproto.proto \
     userscript.proto \
     hexdump.proto \
-    sample.proto
+    sample.proto \
+    sign.proto
 
 HEADERS = \
     abstractprotocol.h    \
@@ -77,6 +78,7 @@ HEADERS += \
     hexdump.h \
     payload.h \
     sample.h \
+    sign.h \
     userscript.h 
 
 SOURCES = \
@@ -110,6 +112,7 @@ SOURCES += \
     hexdump.cpp \
     payload.cpp \
     sample.cpp \
+    sign.cpp \
     userscript.cpp
 
 QMAKE_DISTCLEAN += object_script.*
@@ -118,4 +121,5 @@ QMAKE_DISTCLEAN += object_script.*
 #QMAKE_EXTRA_TARGETS += binding
 
 include(../protobuf.pri)
+include(../options.pri)
 

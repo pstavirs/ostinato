@@ -70,7 +70,7 @@ int testImportPcap(int argc, char* argv[])
     if (!error.isEmpty())
     {
         printf("%s: %s\n", 
-                inFile.toAscii().constData(), error.toAscii().constData());
+                qPrintable(inFile), qPrintable(error));
     }
 
     if (!isOk)

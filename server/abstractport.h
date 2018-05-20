@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SERVER_ABSTRACT_PORT_H
 #define _SERVER_ABSTRACT_PORT_H
 
+#include "streamstats.h"
+
 #include <QList>
 #include <QtGlobal>
 
@@ -31,7 +33,7 @@ class PacketBuffer;
 class QIODevice;
 
 // TODO: send notification back to client(s)
-#define notify qWarning
+#define Xnotify qWarning
 
 class AbstractPort
 {
@@ -72,6 +74,7 @@ public:
     const char* name() { return data_.name().c_str(); }
     void protoDataCopyInto(OstProto::Port *port) { port->CopyFrom(data_); }
 
+    bool canModify(const OstProto::Port &port, bool *dirty);
     bool modify(const OstProto::Port &port);
 
     virtual OstProto::LinkState linkState() { return linkState_; }
@@ -86,6 +89,8 @@ public:
 
     bool isDirty() { return isSendQueueDirty_; }
     void setDirty() { isSendQueueDirty_ = true; }
+
+    virtual bool setTrackStreamStats(bool enable);
 
     Accuracy rateAccuracy();
     virtual bool setRateAccuracy(Accuracy accuracy);
@@ -111,6 +116,12 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
+    // FIXME: combine single and All calls?
+    void streamStats(uint guid, OstProto::StreamStatsList *stats);
+    void streamStatsAll(OstProto::StreamStatsList *stats);
+    void resetStreamStats(uint guid);
+    void resetStreamStatsAll();
+
     DeviceManager* deviceManager();
     virtual void startDeviceEmulation() = 0;
     virtual void stopDeviceEmulation() = 0;
@@ -123,6 +134,7 @@ public:
     quint64 neighborMacAddress(int streamId, int frameIndex);
 
 protected:
+
     void addNote(QString note);
 
     void updatePacketListSequential();
@@ -136,6 +148,7 @@ protected:
 
     quint64 maxStatsValue_;
     struct PortStats    stats_;
+    StreamStats streamStats_;
     //! \todo Need lock for stats access/update
 
     DeviceManager *deviceManager_;

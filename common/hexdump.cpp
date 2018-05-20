@@ -200,7 +200,10 @@ int HexDumpProtocol::protocolFrameSize(int streamIndex) const
     if (data.pad_until_end())
     {
         int pad = mpStream->frameLen(streamIndex) 
-                    - (protocolFrameOffset(streamIndex) + len + kFcsSize);
+                    - (protocolFrameOffset(streamIndex)
+                        + len
+                        + protocolFramePayloadSize(streamIndex)
+                        + kFcsSize);
         if (pad < 0)
             pad = 0;
         len += pad;

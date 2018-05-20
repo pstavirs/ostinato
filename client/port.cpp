@@ -57,6 +57,7 @@ Port::Port(quint32 id, quint32 portGroupId)
     stats.mutable_port_id()->set_id(id);
     mPortGroupId = portGroupId;
     capFile_ = NULL;
+    dirty_ = false;
 }
 
 Port::~Port()
@@ -98,6 +99,15 @@ void Port::updateStreamOrdinalsFromIndex()
 void Port::reorderStreamsByOrdinals()
 {
     qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
+}
+
+void Port::setDirty(bool dirty)
+{
+    if (dirty == dirty_)
+        return;
+
+    dirty_ = dirty;
+    emit localConfigChanged(mPortGroupId, mPortId, dirty_);
 }
 
 void Port::recalculateAverageRates()
@@ -209,6 +219,7 @@ void Port::setAveragePacketRate(double packetsPerSec)
             Q_ASSERT(false); // Unreachable!!
         }
         numActiveStreams_ = n;
+        setDirty(true);
     }
     else
         avgPacketsPerSec_ = avgBitsPerSec_ = numActiveStreams_ = 0;
@@ -282,6 +293,7 @@ void Port::setAverageBitRate(double bitsPerSec)
             Q_ASSERT(false); // Unreachable!!
         }
         numActiveStreams_ = n;
+        setDirty(true);
     }
     else
         avgPacketsPerSec_ = avgBitsPerSec_ = numActiveStreams_ = 0;
@@ -305,6 +317,7 @@ bool Port::newStreamAt(int index, OstProto::Stream const *stream)
     mStreams.insert(index, s);
     updateStreamOrdinalsFromIndex();
     recalculateAverageRates();
+    setDirty(true);
 
     return true;
 }
@@ -317,6 +330,7 @@ bool Port::deleteStreamAt(int index)
     delete mStreams.takeAt(index);
     updateStreamOrdinalsFromIndex();
     recalculateAverageRates();
+    setDirty(true);
 
     return true;
 }
@@ -506,6 +520,8 @@ void Port::when_syncComplete()
                 deviceGroups_.at(i)->device_group_id().id());
     }
     modifiedDeviceGroupList_.clear();
+
+    setDirty(false);
 }
 
 void Port::updateStats(OstProto::PortStats *portStats)
@@ -543,6 +559,7 @@ void Port::duplicateStreams(const QList<int> &list, int count)
             insertAt++;
         }
     }
+    setDirty(true);
 
     emit streamListChanged(mPortGroupId, mPortId);
 }
@@ -625,6 +642,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
         if (i % 32 == 0)
             qApp->processEvents();
     }
+    setDirty(true);
 
 _user_cancel:
     emit streamListChanged(mPortGroupId, mPortId);
@@ -743,11 +761,12 @@ OstProto::DeviceGroup* Port::mutableDeviceGroupByIndex(int index)
 
     // Caller can modify DeviceGroup - assume she will
     modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
+    setDirty(true);
 
     return devGrp;
 }
 
-OstProto::DeviceGroup* Port::deviceGroupById(uint deviceGroupId)
+const OstProto::DeviceGroup* Port::deviceGroupById(uint deviceGroupId) const
 {
     for (int i = 0; i < deviceGroups_.size(); i++) {
         OstProto::DeviceGroup *devGrp = deviceGroups_.at(i);
@@ -776,6 +795,7 @@ bool Port::newDeviceGroupAt(int index, const OstProto::DeviceGroup *deviceGroup)
     devGrp->mutable_device_group_id()->set_id(newDeviceGroupId());
     deviceGroups_.insert(index, devGrp);
     modifiedDeviceGroupList_.insert(devGrp->device_group_id().id());
+    setDirty(true);
 
     return true;
 }
@@ -788,6 +808,7 @@ bool Port::deleteDeviceGroupAt(int index)
     OstProto::DeviceGroup *devGrp = deviceGroups_.takeAt(index);
     modifiedDeviceGroupList_.remove(devGrp->device_group_id().id());
     delete devGrp;
+    setDirty(true);
 
     return true;
 }
@@ -818,7 +839,12 @@ bool Port::updateDeviceGroup(
         uint deviceGroupId,
         OstProto::DeviceGroup *deviceGroup)
 {
-    OstProto::DeviceGroup *devGrp = deviceGroupById(deviceGroupId);
+    using OstProto::DeviceGroup;
+
+    // XXX: We should not call mutableDeviceGroupById() because that will
+    // implicitly set the port as dirty, so we use a const_cast hack instead
+    DeviceGroup *devGrp = const_cast<DeviceGroup*>(
+                                deviceGroupById(deviceGroupId));
 
     if (!devGrp) {
         qDebug("%s: deviceGroup id %u does not exist", __FUNCTION__,

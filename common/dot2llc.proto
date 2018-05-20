@@ -1,3 +1,4 @@
+/// (802.2 LLC)
 /*
 Copyright (C) 2010 Srivats P.
 
@@ -18,12 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 import "protocol.proto";
-import "dot3.proto";
-import "llc.proto";
 
 package OstProto;
 
-// 802.2 LLC
 message Dot2Llc {
     // Empty since this is a 'combo' protocol
 }

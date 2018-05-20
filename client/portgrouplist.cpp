@@ -21,8 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "params.h"
 
-// TODO(LOW): Remove
-#include <modeltest.h>
+#include "modeltest.h"
 
 PortGroupList::PortGroupList()
     : mPortGroupListModel(this), 
@@ -31,7 +30,7 @@ PortGroupList::PortGroupList()
       mDeviceGroupModel(this),
       mDeviceModel(this)
 {
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     streamModelTester_ = NULL;
     portModelTester_ = NULL;
     portStatsModelTester_ = NULL;

@@ -30,6 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
 
+#include <QButtonGroup>
+#include <QMessageBox>
+
 extern ProtocolManager *OstProtocolManager;
 extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
@@ -39,19 +42,35 @@ int StreamConfigDialog::lastProtocolDataIndex = 0;
 
 static const uint kEthFrameOverHead = 20;
 
-StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
-    QWidget *parent) : QDialog (parent), mPort(port)
+StreamConfigDialog::StreamConfigDialog(
+        QList<Stream*> &streamList,
+        const Port &port,
+        QWidget *parent)
+    : QDialog (parent), _userStreamList(streamList), mPort(port)
 {
-    OstProto::Stream s;
-    mCurrentStreamIndex = streamIndex;
-    mpStream = new Stream;
-    mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyInto(s);
-    mpStream->protoDataCopyFrom(s);
+    mCurrentStreamIndex = 0;
+
+    Q_ASSERT(_userStreamList.size() > 0);
+
+    // Create a copy of the user provided stream list
+    //   We need a copy because user may edit multiple streams and then
+    //   discard the edit - in this case the user provided stream list
+    //   should not be modified on return
+    foreach(Stream* stm, _userStreamList) {
+        OstProto::Stream s;
+        stm->protoDataCopyInto(s);
+        _streamList.append(new Stream());
+        _streamList.last()->protoDataCopyFrom(s);
+    }
+
+    mpStream = _streamList.at(mCurrentStreamIndex);
     _iter = mpStream->createProtocolListIterator();
     isUpdateInProgress = false;
 
     setupUi(this);
     setupUiExtra();
+
+    _windowTitle = windowTitle();
 
     for (int i = ProtoMin; i < ProtoMax; i++)
     {
@@ -69,13 +88,14 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
 
     // Time to play match the signals and slots!
 
-    // If L1/L2(FT)/L3 = None, force subsequent protocol level(s) also to None
+    // If L1/L2(FT)/L3/L4 = None,
+    // force subsequent protocol level(s) also to None
     connect(rbL1None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbFtNone, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbL3None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
     connect(rbL4None, SIGNAL(toggled(bool)), SLOT(forceProtocolNone(bool)));
 
-    // If L1/L2(FT)/L3/L4 = Other, force subsequent protocol to Other and 
+    // If L1/L2(FT)/L3/L4/L5 = Other, force subsequent protocol to Other and
     // disable the subsequent protocol group as well
     connect(rbL1Other, SIGNAL(toggled(bool)), rbFtOther, SLOT(setChecked(bool)));
     connect(rbL1Other, SIGNAL(toggled(bool)), gbFrameType, SLOT(setDisabled(bool)));
@@ -83,8 +103,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     connect(rbFtOther, SIGNAL(toggled(bool)), gbL3Proto, SLOT(setDisabled(bool)));
     connect(rbL3Other, SIGNAL(toggled(bool)), rbL4Other, SLOT(setChecked(bool)));
     connect(rbL3Other, SIGNAL(toggled(bool)), gbL4Proto, SLOT(setDisabled(bool)));
-    connect(rbL4Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
-    connect(rbL4Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
+    connect(rbL4Other, SIGNAL(toggled(bool)), rbL5Other, SLOT(setChecked(bool)));
+    connect(rbL4Other, SIGNAL(toggled(bool)), gbL5Proto, SLOT(setDisabled(bool)));
+    connect(rbL5Other, SIGNAL(toggled(bool)), rbPayloadOther, SLOT(setChecked(bool)));
+    connect(rbL5Other, SIGNAL(toggled(bool)), gbPayloadProto, SLOT(setDisabled(bool)));
 
     // Setup valid subsequent protocols for L2 to L4 protocols
     for (int i = ProtoL2; i <= ProtoL4; i++)
@@ -151,12 +173,10 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
         this, SLOT(when_lvSelectedProtocols_currentChanged(const QModelIndex&,
             const QModelIndex&)));
 
-    variableFieldsWidget->setStream(mpStream);
-
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     mpPacketModelTester = NULL;
 #else
     mpPacketModelTester = new ModelTest(mpPacketModel);
@@ -165,10 +185,9 @@ StreamConfigDialog::StreamConfigDialog(Port &port, uint streamIndex,
     vwPacketDump->setModel(mpPacketModel);
     vwPacketDump->setSelectionModel(tvPacketTree->selectionModel());
 
-    // TODO(MED):
-    //! \todo Enable navigation of streams
-    pbPrev->setHidden(true);
-    pbNext->setHidden(true);
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+
     //! \todo Support Goto Stream Id
     leStreamId->setHidden(true);
     disconnect(rbActionGotoStream, SIGNAL(toggled(bool)), leStreamId, SLOT(setEnabled(bool)));
@@ -281,6 +300,17 @@ void StreamConfigDialog::setupUiExtra()
     bgProto[ProtoPayload]->addButton(rbPayloadHexDump, OstProto::Protocol::kHexDumpFieldNumber);
     bgProto[ProtoPayload]->addButton(rbPayloadOther, ButtonIdOther);
 #endif
+
+    // Special
+    bgProto[ProtoSign] = new QButtonGroup();
+    bgProto[ProtoSign]->addButton(rbSpecialNone, ButtonIdNone);
+    bgProto[ProtoSign]->addButton(rbSignature,
+                                  OstProto::Protocol::kSignFieldNumber);
+    // Trailer
+    bgProto[ProtoTrailer] = new QButtonGroup();
+    bgProto[ProtoTrailer]->addButton(rbTrailerNone, ButtonIdNone);
+    bgProto[ProtoTrailer]->addButton(rbTrailerOther, ButtonIdOther);
+
     /*
     ** Setup Validators
     */    
@@ -318,7 +348,14 @@ StreamConfigDialog::~StreamConfigDialog()
     }
 
     delete _iter;
-    delete mpStream;
+    while (!_streamList.isEmpty())
+        delete _streamList.takeFirst();
+}
+
+void StreamConfigDialog::setWindowTitle(const QString &title)
+{
+    _windowTitle = title;
+    QDialog::setWindowTitle(title);
 }
 
 void StreamConfigDialog::loadProtocolWidgets()
@@ -395,32 +432,8 @@ void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
     }
     else
     {
-        qWarning("Unhandled/Unknown PktLenMode = %s", mode.toAscii().data());
+        qWarning("Unhandled/Unknown PktLenMode = %s", qPrintable(mode));
     }
-}
-
-void StreamConfigDialog::on_pbPrev_clicked()
-{
-#if 0
-    StoreCurrentStream(currStreamIdx);
-    currStreamIdx--;
-    LoadCurrentStream(currStreamIdx);
-
-    pbPrev->setDisabled((currStreamIdx == 0));
-    pbNext->setDisabled((currStreamIdx == 2));
-#endif
-}
-
-void StreamConfigDialog::on_pbNext_clicked()
-{
-#if 0
-    StoreCurrentStream(currStreamIdx);
-    currStreamIdx++;
-    LoadCurrentStream(currStreamIdx);
-
-    pbPrev->setDisabled((currStreamIdx == 0));
-    pbNext->setDisabled((currStreamIdx == 2));
-#endif
 }
 
 void StreamConfigDialog::on_tbSelectProtocols_currentChanged(int index)
@@ -700,9 +713,9 @@ void StreamConfigDialog::on_lePattern_editingFinished()
     QString    str;
 
     num = lePattern->text().remove(QChar(' ')).toULong(&isOk, 16);
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
     lePattern->setText(uintToHexStr(num, str, 4));
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
 }
 #endif
 
@@ -792,6 +805,8 @@ void StreamConfigDialog::forceProtocolNone(bool checked)
     }
 }
 
+// Button 'newId' has been clicked
+// - update the protocol list correspondingly
 void StreamConfigDialog::updateProtocol(int newId)
 {
     int level;
@@ -806,6 +821,8 @@ void StreamConfigDialog::updateProtocol(int newId)
     __updateProtocol(level, newId);
 }
 
+// Button 'newId' belonging to layer 'level' has been clicked
+// - update the protocol list correspondingly
 void StreamConfigDialog::__updateProtocol(int level, int newId)
 {
     int oldId;
@@ -853,7 +870,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
                 // Free both protocol and associated widget
                 delete _protocolWidgets.take(p);
                 delete p;
-                if (level == ProtoPayload)
+                if (level == ProtoTrailer)
                 {
                     while (_iter->hasNext())
                     {
@@ -872,6 +889,7 @@ void StreamConfigDialog::__updateProtocol(int level, int newId)
     return;
 }
 
+//! Traverse the ProtocolList and update the SelectProtocols (Simple) widget
 void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
 {
     int i;
@@ -897,7 +915,7 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
         id = _iter->next()->protocolNumber();
         btn = bgProto[i]->button(id);
 
-        if (btn)
+        if (btn) // we have a button for this protocol
         {
             if (btn->isEnabled())
                 btn->click();
@@ -907,23 +925,32 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
                 __updateProtocol(i, id);
             }
         }
-        else
+        else // we don't have a button for this protocol
         {
             switch (i)
             {
                 case ProtoVlan:
+                    // No vlan - proto may belong to next layer
+                    _iter->previous();
+                    break;
+
+                case ProtoSign:
+                    // No sign - but we have a trailer
                     _iter->previous();
                     break;
 
                 case ProtoPayload:
                     goto _other;
 
-                default:
+                default: // viz. L1, L2, L3, L4, L5, Trailer
+                    // Is this a Payload layer protocol?
+                    // (maybe intermediate layers are not present)
                     btn = bgProto[ProtoPayload]->button(id);
                     if (btn && btn->isEnabled())
                     {
                         btn->click();
-                        break;
+                        i = ProtoPayload;
+                        continue;
                     }
                     else
                         goto _other;
@@ -931,20 +958,22 @@ void StreamConfigDialog::updateSelectProtocolsSimpleWidget()
         }
     }
 
-    // If more protocol(s) beyond payload ...
+    // If more protocol(s) beyond trailer ...
     if (_iter->hasNext())
     {
-        i = ProtoPayload;
+        i = ProtoTrailer;
         goto _other;
     }
 
+    Q_ASSERT(!_iter->hasNext()); // At end of the ProtocolList
     goto _done;
 
 _other:
+    // Set remaining protocols as 'Other'
     for (int j = i; j < ProtoMax; j++)
     {
-        // VLAN doesn't have a "Other" button
-        if (j == ProtoVlan)
+        // VLAN/Sign doesn't have a "Other" button
+        if ((j == ProtoVlan) || (j == ProtoSign))
             continue;
 
         bgProto[j]->button(ButtonIdOther)->setChecked(true);
@@ -960,9 +989,16 @@ void StreamConfigDialog::LoadCurrentStream()
     QString    str;
 
     qDebug("loading mpStream %p", mpStream);
+    variableFieldsWidget->setStream(mpStream);
+
+    QDialog::setWindowTitle(QString("%1 [%2]").arg(_windowTitle)
+                .arg(mpStream->name().isEmpty() ?
+                            tr("<unnamed>") : mpStream->name()));
 
     // Meta Data
     {
+        name->setText(mpStream->name());
+        enabled->setChecked(mpStream->isEnabled());
         cmbPktLenMode->setCurrentIndex(mpStream->lenMode());
         lePktLen->setText(str.setNum(mpStream->frameLen()));
         lePktLenMin->setText(str.setNum(mpStream->frameLenMin()));
@@ -979,6 +1015,7 @@ void StreamConfigDialog::LoadCurrentStream()
 
     // Variable Fields
     {
+        variableFieldsWidget->clear();
         variableFieldsWidget->load();
     }
 
@@ -1047,6 +1084,8 @@ void StreamConfigDialog::StoreCurrentStream()
     qDebug("storing pStream %p", pStream);
 
     // Meta Data
+    pStream->setName(name->text());
+    pStream->setEnabled(enabled->isChecked());
     pStream->setLenMode((Stream::FrameLengthMode) cmbPktLenMode->currentIndex());
     pStream->setFrameLen(lePktLen->text().toULong(&isOk));
     pStream->setFrameLenMin(lePktLenMin->text().toULong(&isOk));
@@ -1150,7 +1189,7 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
     uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
     uint frameLen;
 
-    qDebug("start of %s(%s)", __FUNCTION__, text.toAscii().constData());
+    qDebug("start of %s(%s)", __FUNCTION__, qPrintable(text));
     if (pStream->lenMode() == Stream::e_fl_fixed)
         frameLen = pStream->frameLen();
     else
@@ -1195,34 +1234,99 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
     }
 }
 
-void StreamConfigDialog::on_pbOk_clicked()
+bool StreamConfigDialog::isCurrentStreamValid()
 {
-    QString log;
-    OstProto::Stream s;
-
-    // Store dialog contents into stream
-    StoreCurrentStream();
+    QStringList log;
 
     if ((mPort.transmitMode() == OstProto::kInterleavedTransmit)
             && (mpStream->isFrameVariable()))
     {
-        log += "In 'Interleaved Streams' transmit mode, the count for "
-            "varying fields at transmit time may not be same as configured\n";
+        log << tr("In 'Interleaved Streams' transmit mode, the count for "
+            "varying fields at transmit time may not be same as configured");
+    }
+
+    if (!mPort.trackStreamStats()
+            && mpStream->hasProtocol(OstProto::Protocol::kSignFieldNumber))
+    {
+        log << tr("Stream contains special signature, but per stream statistics "
+            "will not be available till it is enabled on the port");
     }
 
     mpStream->preflightCheck(log);
 
-    if (log.length())
+    if (log.size())
     {
-        if (QMessageBox::warning(this, "Preflight Check", log + "\nContinue?",
+        if (QMessageBox::warning(this, "Preflight Check",
+                    tr("<p>We found possible problems with this stream -</p>")
+                    + "<ul>"
+                    + log.replaceInStrings(QRegExp("(.*)"), "<li>\\1</li>")
+                        .join("\n")
+                    + "</ul>"
+                    + tr("<p>Ignore?</p>"),
                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) 
                 == QMessageBox::No)
-            return;
+            return false;
     }
 
-    // Copy the data from the "local working copy of stream" to "actual stream"
-    mpStream->protoDataCopyInto(s);
-    mPort.streamByIndex(mCurrentStreamIndex)->protoDataCopyFrom(s);
+    return true;
+}
+
+void StreamConfigDialog::on_pbPrev_clicked()
+{
+    Q_ASSERT(mCurrentStreamIndex > 0);
+
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    delete _iter;
+    mpStream = _streamList.at(--mCurrentStreamIndex);
+    _iter = mpStream->createProtocolListIterator();
+
+    LoadCurrentStream();
+    on_twTopLevel_currentChanged(twTopLevel->currentIndex());
+
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+}
+
+void StreamConfigDialog::on_pbNext_clicked()
+{
+    Q_ASSERT(int(mCurrentStreamIndex) < (_streamList.size()-1));
+
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    delete _iter;
+    mpStream = _streamList.at(++mCurrentStreamIndex);
+    _iter = mpStream->createProtocolListIterator();
+
+    LoadCurrentStream();
+    on_twTopLevel_currentChanged(twTopLevel->currentIndex());
+
+    pbPrev->setDisabled(mCurrentStreamIndex == 0);
+    pbNext->setDisabled(int(mCurrentStreamIndex) == (_streamList.size()-1));
+
+}
+
+void StreamConfigDialog::on_pbOk_clicked()
+{
+    // Store dialog contents into current stream
+    StoreCurrentStream();
+
+    if (!isCurrentStreamValid())
+        return;
+
+    // Copy the working copy of streams to user provided streams
+    Q_ASSERT(_userStreamList.size() == _streamList.size());
+    for (int i = 0; i < _streamList.size(); i++) {
+        OstProto::Stream s;
+        _streamList.at(i)->protoDataCopyInto(s);
+        _userStreamList[i]->protoDataCopyFrom(s);
+    }
 
     qDebug("stream stored");
 

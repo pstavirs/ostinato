@@ -683,7 +683,7 @@ void Device::sendIp4Reply(PacketBuffer *pktBuf)
     uchar *pktData = pktBuf->push(20);
     uchar origTtl = pktData[8];
     uchar ipProto = pktData[9];
-    quint32 srcIp, dstIp, tgtIp, mask;
+    quint32 srcIp, dstIp, tgtIp;
     quint32 sum;
 
     // Swap src/dst IP addresses

@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class WinPcapPort : public PcapPort
 {
 public:
-    WinPcapPort(int id, const char *device);
+    WinPcapPort(int id, const char *device, const char *description);
     ~WinPcapPort();
 
     virtual OstProto::LinkState linkState();

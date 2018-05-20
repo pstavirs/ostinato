@@ -25,7 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 #include "stream.h"
 #include "packetmodel.h"
-#include "modeltest.h"
+
+#include <QFileDialog>
+#include <QProgressDialog>
+#include <QStringListModel>
 
 #define MAX_MAC_ITER_COUNT     256
 #define MIN_PKT_LEN            64
@@ -38,13 +41,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 class AbstractProtocolConfigForm;
+class ModelTest;
 
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {
     Q_OBJECT
 public:
-    StreamConfigDialog(Port &port, uint streamIndex, QWidget *parent = 0);
+    StreamConfigDialog(QList<Stream*> &streamList, const Port &port,
+            QWidget *parent = 0);
     ~StreamConfigDialog();
+
+    void setWindowTitle(const QString &title);
 
 private: 
 
@@ -64,6 +71,8 @@ private:
         ProtoL4 = 4,
         ProtoL5 = 5,
         ProtoPayload = 6,
+        ProtoSign = 7,
+        ProtoTrailer = 8,
         ProtoMax
     };
 
@@ -72,7 +81,10 @@ private:
     QStringListModel *mpAvailableProtocolsModel;
     QStringListModel *mpSelectedProtocolsModel;
 
-    Port&            mPort;
+    QList<Stream*>  _userStreamList;
+    QList<Stream*>  _streamList;
+    const Port&     mPort;
+    QString         _windowTitle;
     uint            mCurrentStreamIndex;
 
     Stream                    *mpStream;
@@ -92,6 +104,7 @@ private:
     static int lastProtocolDataIndex;
 
     void setupUiExtra();
+    bool isCurrentStreamValid();
     void LoadCurrentStream();
     void StoreCurrentStream();
     void loadProtocolWidgets();

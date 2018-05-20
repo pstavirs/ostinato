@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocollistiterator.h"
 #include "streambase.h"
 
+#include "bswap.h"
+
 #include <qendian.h>
 
 /*!
@@ -618,9 +620,9 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
             else
                 field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
             qDebug("<<< (%d, %db) %s >>>", proto.size(), lastbitpos,
-                    QString(proto.toHex()).toAscii().constData());
+                    qPrintable(QString(proto.toHex())));
             qDebug("  < %d: (%db/%dB) %s >", i, bits, field.size(),
-                    QString(field.toHex()).toAscii().constData());
+                    qPrintable(QString(field.toHex())));
 
             if (bits == (uint) field.size() * 8)
             {
@@ -972,18 +974,29 @@ out:
 quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
     CksumType cksumType, CksumScope cksumScope) const
 {
-    quint32 sum = 0;
+    quint32 sum;
     quint16 cksum;
     AbstractProtocol *p = next;
 
     Q_ASSERT(cksumType == CksumIp);
 
+    if (!p)
+        return 0xFFFF;
+
+    cksum = p->protocolFrameCksum(streamIndex, cksumType);
+    sum = (quint16) ~cksum;
+    if (cksumScope == CksumScopeAdjacentProtocol)
+        goto out;
+
+    p = p->next;
     while (p)
     {
+        // when combining cksums, a non-first protocol starting at odd offset
+        // needs a byte swap (see RFC 1071 section(s) 2A, 2B)
         cksum = p->protocolFrameCksum(streamIndex, cksumType);
+        if (p->protocolFrameOffset(streamIndex) & 0x1)
+            cksum = swap16(cksum);
         sum += (quint16) ~cksum;
-        if (cksumScope == CksumScopeAdjacentProtocol)
-            goto out;
         p = p->next;
     }
 
@@ -998,7 +1011,9 @@ out:
     while(sum>>16)
         sum = (sum & 0xFFFF) + (sum >> 16);
 
-    return (quint16) ~sum;
+    cksum = (quint16) ~sum;
+    qDebug("%s: cksum = %u", __FUNCTION__, cksum);
+    return cksum;
 }
 
 // Stein's binary GCD algo - from wikipedia

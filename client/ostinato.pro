@@ -3,9 +3,10 @@ CONFIG += qt ver_info
 macx: TARGET = Ostinato
 win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
-QT += network script xml
+QT += widgets network script xml
 INCLUDEPATH += "../rpc/" "../common/"
 win32 {
+    QMAKE_LFLAGS += -static
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostprotogui -lostproto
         LIBS += -L"../rpc/debug" -lpbrpc
@@ -58,6 +59,9 @@ HEADERS += \
     streamconfigdialog.h \
     streamlistdelegate.h \
     streammodel.h \
+    streamstatsfiltermodel.h \
+    streamstatsmodel.h \
+    streamstatswindow.h \
     variablefieldswidget.h
 
 FORMS += \
@@ -71,6 +75,7 @@ FORMS += \
     portswindow.ui \
     preferences.ui \
     streamconfigdialog.ui \
+    streamstatswindow.ui \
     variablefieldswidget.ui
 
 SOURCES += \
@@ -100,6 +105,8 @@ SOURCES += \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp \
+    streamstatsmodel.cpp \
+    streamstatswindow.cpp \
     variablefieldswidget.cpp
 
 
@@ -107,6 +114,10 @@ QMAKE_DISTCLEAN += object_script.*
 
 include(../install.pri)
 include(../version.pri)
+include(../options.pri)
 
-# TODO(LOW): Test only
-CONFIG(debug, debug|release):include(modeltest.pri)
+INCLUDEPATH += "../extra/modeltest"
+greaterThan(QT_MINOR_VERSION, 6) {
+CONFIG(debug, debug|release): LIBS += -L"../extra/modeltest/$(OBJECTS_DIR)/" -lmodeltest
+CONFIG(debug, debug|release): QT += testlib
+}

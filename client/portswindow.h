@@ -66,6 +66,7 @@ public slots:
     void showMyReservedPortsOnly(bool enabled);
 
 private slots:
+    void updateApplyHint(int portGroupId, int portId, bool configChanged);
     void updatePortViewActions(const QModelIndex& currentIndex);
     void updateStreamViewActions();
 

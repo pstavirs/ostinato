@@ -52,8 +52,8 @@ message StreamCore {
     optional bool is_enabled = 2;
     optional uint32 ordinal = 3;
 
-    // Frame Length (includes CRC)
     optional FrameLengthMode len_mode = 14 [default = e_fl_fixed];
+    /// Frame Length (includes CRC)
     optional uint32 frame_len = 15 [default = 64];
     optional uint32 frame_len_min = 16 [default = 64];
     optional uint32 frame_len_max = 17 [default = 1518];
@@ -78,7 +78,7 @@ message StreamControl {
 
     optional SendUnit unit = 1 [default = e_su_packets];
     optional SendMode mode = 2 [default = e_sm_fixed];
-    optional uint32 num_packets = 3 [default = 1];
+    optional uint32 num_packets = 3 [default = 10];
     optional uint32 num_bursts = 4 [default = 1];
     optional uint32 packets_per_burst = 5 [default = 10];
     optional NextWhat next = 6 [default = e_nw_goto_next];
@@ -128,6 +128,7 @@ message Protocol {
         kSampleFieldNumber = 102;
         kUserScriptFieldNumber = 103;
         kHexDumpFieldNumber = 104;
+        kSignFieldNumber = 105;
 
         kEth2FieldNumber = 200;
         kDot3FieldNumber = 201;
@@ -204,6 +205,7 @@ message Port {
     optional bool is_exclusive_control = 6;
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
     optional string user_name = 8;
+    optional bool is_tracking_stream_stats = 9;
 }
 
 message PortConfigList {
@@ -263,6 +265,29 @@ message PortStats {
 
 message PortStatsList {
     repeated PortStats port_stats = 1;
+}
+
+message StreamGuid {
+    required uint32 id = 1;
+}
+
+message StreamGuidList {
+    required PortIdList port_id_list = 1;
+    repeated StreamGuid stream_guid = 2;
+}
+
+message StreamStats {
+    required PortId port_id = 1;
+    required StreamGuid stream_guid = 2;
+
+    optional uint64 rx_pkts = 11;
+    optional uint64 rx_bytes = 12;
+    optional uint64 tx_pkts = 13;
+    optional uint64 tx_bytes = 14;
+}
+
+message StreamStatsList {
+    repeated StreamStats stream_stats = 1;
 }
 
 enum NotifType {
@@ -358,5 +383,11 @@ service OstService {
     rpc resolveDeviceNeighbors(PortIdList) returns (Ack);
     rpc clearDeviceNeighbors(PortIdList) returns (Ack);
     rpc getDeviceNeighbors(PortId) returns (PortNeighborList);
+
+    // Stream Stats
+    rpc getStreamStats(StreamGuidList) returns (StreamStatsList);
+    rpc clearStreamStats(StreamGuidList) returns (Ack);
+
+    // XXX: Add new RPCs at the end only to preserve backward compatibility
 }
 

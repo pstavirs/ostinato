@@ -1,12 +1,17 @@
 TEMPLATE = lib
 CONFIG += qt staticlib warn_on
+QT += core gui
 
-HEADERS = src/commands.h\
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+VERSION = 4.0.0
+
+DEFINES += QHEXEDIT_EXPORTS
+
+HEADERS = src/chunks.h\
+          src/commands.h \
           src/qhexedit.h \
-          src/qhexedit_p.h \
-          src/xbytearray.h
 
-SOURCES = src/commands.cpp \
-          src/qhexedit.cpp \
-          src/qhexedit_p.cpp \
-          src/xbytearray.cpp
+SOURCES = src/chunks.cpp \
+          src/commands.cpp \
+          src/qhexedit.cpp

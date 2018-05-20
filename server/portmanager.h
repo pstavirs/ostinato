@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SERVER_PORT_MANAGER_H
 #define _SERVER_PORT_MANAGER_H
 
-#include <QList>
 #include "abstractport.h"
+
+#include <pcap.h>
+#include <QByteArray>
+#include <QList>
 
 class PortManager
 {
@@ -39,9 +42,17 @@ private:
     bool filterAcceptsPort(const char *name);
 
 private:
-    QList<AbstractPort*>    portList_;
+    pcap_if_t* GetPortList();
+    void FreePortList(pcap_if_t *deviceList);
 
+    QList<AbstractPort*>    portList_;
     static PortManager      *instance_;
+#ifdef Q_OS_WIN32
+    HMODULE                 ipHlpApi_;
+    QList<char*>            oldDescriptions_;
+    QList<QByteArray*>      newDescriptions_;
+#endif
+
 };
 
 #endif

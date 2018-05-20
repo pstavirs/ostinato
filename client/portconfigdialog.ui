@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>244</width>
-    <height>233</height>
+    <height>257</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -66,6 +66,13 @@
     <widget class="QCheckBox" name="exclusiveControlButton" >
      <property name="text" >
       <string>Exclusive Control</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="streamStatsButton" >
+     <property name="text" >
+      <string>Stream Statistics</string>
      </property>
     </widget>
    </item>

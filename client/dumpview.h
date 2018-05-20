@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <QtGui> // FIXME: High
+#include <QAbstractItemView>
 
 
 class DumpView: public QAbstractItemView
@@ -48,7 +48,7 @@ private:
     void populateDump(QByteArray &dump, int &selOfs, int &selSize, 
             QModelIndex parent = QModelIndex());
     bool inline isPrintable(char c) 
-        {if ((c > 48) && (c < 126)) return true; else return false; }
+        {if ((c >= 32) && (c <= 126)) return true; else return false; }
 
 private:
     QRect        mOffsetPaneTopRect;

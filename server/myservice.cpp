@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010-2015 Srivats P.
+Copyright (C) 2010-2016 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -133,9 +133,19 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         id = port.port_id().id();
         if (id < portInfo.size())
         {
+            bool dirty;
+
+            if (!portInfo[id]->canModify(port, &dirty)) {
+                qDebug("Port %d cannot be modified - stop tx and retry", id);
+                continue;        //! \todo(LOW): Partial status of RPC
+            }
+
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
+            if (dirty)
+                portInfo[id]->updatePacketList();
             portLock[id]->unlock();
+
 
             notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
@@ -148,6 +158,8 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
         notif->set_notif_type(OstProto::portConfigChanged);
         emit notification(notif->notif_type(), SharedProtobufMessage(notif));
     }
+    else
+        delete notif;
 }
 
 void MyService::getStreamIdList(::google::protobuf::RpcController* controller,
@@ -558,6 +570,66 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
     done->Run();
 }
 
+void MyService::getStreamStats(
+    ::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::StreamGuidList* request,
+    ::OstProto::StreamStatsList* response,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_list().port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id_list().port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo(LOW): partial rpc?
+
+        portLock[portId]->lockForRead();
+        if (request->stream_guid_size())
+            for (int j = 0; j < request->stream_guid_size(); j++)
+                portInfo[portId]->streamStats(request->stream_guid(j).id(),
+                                              response);
+        else
+            portInfo[portId]->streamStatsAll(response);
+        portLock[portId]->unlock();
+    }
+
+    done->Run();
+}
+
+void MyService::clearStreamStats(
+    ::google::protobuf::RpcController* /*controller*/,
+    const ::OstProto::StreamGuidList* request,
+    ::OstProto::Ack* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    for (int i = 0; i < request->port_id_list().port_id_size(); i++)
+    {
+        int portId;
+
+        portId = request->port_id_list().port_id(i).id();
+        if ((portId < 0) || (portId >= portInfo.size()))
+            continue;     //! \todo (LOW): partial RPC?
+
+        portLock[portId]->lockForWrite();
+        if (request->stream_guid_size())
+            for (int j = 0; j < request->stream_guid_size(); j++)
+                portInfo[portId]->resetStreamStats(
+                        request->stream_guid(j).id());
+        else
+            portInfo[portId]->resetStreamStatsAll();
+        portLock[portId]->unlock();
+    }
+
+    //! \todo (LOW): fill-in response "Ack"????
+
+    done->Run();
+}
+
 void MyService::checkVersion(::google::protobuf::RpcController* controller,
     const ::OstProto::VersionInfo* request,
     ::OstProto::VersionCompatibility* response,
@@ -590,7 +662,7 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
     }
     else {
         response->set_result(OstProto::VersionCompatibility::kIncompatible);
-        response->set_notes(QString("Drone needs client version %1.%2.x")
+        response->set_notes(QString("Drone needs controller version %1.%2.x")
                 .arg(my[0], my[1]).toStdString());
         static_cast<PbRpcController*>(controller)->TriggerDisconnect();
     }

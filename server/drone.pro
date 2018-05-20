@@ -2,12 +2,13 @@ TEMPLATE = app
 CONFIG += qt ver_info
 QT += network script xml
 QT -= gui
-DEFINES += HAVE_REMOTE WPCAP
 linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
     DEFINES += HAVE_IFLA_STATS64
 INCLUDEPATH += "../rpc"
 win32 {
+    DEFINES += HAVE_REMOTE WPCAP
     CONFIG += console
+    QMAKE_LFLAGS += -static
     LIBS += -lwpcap -lpacket
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostproto
@@ -31,6 +32,7 @@ win32 {
 LIBS += -lm
 LIBS += -lprotobuf
 HEADERS += drone.h \
+    pcaptransmitter.h \
     myservice.h
 SOURCES += \
     devicemanager.cpp \
@@ -40,6 +42,10 @@ SOURCES += \
     portmanager.cpp \
     abstractport.cpp \
     pcapport.cpp \
+    pcaptransmitter.cpp \
+    pcaprxstats.cpp \
+    pcaptxstats.cpp \
+    pcaptxthread.cpp \
     bsdport.cpp \
     linuxport.cpp \
     winpcapport.cpp 
@@ -51,3 +57,4 @@ QMAKE_DISTCLEAN += object_script.*
 
 include (../install.pri)
 include (../version.pri)
+include (../options.pri)

@@ -16,25 +16,27 @@ matrix:
 
 before_install:
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then \
-       brew update && \
-       brew tap cartr/qt4 && \
-       brew tap-pin cartr/qt4 && \
-       brew install qt@4 && \
+       brew install qt5 && \
+       brew link qt5 --force && \
        brew install protobuf && \
-       ls -lR /usr/local/include; \
+       ls -lR /usr/local/include/google/protobuf; \
+       which clang++; \
+       clang++ -E -x c++ - -v < /dev/null; \
+       export CPLUS_INCLUDE_PATH=/usr/local/include; \
+       export LIBRARY_PATH=/usr/local/lib; \
      fi"
 
 addons:
   apt:
     packages:
-      - libqt4-dev
-      - qt4-qmake
+      - qtbase5-dev
+      - qtscript5-dev
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
 
 script:
-  - qmake
+  - QT_SELECT=qt5 qmake
   - make
 
 notifications:

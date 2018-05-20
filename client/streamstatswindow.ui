@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StreamStatsWindow</class>
+ <widget class="QWidget" name="StreamStatsWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>551</width>
+    <height>452</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Stream Statistics</string>
+  </property>
+  <layout class="QHBoxLayout">
+   <item>
+    <widget class="XTableView" name="streamStats">
+     <property name="contextMenuPolicy">
+      <enum>Qt::ActionsContextMenu</enum>
+     </property>
+     <property name="whatsThis">
+      <string>Oops! We don't seem to have any stream statistics for the requested port(s)
+
+Wait a little bit to see if they appear, otherwise verify your stream stats configuration</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionShowByteCounters">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Byte Counters</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XTableView</class>
+   <extends>QTableView</extends>
+   <header>xtableview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

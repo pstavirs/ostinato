@@ -46,8 +46,9 @@ public:
     RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
     virtual ~RpcConnection();
 
-    static void connIdMsgHandler(QtMsgType type, const char* msg);
-
+    static void connIdMsgHandler(QtMsgType type,
+                                 const QMessageLogContext &context,
+                                 const QString &msg);
 private:
     void writeHeader(char* header, quint16 type, quint16 method, 
                      quint32 length);

@@ -162,8 +162,8 @@ void PdmlProtocol::fieldHandler(QString name,
         QString valueHexStr = attributes.value("value").toString();
 
         qDebug("\t(KNOWN) fieldName:%s, value:%s",
-                name.toAscii().constData(), 
-                valueHexStr.toAscii().constData());
+                qPrintable(name), 
+                qPrintable(valueHexStr));
 
         knownFieldHandler(name, valueHexStr, pbProto);
     }
@@ -178,7 +178,7 @@ void PdmlProtocol::fieldHandler(QString name,
             size = attributes.value("size").toString().toInt();
 
         qDebug("\t(UNKNOWN) fieldName:%s, pos:%d, size:%d",
-                name.toAscii().constData(), pos, size);
+                qPrintable(name), pos, size);
 
         unknownFieldHandler(name, pos, size, attributes, pbProto, stream);
     }

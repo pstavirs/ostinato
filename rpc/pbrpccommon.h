@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PB_RPC_COMMON_H
 
 // Print a HexDump
-#define BUFDUMP(ptr, len) qDebug("%s", QString(QByteArray((char*)(ptr), \
-    (len)).toHex()).toAscii().data()); 
+#define BUFDUMP(ptr, len) qDebug("%s", \
+        qPrintable(QString(QByteArray((char*)(ptr), (len)).toHex()))); 
 
 /*
 ** RPC Header (8)

@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += network xml script
+QT += widgets network xml script
 INCLUDEPATH += "../extra/qhexedit2/src"
 LIBS += \
     -lprotobuf
@@ -24,9 +24,11 @@ FORMS += \
     tcp.ui \
     udp.ui \
     textproto.ui \
+    tosdscp.ui \
     hexdump.ui \
     payload.ui \
     sample.ui \
+    sign.ui \
     userscript.ui
 
 PROTOS = \
@@ -49,6 +51,9 @@ HEADERS = \
     sessionfileformat.h \
     streamfileformat.h \
     spinboxdelegate.h
+
+HEADERS += \
+    tosdscp.h
 
 HEADERS += \
     abstractprotocolconfig.h \
@@ -79,6 +84,7 @@ HEADERS += \
     hexdumpconfig.h \
     payloadconfig.h \
     sampleconfig.h \
+    signconfig.h \
     userscriptconfig.h
 
 SOURCES += \
@@ -95,6 +101,9 @@ SOURCES += \
     sessionfileformat.cpp \
     streamfileformat.cpp \
     spinboxdelegate.cpp
+
+SOURCES += \
+    tosdscp.cpp
 
 SOURCES += \
     protocolwidgetfactory.cpp \
@@ -118,6 +127,7 @@ SOURCES += \
     hexdumpconfig.cpp \
     payloadconfig.cpp \
     sampleconfig.cpp \
+    signconfig.cpp \
     userscriptconfig.cpp
 
 SOURCES += \
@@ -141,3 +151,4 @@ SOURCES += \
 QMAKE_DISTCLEAN += object_script.*
 
 include(../protobuf.pri)
+include(../options.pri)

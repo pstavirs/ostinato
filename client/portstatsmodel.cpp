@@ -22,6 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTimer>
 
+enum {
+    // XXX: The byte stats don't include FCS so include it in the overhead
+    kPerPacketByteOverhead = 24 // 1(SFD)+7(Preamble)+12(IPG)+4(FCS)
+};
+
 PortStatsModel::PortStatsModel(PortGroupList *p, QObject *parent)
     : QAbstractTableModel(parent) 
 {
@@ -134,28 +139,38 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
             // Statistics
             case e_STAT_FRAMES_RCVD:
-                return quint64(stats.rx_pkts());
+                return QString("%L1").arg(quint64(stats.rx_pkts()));
 
             case e_STAT_FRAMES_SENT:
-                return quint64(stats.tx_pkts());
+                return QString("%L1").arg(quint64(stats.tx_pkts()));
 
             case e_STAT_FRAME_SEND_RATE:
-                return quint64(stats.tx_pps());
+                return QString("%L1").arg(quint64(stats.tx_pps()));
 
             case e_STAT_FRAME_RECV_RATE:
-                return quint64(stats.rx_pps());
+                return QString("%L1").arg(quint64(stats.rx_pps()));
 
             case e_STAT_BYTES_RCVD:
-                return quint64(stats.rx_bytes());
+                return QString("%L1").arg(quint64(stats.rx_bytes()));
 
             case e_STAT_BYTES_SENT:
-                return quint64(stats.tx_bytes());
+                return QString("%L1").arg(quint64(stats.tx_bytes()));
 
             case e_STAT_BYTE_SEND_RATE:
-                return quint64(stats.tx_bps());
+                return QString("%L1").arg(quint64(stats.tx_bps()));
 
             case e_STAT_BYTE_RECV_RATE:
-                return quint64(stats.rx_bps());
+                return QString("%L1").arg(quint64(stats.rx_bps()));
+
+            case e_STAT_BIT_SEND_RATE:
+                return QString("%L1").arg(quint64(
+                            stats.tx_bps()
+                                + stats.tx_pps()*kPerPacketByteOverhead)*8);
+
+            case e_STAT_BIT_RECV_RATE:
+                return QString("%L1").arg(quint64(
+                            stats.rx_bps()
+                                + stats.rx_pps()*kPerPacketByteOverhead)*8);
 
 #if 0
             case e_STAT_FRAMES_RCVD_NIC:
@@ -170,10 +185,15 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
             case e_STAT_BYTES_SENT_NIC:
                 return stats.tx_bytes_nic();
 #endif
-            case e_STAT_RX_DROPS : return quint64(stats.rx_drops());
-            case e_STAT_RX_ERRORS: return quint64(stats.rx_errors());
-            case e_STAT_RX_FIFO_ERRORS: return quint64(stats.rx_fifo_errors());
-            case e_STAT_RX_FRAME_ERRORS: return quint64(stats.rx_frame_errors());
+
+            case e_STAT_RX_DROPS:
+                return QString("%L1").arg(quint64(stats.rx_drops()));
+            case e_STAT_RX_ERRORS:
+                return QString("%L1").arg(quint64(stats.rx_errors()));
+            case e_STAT_RX_FIFO_ERRORS:
+                return QString("%L1").arg(quint64(stats.rx_fifo_errors()));
+            case e_STAT_RX_FRAME_ERRORS:
+                return QString("%L1").arg(quint64(stats.rx_frame_errors()));
 
             default:
                 qWarning("%s: Unhandled stats id %d\n", __FUNCTION__,
@@ -288,6 +308,8 @@ void PortStatsModel::when_portListChanged()
 {
     int i, count = 0;
 
+    beginResetModel();
+
     // recalc numPorts
     while (numPorts.size())
         numPorts.removeFirst();
@@ -298,7 +320,7 @@ void PortStatsModel::when_portListChanged()
         numPorts.append(count);
     }
 
-    reset();
+    endResetModel();
 }
 
 // FIXME: unused? if used, the index calculation row/column needs to be swapped

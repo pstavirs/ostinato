@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dbgthread.h"
 #endif
 
+#include "jumpurl.h"
 #include "params.h"
 #include "portgrouplist.h"
 #include "portstatswindow.h"
@@ -41,7 +42,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 #include <QProcess>
 #include <QProgressDialog>
+#include <QTimer>
 #include <QUrl>
+
+#ifdef Q_OS_WIN32
+#define WIN32_NO_STATUS
+#include <windows.h>
+#undef WIN32_NO_STATUS
+#include <ntstatus.h>
+#endif
 
 extern const char* version;
 extern const char* revision;
@@ -68,8 +77,13 @@ MainWindow::MainWindow(QWidget *parent)
 
         qDebug("staring local server - %s", qPrintable(serverApp));
         localServer_ = new QProcess(this);
+        connect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
+                SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
+        connect(localServer_, SIGNAL(error(QProcess::ProcessError)),
+                SLOT(onLocalServerError(QProcess::ProcessError)));
         localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
         localServer_->start(serverApp, QStringList());
+        QTimer::singleShot(5000, this, SLOT(stopLocalServerMonitor()));
     }
     else
         localServer_ = NULL;
@@ -82,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setObjectName("portsDock");
     portsDock->setFeatures(
                 portsDock->features() & ~QDockWidget::DockWidgetClosable);
-    statsDock = new QDockWidget(tr("Statistics"), this);
+    statsDock = new QDockWidget(tr("Port Statistics"), this);
     statsDock->setObjectName("statsDock");
     statsDock->setFeatures(
                 statsDock->features() & ~QDockWidget::DockWidgetClosable);
@@ -140,6 +154,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    stopLocalServerMonitor();
     if (localServer_) {
 #ifdef Q_OS_WIN32
         //! \todo - find a way to terminate cleanly
@@ -150,6 +165,13 @@ MainWindow::~MainWindow()
     }
 
     delete pgl;
+
+    // We don't want to save state for Stream Stats Docks - so delete them
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks)
+        delete dock;
+    Q_ASSERT(findChildren<QDockWidget*>("streamStatsDock").size() == 0);
 
     QByteArray layout = saveState(0);
     appSettings->setValue(kApplicationWindowLayout, layout);
@@ -294,12 +316,22 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     setGeometry(defaultGeometry_);
     restoreState(defaultLayout_, 0);
 
+    // Add streamStats as tabs
+    QList<QDockWidget*> streamStatsDocks
+            = findChildren<QDockWidget*>("streamStatsDock");
+    foreach(QDockWidget *dock, streamStatsDocks) {
+        dock->setFloating(false);
+        tabifyDockWidget(statsDock, dock);
+    }
+    statsDock->show();
+    statsDock->raise();
+
     actionViewShowMyReservedPortsOnly->setChecked(false);
 }
 
 void MainWindow::on_actionHelpOnline_triggered()
 {
-    QDesktopServices::openUrl(QUrl("http://ostinato.org/docs"));
+    QDesktopServices::openUrl(QUrl(jumpUrl("help", "app", "menu")));
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
@@ -316,10 +348,76 @@ void MainWindow::on_actionHelpAbout_triggered()
     delete aboutDialog;
 }
 
+void MainWindow::stopLocalServerMonitor()
+{
+    // We are only interested in startup errors
+    disconnect(localServer_, SIGNAL(error(QProcess::ProcessError)),
+            this, SLOT(onLocalServerError(QProcess::ProcessError)));
+    disconnect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
+            this, SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
+}
+
+void MainWindow::onLocalServerFinished(int exitCode,
+                                       QProcess::ExitStatus /*exitStatus*/)
+{
+    if (exitCode)
+        reportLocalServerError();
+}
+
+void MainWindow::onLocalServerError(QProcess::ProcessError /*error*/)
+{
+    reportLocalServerError();
+}
+
+void MainWindow::reportLocalServerError()
+{
+    QMessageBox msgBox(this);
+    msgBox.setIcon(QMessageBox::Warning);
+    msgBox.setTextFormat(Qt::RichText);
+    msgBox.setStyleSheet("messagebox-text-interaction-flags: 5"); // mouse copy
+    QString errorStr = tr("<p>Failed to start the local drone agent - "
+                          "error 0x%1, exit status 0x%2 exit code 0x%3.</p>")
+            .arg(localServer_->error(), 0, 16)
+            .arg(localServer_->exitStatus(), 0, 16)
+            .arg(localServer_->exitCode(), 0, 16);
+    if (localServer_->error() == QProcess::FailedToStart)
+        errorStr.append(tr("<p>The drone program does not exist at %1 or you "
+                           "don't have sufficient permissions to execute it."
+                           "</p>")
+                        .arg(QCoreApplication::applicationDirPath()));
+    if (localServer_->exitCode() == 1)
+        errorStr.append(tr("<p>The drone program was not able to bind to "
+                           "TCP port 7878 - maybe a drone process is already "
+                           "running?</p>"));
+#ifdef Q_OS_WIN32
+    if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
+        errorStr.append(tr("<p>This is most likely because Packet.dll "
+                           "was not found - make sure you have "
+                           "<a href='%1'>WinPcap"
+                           "</a> installed.</p>")
+                                .arg(jumpUrl("winpcap")));
+#endif
+    msgBox.setText(errorStr);
+    msgBox.setInformativeText(tr("Try running drone directly."));
+    msgBox.exec();
+
+    QMessageBox::information(this, QString(),
+        tr("<p>If you have remote drone agents running, you can still add "
+           "and connect to them.</p>"
+           "<p>If you don't want to start the local drone agent at startup, "
+           "provide the <b>-c</b> option to Ostinato on the command line.</p>"
+           "<p>Learn about Ostinato's <a href='%1'>Controller-Agent "
+           "architecture</a></p>").arg(jumpUrl("arch")));
+}
+
 void MainWindow::onNewVersion(QString newVersion)
 {
-    statusBar()->showMessage(QString("New Ostinato version %1 available. "
-                "Visit http://ostinato.org to download").arg(newVersion));
+    QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
+                   "<a href='%2'>ostinato.org</a> to download")
+                .arg(newVersion)
+                .arg(jumpUrl("download", "app", "status", "update")));
+    msg->setOpenExternalLinks(true);
+    statusBar()->addPermanentWidget(msg);
 }
 
 //! Returns true on success (or user cancel) and false on failure

@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>DevicesWidget</class>
- <widget class="QWidget" name="DevicesWidget" >
-  <property name="geometry" >
+ <widget class="QWidget" name="DevicesWidget">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,47 +10,38 @@
     <height>328</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" >
-   <property name="leftMargin" >
-    <number>0</number>
-   </property>
-   <property name="topMargin" >
-    <number>0</number>
-   </property>
-   <property name="rightMargin" >
-    <number>0</number>
-   </property>
-   <property name="bottomMargin" >
+  <layout class="QVBoxLayout">
+   <property name="margin">
     <number>0</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" >
+    <layout class="QHBoxLayout">
      <item>
-      <widget class="QRadioButton" name="deviceConfig" >
-       <property name="text" >
+      <widget class="QRadioButton" name="deviceConfig">
+       <property name="text">
         <string>Configuration</string>
        </property>
-       <property name="checked" >
+       <property name="checked">
         <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="deviceInfo" >
-       <property name="text" >
+      <widget class="QRadioButton" name="deviceInfo">
+       <property name="text">
         <string>Information</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>131</width>
          <height>23</height>
@@ -58,90 +50,116 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="refresh" >
-       <property name="toolTip" >
+      <widget class="QPushButton" name="refresh">
+       <property name="toolTip">
         <string>Refresh information</string>
        </property>
-       <property name="statusTip" >
+       <property name="statusTip">
         <string>Refresh device and neighbor information</string>
        </property>
-       <property name="text" >
+       <property name="text">
         <string/>
        </property>
-       <property name="icon" >
-        <iconset resource="ostinato.qrc" >:/icons/refresh.png</iconset>
+       <property name="icon">
+        <iconset resource="ostinato.qrc">
+         <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QTableView" name="deviceGroupList" >
-     <property name="contextMenuPolicy" >
+    <widget class="XTableView" name="deviceGroupList">
+     <property name="contextMenuPolicy">
       <enum>Qt::ActionsContextMenu</enum>
      </property>
-     <property name="frameShape" >
+     <property name="whatsThis">
+      <string>This is the device group list for the selected port
+
+A device group is a set of one or more devices/hosts which will be emulated by Ostinato
+
+Right-click to create/edit a device group</string>
+     </property>
+     <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="lineWidth" >
+     <property name="lineWidth">
       <number>1</number>
      </property>
-     <property name="selectionMode" >
+     <property name="selectionMode">
       <enum>QAbstractItemView::ExtendedSelection</enum>
      </property>
-     <property name="selectionBehavior" >
+     <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="deviceList" >
-     <property name="sizePolicy" >
-      <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+    <widget class="XTableView" name="deviceList">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>1</verstretch>
       </sizepolicy>
      </property>
-     <property name="selectionBehavior" >
+     <property name="whatsThis">
+      <string>No devices being emulated
+
+To emulate a device, click on Configuration and create a device group</string>
+     </property>
+     <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="deviceDetail" >
-     <property name="selectionMode" >
+    <widget class="XTableView" name="deviceDetail">
+     <property name="whatsThis">
+      <string>IP neighbor cache is empty</string>
+     </property>
+     <property name="selectionMode">
       <enum>QAbstractItemView::SingleSelection</enum>
      </property>
     </widget>
    </item>
   </layout>
-  <action name="actionNewDeviceGroup" >
-   <property name="icon" >
-    <iconset resource="ostinato.qrc" >:/icons/devicegroup_add.png</iconset>
+  <action name="actionNewDeviceGroup">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/devicegroup_add.png</normaloff>:/icons/devicegroup_add.png</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>New Device Group</string>
    </property>
   </action>
-  <action name="actionDeleteDeviceGroup" >
-   <property name="icon" >
-    <iconset resource="ostinato.qrc" >:/icons/devicegroup_delete.png</iconset>
+  <action name="actionDeleteDeviceGroup">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/devicegroup_delete.png</normaloff>:/icons/devicegroup_delete.png</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Delete Device Group</string>
    </property>
   </action>
-  <action name="actionEditDeviceGroup" >
-   <property name="icon" >
-    <iconset resource="ostinato.qrc" >:/icons/devicegroup_edit.png</iconset>
+  <action name="actionEditDeviceGroup">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/devicegroup_edit.png</normaloff>:/icons/devicegroup_edit.png</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Edit Device Group</string>
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XTableView</class>
+   <extends>QTableView</extends>
+   <header>xtableview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
-  <include location="ostinato.qrc" />
+  <include location="ostinato.qrc"/>
  </resources>
  <connections/>
 </ui>

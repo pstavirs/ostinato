@@ -88,7 +88,7 @@ message File {
     // FieldNumber 1 is reserved and MUST not be used!
     required bytes magic_value = 2;
     required FileMetaData meta_data = 3;
-    optional FileContent content_matter = 9;
+    optional FileContentMatter content_matter = 9;
     required fixed32 checksum_value = 15;
 }
 

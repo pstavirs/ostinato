@@ -31,20 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QTemporaryFile>
 #include <QtGlobal>
 
-static inline quint32 swap32(quint32 val)
-{
-    return (((val >> 24) && 0x000000FF) |
-            ((val >> 16) && 0x0000FF00) |
-            ((val << 16) && 0x00FF0000) |
-            ((val << 24) && 0xFF000000));
-}
-
-static inline quint16 swap16(quint16 val)
-{
-    return (((val >> 8) && 0x00FF) |
-            ((val << 8) && 0xFF00));
-}
-
 const quint32 kPcapFileMagic = 0xa1b2c3d4;
 const quint32 kPcapFileMagicSwapped = 0xd4c3b2a1;
 const quint16 kPcapFileVersionMajor = 2;
@@ -129,7 +115,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _err_unzip_fail;
         }
 
-        qDebug("decompressing to %s", file2.fileName().toAscii().constData());
+        qDebug("decompressing to %s", qPrintable(file2.fileName()));
 
         gzip.setStandardOutputFile(file2.fileName());
         gzip.start(OstProtoLib::gzipPath(), 
@@ -209,7 +195,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _non_pdml;
         }
 
-        qDebug("generating PDML %s", pdmlFile.fileName().toAscii().constData());
+        qDebug("generating PDML %s", qPrintable(pdmlFile.fileName()));
         emit status("Generating PDML...");
         emit target(0);
 
@@ -279,7 +265,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("generating text file (original) %s", 
-                originalTextFile.fileName().toAscii().constData());
+                qPrintable(originalTextFile.fileName()));
 
         emit status("Preparing original PCAP for diff...");
         emit target(0);
@@ -339,7 +325,7 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("generating text file (imported) %s", 
-                importedTextFile.fileName().toAscii().constData());
+                qPrintable(importedTextFile.fileName()));
 
         emit status("Preparing imported PCAP for diff...");
         emit target(0);
@@ -384,9 +370,9 @@ bool PcapFileFormat::open(const QString fileName,
             goto _diff_fail;
         }
         qDebug("diffing %s and %s > %s", 
-                originalTextFile.fileName().toAscii().constData(),
-                importedTextFile.fileName().toAscii().constData(),
-                diffFile.fileName().toAscii().constData());
+                qPrintable(originalTextFile.fileName()),
+                qPrintable(importedTextFile.fileName()),
+                qPrintable(diffFile.fileName()));
 
         emit status("Taking diff...");
         emit target(0);

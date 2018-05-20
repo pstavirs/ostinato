@@ -187,6 +187,10 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
         {
             return portIconFactory[port->linkState()][port->hasExclusiveControl()];
         }
+        else if ((role == Qt::ForegroundRole))
+        {
+            return port->isDirty() ? QBrush(Qt::red) : QVariant();
+        }
         else
         {
             DBG0("Exit PortModel data 6\n");
@@ -339,5 +343,7 @@ void PortModel::portGroupRemoved()
 
 void PortModel::when_portListChanged()
 {
-    reset();
+    // FIXME: why needed?
+    beginResetModel();
+    endResetModel();
 }

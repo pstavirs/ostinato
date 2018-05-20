@@ -96,7 +96,7 @@ DeviceGroupDialog::DeviceGroupDialog(
             vlans->setItemDelegateForColumn(i, spd);
     }
 
-    vlans->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    vlans->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     vlans->resizeRowsToContents();
 
     // Set vlan tag count *after* adding all items, so connected slots

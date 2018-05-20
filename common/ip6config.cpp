@@ -84,11 +84,11 @@ void Ip6ConfigForm::loadWidget(AbstractProtocol *ip6Proto)
             AbstractProtocol::FieldValue
         ).toString());
 
-    trafficClass->setText(uintToHexStr(
+    tosDscp->setValue(
         ip6Proto->fieldData(
             Ip6Protocol::ip6_trafficClass, 
             AbstractProtocol::FieldValue
-        ).toUInt(), 1));
+        ).toUInt());
 
     flowLabel->setText(QString("%1").arg(
         ip6Proto->fieldData(
@@ -180,7 +180,7 @@ void Ip6ConfigForm::storeWidget(AbstractProtocol *ip6Proto)
 
     ip6Proto->setFieldData(
             Ip6Protocol::ip6_trafficClass,
-            trafficClass->text().remove(QChar(' ')).toUInt(&isOk, BASE_HEX));
+            tosDscp->value());
 
     ip6Proto->setFieldData(
             Ip6Protocol::ip6_flowLabel,

@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "dumpview.h"
 
+#include <QScrollBar>
+#include <QStylePainter>
+
 //! \todo Enable Scrollbars
 
 DumpView::DumpView(QWidget *parent)

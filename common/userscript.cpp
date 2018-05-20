@@ -281,7 +281,7 @@ void UserScriptProtocol::evaluateUserScript() const
     userFunction = userProtocolScriptValue_.property(property);
 
     qDebug("userscript property %s: isValid:%d/isFunc:%d", 
-            property.toAscii().constData(),
+            qPrintable(property),
             userFunction.isValid(), userFunction.isFunction());
 
     if (!userFunction.isValid())
@@ -301,7 +301,7 @@ void UserScriptProtocol::evaluateUserScript() const
         goto _error_exception;
 
     qDebug("userscript property %s return value: isValid:%d/isArray:%d",
-            property.toAscii().constData(),
+            qPrintable(property),
             userValue.isValid(), userValue.isArray());
 
     if (!userValue.isArray())
@@ -315,7 +315,7 @@ void UserScriptProtocol::evaluateUserScript() const
     userFunction = userProtocolScriptValue_.property(property);
 
     qDebug("userscript property %s: isValid:%d/isFunc:%d", 
-            property.toAscii().constData(),
+            qPrintable(property),
             userFunction.isValid(), userFunction.isFunction());
 
     if (!userFunction.isValid())
@@ -335,7 +335,7 @@ void UserScriptProtocol::evaluateUserScript() const
         goto _error_exception;
 
     qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
-            property.toAscii().constData(),
+            qPrintable(property),
             userValue.isValid(), userValue.isNumber());
 
     if (!userValue.isNumber())
@@ -349,7 +349,7 @@ void UserScriptProtocol::evaluateUserScript() const
     userFunction = userProtocolScriptValue_.property(property);
 
     qDebug("userscript property %s: isValid:%d/isFunc:%d", 
-            property.toAscii().constData(),
+            qPrintable(property),
             userFunction.isValid(), userFunction.isFunction());
 
     if (!userFunction.isValid())
@@ -366,7 +366,7 @@ void UserScriptProtocol::evaluateUserScript() const
         goto _error_exception;
 
     qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
-            property.toAscii().constData(),
+            qPrintable(property),
             userValue.isValid(), userValue.isNumber());
 
     if (!userValue.isNumber())
@@ -382,7 +382,7 @@ _skip_cksum:
     userFunction = userProtocolScriptValue_.property(property);
 
     qDebug("userscript property %s: isValid:%d/isFunc:%d", 
-            property.toAscii().constData(),
+            qPrintable(property),
             userFunction.isValid(), userFunction.isFunction());
 
     if (!userFunction.isValid())
@@ -399,7 +399,7 @@ _skip_cksum:
         goto _error_exception;
 
     qDebug("userscript property %s return value: isValid:%d/isNumber:%d",
-            property.toAscii().constData(),
+            qPrintable(property),
             userValue.isValid(), userValue.isNumber());
 
     if (!userValue.isNumber())

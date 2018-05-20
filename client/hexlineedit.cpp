@@ -64,10 +64,10 @@ void HexLineEdit::focusOutEvent(QFocusEvent* /*e*/)
     bool isOk;
     ulong    num;
 
-    qDebug("before = %s\n", text().toAscii().data());
+    qDebug("before = %s\n", qPrintable(text()));
     num = text().remove(QChar(' ')).toULong(&isOk, 16);
     setText(uintToHexStr(num, 4));
-    qDebug("after = %s\n", text().toAscii().data());
+    qDebug("after = %s\n", qPrintable(text()));
 #undef uintToHexStr
 #endif
 }

@@ -29,25 +29,45 @@ public:
 
     quint64 value();
     void setValue(quint64 val);
+
+protected:
+    virtual void focusOutEvent(QFocusEvent *e);
 };
 
 inline MacEdit::MacEdit(QWidget *parent)
     : QLineEdit(parent)
 {
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
+    // Allow : or - as separator
+    QRegExp reMac("([0-9,a-f,A-F]{0,2}[:-]){5,5}[0-9,a-f,A-F]{0,2}");
 
     setValidator(new QRegExpValidator(reMac, this));
 }
 
 inline quint64 MacEdit::value()
 {
-    return text().remove(QChar(':')).toULongLong(NULL, 16);
+    QStringList bytes = text().split(QRegExp("[:-]"));
+    quint64 mac = 0;
+
+    while (bytes.count() > 6)
+        bytes.removeLast();
+
+    for (int i = 0; i < bytes.count(); i++)
+        mac |= (bytes.at(i).toULongLong(NULL, 16) & 0xff) << (5-i)*8;
+
+    return mac;
 }
 
 inline void MacEdit::setValue(quint64 val)
 {
     setText(QString("%1").arg(val, 6*2, 16, QChar('0'))
         .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper());
+}
+
+inline void MacEdit::focusOutEvent(QFocusEvent *e)
+{
+    // be helpful and show a well-formatted value on focus out
+    setValue(value());
+    QLineEdit::focusOutEvent(e);
 }
 
 #endif

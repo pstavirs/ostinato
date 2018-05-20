@@ -23,9 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsfilterdialog.h"
 #include "portstatsmodel.h"
 #include "portstatsproxymodel.h"
+#include "streamstatsmodel.h"
+#include "streamstatswindow.h"
 #include "settings.h"
 
+#include <QDockWidget>
 #include <QHeaderView>
+#include <QMainWindow>
+
+extern QMainWindow *mainWindow;
 
 PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     : QWidget(parent), proxyStatsModel(NULL)
@@ -43,10 +49,17 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     else
         tvPortStats->setModel(model);
 
+    tvPortStats->setAlternatingRowColors(true);
     tvPortStats->verticalHeader()->setHighlightSections(false);
     tvPortStats->verticalHeader()->setDefaultSectionSize(
         tvPortStats->verticalHeader()->minimumSectionSize());
 
+    connect(tvPortStats->selectionModel(),
+            SIGNAL(selectionChanged(
+                    const QItemSelection&, const QItemSelection&)),
+            SLOT(when_tvPortStats_selectionChanged(
+                    const QItemSelection&, const QItemSelection&)));
+    when_tvPortStats_selectionChanged(QItemSelection(), QItemSelection());
 }
 
 PortStatsWindow::~PortStatsWindow()
@@ -70,12 +83,44 @@ void PortStatsWindow::showMyReservedPortsOnly(bool enabled)
 }
 
 /* ------------- SLOTS (private) -------------- */
+
+void PortStatsWindow::when_tvPortStats_selectionChanged(
+        const QItemSelection& /*selected*/,
+        const QItemSelection& /*deselected*/)
+{
+    QModelIndexList indexList = 
+            tvPortStats->selectionModel()->selectedColumns();
+
+    if (proxyStatsModel) {
+        selectedColumns.clear();
+        foreach(QModelIndex index, indexList)
+            selectedColumns.append(proxyStatsModel->mapToSource(index));
+    }
+    else 
+        selectedColumns = indexList;
+
+    bool isEmpty = selectedColumns.isEmpty();
+
+    tbStartTransmit->setDisabled(isEmpty);
+    tbStopTransmit->setDisabled(isEmpty);
+
+    tbStartCapture->setDisabled(isEmpty);
+    tbStopCapture->setDisabled(isEmpty);
+    tbViewCapture->setDisabled(isEmpty);
+
+    tbClear->setDisabled(isEmpty);
+    tbGetStreamStats->setDisabled(isEmpty);
+
+    tbResolveNeighbors->setDisabled(isEmpty);
+    tbClearNeighbors->setDisabled(isEmpty);
+}
+
 void PortStatsWindow::on_tbStartTransmit_clicked()
 {
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), pgpl);
+    model->portListFromIndex(selectedColumns, pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -90,7 +135,7 @@ void PortStatsWindow::on_tbStopTransmit_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), pgpl);
+    model->portListFromIndex(selectedColumns, pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -106,7 +151,7 @@ void PortStatsWindow::on_tbStartCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), pgpl);
+    model->portListFromIndex(selectedColumns, pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -122,7 +167,7 @@ void PortStatsWindow::on_tbStopCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), pgpl);
+    model->portListFromIndex(selectedColumns, pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -138,7 +183,7 @@ void PortStatsWindow::on_tbViewCapture_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    pgpl;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), pgpl);
+    model->portListFromIndex(selectedColumns, pgpl);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < pgpl.size(); i++)
@@ -153,7 +198,7 @@ void PortStatsWindow::on_tbResolveNeighbors_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    portList;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), portList);
+    model->portListFromIndex(selectedColumns, portList);
 
     // Resolve ARP/ND for selected ports, portgroup by portgroup
     for (int i = 0; i < portList.size(); i++)
@@ -168,7 +213,7 @@ void PortStatsWindow::on_tbClearNeighbors_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    portList;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), portList);
+    model->portListFromIndex(selectedColumns, portList);
 
     // Clear ARP/ND for ports, portgroup by portgroup
     for (int i = 0; i < portList.size(); i++)
@@ -183,13 +228,15 @@ void PortStatsWindow::on_tbClear_clicked()
     QList<PortStatsModel::PortGroupAndPortList>    portList;
 
     // Get selected ports
-    model->portListFromIndex(selectedColumns(), portList);
+    model->portListFromIndex(selectedColumns, portList);
 
     // Clear selected ports, portgroup by portgroup
     for (int i = 0; i < portList.size(); i++)
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId).
+            clearStreamStats(&portList[i].portList);
     }
 }
 
@@ -216,6 +263,44 @@ void PortStatsWindow::on_tbClearAll_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId)
                     .clearPortStats(&portList[i].portList);
+        pgl->portGroupByIndex(portList.at(i).portGroupId)
+                    .clearStreamStats(&portList[i].portList);
+    }
+}
+
+void PortStatsWindow::on_tbGetStreamStats_clicked()
+{
+    QList<PortStatsModel::PortGroupAndPortList> portList;
+    StreamStatsModel *streamStatsModel;
+
+    // Get selected ports
+    model->portListFromIndex(selectedColumns, portList);
+
+    if (portList.size()) {
+        QDockWidget *dock = new QDockWidget(mainWindow);
+        streamStatsModel = new StreamStatsModel(dock);
+        dock->setWidget(new StreamStatsWindow(streamStatsModel, dock));
+        dock->setWindowTitle(dock->widget()->windowTitle());
+        dock->setObjectName("streamStatsDock");
+        dock->setAttribute(Qt::WA_DeleteOnClose);
+        QDockWidget *statsDock = mainWindow->findChild<QDockWidget*>(
+                                                            "statsDock");
+        mainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+        mainWindow->tabifyDockWidget(statsDock, dock);
+        dock->show();
+        dock->raise();
+    }
+
+    // Get stream stats for selected ports, portgroup by portgroup
+    for (int i = 0; i < portList.size(); i++)
+    {
+        PortGroup &pg = pgl->portGroupByIndex(portList.at(i).portGroupId);
+        if (pg.getStreamStats(&portList[i].portList)) {
+            connect(&pg,SIGNAL(streamStatsReceived(
+                                  quint32, const OstProto::StreamStatsList*)),
+                    streamStatsModel, SLOT(appendStreamStatsList(
+                                  quint32, const OstProto::StreamStatsList*)));
+        }
     }
 }
 
@@ -251,21 +336,4 @@ void PortStatsWindow::on_tbFilter_clicked()
         for(int vi = 0; vi < newColumns.size(); vi++)
             hv->moveSection(hv->visualIndex(newColumns.at(vi)), vi);
     }
-}
-
-/* ------------ Private Methods -------------- */
-
-QModelIndexList PortStatsWindow::selectedColumns()
-{
-    QModelIndexList indexList = 
-            tvPortStats->selectionModel()->selectedColumns();
-    QModelIndexList sourceIndexList;
-
-    if (!proxyStatsModel)
-        return indexList;
-
-    foreach(QModelIndex index, indexList)
-        sourceIndexList.append(proxyStatsModel->mapToSource(index));
-
-    return sourceIndexList;
 }

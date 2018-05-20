@@ -26,7 +26,9 @@ PdmlIp6Protocol::PdmlIp6Protocol()
     ostProtoId_ = OstProto::Protocol::kIp6FieldNumber;
 
     fieldMap_.insert("ipv6.version", OstProto::Ip6::kVersionFieldNumber);
+    // Tshark 1.x uses .class while 2.x uses .tclass - we'll use either
     fieldMap_.insert("ipv6.class", OstProto::Ip6::kTrafficClassFieldNumber);
+    fieldMap_.insert("ipv6.tclass", OstProto::Ip6::kTrafficClassFieldNumber);
     fieldMap_.insert("ipv6.flow", OstProto::Ip6::kFlowLabelFieldNumber);
     fieldMap_.insert("ipv6.plen", OstProto::Ip6::kPayloadLengthFieldNumber);
     fieldMap_.insert("ipv6.nxt", OstProto::Ip6::kNextHeaderFieldNumber);

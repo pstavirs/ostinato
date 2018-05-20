@@ -68,7 +68,7 @@ int PayloadProtocol::protocolFrameSize(int streamIndex) const
     int len;
 
     len = mpStream->frameLen(streamIndex) - protocolFrameOffset(streamIndex) 
-        - kFcsSize;
+        - protocolFramePayloadSize(streamIndex) - kFcsSize;
 
     if (len < 0)
         len = 0;
@@ -215,7 +215,7 @@ bool PayloadProtocol::setFieldData(int index, const QVariant &value,
 
 bool PayloadProtocol::isProtocolFrameValueVariable() const
 {
-    return (AbstractProtocol::isProtocolFrameSizeVariable()
+    return (AbstractProtocol::isProtocolFrameValueVariable()
                ||  isProtocolFrameSizeVariable());
 }
 

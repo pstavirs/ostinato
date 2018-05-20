@@ -39,6 +39,7 @@ LOW
 namespace OstProto {
     class PortContent;
     class PortGroupContent;
+    class StreamStatsList;
 }
 
 class QFile;
@@ -163,13 +164,19 @@ public:
     void getPortStats();
     void processPortStatsList();
     void clearPortStats(QList<uint> *portList = NULL);
-    void processClearStatsAck(PbRpcController *controller);
+    void processClearPortStatsAck(PbRpcController *controller);
+    bool clearStreamStats(QList<uint> *portList = NULL);
+    void processClearStreamStatsAck(PbRpcController *controller);
+    bool getStreamStats(QList<uint> *portList = NULL);
+    void processStreamStatsList(PbRpcController *controller);
 
 signals:
     void portGroupDataChanged(int portGroupId, int portId = 0xFFFF);
     void portListAboutToBeChanged(quint32 portGroupId);
     void portListChanged(quint32 portGroupId);
     void statsChanged(quint32 portGroupId);
+    void streamStatsReceived(quint32 portGroupId,
+                             const OstProto::StreamStatsList *stats);
 
 private slots:
     void on_reconnectTimer_timeout();

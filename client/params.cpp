@@ -31,10 +31,10 @@ int Params::parseCommandLine(int argc, char* argv[])
     int c, n = 0;
 
     opterr = 0;
-    while ((c = getopt (argc, argv, "s")) != -1) {
+    while ((c = getopt (argc, argv, "c")) != -1) {
         switch (c)
         {
-        case 's':
+        case 'c':
             localDrone_ = false;
             break;
         default:

@@ -138,14 +138,17 @@ QVariant ArpStatusModel::data(const QModelIndex &index, int role) const
 
 void ArpStatusModel::setDeviceIndex(Port *port, int deviceIndex)
 {
+    beginResetModel();
     port_ = port;
     deviceIndex_ = deviceIndex;
     if (port_)
         neighbors_ = port_->deviceNeighbors(deviceIndex);
-    reset();
+    endResetModel();
 }
 
 void ArpStatusModel::updateArpStatus()
 {
-    reset();
+    // FIXME: why needed?
+    beginResetModel();
+    endResetModel();
 }
