@@ -157,7 +157,8 @@ QRegion DumpView::visualRegionForSelection(
 
 //protected slots:
 void DumpView::dataChanged(const QModelIndex &/*topLeft*/, 
-        const QModelIndex &/*bottomRight*/)
+        const QModelIndex &/*bottomRight*/,
+        const QVector<int> &/*roles*/)
 {
     // FIXME(HI)
     update();
