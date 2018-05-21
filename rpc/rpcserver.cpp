@@ -62,7 +62,7 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
     return true;
 }
 
-void RpcServer::incomingConnection(int socketDescriptor)
+void RpcServer::incomingConnection(qintptr socketDescriptor)
 {
     QThread *thread = new QThreadX; // FIXME:QThreadX pending Qt4.4+
     RpcConnection *conn = new RpcConnection(socketDescriptor, service);
