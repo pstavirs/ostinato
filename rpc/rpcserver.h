@@ -47,7 +47,7 @@ signals:
     void notifyClients(int notifType, SharedProtobufMessage notifData);
 
 protected:
-    void incomingConnection(int socketDescriptor);
+    void incomingConnection(qintptr socketDescriptor);
 
 private:
     ::google::protobuf::Service *service;

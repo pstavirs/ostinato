@@ -43,7 +43,7 @@ class RpcConnection : public QObject
     Q_OBJECT
 
 public:
-    RpcConnection(int socketDescriptor, ::google::protobuf::Service *service);
+    RpcConnection(qintptr socketDescriptor, ::google::protobuf::Service *service);
     virtual ~RpcConnection();
 
     static void connIdMsgHandler(QtMsgType type,
@@ -67,7 +67,7 @@ private slots:
     void on_clientSock_disconnected();
 
 private:
-    int socketDescriptor;
+    qintptr socketDescriptor;
     QTcpSocket *clientSock;
 
     ::google::protobuf::Service *service;
