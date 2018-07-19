@@ -47,6 +47,7 @@ public:
 
 public:
     Device(DeviceManager *deviceManager);
+    virtual ~Device() = default;
 
     void setVlan(int index, quint16 vlan, quint16 tpid = kVlanTpid);
     quint64 mac();
@@ -59,43 +60,25 @@ public:
     DeviceKey key();
     void clearKey();
 
-    int encapSize();
-    void encap(PacketBuffer *pktBuf, quint64 dstMac, quint16 type);
-
-    void receivePacket(PacketBuffer *pktBuf);
+    virtual void receivePacket(PacketBuffer *pktBuf) = 0;
     void transmitPacket(PacketBuffer *pktBuf);
 
     void resolveGateway();
 
-    void clearNeighbors(Device::NeighborSet set);
     void resolveNeighbor(PacketBuffer *pktBuf);
-    void getNeighbors(OstEmul::DeviceNeighborList *neighbors);
+    virtual void clearNeighbors(Device::NeighborSet set) = 0;
+    virtual void getNeighbors(OstEmul::DeviceNeighborList *neighbors) = 0;
 
     bool isOrigin(const PacketBuffer *pktBuf);
     quint64 neighborMac(const PacketBuffer *pktBuf);
 
-private: // methods
-    void receiveArp(PacketBuffer *pktBuf);
-    void sendArpRequest(PacketBuffer *pktBuf);
-    void sendArpRequest(quint32 tgtIp);
+protected: // methods
+    virtual quint64 arpLookup(quint32 ip) = 0;
+    virtual quint64 ndpLookup(UInt128 ip) = 0;
+    virtual void sendArpRequest(quint32 tgtIp) = 0;
+    virtual void sendNeighborSolicit(UInt128 tgtIp) = 0;
 
-    void receiveIp4(PacketBuffer *pktBuf);
-    void sendIp4Reply(PacketBuffer *pktBuf);
-
-    void receiveIcmp4(PacketBuffer *pktBuf);
-
-    void receiveIp6(PacketBuffer *pktBuf);
-    bool sendIp6(PacketBuffer *pktBuf, UInt128 dstIp, quint8 protocol);
-    void sendIp6Reply(PacketBuffer *pktBuf);
-
-    void receiveIcmp6(PacketBuffer *pktBuf);
-
-    void receiveNdp(PacketBuffer *pktBuf);
-    void sendNeighborSolicit(PacketBuffer *pktBuf);
-    void sendNeighborSolicit(UInt128 tgtIp);
-    void sendNeighborAdvertisement(PacketBuffer *pktBuf);
-
-private: // data
+protected: // data
     static const int kMaxVlan = 4;
 
     DeviceManager *deviceManager_;
@@ -120,8 +103,10 @@ private: // data
 
     DeviceKey key_;
 
-    QHash<quint32, quint64> arpTable_;
-    QHash<UInt128, quint64> ndpTable_;
+private: // methods
+    void sendArpRequest(PacketBuffer *pktBuf);
+    void sendNeighborSolicit(PacketBuffer *pktBuf);
+
 };
 
 bool operator<(const DeviceKey &a1, const DeviceKey &a2);

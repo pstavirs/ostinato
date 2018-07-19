@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractport.h"
 #include "device.h"
+#include "emuldevice.h"
 #include "../common/emulation.h"
 #include "packetbuffer.h"
 
@@ -169,7 +170,7 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     int offset = 0;
-    Device dk(this);
+    EmulDevice dk(this);
     Device *device;
     quint64 dstMac;
     quint16 ethType;
@@ -304,7 +305,7 @@ Device* DeviceManager::originDevice(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     int offset = 12; // start parsing after mac addresses
-    Device dk(this);
+    EmulDevice dk(this);
     quint16 ethType;
     quint16 vlan;
     int idx = 0;
@@ -346,7 +347,7 @@ void DeviceManager::enumerateDevices(
     const OstProto::DeviceGroup *deviceGroup,
     Operation oper)
 {
-    Device dk(this);
+    EmulDevice dk(this);
     OstEmul::VlanEmulation pbVlan = deviceGroup->encap()
                                         .GetExtension(OstEmul::vlan);
     int numTags = pbVlan.stack_size();
@@ -458,14 +459,14 @@ void DeviceManager::enumerateDevices(
                                 __FUNCTION__, qPrintable(dk.config()));
                         break;
                     }
-                    device = new Device(this);
+                    device = new EmulDevice(this);
                     *device = dk;
                     deviceList_.insert(dk.key(), device);
                     sortedDeviceList_.insert(dk.key(), device);
 
                     dk.setMac(kBcastMac);
                     bcastList_.insert(dk.key(), device);
-                    qDebug("enumerate(add): %s", qPrintable(device->config()));
+                    qDebug("enumerate(add): %p %s", device, qPrintable(device->config()));
                     break;
 
                 case kDelete:
@@ -475,7 +476,7 @@ void DeviceManager::enumerateDevices(
                                 __FUNCTION__, qPrintable(dk.config()));
                         break;
                     }
-                    qDebug("enumerate(del): %s", qPrintable(device->config()));
+                    qDebug("enumerate(del): %p %s", device, qPrintable(device->config()));
                     delete device;
                     sortedDeviceList_.take(dk.key()); // already freed above
 

@@ -37,6 +37,7 @@ HEADERS += drone.h \
 SOURCES += \
     devicemanager.cpp \
     device.cpp \
+    emuldevice.cpp \
     drone_main.cpp \
     drone.cpp \
     portmanager.cpp \
