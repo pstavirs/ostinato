@@ -19,16 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "winpcapport.h"
 
+#include "interfaceinfo.h"
+
 #include <QCoreApplication> 
 #include <QProcess> 
 
 #ifdef Q_OS_WIN32
 
+PIP_ADAPTER_ADDRESSES WinPcapPort::adapterList_ = NULL;
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
 WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
     : PcapPort(id, device)
 {
+    populateInterfaceInfo();
+
     monitorRx_->stop();
     monitorTx_->stop();
     monitorRx_->wait();
@@ -222,6 +227,88 @@ void WinPcapPort::PortMonitor::run()
         lastTs.tv_usec = hdr->ts.tv_usec;
         if (!stop_)
             QThread::msleep(1000);
+    }
+}
+
+void WinPcapPort::populateInterfaceInfo()
+{
+    if (!adapterList_) {
+        qWarning("Adapter List not available");
+        return;
+    }
+
+    PIP_ADAPTER_ADDRESSES adapter = adapterList_;
+    while (!QString(name()).endsWith(QString(adapter->AdapterName)))
+        adapter = adapter->Next;
+
+    if (!adapter) {
+        qWarning("Adapter info not found for %s", name());
+        return;
+    }
+
+    interfaceInfo_ = new InterfaceInfo;
+    if (adapter->PhysicalAddressLength == 6) {
+        interfaceInfo_->mac = qFromBigEndian<quint64>(
+                                    adapter->PhysicalAddress) >> 16;
+    }
+    else
+        interfaceInfo_->mac = 0;
+    qDebug("mac = %llx", interfaceInfo_->mac);
+
+#define SOCKET_ADDRESS_FAMILY(x) \
+    (x.lpSockaddr->sa_family)
+
+#define SOCKET_ADDRESS_IP4(x) \
+    (qFromBigEndian<quint32>(((sockaddr_in*)(x.lpSockaddr))->sin_addr.S_un.S_addr));
+
+    // We may have multiple gateways - use the first for each family
+    quint32 ip4Gateway = 0;
+    PIP_ADAPTER_GATEWAY_ADDRESS gateway = adapter->FirstGatewayAddress;
+    while (gateway) {
+        if (SOCKET_ADDRESS_FAMILY(gateway->Address) == AF_INET) {
+            ip4Gateway = SOCKET_ADDRESS_IP4(gateway->Address);
+            break;
+        }
+        gateway = gateway->Next;
+    }
+    // TODO: IPv6 Gateway
+
+    PIP_ADAPTER_UNICAST_ADDRESS ucast = adapter->FirstUnicastAddress;
+    while (ucast) {
+        if (SOCKET_ADDRESS_FAMILY(ucast->Address) == AF_INET) {
+            Ip4Config ip;
+            ip.address = SOCKET_ADDRESS_IP4(ucast->Address);
+            ip.prefixLength = ucast->OnLinkPrefixLength;
+            ip.gateway = ip4Gateway;
+            interfaceInfo_->ip4.append(ip);
+        }
+        // TODO: IPv6
+        ucast = ucast->Next;
+    }
+#undef SOCKET_ADDRESS_FAMILY
+#undef SOCKET_ADDRESS_IP4
+}
+
+void WinPcapPort::populateAdapterList()
+{
+    DWORD ret;
+    ULONG bufLen = 15*1024; // MS recommended starting size
+
+    while (1) {
+        adapterList_ = (IP_ADAPTER_ADDRESSES *) malloc(bufLen);
+        ret = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, 0,
+                                   adapterList_, &bufLen);
+        if (ret == ERROR_BUFFER_OVERFLOW) {
+            free(adapterList_);
+            continue;
+        }
+        break;
+    }
+
+    if (ret != NO_ERROR) {
+        free(adapterList_);
+        adapterList_ = NULL;
+        return;
     }
 }
 

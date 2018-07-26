@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocol.pb.h"
 
 class DeviceManager;
+struct InterfaceInfo;
 class StreamBase;
 class PacketBuffer;
 class QIODevice;
@@ -76,6 +77,8 @@ public:
 
     bool canModify(const OstProto::Port &port, bool *dirty);
     bool modify(const OstProto::Port &port);
+
+    const InterfaceInfo* interfaceInfo() const;
 
     virtual OstProto::LinkState linkState() { return linkState_; }
     virtual bool hasExclusiveControl() = 0;
@@ -151,6 +154,7 @@ protected:
     StreamStats streamStats_;
     //! \todo Need lock for stats access/update
 
+    struct InterfaceInfo *interfaceInfo_;
     DeviceManager *deviceManager_;
 
 private:
@@ -169,7 +173,6 @@ private:
     QList<StreamBase*>  streamList_;
 
     struct PortStats    epochStats_;
-
 };
 
 #endif

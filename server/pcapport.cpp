@@ -63,6 +63,8 @@ PcapPort::PcapPort(int id, const char *device)
 
 void PcapPort::init()
 {
+    AbstractPort::init();
+
     if (!monitorTx_->isDirectional())
         transmitter_->useExternalStats(&stats_);
 

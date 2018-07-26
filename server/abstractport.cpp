@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/abstractprotocol.h"
 #include "../common/streambase.h"
 #include "devicemanager.h"
+#include "interfaceinfo.h"
 #include "packetbuffer.h"
 
 #include <QString>
@@ -47,6 +48,7 @@ AbstractPort::AbstractPort(int id, const char *device)
     minPacketSetSize_ = 1;
 
     deviceManager_ = new DeviceManager(this);
+    interfaceInfo_ = NULL;
 
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
@@ -56,10 +58,13 @@ AbstractPort::AbstractPort(int id, const char *device)
 AbstractPort::~AbstractPort()
 {
     delete deviceManager_;
+    delete interfaceInfo_;
 }    
 
 void AbstractPort::init()
 {
+    if (deviceManager_)
+        deviceManager_->createHostDevices();
 }    
 
 /*! Can we modify Port with these params? Should modify cause port dirty? */
@@ -785,4 +790,9 @@ quint64 AbstractPort::neighborMacAddress(int streamId, int frameIndex)
     }
 
     return 0;
+}
+
+const InterfaceInfo* AbstractPort::interfaceInfo() const
+{
+    return interfaceInfo_;
 }

@@ -32,7 +32,6 @@ PortManager *PortManager::instance_ = NULL;
 #if defined(Q_OS_WIN32)
 #include <QUuid>
 #include <ipHlpApi.h>
-#define NETIO_STATUS NTSTATUS
 // Define the function prototypes since they are not defined in ipHlpApi.h
 NETIO_STATUS WINAPI ConvertInterfaceGuidToLuid(
         const GUID *InterfaceGuid, PNET_LUID InterfaceLuid);
@@ -51,6 +50,10 @@ PortManager::PortManager()
 
     qDebug("PCAP Lib: %s", pcap_lib_version());
     qDebug("Retrieving the device list from the local machine\n"); 
+
+#if defined(Q_OS_WIN32)
+    WinPcapPort::populateAdapterList();
+#endif
 
     txRateAccuracy = rateAccuracy();
 

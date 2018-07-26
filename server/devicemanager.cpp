@@ -20,9 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemanager.h"
 
 #include "abstractport.h"
-#include "device.h"
 #include "emuldevice.h"
 #include "../common/emulation.h"
+#include "hostdevice.h"
+#include "interfaceinfo.h"
+#include "nulldevice.h"
 #include "packetbuffer.h"
 
 #include "../common/emulproto.pb.h"
@@ -50,6 +52,40 @@ DeviceManager::DeviceManager(AbstractPort *parent)
     port_ = parent;
 }
 
+void DeviceManager::createHostDevices(void)
+{
+    const InterfaceInfo *ifInfo = port_->interfaceInfo();
+
+    if (!ifInfo)
+        return;
+
+    NullDevice bcastDevice(this);
+    bcastDevice.setMac(kBcastMac);
+
+    int count = ifInfo->ip4.size(); // FIXME: IPv6
+    for (int i = 0; i < count; i++) {
+        Device *device = HostDevice::create(port_->name(), this);
+        device->setMac(ifInfo->mac);
+        device->setIp4(ifInfo->ip4.at(i).address,
+                       ifInfo->ip4.at(i).prefixLength,
+                       ifInfo->ip4.at(i).gateway);
+
+        if (deviceList_.contains(device->key())) {
+            qWarning("%s: error adding host device %s (EEXIST)",
+                    __FUNCTION__, qPrintable(device->config()));
+            delete device;
+            continue;
+        }
+        hostDeviceList_.append(device);
+        deviceList_.insert(device->key(), device);
+        sortedDeviceList_.insert(device->key(), device);
+
+        bcastList_.insert(bcastDevice.key(), device);
+        qDebug("host(add): %s", qPrintable(device->config()));
+        break;
+    }
+}
+
 DeviceManager::~DeviceManager()
 {
     foreach(Device *dev, deviceList_)
@@ -57,6 +93,9 @@ DeviceManager::~DeviceManager()
 
     foreach(OstProto::DeviceGroup *devGrp, deviceGroupList_)
         delete devGrp;
+
+    foreach(Device *dev, hostDeviceList_)
+        delete dev;
 }
 
 int DeviceManager::deviceGroupCount()
@@ -153,7 +192,7 @@ bool DeviceManager::modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup)
 
 int DeviceManager::deviceCount()
 {
-    return deviceList_.size();
+    return deviceList_.size() + 1; // FIXME: why +1 for hostdev?
 }
 
 void DeviceManager::getDeviceList(

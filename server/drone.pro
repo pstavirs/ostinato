@@ -6,10 +6,12 @@ linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
     DEFINES += HAVE_IFLA_STATS64
 INCLUDEPATH += "../rpc"
 win32 {
+    # Support Windows Vista and above only
+    DEFINES += WIN32_LEAN_AND_MEAN NTDDI_VERSION=0x06000000 _WIN32_WINNT=0x0600
     DEFINES += HAVE_REMOTE WPCAP
     CONFIG += console
     QMAKE_LFLAGS += -static
-    LIBS += -lwpcap -lpacket
+    LIBS += -lwpcap -lpacket -liphlpapi
     CONFIG(debug, debug|release) {
         LIBS += -L"../common/debug" -lostproto
         LIBS += -L"../rpc/debug" -lpbrpc
@@ -49,6 +51,7 @@ SOURCES += \
     pcaptxthread.cpp \
     bsdport.cpp \
     linuxport.cpp \
+    winhostdevice.cpp \
     winpcapport.cpp 
 SOURCES += myservice.cpp 
 SOURCES += pcapextra.cpp 

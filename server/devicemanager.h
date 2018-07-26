@@ -39,6 +39,8 @@ public:
     DeviceManager(AbstractPort *parent = 0);
     ~DeviceManager();
 
+    void createHostDevices();
+
     int deviceGroupCount();
     const OstProto::DeviceGroup* deviceGroupAtIndex(int index);
     const OstProto::DeviceGroup* deviceGroup(uint deviceGroupId);
@@ -71,11 +73,14 @@ private:
             Operation oper);
 
     AbstractPort *port_;
+
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_; // fast access to devices
     QMap<DeviceKey, Device*> sortedDeviceList_; // sorted access to devices
     QMultiHash<DeviceKey, Device*> bcastList_;
     QHash<quint16, uint> tpidList_; // Key: TPID, Value: RefCount
+
+    QList<Device*> hostDeviceList_; // TODO: use to add/remove from devicelist on useHostDevice flag toggle
 };
 
 #endif
