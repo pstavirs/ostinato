@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "device.h"
 
+#ifdef Q_OS_WIN32
+
 #include <Ws2tcpip.h>
 #include <iphlpapi.h>
 
@@ -44,5 +46,7 @@ protected:
 private:
     NET_LUID luid_;
 };
+
+#endif
 
 #endif

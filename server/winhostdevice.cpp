@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QUuid>
 
+#ifdef Q_OS_WIN32
+
 WindowsHostDevice::WindowsHostDevice(QString portName,
         DeviceManager *deviceManager)
     : Device(deviceManager)
@@ -130,3 +132,5 @@ void WindowsHostDevice::sendNeighborSolicit(UInt128 /*tgtIp*/)
 {
     // TODO
 }
+
+#endif
