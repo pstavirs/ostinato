@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += qt ver_info
+CONFIG += qt ver_info c++11
 QT += network script xml
 QT -= gui
 linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
