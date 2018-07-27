@@ -35,6 +35,9 @@ public:
 #ifdef Q_OS_WIN32
         return new WindowsHostDevice(portName, deviceManager);
 #else
+        (void)portName;      // squelch unused warning
+        (void)deviceManager; // squelch unused warning
+
         return nullptr;
 #endif
     }
