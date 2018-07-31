@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const quint64 kBcastMac = 0xffffffffffffULL;
 const quint16 kEthTypeIp4 = 0x0800;
+const quint16 kEthTypeArp = 0x0806;
 const quint16 kEthTypeIp6 = 0x86dd;
 const int kIp6HdrLen = 40;
 const quint8 kIpProtoIcmp6 = 58;
@@ -100,17 +101,17 @@ void EmulDevice::receivePacket(PacketBuffer *pktBuf)
 
     switch(ethType)
     {
-    case 0x0806: // ARP
+    case kEthTypeArp:
         if (hasIp4_)
             receiveArp(pktBuf);
         break;
 
-    case 0x0800: // IPv4
+    case kEthTypeIp4:
         if (hasIp4_)
             receiveIp4(pktBuf);
         break;
 
-    case 0x86dd: // IPv6
+    case kEthTypeIp6:
         if (hasIp6_)
             receiveIp6(pktBuf);
         break;
@@ -214,7 +215,7 @@ void EmulDevice::receiveArp(PacketBuffer *pktBuf)
 
     protoType = qFromBigEndian<quint16>(pktData + offset);
     offset += 2;
-    if (protoType != 0x0800) // IPv4
+    if (protoType != kEthTypeIp4)
         goto _invalid_exit;
 
     hwAddrLen = pktData[offset];
@@ -266,7 +267,7 @@ void EmulDevice::receiveArp(PacketBuffer *pktBuf)
             *(quint32*)(pktData+24) = qToBigEndian(srcIp);
         }
 
-        encap(rspPkt, srcMac, 0x0806);
+        encap(rspPkt, srcMac, kEthTypeArp);
         transmitPacket(rspPkt);
 
         qDebug("Sent ARP Reply for srcIp/tgtIp=%s/%s",
@@ -335,7 +336,7 @@ void EmulDevice::sendArpRequest(quint32 tgtIp)
         *(quint32*)(pktData+24) = qToBigEndian(tgtIp);
     }
 
-    encap(reqPkt, kBcastMac, 0x0806);
+    encap(reqPkt, kBcastMac, kEthTypeArp);
     transmitPacket(reqPkt);
     arpTable_.insert(tgtIp, 0);
 
@@ -426,7 +427,7 @@ void EmulDevice::sendIp4Reply(PacketBuffer *pktBuf)
         sum = (sum & 0xFFFF) + (sum >> 16);
     *(quint16*)(pktData + 10) = qToBigEndian(quint16(~sum));
 
-    encap(pktBuf, arpTable_.value(tgtIp), 0x0800);
+    encap(pktBuf, arpTable_.value(tgtIp), kEthTypeIp4);
     transmitPacket(pktBuf);
 }
 
@@ -579,7 +580,7 @@ void EmulDevice::sendIp6Reply(PacketBuffer *pktBuf)
     // Reset TTL
     pktData[7] = 64;
 
-    encap(pktBuf, ndpTable_.value(tgtIp), 0x86dd);
+    encap(pktBuf, ndpTable_.value(tgtIp), kEthTypeIp6);
     transmitPacket(pktBuf);
 }
 
