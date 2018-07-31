@@ -27,12 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <qendian.h>
 
 const int kBaseHex = 16;
-const quint64 kBcastMac = 0xffffffffffffULL;
-const quint16 kEthTypeArp = 0x0806;
 const quint16 kEthTypeIp4 = 0x0800;
 const quint16 kEthTypeIp6 = 0x86dd;
 const int kIp6HdrLen = 40;
-const quint8 kIpProtoIcmp6 = 58;
 
 /*
  * NOTE:
