@@ -23,6 +23,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #ifdef Q_OS_WIN32
 
+static WCHAR errBuf[256];
+static inline const char* errMsg(ulong err)
+{
+    return FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  errBuf, sizeof(errBuf)-1, NULL) > 0 ?
+        QString("error 0x%1 %2").arg(err, 0, 16)
+                          .arg(QString().fromWCharArray(errBuf))
+                          .toLocal8Bit().constData() :
+        QString("error 0x%1").arg(err, 0, 16).toLocal8Bit().constData();
+}
+
 WindowsHostDevice::WindowsHostDevice(QString portName,
         DeviceManager *deviceManager)
     : Device(deviceManager)
@@ -30,10 +42,11 @@ WindowsHostDevice::WindowsHostDevice(QString portName,
     GUID guid = static_cast<GUID>(QUuid(portName.right(38)));
     ulong status = ConvertInterfaceGuidToLuid(&guid, &luid_);
     if (status != NO_ERROR) {
-        qWarning("ConvertInterfaceGuidToLuid failed for %s with error %lx",
-                 qPrintable(portName), status);
+        qWarning("ConvertInterfaceGuidToLuid failed for %s: %s",
+                 qPrintable(portName), errMsg(status));
         luid_.Value = 0;
     }
+    qInfo("Port %s: Luid %llx", qPrintable(portName), luid_.Value);
 }
 
 void WindowsHostDevice::receivePacket(PacketBuffer* /*pktBuf*/)
@@ -51,13 +64,15 @@ void WindowsHostDevice::clearNeighbors(Device::NeighborSet set)
     NET_IFINDEX ifIndex;
     ulong status = ConvertInterfaceLuidToIndex(&luid_, &ifIndex);
     if (status != NO_ERROR) {
-        qWarning("luid2ifIdx convert failed with error %lx", status);
+        qWarning("luid2ifIdx convert failed for LUID %llx: %s",
+                 luid_.Value, errMsg(status));
         return;
     }
 
     status = FlushIpNetTable2(AF_UNSPEC, ifIndex);
     if(status != NO_ERROR)
-        qWarning("Flush ARP/ND table failed with error %lx", status);
+        qWarning("Flush ARP/ND table failed for LUID %llx: %s",
+                 luid_.Value, errMsg(status));
 }
 
 void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
@@ -66,7 +81,8 @@ void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
     // TODO: optimization: use AF_UNSPEC only if hasIp4 and hasIp6
     ulong status = GetIpNetTable2(AF_UNSPEC, &nbrs) != NO_ERROR;
     if (status != NO_ERROR) {
-        qWarning("Get ARP/ND table failed with error %lx", status);
+        qWarning("Get ARP/ND table failed for LUID %llx: %s",
+                 luid_.Value, errMsg(status));
         return;
     }
 
@@ -125,7 +141,8 @@ void WindowsHostDevice::sendArpRequest(quint32 tgtIp)
 
     ulong status = ResolveIpNetEntry2(&arpEntry, &src);
     if (ResolveIpNetEntry2(&arpEntry, &src) != NO_ERROR)
-        qWarning("Resolve arp failed with error %lx", status);
+        qWarning("Resolve arp failed for LUID %llx: %s",
+                 luid_.Value, errMsg(status));
 }
 
 void WindowsHostDevice::sendNeighborSolicit(UInt128 /*tgtIp*/)
