@@ -39,7 +39,8 @@ protected:
     QRegion visualRegionForSelection( const QItemSelection &selection ) const;
 protected slots:
     void dataChanged( const QModelIndex &topLeft, 
-            const QModelIndex &bottomRight );
+            const QModelIndex &bottomRight,
+            const QVector<int> &roles );
     void selectionChanged( const QItemSelection &selected,
     const QItemSelection &deselected );
     void paintEvent(QPaintEvent *event);

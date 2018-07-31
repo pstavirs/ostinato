@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 static QThreadStorage<QString*> connId;
 
-RpcConnection::RpcConnection(int socketDescriptor, 
+RpcConnection::RpcConnection(qintptr socketDescriptor, 
                              ::google::protobuf::Service *service)
     : socketDescriptor(socketDescriptor),
       service(service)

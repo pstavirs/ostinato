@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const int kBaseHex = 16;
 const quint64 kBcastMac = 0xffffffffffffULL;
+const quint16 kEthTypeArp = 0x0806;
 const quint16 kEthTypeIp4 = 0x0800;
 const quint16 kEthTypeIp6 = 0x86dd;
 const int kIp6HdrLen = 40;
@@ -206,12 +207,12 @@ void Device::resolveNeighbor(PacketBuffer *pktBuf)
 
     switch(ethType)
     {
-    case 0x0800: // IPv4
+    case kEthTypeIp4: // IPv4
         if (hasIp4_)
             sendArpRequest(pktBuf);
         break;
 
-    case 0x86dd: // IPv6
+    case kEthTypeIp6: // IPv6
         if (hasIp6_)
             sendNeighborSolicit(pktBuf);
         break;
@@ -248,7 +249,7 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
 
     // We know only about IP packets - adjust for ethType length (2 bytes)
     // when checking that we have a complete IP header
-    if ((ethType == 0x0800) && hasIp4_) { // IPv4
+    if ((ethType == kEthTypeIp4) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
         quint32 srcIp;
 
@@ -290,7 +291,7 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
     pktData += 2;
 
     // We know only about IP packets
-    if ((ethType == 0x0800) && hasIp4_) { // IPv4
+    if ((ethType == kEthTypeIp4) && hasIp4_) { // IPv4
         int ipHdrLen = (pktData[0] & 0x0F) << 2;
         quint32 dstIp, tgtIp;
 

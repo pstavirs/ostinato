@@ -113,7 +113,7 @@ QVariant StreamModel::data(const QModelIndex &index, int role) const
         }
         case StreamStatus:
         {
-            if ((role == Qt::CheckStateRole))
+            if (role == Qt::CheckStateRole)
             {
                 if (mCurrentPort->streamByIndex(index.row())->isEnabled())
                     return Qt::Checked;
