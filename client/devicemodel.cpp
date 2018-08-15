@@ -172,9 +172,10 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
                 case Qt::DisplayRole:
                     if (dev->has_ip6_prefix_length()) {
                         OstEmul::Ip6Address ip = dev->ip6();
-                        return QHostAddress(
-                                    UInt128(ip.hi(), ip.lo()).toArray())
-                                        .toString();
+                        return QString("%1/%2")
+                            .arg(QHostAddress(UInt128(ip.hi(), ip.lo())
+                                        .toArray()).toString())
+                            .arg(dev->ip6_prefix_length());
                     }
                     else
                         return QString("--");
