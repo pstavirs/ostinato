@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #ifdef Q_OS_WIN32
 
+#include <ws2ipdef.h>
+
 PIP_ADAPTER_ADDRESSES WinPcapPort::adapterList_ = NULL;
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
@@ -261,6 +263,9 @@ void WinPcapPort::populateInterfaceInfo()
 #define SOCKET_ADDRESS_IP4(x) \
     (qFromBigEndian<quint32>(((sockaddr_in*)(x.lpSockaddr))->sin_addr.S_un.S_addr));
 
+#define SOCKET_ADDRESS_IP6(x) \
+    (UInt128(((PSOCKADDR_IN6)(x.lpSockaddr))->sin6_addr.u.Byte));
+
     // We may have multiple gateways - use the first for each family
     quint32 ip4Gateway = 0;
     PIP_ADAPTER_GATEWAY_ADDRESS gateway = adapter->FirstGatewayAddress;
@@ -271,7 +276,15 @@ void WinPcapPort::populateInterfaceInfo()
         }
         gateway = gateway->Next;
     }
-    // TODO: IPv6 Gateway
+    UInt128 ip6Gateway(0, 0);
+    gateway = adapter->FirstGatewayAddress;
+    while (gateway) {
+        if (SOCKET_ADDRESS_FAMILY(gateway->Address) == AF_INET6) {
+            ip6Gateway = SOCKET_ADDRESS_IP6(gateway->Address);
+            break;
+        }
+        gateway = gateway->Next;
+    }
 
     PIP_ADAPTER_UNICAST_ADDRESS ucast = adapter->FirstUnicastAddress;
     while (ucast) {
@@ -282,11 +295,18 @@ void WinPcapPort::populateInterfaceInfo()
             ip.gateway = ip4Gateway;
             interfaceInfo_->ip4.append(ip);
         }
-        // TODO: IPv6
+        else if (SOCKET_ADDRESS_FAMILY(ucast->Address) == AF_INET6) {
+            Ip6Config ip;
+            ip.address = SOCKET_ADDRESS_IP6(ucast->Address);
+            ip.prefixLength = ucast->OnLinkPrefixLength;
+            ip.gateway = ip6Gateway;
+            interfaceInfo_->ip6.append(ip);
+        }
         ucast = ucast->Next;
     }
 #undef SOCKET_ADDRESS_FAMILY
 #undef SOCKET_ADDRESS_IP4
+#undef SOCKET_ADDRESS_IP6
 }
 
 void WinPcapPort::populateAdapterList()

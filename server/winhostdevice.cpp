@@ -92,12 +92,20 @@ void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
 
         if (nbrs->Table[i].Address.si_family == AF_INET) {
             OstEmul::ArpEntry *arp = neighbors->add_arp();
-            arp->set_ip4(qToBigEndian(quint32(
-                            nbrs->Table[i].Address.Ipv4.sin_addr.s_addr)));
+            arp->set_ip4(qFromBigEndian<quint32>(
+                            nbrs->Table[i].Address.Ipv4.sin_addr.s_addr));
             arp->set_mac(qFromBigEndian<quint64>(
                             nbrs->Table[i].PhysicalAddress) >> 16);
         }
-        // TODO: IPv6
+        else if (nbrs->Table[i].Address.si_family == AF_INET6) {
+            OstEmul::NdpEntry *ndp = neighbors->add_ndp();
+            ndp->mutable_ip6()->set_hi(qFromBigEndian<quint64>(
+                            nbrs->Table[i].Address.Ipv6.sin6_addr.u.Byte));
+            ndp->mutable_ip6()->set_lo(qFromBigEndian<quint64>(
+                            nbrs->Table[i].Address.Ipv6.sin6_addr.u.Byte+8));
+            ndp->set_mac(qFromBigEndian<quint64>(
+                            nbrs->Table[i].PhysicalAddress) >> 16);
+        }
     }
 
     FreeMibTable(nbrs);
@@ -121,12 +129,22 @@ quint64 WindowsHostDevice::arpLookup(quint32 ip)
         return 0;
 }
 
-quint64 WindowsHostDevice::ndpLookup(UInt128 /*ip*/)
+quint64 WindowsHostDevice::ndpLookup(UInt128 ip)
 {
     if (!luid_.Value)
         return 0;
 
-    return 0; // TODO
+    MIB_IPNET_ROW2 ndpEntry;
+    ndpEntry.InterfaceLuid = luid_;
+    ndpEntry.Address.si_family = AF_INET6;
+    memcpy(&ndpEntry.Address.Ipv6.sin6_addr.u, ip.toArray(), 16);
+
+    if ((GetIpNetEntry2(&ndpEntry) == NO_ERROR)
+            && (ndpEntry.PhysicalAddressLength == 6)) {
+        return qFromBigEndian<quint64>(ndpEntry.PhysicalAddress) >> 16;
+    }
+    else
+        return 0;
 }
 
 void WindowsHostDevice::sendArpRequest(quint32 tgtIp)
@@ -145,9 +163,20 @@ void WindowsHostDevice::sendArpRequest(quint32 tgtIp)
                  luid_.Value, errMsg(status));
 }
 
-void WindowsHostDevice::sendNeighborSolicit(UInt128 /*tgtIp*/)
+void WindowsHostDevice::sendNeighborSolicit(UInt128 tgtIp)
 {
-    // TODO
+    SOCKADDR_INET src;
+    memcpy(&src.Ipv6.sin6_addr.u, ip6_.toArray(), 16);
+
+    MIB_IPNET_ROW2 ndpEntry;
+    ndpEntry.InterfaceLuid = luid_;
+    ndpEntry.Address.si_family = AF_INET6;
+    memcpy(&ndpEntry.Address.Ipv6.sin6_addr.u, tgtIp.toArray(), 16);
+
+    ulong status = ResolveIpNetEntry2(&ndpEntry, &src);
+    if (ResolveIpNetEntry2(&ndpEntry, &src) != NO_ERROR)
+        qWarning("Resolve ndp failed for LUID %llx: %s",
+                 luid_.Value, errMsg(status));
 }
 
 #endif
