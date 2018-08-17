@@ -41,6 +41,8 @@ HEADERS += \
     deviceswidget.h \
     dumpview.h \
     hexlineedit.h \
+    logsmodel.h \
+    logswindow.h \
     mainwindow.h \
     ndpstatusmodel.h \
     packetmodel.h \
@@ -68,6 +70,7 @@ FORMS += \
     about.ui \
     devicegroupdialog.ui \
     deviceswidget.ui \
+    logswindow.ui \
     mainwindow.ui \
     portconfigdialog.ui \
     portstatsfilter.ui \
@@ -87,6 +90,8 @@ SOURCES += \
     dumpview.cpp \
     stream.cpp \
     hexlineedit.cpp \
+    logsmodel.cpp \
+    logswindow.cpp \
     main.cpp \
     mainwindow.cpp \
     ndpstatusmodel.cpp \
