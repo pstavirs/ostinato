@@ -36,17 +36,13 @@ static QStringList columnTitles = QStringList()
     << "Message";
 
 static QStringList levelTitles = QStringList()
-    << "Error"
+    << "Info"
     << "Warning"
-    << "Info";
+    << "Error";
 
 LogsModel::LogsModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
-    // FIXME: test only
-    log(kInfo, QString("--"), QString("Welcome to Ostinato!"));
-    log(kWarning, QString("--"), QString("This is a sample warning!"));
-    log(kError, QString("--"), QString("This is a sample error!"));
 }
 
 int LogsModel::rowCount(const QModelIndex &/*parent*/) const
@@ -56,9 +52,6 @@ int LogsModel::rowCount(const QModelIndex &/*parent*/) const
 
 int LogsModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    if (!logs_.size())
-        return 0;
-
     return kFieldCount;
 }
 
@@ -81,6 +74,9 @@ QVariant LogsModel::headerData(
 
 QVariant LogsModel::data(const QModelIndex &index, int role) const
 {
+    if (!index.isValid() || (index.row() >= logs_.size()))
+            return QVariant();
+
     if (role == Qt::ForegroundRole) {
         switch(logs_.at(index.row()).logLevel) {
         case kError:
@@ -98,7 +94,7 @@ QVariant LogsModel::data(const QModelIndex &index, int role) const
 
     switch (index.column()) {
     case kTimeStamp:
-        return logs_.at(index.row()).timeStamp.toString();
+        return logs_.at(index.row()).timeStamp.toString("hh:mm:ss.zzz");
     case kLogLevel:
         return levelTitles.at(logs_.at(index.row()).logLevel);
     case kPort:
@@ -122,8 +118,19 @@ void LogsModel::clear()
     endResetModel();
 }
 
+void LogsModel::setLogLevel(int level)
+{
+    currentLevel_ = static_cast<LogLevel>(level % kLevelCount);
+    log(currentLevel_, QString("--"),
+        QString("Log level changed to %1 or higher")
+            .arg(levelTitles.at(currentLevel_)));
+}
+
 void LogsModel::log(int logLevel,QString port, QString message)
 {
+    if (logLevel < currentLevel_)
+        return;
+
     // TODO: discard logs older than some threshold
 
     //qDebug("adding log %u %s", logs_.size(), qPrintable(message));

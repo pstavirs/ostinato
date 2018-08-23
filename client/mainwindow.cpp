@@ -96,7 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
-    logsWindow_ = new LogsWindow(appLogs, this);
 
     portsDock = new QDockWidget(tr("Ports and Streams"), this);
     portsDock->setObjectName("portsDock");
@@ -112,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent)
     logsDock_->setObjectName("logsDock");
     logsDock_->setFeatures(
                 logsDock_->features() & ~QDockWidget::DockWidgetClosable);
+    logsWindow_ = new LogsWindow(appLogs, logsDock_);
 
     setupUi(this);
 

@@ -28,9 +28,10 @@ class LogsModel: public QAbstractTableModel
     Q_OBJECT
 public:
     enum LogLevel { // FIXME: use enum class?
-        kError,
+        kInfo,
         kWarning,
-        kInfo
+        kError,
+        kLevelCount
     };
 
 public:
@@ -45,6 +46,7 @@ public:
 
 public slots:
     void clear();
+    void setLogLevel(int level);
     void log(int logLevel,QString port, QString message);
 
 private:
@@ -55,6 +57,7 @@ private:
         QString message;
     };
     QVector<Log> logs_;
+    LogLevel currentLevel_{kInfo};
 };
 #endif
 

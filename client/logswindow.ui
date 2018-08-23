@@ -41,6 +41,35 @@
         <property name="statusTip">
          <string>Select the desired logging level</string>
         </property>
+        <item>
+         <property name="text">
+          <string>Info</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Warning</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Error</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="autoScroll">
+        <property name="text">
+         <string>Auto Scroll</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -81,6 +110,9 @@
      <property name="whatsThis">
       <string>Ostinato application logs are displayed here</string>
      </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
     </widget>
    </item>
   </layout>
@@ -94,6 +126,7 @@
  </customwidgets>
  <tabstops>
   <tabstop>level</tabstop>
+  <tabstop>autoScroll</tabstop>
   <tabstop>clear</tabstop>
   <tabstop>logs</tabstop>
  </tabstops>

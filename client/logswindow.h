@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ui_logswindow.h"
 
 class LogsModel;
+class QDockWidget;
+class QShowEvent;
 
 class LogsWindow: public QWidget, private Ui::LogsWindow
 {
@@ -30,6 +32,18 @@ class LogsWindow: public QWidget, private Ui::LogsWindow
 public:
     LogsWindow(LogsModel *model, QWidget *parent = 0);
     ~LogsWindow();
+
+private slots:
+    void when_visibilityChanged(bool visible);
+    void when_rowsInserted(const QModelIndex &parent, int first, int last);
+    void on_autoScroll_toggled(bool checked);
+
+private:
+    QDockWidget *parentDock_;
+    QString windowTitle_;
+    QString annotation_;
+    bool isVisible_{false};
+    QObject *logsModelTest_;
 };
 
 #endif
