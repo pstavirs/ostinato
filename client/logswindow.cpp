@@ -96,7 +96,7 @@ void LogsWindow::when_rowsInserted(const QModelIndex &parent,
             annotation_ = QString(" - Warning(s)");
         }
     }
-    parentDock_>setWindowTitle(windowTitle_+annotation_);
+    parentDock_->setWindowTitle(windowTitle_+annotation_);
 }
 
 void LogsWindow::on_autoScroll_toggled(bool checked)
