@@ -31,7 +31,7 @@ win32 {
     LIBS += -L"../rpc" -lpbrpc
     POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 }
-linux-g++ {
+linux {
     INCLUDEPATH += "/usr/include/libnl3"
     LIBS += -lnl-3 -lnl-route-3
 }
