@@ -35,6 +35,8 @@ addons:
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
+      - libnl-3-dev
+      - libnl-route-3-dev
 
 script:
   - QT_SELECT=qt5 qmake -config debug
