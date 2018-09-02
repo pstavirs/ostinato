@@ -53,6 +53,8 @@ PortManager::PortManager()
 
 #if defined(Q_OS_WIN32)
     WinPcapPort::populateAdapterList();
+#elif defined(Q_OS_LINUX)
+    LinuxPort::classInit();
 #endif
 
     txRateAccuracy = rateAccuracy();

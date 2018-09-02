@@ -17,35 +17,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _HOST_DEVICE_H
-#define _HOST_DEVICE_H
+#ifndef _QT_PORT_H
+#define _QT_PORT_H
 
-#include "linuxhostdevice.h"
-#include "winhostdevice.h"
+//
+// Make Qt stuff portable across Qt versions
+//
 
-class DeviceManager;
-
-/*!
- * HostDevice abstracts the various OS-specific host device classes
- */
-class HostDevice
+#if QT_VERSION < 0x050700
+template <typename T>
+T qFromBigEndian(const void *src)
 {
-public:
-    static Device* create(QString portName, DeviceManager *deviceManager)
-    {
-#if defined(Q_OS_WIN32)
-        return new WindowsHostDevice(portName, deviceManager);
-#elif defined(Q_OS_LINUX)
-        return new LinuxHostDevice(portName, deviceManager);
-#else
-        (void)portName;      // squelch unused warning
-        (void)deviceManager; // squelch unused warning
-
-        return nullptr;
-#endif
-    }
-
-};
-
+    return qFromBigEndian<T>((const uchar*)src);
+}
 #endif
 
+#endif

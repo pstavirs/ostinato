@@ -281,6 +281,7 @@ bool Device::isOrigin(const PacketBuffer *pktBuf)
 // We expect pktBuf to point to EthType on entry
 quint64 Device::neighborMac(const PacketBuffer *pktBuf)
 {
+    quint64 mac = 0;
     const uchar *pktData = pktBuf->data();
     quint16 ethType = qFromBigEndian<quint16>(pktData);
 
@@ -295,17 +296,19 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
         if (pktBuf->length() < ipHdrLen) {
             qDebug("incomplete IPv4 header: expected %d, actual %d",
                     ipHdrLen, pktBuf->length());
-            return false;
+            return mac;
         }
 
         dstIp = qFromBigEndian<quint32>(pktData + ipHdrLen - 4);
         if ((dstIp & 0xF0000000) == 0xE0000000) { // Mcast IP?
-            qDebug("mcast dst %x", dstIp);
-            return (quint64(0x01005e) << 24) | (dstIp & 0x7FFFFF);
+            mac = (quint64(0x01005e) << 24) | (dstIp & 0x7FFFFF);
+            qDebug("mcast dst %08x, mac: %012llx", dstIp, mac);
         }
-        tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
-
-        return arpLookup(tgtIp);
+        else {
+            tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
+            mac = arpLookup(tgtIp);
+            qDebug("tgtIp: %08x, mac: %012llx", tgtIp, mac);
+        }
     }
     else if ((ethType == kEthTypeIp6) && hasIp6_) { // IPv6
         UInt128 dstIp, tgtIp;
@@ -313,21 +316,26 @@ quint64 Device::neighborMac(const PacketBuffer *pktBuf)
         if (pktBuf->length() < (kIp6HdrLen+2)) {
             qDebug("incomplete IPv6 header: expected %d, actual %d",
                     kIp6HdrLen, pktBuf->length()-2);
-            return false;
+            return mac;
         }
 
         dstIp = qFromBigEndian<UInt128>(pktData + 24);
         if (dstIp.toArray()[0] == 0xFF) { // Mcast IP?
-            qDebug("mcast dst %s",
-                    qPrintable(QHostAddress(dstIp.toArray()).toString()));
-            return (quint64(0x3333) << 32) | (dstIp.lo64() & 0xFFFFFFFF);
+            mac = (quint64(0x3333) << 32) | (dstIp.lo64() & 0xFFFFFFFF);
+            qDebug("mcast dst %s, mac: %012llx",
+                    qPrintable(QHostAddress(dstIp.toArray()).toString()),
+                    mac);
         }
-        tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
-
-        return ndpLookup(tgtIp);
+        else {
+            tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
+            mac = ndpLookup(tgtIp);
+            qDebug("tgtIp %s, mac: %012llx",
+                    qPrintable(QHostAddress(dstIp.toArray()).toString()),
+                    mac);
+        }
     }
 
-    return false;
+    return mac;
 }
 
 /*
