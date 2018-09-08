@@ -31,10 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <errno.h>
 #include <fcntl.h>
-#include <net/if.h>
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
 #include <netlink/route/route.h>
+#if (LIBNL_VER_NUM > 0x0302) || ((LIBNL_VER_NUM == 0x0302) && (LIBNL_VER_MIC >= 26))
+#include <net/if.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
