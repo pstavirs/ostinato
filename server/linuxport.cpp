@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <errno.h>
 #include <fcntl.h>
+#include <net/if.h>
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
 #include <netlink/route/route.h>
@@ -237,7 +238,7 @@ void LinuxPort::populateInterfaceInfo()
     quint32 gw4 = 0;
     UInt128 gw6 = UInt128(0,0); // FIXME - just 0
     for (rtnl_route *rt = routeCache_ ? (rtnl_route*) nl_cache_get_first(routeCache_) : 0;
-            rt && !gw4 && gw6 == UInt128(0,0); // FIXME: !UInt128
+            rt && (!gw4 || gw6 == UInt128(0,0)); // FIXME: !UInt128
             rt = (rtnl_route*) nl_cache_get_next(OBJ_CAST(rt))) {
         if (rtnl_route_get_table(rt) != RT_TABLE_MAIN) // we want only main RTT
             continue;
@@ -257,7 +258,7 @@ void LinuxPort::populateInterfaceInfo()
             gw4 = qFromBigEndian<quint32>(
                     nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
         }
-        else if (gw6 != UInt128(0,0) && rtnl_route_get_family(rt) == AF_INET6) { // FIXME: !gw6
+        else if (gw6 == UInt128(0,0) && rtnl_route_get_family(rt) == AF_INET6) { // FIXME: !gw6
             gw6 = UInt128((quint8*)
                     nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
         }
