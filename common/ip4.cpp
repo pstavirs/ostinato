@@ -521,7 +521,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldFrameValue:
                 case FieldTextValue:
-                    ba.append(QString().fromStdString(data.options()));
+                    ba.append(data.options().c_str(), data.options().length());
                 default:
                     break;
             }

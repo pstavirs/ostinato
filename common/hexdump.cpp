@@ -109,7 +109,7 @@ QVariant HexDumpProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldTextValue:
                 case FieldFrameValue:
-                    ba.append(QString().fromStdString(data.content()));
+                    ba.append(data.content().c_str(), data.content().length());
                     if (data.pad_until_end())
                     {
                         pad = QByteArray(
