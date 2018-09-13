@@ -781,13 +781,18 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
         // src-ip, dst-ip
         for (int i = 8; i < fv.size(); i+=2)
             sum += *((quint16*)(p + i));
-        sum += *((quint16*)(p + 4)); // payload len
-        sum += qToBigEndian((quint16) *(p + 6)); // proto
+
+        // XXX: payload length and protocol are also part of the
+        // pseudo cksum but we need to skip extension headers to
+        // get to them as per RFC 8200 Section 8.1
+        // Since we can't traverse beyond our immediate neighboring
+        // protocol from here, these two fields are counted in the
+        // pseudo cksum in AbstractProtocol::protocolFrameHeaderCksum()
 
         while(sum>>16)
             sum = (sum & 0xFFFF) + (sum >> 16);
 
-        return ~qFromBigEndian((quint16)sum);
+        return qFromBigEndian((quint16) ~sum);
     }
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }

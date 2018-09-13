@@ -859,14 +859,18 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
             sum += *((quint16*)(p + 14)); // src-ip lo
             sum += *((quint16*)(p + 16)); // dst-ip hi
             sum += *((quint16*)(p + 18)); // dst-ip lo
-            sum += qToBigEndian((quint16)
-                    protocolFramePayloadSize(streamIndex)); // len
-            sum += qToBigEndian((quint16) *(p + 9)); // proto
+
+            // XXX: payload length and protocol are also part of the
+            // pseudo cksum but for IPv6 we need to skip extension headers to
+            // get to them, so these two fields are counted in the
+            // pseudo cksum in AbstractProtocol::protocolFrameHeaderCksum()
+            // Although not needed for IPv4 case, we do the same for IPv4
+            // also, so that code there is common for IPv4 and IPv6
 
             while(sum>>16)
                 sum = (sum & 0xFFFF) + (sum >> 16);
 
-            return ~qFromBigEndian((quint16)sum);
+            return qFromBigEndian((quint16) ~sum);
         }
         default:
             break;
