@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "fileformat.pb.h"
 
-#include "xlocale.h"
+#include "xqlocale.h"
 
 #include <QFileInfo>
 #include <QInputDialog>
