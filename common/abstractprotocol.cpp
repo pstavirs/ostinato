@@ -945,7 +945,8 @@ quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex,
             // Ip4/6Protocol::protocolFrameCksum(CksumIpPseudo) only
             // counts the src/dst IP (see Note in there)
             // Count the payload length and protocolId here
-            sum += protocolFrameSize() + protocolFramePayloadSize();
+            sum += protocolFrameSize(streamIndex)
+                    + protocolFramePayloadSize(streamIndex);
             sum += protocolId(ProtocolIdIp);
             qDebug("%s: sum = %x, cksum = %x", __FUNCTION__, sum, cksum);
             if (cksumScope == CksumScopeAdjacentProtocol)
