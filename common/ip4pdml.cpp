@@ -63,8 +63,11 @@ void PdmlIp4Protocol::unknownFieldHandler(QString name, int /*pos*/,
     else if ((name == "ip.options") ||
             attributes.value("show").toString().startsWith("Options"))
     {
-        options_ = QByteArray::fromHex(
+        OstProto::Ip4 *ip4 = pbProto->MutableExtension(OstProto::ip4);
+
+        QByteArray options = QByteArray::fromHex(
                 attributes.value("value").toString().toUtf8());
+        ip4->set_options(options.constData(), options.size());
     }
     else if (name == "ip.flags")
     {
@@ -75,7 +78,7 @@ void PdmlIp4Protocol::unknownFieldHandler(QString name, int /*pos*/,
 }
 
 void PdmlIp4Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
-        OstProto::Stream *stream)
+        OstProto::Stream* /*stream*/)
 {
     OstProto::Ip4 *ip4 = pbProto->MutableExtension(OstProto::ip4);
 
@@ -84,20 +87,5 @@ void PdmlIp4Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
     ip4->set_is_override_totlen(true);
     ip4->set_is_override_proto(true);
     ip4->set_is_override_cksum(true);
-
-    if (options_.size())
-    {
-        OstProto::Protocol *proto = stream->add_protocol();
-
-        proto->mutable_protocol_id()->set_id(
-                OstProto::Protocol::kHexDumpFieldNumber);
-
-        OstProto::HexDump *hexDump = proto->MutableExtension(OstProto::hexDump);
-
-        hexDump->mutable_content()->append(options_.constData(), 
-                options_.size());
-        hexDump->set_pad_until_end(false);
-        options_.resize(0);
-    }
 }
 
