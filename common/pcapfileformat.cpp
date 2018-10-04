@@ -438,6 +438,8 @@ _non_pdml:
         stream->mutable_core()->set_is_enabled(true);
         stream->mutable_core()->set_frame_len(pktHdr.inclLen+4); // FCS
 
+        stream->mutable_control()->set_num_packets(1);
+
         // setup packet rate to the timing in pcap (as close as possible)
         const uint kUsecsInSec = uint(1e6);
         uint usec = (pktHdr.tsSec*kUsecsInSec + pktHdr.tsUsec);
