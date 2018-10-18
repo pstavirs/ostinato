@@ -10,3 +10,4 @@ License: GPLv3+ (see [COPYING](https://raw.githubusercontent.com/pstavirs/ostina
 
 For more information visit http://ostinato.org.
 
+## 42:61:73:65:64:20:47:6F:64
