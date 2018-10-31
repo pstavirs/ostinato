@@ -45,6 +45,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define IFF_PPROMISC (IFF_PROMISC << 16)
 #endif
 
+#ifndef SA_SIZE // For some reason MacOS doesn't define this while BSD does
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
+
 struct ifaddrs *BsdPort::addressList_{nullptr};
 QByteArray BsdPort::routeListBuffer_;
 
