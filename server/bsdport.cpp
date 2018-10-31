@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "bsdport.h"
 
+#include "interfaceinfo.h"
+
 #ifdef Q_OS_BSD4
 
 #include <QByteArray>
@@ -33,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <sys/types.h>
 #include <net/if.h>
 #include <net/if_dl.h>
+#include <netinet/in.h>
+#include <ifaddrs.h>
 #include <net/route.h>
 #include <unistd.h>
 
@@ -40,6 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define ifr_flagshigh ifr_flags
 #define IFF_PPROMISC (IFF_PROMISC << 16)
 #endif
+
+struct ifaddrs *BsdPort::addressList_{nullptr};
+QByteArray BsdPort::routeListBuffer_;
 
 QList<BsdPort*> BsdPort::allPorts_;
 BsdPort::StatsMonitor *BsdPort::monitor_;
@@ -51,6 +58,9 @@ BsdPort::BsdPort(int id, const char *device)
 {
     isPromisc_ = true;
     clearPromisc_ = false;
+    ifIndex_ = if_nametoindex(device);
+
+    populateInterfaceInfo();
 
     // We don't need per port Rx/Tx monitors for Bsd
     delete monitorRx_;
@@ -112,6 +122,38 @@ BsdPort::~BsdPort()
     }
 }
 
+void BsdPort::classInit() // FIXME: rename
+{
+    if (getifaddrs(&addressList_) < 0)
+    {
+        qWarning("getifaddrs() failed: %s", strerror(errno));
+        return;
+    }
+
+    size_t len;
+    int mib[] = {CTL_NET, PF_ROUTE, 0, AF_UNSPEC, NET_RT_FLAGS, RTF_GATEWAY};
+    if (sysctl(mib, sizeof(mib)/sizeof(int), 0, &len, 0, 0) < 0)
+    {
+        qWarning("sysctl CTL_NET|PF_ROUTE failed fetching buflen: %s", strerror(errno));
+        return;
+    }
+
+    routeListBuffer_.resize(len); 
+    if (sysctl(mib, sizeof(mib)/sizeof(int), routeListBuffer_.data(), &len, 0, 0) < 0)
+    {
+        qWarning("sysctl CTL_NET|PF_ROUTE failed: %s", strerror(errno));
+        return;
+    }
+}
+
+void BsdPort::classDone() // FIXME: rename
+{
+    freeifaddrs(addressList_);
+    addressList_ = nullptr;
+
+    routeListBuffer_.resize(0); // FIXME: does this actually free memory?
+}
+
 void BsdPort::init()
 {
     if (!monitor_->isRunning())
@@ -121,6 +163,8 @@ void BsdPort::init()
 
     if (!isPromisc_)
         addNote("Non Promiscuous Mode");
+
+    AbstractPort::init();
 }
 
 bool BsdPort::hasExclusiveControl() 
@@ -133,6 +177,111 @@ bool BsdPort::setExclusiveControl(bool /*exclusive*/)
 {
     // TODO
     return false;
+}
+
+void BsdPort::populateInterfaceInfo()
+{
+    //
+    // Find Mac
+    //
+    quint64 mac = 0;
+    struct ifaddrs *addr;
+    for (addr = addressList_; addr != NULL; addr = addr->ifa_next)
+    {
+        if (strcmp(addr->ifa_name, name()) == 0)
+        {
+            if (addr->ifa_addr->sa_family == AF_LINK)
+            {
+                mac = qFromBigEndian<quint64>(
+                        LLADDR((struct sockaddr_dl *)(addr->ifa_addr))) >> 16;
+                break;
+            }
+        }
+    }
+
+    interfaceInfo_ = new InterfaceInfo;
+    interfaceInfo_->mac = mac;
+
+    //
+    // Find gateways
+    //
+    static_assert(RTA_DST == 0x1, "RTA_DST is not 0x1"); // Validate assumption
+    static_assert(RTA_GATEWAY == 0x2, "RTA_GATEWAY is not 0x2"); // Validate assumption
+    quint32 gw4 = 0;
+    UInt128 gw6 = UInt128(0,0); // FIXME - just 0
+    const char *p = routeListBuffer_.constData();
+    const char *end = p + routeListBuffer_.size();
+    while (!gw4 || gw6 == UInt128(0,0)) // FIXME: !UInt128
+    {
+        const struct rt_msghdr *rt = (const struct rt_msghdr*) p;
+        const struct sockaddr *sa = (const struct sockaddr*)(rt + 1); // RTA_DST = 0x1
+        if ((rt->rtm_index == ifIndex_)
+                && ((rt->rtm_addrs & (RTA_DST|RTA_GATEWAY)) == (RTA_DST|RTA_GATEWAY))) 
+        {
+            if (!gw4 && sa->sa_family == AF_INET) 
+            {
+                if (((sockaddr_in*)sa)->sin_addr.s_addr == 0) // default route 0.0.0.0
+                {
+                    sa = (struct sockaddr *)((char *)sa + SA_SIZE(sa)); 
+                    gw4 = qFromBigEndian<quint32>(
+                            ((sockaddr_in*)sa)->sin_addr.s_addr); // RTA_GW = 0x2
+                }
+            }
+            if (gw6 == UInt128(0,0) && sa->sa_family == AF_INET6) // FIXME: !UInt128
+            {
+                if (UInt128((quint8*)(((sockaddr_in6*)sa)->sin6_addr.s6_addr))
+                        == UInt128(0,0)) // default route ::
+                {
+                    sa = (struct sockaddr *)((char *)sa + SA_SIZE(sa)); 
+                    gw6 = UInt128((quint8*)
+                            ((sockaddr_in6*)sa)->sin6_addr.s6_addr); // RTA_GW = 0x2
+                }
+            }
+        }
+        p += rt->rtm_msglen;
+        if (p >= end)
+            break;
+    }
+
+    //
+    // Find self IP
+    //
+    addr = addressList_;
+    while (addr)
+    {
+        if (strcmp(addr->ifa_name, name()) == 0)
+        {
+            if (addr->ifa_addr && addr->ifa_addr->sa_family == AF_INET)
+            {
+                Ip4Config ip;
+                ip.address = qFromBigEndian<quint32>(
+                        ((struct sockaddr_in *)(addr->ifa_addr))->sin_addr.s_addr);
+                ip.prefixLength = std::bitset<32>( 
+                            ((struct sockaddr_in *)(addr->ifa_netmask))->sin_addr.s_addr)
+                        .count();
+                ip.gateway = gw4;
+                interfaceInfo_->ip4.append(ip);
+            }
+            else if (addr->ifa_addr && addr->ifa_addr->sa_family == AF_INET6)
+            {
+                Ip6Config ip;
+                ip.address = UInt128((quint8*)
+                        ((struct sockaddr_in6 *)(addr->ifa_addr))->sin6_addr.s6_addr);
+                Q_ASSERT(addr->ifa_netmask);
+                ip.prefixLength = std::bitset<64>(qFromBigEndian<quint64>(
+                            ((struct sockaddr_in6 *)(addr->ifa_netmask))
+                                ->sin6_addr.s6_addr))
+                        .count();
+                ip.prefixLength += std::bitset<64>(qFromBigEndian<quint64>(
+                            ((struct sockaddr_in6 *)(addr->ifa_netmask))
+                                ->sin6_addr.s6_addr+8))
+                        .count();
+                ip.gateway = gw6;
+                interfaceInfo_->ip6.append(ip);
+            }
+        }
+        addr = addr->ifa_next;
+    }
 }
 
 BsdPort::StatsMonitor::StatsMonitor()

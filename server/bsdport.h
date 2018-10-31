@@ -37,6 +37,9 @@ public:
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
 
+    static void classInit();
+    static void classDone();
+
 protected:
     class StatsMonitor: public QThread
     {
@@ -55,6 +58,14 @@ protected:
     bool clearPromisc_;
     static QList<BsdPort*> allPorts_;
     static StatsMonitor *monitor_; // rx/tx stats for ALL ports
+
+private:
+    void populateInterfaceInfo();
+
+    unsigned int ifIndex_{0};
+
+    static struct ifaddrs *addressList_;
+    static QByteArray routeListBuffer_;
 };
 #endif
 

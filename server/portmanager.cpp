@@ -55,6 +55,8 @@ PortManager::PortManager()
     WinPcapPort::populateAdapterList();
 #elif defined(Q_OS_LINUX)
     LinuxPort::classInit();
+#elif defined(Q_OS_BSD4)
+    BsdPort::classInit();
 #endif
 
     txRateAccuracy = rateAccuracy();
@@ -111,6 +113,14 @@ PortManager::PortManager()
     foreach(AbstractPort *port, portList_)
         port->init();
     
+#if defined(Q_OS_WIN32)
+    // TODO: WinPcapPort::freeAdapterList();
+#elif defined(Q_OS_LINUX)
+    // TODO: LinuxPort::classDone();
+#elif defined(Q_OS_BSD4)
+    BsdPort::classDone();
+#endif
+
     return;
 }
 

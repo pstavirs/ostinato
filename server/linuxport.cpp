@@ -269,8 +269,8 @@ void LinuxPort::populateInterfaceInfo()
     //
     // Find self IP
     //
-    bool foundIp4 = false;
-    bool foundIp6 = false;
+    bool foundIp4 = false; // FIXME: needed? why?
+    bool foundIp6 = false; // FIXME: needed? why?
     if (!addressCache_) {
         qWarning("rtnetlink address cache empty for %s", name());
         return;
