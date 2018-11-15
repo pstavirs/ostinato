@@ -28,9 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <qendian.h>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
 const quint64 kBcastMac = 0xffffffffffffULL;
 
 inline UInt128 UINT128(OstEmul::Ip6Address x)
@@ -193,7 +190,7 @@ void DeviceManager::receivePacket(PacketBuffer *pktBuf)
     offset += 4;
     dstMac = (dstMac << 16) | qFromBigEndian<quint16>(pktData + offset);
 
-    qDebug("dstMac %012" PRIx64, dstMac);
+    qDebug("dstMac %012llx", dstMac);
 
     // XXX: Treat multicast as bcast
     if (isMacMcast(dstMac))

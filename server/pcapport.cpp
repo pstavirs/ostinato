@@ -350,14 +350,14 @@ void PcapPort::PortMonitor::stop()
  */
 PcapPort::PortCapturer::PortCapturer(const char *device)
 {
-    device_ = QString::fromAscii(device);
+    device_ = QString::fromLatin1(device);
     stop_ = false;
     state_ = kNotStarted;
 
     if (!capFile_.open())
         qWarning("Unable to open temp cap file");
 
-    qDebug("cap file = %s", capFile_.fileName().toAscii().constData());
+    qDebug("cap file = %s", qPrintable(capFile_.fileName()));
 
     dumpHandle_ = NULL;
     handle_ = NULL;
@@ -381,7 +381,7 @@ void PcapPort::PortCapturer::run()
         goto _exit;
     }
 _retry:
-    handle_ = pcap_open_live(device_.toAscii().constData(), 65535, 
+    handle_ = pcap_open_live(qPrintable(device_), 65535,
                     flag, 1000 /* ms */, errbuf);
 
     if (handle_ == NULL)
@@ -389,20 +389,19 @@ _retry:
         if (flag && QString(errbuf).contains("promiscuous"))
         {
             qDebug("%s:can't set promiscuous mode, trying non-promisc", 
-                    device_.toAscii().constData());
+                    qPrintable(device_));
             flag = 0;
             goto _retry;
         }
         else
         {
             qDebug("%s: Error opening port %s: %s\n", __FUNCTION__,
-                    device_.toAscii().constData(), errbuf);
+                    qPrintable(device_), errbuf);
             goto _exit;
         }
     }
 
-    dumpHandle_ = pcap_dump_open(handle_, 
-            capFile_.fileName().toAscii().constData());
+    dumpHandle_ = pcap_dump_open(handle_, qPrintable(capFile_.fileName()));
     state_ = kRunning;
     while (1)
     {
@@ -492,7 +491,7 @@ QFile* PcapPort::PortCapturer::captureFile()
 PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
         DeviceManager *deviceManager)
 {
-    device_ = QString::fromAscii(device);
+    device_ = QString::fromLatin1(device);
     deviceManager_ = deviceManager;
     stop_ = false;
     state_ = kNotStarted;
@@ -565,7 +564,7 @@ _retry:
     {
         if (flags && QString(errbuf).contains("promiscuous"))
         {
-            notify("Unable to set promiscuous mode on <%s> - "
+            Xnotify("Unable to set promiscuous mode on <%s> - "
                     "device emulation will not work", qPrintable(device_));
             goto _exit;
         }
@@ -580,7 +579,7 @@ _retry:
 #endif
         else
         {
-            notify("Unable to open <%s> [%s] - device emulation will not work",
+            Xnotify("Unable to open <%s> [%s] - device emulation will not work",
                     qPrintable(device_), errbuf);
             goto _exit;
         }

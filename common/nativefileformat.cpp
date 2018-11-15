@@ -103,7 +103,7 @@ bool NativeFileFormat::open(
     qDebug("%s: size = %d", __FUNCTION__, size);
 
     //qDebug("Read %d bytes", buf.size());
-    //qDebug("%s", QString(buf.toHex()).toAscii().constData());
+    //qDebug("%s", qPrintable(QString(buf.toHex())));
 
     // Parse and verify magic
     if (!magic.ParseFromArray(
@@ -148,7 +148,7 @@ bool NativeFileFormat::open(
     }
 
     qDebug("%s: File MetaData (INFORMATION) - \n%s", __FUNCTION__,
-       QString().fromStdString(meta.DebugString()).toAscii().constData());
+       meta.DebugString().c_str());
     qDebug("%s: END MetaData", __FUNCTION__);
 
     // MetaData Validation(s)
@@ -193,11 +193,8 @@ bool NativeFileFormat::open(
 
 _content_parse_fail:
     error = QString(tr("Failed parsing %1 contents")).arg(fileName);
-    qDebug("Error: %s", QString().fromStdString(
-            content.InitializationErrorString())
-                .toAscii().constData());
-    qDebug("Debug: %s", QString().fromStdString(
-            content.DebugString()).toAscii().constData());
+    qDebug("Error: %s", content.InitializationErrorString().c_str());
+    qDebug("Debug: %s", content.DebugString().c_str());
     goto _fail;
 _incompatible_file_version:
     error = QString(tr("%1 is in an incompatible format version - %2.%3.%4"
@@ -217,9 +214,7 @@ _unexpected_file_type:
     goto _fail;
 _metadata_parse_fail:
     error = QString(tr("Failed parsing %1 meta data")).arg(fileName);
-    qDebug("Error: %s", QString().fromStdString(
-            meta.data().InitializationErrorString())
-                .toAscii().constData());
+    qDebug("Error: %s", meta.data().InitializationErrorString().c_str());
     goto _fail;
 _cksum_verify_fail:
     error = QString(tr("%1 checksum validation failed!\nExpected:%2 Actual:%3"))
@@ -236,18 +231,14 @@ _zero_cksum_serialize_fail:
     goto _fail;
 _cksum_parse_fail:
     error = QString(tr("Failed parsing %1 checksum")).arg(fileName);
-    qDebug("Error: %s", QString().fromStdString(
-            cksum.InitializationErrorString())
-                .toAscii().constData());
+    qDebug("Error: %s", cksum.InitializationErrorString().c_str());
     goto _fail;
 _magic_match_fail:
     error = QString(tr("%1 is not an Ostinato file")).arg(fileName);
     goto _fail;
 _magic_parse_fail:
     error = QString(tr("%1 does not look like an Ostinato file")).arg(fileName);
-    qDebug("Error: %s", QString().fromStdString(
-            magic.InitializationErrorString())
-                .toAscii().constData());
+    qDebug("Error: %s", magic.InitializationErrorString().c_str());
     goto _fail;
 _read_fail:
     error = QString(tr("Error reading from %1")).arg(fileName);
@@ -263,7 +254,7 @@ _open_fail:
     error = QString(tr("Error opening %1")).arg(fileName);
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
     return false;
 }
 
@@ -344,7 +335,7 @@ bool NativeFileFormat::save(
     }
 
     qDebug("Writing %d bytes", buf.size());
-    //qDebug("%s", QString(buf.toHex()).toAscii().constData());
+    //qDebug("%s", qPrintable(QString(buf.toHex())));
 
     // TODO: emit status("Writing to disk...");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -402,7 +393,7 @@ _content_not_init:
                 .arg(QString().fromStdString(content.DebugString()));
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
     return false;
 }
 
@@ -431,7 +422,7 @@ bool NativeFileFormat::isNativeFileFormat(
         if (!meta.ParseFromArray(
                 (void*)(buf.constData() + kFileMetaDataOffset), metaSize)) {
             qDebug("%s: File MetaData\n%s", __FUNCTION__,
-                    QString().fromStdString(meta.DebugString()).toAscii().constData());
+                    meta.DebugString().c_str());
             goto _close_exit;
         }
         if (meta.data().file_type() == fileType)

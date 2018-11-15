@@ -30,6 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
 
+#include "xqlocale.h"
+
+#include <QButtonGroup>
+#include <QMessageBox>
+
 extern ProtocolManager *OstProtocolManager;
 extern ProtocolWidgetFactory *OstProtocolWidgetFactory;
 
@@ -173,7 +178,7 @@ StreamConfigDialog::StreamConfigDialog(
     LoadCurrentStream();
     mpPacketModel = new PacketModel(this);
     tvPacketTree->setModel(mpPacketModel);
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     mpPacketModelTester = NULL;
 #else
     mpPacketModelTester = new ModelTest(mpPacketModel);
@@ -429,7 +434,7 @@ void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
     }
     else
     {
-        qWarning("Unhandled/Unknown PktLenMode = %s", mode.toAscii().data());
+        qWarning("Unhandled/Unknown PktLenMode = %s", qPrintable(mode));
     }
 }
 
@@ -710,9 +715,9 @@ void StreamConfigDialog::on_lePattern_editingFinished()
     QString    str;
 
     num = lePattern->text().remove(QChar(' ')).toULong(&isOk, 16);
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
     lePattern->setText(uintToHexStr(num, str, 4));
-    qDebug("editfinished (%s | %x)\n", lePattern->text().toAscii().data(), num);
+    qDebug("editfinished (%s | %x)\n", qPrintable(lePattern->text()));
 }
 #endif
 
@@ -1121,9 +1126,9 @@ void StreamConfigDialog::StoreCurrentStream()
         pStream->setNumBursts(leNumBursts->text().toULong(&isOk));
         pStream->setBurstSize(lePacketsPerBurst->text().toULong(&isOk));
         pStream->setPacketRate(
-                QLocale().toDouble(lePacketsPerSec->text(), &isOk));
+                XLocale().toDouble(lePacketsPerSec->text(), &isOk));
         pStream->setBurstRate(
-                QLocale().toDouble(leBurstsPerSec->text(), &isOk));
+                XLocale().toDouble(leBurstsPerSec->text(), &isOk));
     }
 }
 
@@ -1169,7 +1174,7 @@ void StreamConfigDialog::on_lePacketsPerSec_textChanged(const QString &text)
 
     if (rbSendPackets->isChecked())
     {
-        double pktsPerSec = QLocale().toDouble(text, &isOk);
+        double pktsPerSec = XLocale().toDouble(text, &isOk);
         double bitsPerSec = pktsPerSec * double((frameLen+kEthFrameOverHead)*8);
 
         if (rbPacketsPerSec->isChecked())
@@ -1186,7 +1191,7 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
     uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
     uint frameLen;
 
-    qDebug("start of %s(%s)", __FUNCTION__, text.toAscii().constData());
+    qDebug("start of %s(%s)", __FUNCTION__, qPrintable(text));
     if (pStream->lenMode() == Stream::e_fl_fixed)
         frameLen = pStream->frameLen();
     else
@@ -1194,7 +1199,7 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
 
     if (rbSendBursts->isChecked())
     {
-        double burstsPerSec = QLocale().toDouble(text, &isOk);
+        double burstsPerSec = XLocale().toDouble(text, &isOk);
         double bitsPerSec = burstsPerSec *
                 double(burstSize * (frameLen + kEthFrameOverHead) * 8);
         if (rbBurstsPerSec->isChecked())
@@ -1219,13 +1224,13 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
 
     if (rbSendPackets->isChecked())
     {
-        double pktsPerSec = QLocale().toDouble(text, &isOk)/
+        double pktsPerSec = XLocale().toDouble(text, &isOk)/
                 double((frameLen+kEthFrameOverHead)*8);
         lePacketsPerSec->setText(QString("%L1").arg(pktsPerSec, 0, 'f', 4));
     }
     else if (rbSendBursts->isChecked())
     {
-        double burstsPerSec = QLocale().toDouble(text, &isOk)/
+        double burstsPerSec = XLocale().toDouble(text, &isOk)/
                 double(burstSize * (frameLen + kEthFrameOverHead) * 8);
         leBurstsPerSec->setText(QString("%L1").arg(burstsPerSec, 0, 'f', 4));
     }

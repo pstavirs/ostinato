@@ -22,9 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "statstuple.h"
 #include "timestamp.h"
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
 PcapTxThread::PcapTxThread(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE] = "";
@@ -468,8 +465,8 @@ void PcapTxThread::updateStreamStats()
     int d = pkts%packetListSize_;
 
     qDebug("%s:", __FUNCTION__);
-    qDebug("txPkts = %" PRIu64, pkts);
-    qDebug("packetListSize_ = %" PRIu64, packetListSize_);
+    qDebug("txPkts = %llu", pkts);
+    qDebug("packetListSize_ = %llu", packetListSize_);
     qDebug("c = %d, d = %d\n", c, d);
 
     int i;

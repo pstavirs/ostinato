@@ -106,7 +106,7 @@ void PdmlUnknownProtocol::unknownFieldHandler(QString name, int pos,
     OstProto::HexDump *hexDump = pbProto->MutableExtension(OstProto::hexDump);
 
     qDebug("  hexdump: %s, pos = %d, expPos_ = %d, endPos_ = %d\n", 
-            name.toAscii().constData(), 
+            qPrintable(name), 
             pos, expPos_, endPos_); 
 
     // Skipped field? Pad with zero!
@@ -192,4 +192,6 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int /*pos*/,
             }
         }
     }
+    else if (name == "frame.number")
+        stream->mutable_control()->set_num_packets(1);
 }

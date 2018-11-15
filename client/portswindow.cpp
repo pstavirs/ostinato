@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "fileformat.pb.h"
 
+#include "xqlocale.h"
+
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QItemSelectionModel>
@@ -435,7 +437,7 @@ void PortsWindow::on_averagePacketsPerSec_editingFinished()
     Q_ASSERT(plm->isPort(current));
 
     bool isOk;
-    double pps = QLocale().toDouble(averagePacketsPerSec->text(), &isOk);
+    double pps = XLocale().toDouble(averagePacketsPerSec->text(), &isOk);
 
     plm->port(current).setAveragePacketRate(pps);
 }
@@ -450,7 +452,7 @@ void PortsWindow::on_averageBitsPerSec_editingFinished()
     Q_ASSERT(plm->isPort(current));
 
     bool isOk;
-    double bps = QLocale().toDouble(averageBitsPerSec->text(), &isOk);
+    double bps = XLocale().toDouble(averageBitsPerSec->text(), &isOk);
 
     plm->port(current).setAverageBitRate(bps);
 }
@@ -553,7 +555,7 @@ void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
         goto _EXIT;
     }
 
-    qDebug("currentChanged %llx", current.internalId());
+    qDebug("currentChanged %p", (void*)current.internalId());
 
     if (plm->isPortGroup(current))
     {
@@ -846,7 +848,7 @@ void PortsWindow::on_actionDuplicate_Stream_triggered()
     if (model->hasSelection())
     {
         bool isOk;
-        int count = QInputDialog::getInteger(this, "Duplicate Streams",
+        int count = QInputDialog::getInt(this, "Duplicate Streams",
                 "Count", 1, 1, 9999, 1, &isOk);
 
         if (!isOk)

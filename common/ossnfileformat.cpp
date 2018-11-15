@@ -50,7 +50,7 @@ _missing_session:
     error = QString(tr("%1 does not contain a session")).arg(fileName);
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
 _exit:
     return false;
 }
@@ -76,7 +76,7 @@ _session_not_init:
                 .arg(QString().fromStdString(session.DebugString()));
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
     return false;
 }
 

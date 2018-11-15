@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "dumpview.h"
 
+#include <QScrollBar>
+#include <QStylePainter>
+
 //! \todo Enable Scrollbars
 
 DumpView::DumpView(QWidget *parent)
@@ -154,7 +157,8 @@ QRegion DumpView::visualRegionForSelection(
 
 //protected slots:
 void DumpView::dataChanged(const QModelIndex &/*topLeft*/, 
-        const QModelIndex &/*bottomRight*/)
+        const QModelIndex &/*bottomRight*/,
+        const QVector<int> &/*roles*/)
 {
     // FIXME(HI)
     update();

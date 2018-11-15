@@ -2,11 +2,11 @@ TEMPLATE = app
 CONFIG += qt ver_info
 QT += network script xml
 QT -= gui
-DEFINES += HAVE_REMOTE WPCAP
 linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
     DEFINES += HAVE_IFLA_STATS64
 INCLUDEPATH += "../rpc"
 win32 {
+    DEFINES += HAVE_REMOTE WPCAP
     CONFIG += console
     QMAKE_LFLAGS += -static
     LIBS += -lwpcap -lpacket
@@ -57,3 +57,4 @@ QMAKE_DISTCLEAN += object_script.*
 
 include (../install.pri)
 include (../version.pri)
+include (../options.pri)

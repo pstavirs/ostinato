@@ -38,7 +38,7 @@ public:
         QValidator::State state;
         QHostAddress addr(input);
 
-        //qDebug("%s: %s (%d)", __FUNCTION__, input.toAscii().constData(), pos);
+        //qDebug("%s: %s (%d)", __FUNCTION__, qPrintable(input), pos);
 
         if (addr.protocol() == QAbstractSocket::IPv6Protocol)
             state = Acceptable;
@@ -48,7 +48,7 @@ public:
             else
                 state = Invalid;
         //qDebug("%s(%d): %s (%d), ", __FUNCTION__, state, 
-            //input.toAscii().constData(), pos);
+            //qPrintable(input), pos);
         return state;
     }
     virtual void fixup(QString &input) const 
@@ -57,7 +57,7 @@ public:
         QHostAddress addr(input);
         int len = input.size();
 
-        //qDebug("%s: %s", __FUNCTION__, input.toAscii().constData());
+        //qDebug("%s: %s", __FUNCTION__, qPrintable(input));
 
         while (addr.protocol() != QAbstractSocket::IPv6Protocol)
         {

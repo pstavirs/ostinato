@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
-WinPcapPort::WinPcapPort(int id, const char *device)
-    : PcapPort(id, device) 
+WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
+    : PcapPort(id, device)
 {
     monitorRx_->stop();
     monitorTx_->stop();
@@ -39,6 +39,8 @@ WinPcapPort::WinPcapPort(int id, const char *device)
 
     monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
+
+    data_.set_description(description);
 
     adapter_ = PacketOpenAdapter((CHAR*)device);
     if (!adapter_)
@@ -88,7 +90,7 @@ bool WinPcapPort::hasExclusiveControl()
                 + "/bindconfig.exe");
     int exitCode;
 
-    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+    qDebug("%s: %s", __FUNCTION__, qPrintable(portName));
 
     if (!QFile::exists(bindConfigFilePath))
         return false;
@@ -111,7 +113,7 @@ bool WinPcapPort::setExclusiveControl(bool exclusive)
                 + "/bindconfig.exe");
     QString status;
 
-    qDebug("%s: %s", __FUNCTION__, portName.toAscii().constData());
+    qDebug("%s: %s", __FUNCTION__, qPrintable(portName));
 
     if (!QFile::exists(bindConfigFilePath))
         return false;
@@ -170,8 +172,8 @@ void WinPcapPort::PortMonitor::run()
                 case kDirectionRx:
                     stats_->rxPkts += pkts;
                     stats_->rxBytes += bytes;
-                    stats_->rxPps = (pkts  * 1000000) / usec;
-                    stats_->rxBps = (bytes * 1000000) / usec;
+                    stats_->rxPps = qRound64(pkts  * 1e6 / usec);
+                    stats_->rxBps = qRound64(bytes * 1e6 / usec);
                     break;
 
                 case kDirectionTx:
@@ -192,8 +194,8 @@ void WinPcapPort::PortMonitor::run()
                         lastTxPkts = txPkts;
                         lastTxBytes = txBytes;
                     }
-                    stats_->txPps = (pkts  * 1000000) / usec;
-                    stats_->txBps = (bytes * 1000000) / usec;
+                    stats_->txPps = qRound64(pkts  * 1e6 / usec);
+                    stats_->txBps = qRound64(bytes * 1e6 / usec);
                     break;
 
                 default:

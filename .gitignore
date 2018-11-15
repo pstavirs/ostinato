@@ -11,12 +11,14 @@ ostinato
 
 # Qt generated files
 ui_*.h
+moc_*.h
 moc_*.cpp
 qrc_*.cpp
 
 # QMake generated files
 Makefile*
 *\object_script.*
+.qmake.stash
 
 # protobuf generated files
 *.pb.h

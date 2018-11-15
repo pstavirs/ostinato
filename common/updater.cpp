@@ -20,16 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "updater.h"
 
 #include <QCoreApplication>
-#include <QHttp>
-#include <QTemporaryFile>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QXmlStreamReader>
 
 extern const char* version;
 
 Updater::Updater()
 {
-    http_ = NULL;
-    file_ = NULL;
+    http_ = new QNetworkAccessManager(this);
 
 #if 1
     // Tests!
@@ -44,60 +43,39 @@ Updater::Updater()
 Updater::~Updater()
 {
     delete http_;
-    delete file_;
 }
 
 void Updater::checkForNewVersion()
 {
-    QString host("update.ostinato.org");
-    QHttpRequestHeader reqHdr("GET", "/update/pad.xml");
-    http_ = new QHttp(host);
-    file_ = new QTemporaryFile();
+    QNetworkRequest request(QUrl("http://update.ostinato.org/update/pad.xml"));
 
-    reqHdr.setValue("Host", host);
-    reqHdr.setValue("User-Agent", userAgent());
+    //reqHdr.setHeader("Host", host);
+    request.setHeader(QNetworkRequest::UserAgentHeader, userAgent());
 
-    connect(http_, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), 
-            this, SLOT(responseReceived(QHttpResponseHeader)));
-    connect(http_, SIGNAL(requestFinished(int, bool)), 
-            this, SLOT(parseXml(int, bool)));
-    connect(http_, SIGNAL(stateChanged(int)), 
-            this, SLOT(stateUpdate(int)));
+    connect(http_, SIGNAL(finished(QNetworkReply*)), 
+            this, SLOT(parseXml(QNetworkReply*)));
 
-    file_->open();
-    qDebug("Updater: PAD XML file - %s", qPrintable(file_->fileName()));
+    http_->get(request);
 
-    http_->request(reqHdr, NULL, file_);
-    qDebug("Updater: %s", qPrintable(http_->currentRequest().toString()
-                .replace("\r\n", "\nUpdater: ")));
+    QList<QByteArray> headers = request.rawHeaderList();
+    foreach(QByteArray hdr, headers ) {
+        QByteArray val = request.rawHeader(hdr);
+        qDebug("Updater: %s: %s", qPrintable(QString(hdr)),
+                qPrintable(QString(val)));
+    }
 }
 
-void Updater::stateUpdate(int state)
-{
-    qDebug("Updater: state %d", state);
-}
-
-void Updater::responseReceived(QHttpResponseHeader response)
-{
-    qDebug("Updater: HTTP/%d.%d %d %s", 
-            response.majorVersion(), response.minorVersion(),
-            response.statusCode(), qPrintable(response.reasonPhrase()));
-}
-
-void Updater::parseXml(int /*id*/, bool error) 
+void Updater::parseXml(QNetworkReply *reply) 
 {
     QXmlStreamReader xml;
     QString newVersion;
 
-    if (error) {
-        qDebug("Updater: %s", qPrintable(http_->errorString()));
+    if (reply->error()) {
+        qDebug("Updater: %s", qPrintable(reply->errorString()));
         goto _exit;
     }
 
-    // Close and reopen the file so that we read from the top
-    file_->close();
-    file_->open();
-    xml.setDevice(file_);
+    xml.setDevice(reply);
 
     while (!xml.atEnd()) {
         xml.readNext();

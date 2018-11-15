@@ -34,8 +34,6 @@ public:
             OstProto::Stream *stream);
 protected:
     PdmlIp4Protocol();
-private:
-    QByteArray options_;
 };
 
 #endif

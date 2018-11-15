@@ -118,7 +118,7 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
     if (!parent.isValid())
     {
         // Top Level Item - PortGroup
-        if ((role == Qt::DisplayRole))
+        if (role == Qt::DisplayRole)
         {
             DBG0("Exit PortModel data 1\n");
             return QString("Port Group %1: %2 [%3]:%4 (%5)").
@@ -128,7 +128,7 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
                 arg(pgl->mPortGroups.at(index.row())->serverPort()).
                 arg(pgl->mPortGroups.value(index.row())->numPorts()); 
         }
-        else if ((role == Qt::DecorationRole))
+        else if (role == Qt::DecorationRole)
         {
             DBG0("Exit PortModel data 2\n");
             switch(pgl->mPortGroups.at(index.row())->state())
@@ -170,7 +170,7 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
         Port *port = pgl->mPortGroups.at(parent.row())->mPorts[index.row()];
 
         // Non Top Level - Port
-        if ((role == Qt::DisplayRole))
+        if (role == Qt::DisplayRole)
         {
             QString rsvdBy;
 
@@ -183,11 +183,11 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
                 .arg(rsvdBy)
                 .arg(port->description());
         }
-        else if ((role == Qt::DecorationRole))
+        else if (role == Qt::DecorationRole)
         {
             return portIconFactory[port->linkState()][port->hasExclusiveControl()];
         }
-        else if ((role == Qt::ForegroundRole))
+        else if (role == Qt::ForegroundRole)
         {
             return port->isDirty() ? QBrush(Qt::red) : QVariant();
         }
@@ -343,5 +343,7 @@ void PortModel::portGroupRemoved()
 
 void PortModel::when_portListChanged()
 {
-    reset();
+    // FIXME: why needed?
+    beginResetModel();
+    endResetModel();
 }

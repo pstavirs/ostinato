@@ -121,4 +121,5 @@ QMAKE_DISTCLEAN += object_script.*
 #QMAKE_EXTRA_TARGETS += binding
 
 include(../protobuf.pri)
+include(../options.pri)
 

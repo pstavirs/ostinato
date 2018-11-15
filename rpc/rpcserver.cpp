@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "rpcconn.h"
 
 #include <QThread>
+#include <QThread>
 
 // FIXME: QThreadX till we change minimum version of Qt from Qt4.3+ to Qt4.4+
 class QThreadX: public QThread
@@ -35,7 +36,7 @@ RpcServer::RpcServer()
 {
     service = NULL; 
 
-    qInstallMsgHandler(RpcConnection::connIdMsgHandler);
+    qInstallMessageHandler(RpcConnection::connIdMsgHandler);
 }
 
 RpcServer::~RpcServer()
@@ -51,17 +52,17 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
     {
         qDebug("Unable to start the server on <%s>: %s",
                 qPrintable(address.toString()),
-                errorString().toAscii().constData());
+                qPrintable(errorString()));
         return false;
     }
 
     qDebug("The server is running on %s: %d", 
-            serverAddress().toString().toAscii().constData(),
+            qPrintable(serverAddress().toString()),
             serverPort());
     return true;
 }
 
-void RpcServer::incomingConnection(int socketDescriptor)
+void RpcServer::incomingConnection(qintptr socketDescriptor)
 {
     QThread *thread = new QThreadX; // FIXME:QThreadX pending Qt4.4+
     RpcConnection *conn = new RpcConnection(socketDescriptor, service);

@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _UPDATER_H
 #define _UPDATER_H
 
-#include <QHttpResponseHeader>
+#include <QObject>
 #include <QString>
 
-class QHttp;
-class QTemporaryFile;
+class QNetworkAccessManager;
+class QNetworkReply;
 
 class Updater : public QObject
 {
@@ -39,16 +39,13 @@ signals:
     void newVersionAvailable(QString);
 
 private slots:
-    void stateUpdate(int state);
-    void responseReceived(QHttpResponseHeader response);
-    void parseXml(int id, bool error);
+    void parseXml(QNetworkReply *reply);
 
 private:
     QString userAgent();
     QString sysInfo();
 
-    QHttp *http_;
-    QTemporaryFile *file_;
+    QNetworkAccessManager *http_;
 };
 
 #endif

@@ -69,10 +69,10 @@ public:
             dynamic_cast<ComboProtocol<protoNumber, ProtoA, ProtoB>*>(proto);
 
         Q_ASSERT_X(comboProto != NULL, 
-                QString("ComboProtocolConfigForm{%1}::loadWidget()")
-                    .arg(protoNumber).toAscii().constData(),
-                QString("Protocol{%1} is not a instance of ComboProtocol")
-                    .arg(proto->protocolNumber()).toAscii().constData());
+                qPrintable(tr("ComboProtocolConfigForm{%1}::loadWidget()")
+                    .arg(protoNumber)),
+                qPrintable(tr("Protocol{%1} is not a instance of ComboProtocol")
+                    .arg(proto->protocolNumber())));
 
         formA->loadWidget(comboProto->protoA);
         formB->loadWidget(comboProto->protoB);
@@ -83,10 +83,10 @@ public:
             dynamic_cast<ComboProtocol<protoNumber, ProtoA, ProtoB>*>(proto);
 
         Q_ASSERT_X(comboProto != NULL, 
-                QString("ComboProtocolConfigForm{%1}::loadWidget()")
-                    .arg(protoNumber).toAscii().constData(),
-                QString("Protocol{%1} is not a instance of ComboProtocol")
-                    .arg(proto->protocolNumber()).toAscii().constData());
+                qPrintable(tr("ComboProtocolConfigForm{%1}::loadWidget()")
+                    .arg(protoNumber)),
+                qPrintable(tr("Protocol{%1} is not a instance of ComboProtocol")
+                    .arg(proto->protocolNumber())));
 
         formA->storeWidget(comboProto->protoA);
         formB->storeWidget(comboProto->protoB);

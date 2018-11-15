@@ -25,7 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 #include "stream.h"
 #include "packetmodel.h"
-#include "modeltest.h"
+
+#include <QFileDialog>
+#include <QProgressDialog>
+#include <QStringListModel>
 
 #define MAX_MAC_ITER_COUNT     256
 #define MIN_PKT_LEN            64
@@ -38,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 class AbstractProtocolConfigForm;
+class ModelTest;
 
 class StreamConfigDialog : public QDialog, public Ui::StreamConfigDialog
 {

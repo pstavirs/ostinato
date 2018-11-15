@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTableView>
 
+#include <QClipboard>
+#include <QKeyEvent>
 #include <QPainter>
 
 class XTableView : public QTableView
@@ -41,6 +43,31 @@ protected:
         }
         else
             QTableView::paintEvent(event);
+    }
+
+    virtual void keyPressEvent(QKeyEvent *event)
+    {
+        // Copy selection to clipboard (base class copies only current item)
+        if (event->matches(QKeySequence::Copy)
+                && selectionBehavior() == SelectRows) {
+            QString text;
+            int lastRow = -1;
+            QModelIndexList selected = selectionModel()->selectedIndexes();
+            qSort(selected);
+            foreach(QModelIndex index, selected) {
+                if (index.row() != lastRow) {
+                    if (!text.isEmpty())
+                        text.append("\n");
+                }
+                else
+                    text.append("\t");
+                text.append(model()->data(index).toString());
+                lastRow = index.row();
+            }
+            qApp->clipboard()->setText(text);
+        }
+        else
+            QTableView::keyPressEvent(event);
     }
 };
 

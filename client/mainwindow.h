@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMainWindow>
 #include <QProcess>
 
+class LogsWindow;
 class PortsWindow;
 class PortStatsWindow;
 
@@ -41,8 +42,10 @@ private:
     QProcess        *localServer_;
     PortsWindow        *portsWindow;
     PortStatsWindow *statsWindow;
+    LogsWindow         *logsWindow_;
     QDockWidget        *portsDock;
     QDockWidget        *statsDock;
+    QDockWidget        *logsDock_;
 
     QRect defaultGeometry_;
     QByteArray defaultLayout_;

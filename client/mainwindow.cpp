@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #endif
 
 #include "jumpurl.h"
+#include "logsmodel.h"
+#include "logswindow.h"
 #include "params.h"
 #include "portgrouplist.h"
 #include "portstatswindow.h"
@@ -56,6 +58,7 @@ extern const char* version;
 extern const char* revision;
 
 PortGroupList    *pgl;
+LogsModel        *appLogs;
 
 MainWindow::MainWindow(QWidget *parent) 
     : QMainWindow (parent)
@@ -89,17 +92,26 @@ MainWindow::MainWindow(QWidget *parent)
         localServer_ = NULL;
 
     pgl = new PortGroupList;
+    appLogs = new LogsModel(this);
 
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
+
     portsDock = new QDockWidget(tr("Ports and Streams"), this);
     portsDock->setObjectName("portsDock");
     portsDock->setFeatures(
                 portsDock->features() & ~QDockWidget::DockWidgetClosable);
+
     statsDock = new QDockWidget(tr("Port Statistics"), this);
     statsDock->setObjectName("statsDock");
     statsDock->setFeatures(
                 statsDock->features() & ~QDockWidget::DockWidgetClosable);
+
+    logsDock_ = new QDockWidget(tr("Logs"), this);
+    logsDock_->setObjectName("logsDock");
+    logsDock_->setFeatures(
+                logsDock_->features() & ~QDockWidget::DockWidgetClosable);
+    logsWindow_ = new LogsWindow(appLogs, logsDock_);
 
     setupUi(this);
 
@@ -107,6 +119,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);
+    logsDock_->setWidget(logsWindow_);
+    addDockWidget(Qt::BottomDockWidgetArea, logsDock_);
+    tabifyDockWidget(statsDock, logsDock_);
+    statsDock->show();
+    statsDock->raise();
+
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
@@ -405,7 +423,7 @@ void MainWindow::reportLocalServerError()
         tr("<p>If you have remote drone agents running, you can still add "
            "and connect to them.</p>"
            "<p>If you don't want to start the local drone agent at startup, "
-           "provide the <b>-s</b> option to Ostinato on the command line.</p>"
+           "provide the <b>-c</b> option to Ostinato on the command line.</p>"
            "<p>Learn about Ostinato's <a href='%1'>Controller-Agent "
            "architecture</a></p>").arg(jumpUrl("arch")));
 }

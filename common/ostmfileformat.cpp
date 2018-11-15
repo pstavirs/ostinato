@@ -50,7 +50,7 @@ _missing_streams:
     error = QString(tr("%1 does not contain any streams")).arg(fileName);
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
     return false;
 }
 
@@ -75,7 +75,7 @@ _stream_not_init:
                 .arg(QString().fromStdString(streams.DebugString()));
     goto _fail;
 _fail:
-    qDebug("%s", error.toAscii().constData());
+    qDebug("%s", qPrintable(error));
     return false;
 }
 

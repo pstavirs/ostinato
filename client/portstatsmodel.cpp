@@ -22,6 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTimer>
 
+enum {
+    // XXX: The byte stats don't include FCS so include it in the overhead
+    kPerPacketByteOverhead = 24 // 1(SFD)+7(Preamble)+12(IPG)+4(FCS)
+};
+
 PortStatsModel::PortStatsModel(PortGroupList *p, QObject *parent)
     : QAbstractTableModel(parent) 
 {
@@ -156,6 +161,16 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
             case e_STAT_BYTE_RECV_RATE:
                 return QString("%L1").arg(quint64(stats.rx_bps()));
+
+            case e_STAT_BIT_SEND_RATE:
+                return QString("%L1").arg(quint64(
+                            stats.tx_bps()
+                                + stats.tx_pps()*kPerPacketByteOverhead)*8);
+
+            case e_STAT_BIT_RECV_RATE:
+                return QString("%L1").arg(quint64(
+                            stats.rx_bps()
+                                + stats.rx_pps()*kPerPacketByteOverhead)*8);
 
 #if 0
             case e_STAT_FRAMES_RCVD_NIC:
@@ -293,6 +308,8 @@ void PortStatsModel::when_portListChanged()
 {
     int i, count = 0;
 
+    beginResetModel();
+
     // recalc numPorts
     while (numPorts.size())
         numPorts.removeFirst();
@@ -303,7 +320,7 @@ void PortStatsModel::when_portListChanged()
         numPorts.append(count);
     }
 
-    reset();
+    endResetModel();
 }
 
 // FIXME: unused? if used, the index calculation row/column needs to be swapped

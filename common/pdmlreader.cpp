@@ -107,7 +107,7 @@ bool PdmlReader::read(QIODevice *device, PcapFileFormat *pcap, bool *stop)
     {
         qDebug("Line %lld", lineNumber());
         qDebug("Col %lld", columnNumber());
-        qDebug("%s", errorString().toAscii().constData());
+        qDebug("%s", qPrintable(errorString()));
         return false;
     }
     return true;
@@ -151,8 +151,7 @@ void PdmlReader::skipElement()
 {
     Q_ASSERT(isStartElement());
 
-    qDebug("skipping element - <%s>", 
-                    name().toString().toAscii().constData());
+    qDebug("skipping element - <%s>", qPrintable(name().toString()));
     while (!atEnd())
     {
         readNext();
@@ -298,7 +297,7 @@ void PdmlReader::readProto()
         size = attributes().value("size").toString().toInt();
 
     qDebug("proto: %s, pos = %d, expPos_ = %d, size = %d", 
-            protoName.toAscii().constData(), pos, expPos_, size);
+            qPrintable(protoName), pos, expPos_, size);
 
     // This is a heuristic to skip protocols which are not part of
     // this frame, but of a reassembled segment spanning several frames
@@ -355,7 +354,7 @@ void PdmlReader::readProto()
     pdmlProto = appendPdmlProto(protoName, &pbProto);
 
     qDebug("%s: preProtocolHandler(expPos = %d)", 
-            protoName.toAscii().constData(), expPos_);
+            qPrintable(protoName), expPos_);
     pdmlProto->preProtocolHandler(protoName, attributes(), expPos_, pbProto,
             currentStream_);
 
@@ -371,8 +370,8 @@ void PdmlReader::readProto()
             if (name() == "proto")
             {
                 // an embedded proto
-                qDebug("embedded proto: %s\n", attributes().value("name")
-                        .toString().toAscii().constData());
+                qDebug("embedded proto: %s\n", 
+                        qPrintable(attributes().value("name").toString()));
 
                 if (isDontCareProto())
                 {
@@ -423,7 +422,7 @@ void PdmlReader::readProto()
                     pdmlProto = appendPdmlProto(protoName, &pbProto);
 
                     qDebug("%s: preProtocolHandler(expPos = %d)", 
-                            protoName.toAscii().constData(), expPos_);
+                            qPrintable(protoName), expPos_);
                     pdmlProto->preProtocolHandler(protoName, attributes(), 
                             expPos_, pbProto, currentStream_);
                 }
@@ -461,7 +460,7 @@ void PdmlReader::readField(PdmlProtocol *pdmlProto,
 
     QString fieldName = attributes().value("name").toString();
 
-    qDebug("  fieldName:%s", fieldName.toAscii().constData());
+    qDebug("  fieldName:%s", qPrintable(fieldName));
 
     pdmlProto->fieldHandler(fieldName, attributes(), pbProto, currentStream_);
 
@@ -540,8 +539,7 @@ PdmlProtocol* PdmlReader::appendPdmlProto(const QString &protoName,
 
         *pbProto = proto;
 
-        qDebug("%s: name = %s", __FUNCTION__, 
-                protoName.toAscii().constData());
+        qDebug("%s: name = %s", __FUNCTION__, qPrintable(protoName));
     }
     else
         *pbProto = NULL;

@@ -54,6 +54,7 @@ private slots:
     void on_type_currentIndexChanged(int index);
     void updateCurrentVariableField();
 private:
+    void decorateProtocolItem(QListWidgetItem *item);
     void loadProtocolFields(const AbstractProtocol *protocol);
     int typeSize(OstProto::VariableField::Type type);
     int fieldIndex(const OstProto::VariableField &vf);
@@ -61,6 +62,17 @@ private:
             QListWidgetItem *item,
             const AbstractProtocol *protocol,
             const OstProto::VariableField &vf);
+
+    // Custom roles for protocol items
+    enum {
+        kProtocolPtrRole = Qt::UserRole,
+        kCurrentVarFieldRole,
+    };
+
+    // Custom roles for variable field items
+    enum {
+        kVarFieldRole = Qt::UserRole
+    };
 
     Stream *stream_;
     QIntValidator *valueRange_;

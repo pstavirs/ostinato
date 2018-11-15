@@ -68,6 +68,8 @@ public:
     virtual int protocolFrameSize(int streamIndex = 0) const;
 
 private:
+    bool padUntilEnd() const;
+
     OstProto::HexDump    data;
 };
 #endif

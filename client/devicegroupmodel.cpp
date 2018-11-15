@@ -257,8 +257,9 @@ bool DeviceGroupModel::removeRows(
 
 void DeviceGroupModel::setPort(Port *port)
 {
+    beginResetModel();
     port_ = port;
-    reset();
+    endResetModel();
 }
 
 //

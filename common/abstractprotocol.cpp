@@ -620,9 +620,9 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) 
             else
                 field = fieldData(i, FieldFrameValue, streamIndex).toByteArray();
             qDebug("<<< (%d, %db) %s >>>", proto.size(), lastbitpos,
-                    QString(proto.toHex()).toAscii().constData());
+                    qPrintable(QString(proto.toHex())));
             qDebug("  < %d: (%db/%dB) %s >", i, bits, field.size(),
-                    QString(field.toHex()).toAscii().constData());
+                    qPrintable(QString(field.toHex())));
 
             if (bits == (uint) field.size() * 8)
             {
@@ -930,18 +930,28 @@ quint32 AbstractProtocol::protocolFrameHeaderCksum(int streamIndex,
     CksumType cksumType, CksumScope cksumScope) const
 {
     quint32 sum = 0;
-    quint16 cksum;
+    quint32 cksum;
     AbstractProtocol *p = prev;
 
     Q_ASSERT(cksumType == CksumIpPseudo);
 
+    // We may have extension headers between us and the IP header - skip 'em
     while (p)
     {
         cksum = p->protocolFrameCksum(streamIndex, cksumType);
-        sum += (quint16) ~cksum;
-        qDebug("%s: sum = %u, cksum = %u", __FUNCTION__, sum, cksum);
-        if (cksumScope == CksumScopeAdjacentProtocol)
-            goto out;
+        if (cksum <= 0xFFFF) // protocol has a valid pseudo cksum ie its IP
+        {
+            sum += (quint16) ~cksum;
+            // Ip4/6Protocol::protocolFrameCksum(CksumIpPseudo) only
+            // counts the src/dst IP (see Note in there)
+            // Count the payload length and protocolId here
+            sum += protocolFrameSize(streamIndex)
+                    + protocolFramePayloadSize(streamIndex);
+            sum += protocolId(ProtocolIdIp);
+            qDebug("%s: sum = %x, cksum = %x", __FUNCTION__, sum, cksum);
+            if (cksumScope == CksumScopeAdjacentProtocol)
+                goto out;
+        }
         p = p->prev;
     }
     if (parent)

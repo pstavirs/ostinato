@@ -38,8 +38,9 @@ void PacketModel::setSelectedProtocols(ProtocolListIterator &iter)
 
     if (mSelectedProtocols != currentProtocols)
     {
+        beginResetModel();
         mSelectedProtocols = currentProtocols;
-        reset();
+        endResetModel();
     }
     else
     {

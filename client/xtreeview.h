@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QMouseEvent>
 
+#if 0 // FIXME: Test and remove
 #if QT_VERSION >= 0x050000
 #error "Do we even need this anymore?"
 #endif
@@ -45,6 +46,9 @@ private:
         QTreeView::mousePressEvent(event);
     }
 };
+#else
+typedef QTreeView XTreeView;
+#endif
 
 #endif
 
