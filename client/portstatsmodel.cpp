@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsmodel.h"
 #include "portgrouplist.h"
 
+#include <QPainter>
+#include <QPixmapCache>
 #include <QTimer>
 
 enum {
@@ -94,15 +96,12 @@ void PortStatsModel::getDomainIndexes(const QModelIndex &index,
 
 QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 {
-    uint pgidx, pidx;
-    int row;
-
     // Check for a valid index
     if (!index.isValid())
         return QVariant();
 
     // Check for row/column limits
-    row = index.row();
+    int row = index.row();
     if (row >= e_STAT_MAX)
         return QVariant();
 
@@ -112,15 +111,22 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
     if (index.column() >= (numPorts.last()))
         return QVariant();
 
+    if (role == Qt::TextAlignmentRole)
+    {
+        if (row >= e_STATISTICS_START && row <= e_STATISTICS_END)
+            return Qt::AlignRight;      // right-align numbers
+        else
+            return Qt::AlignHCenter;    // center-align everything else
+    }
+
+    uint pgidx, pidx;
     getDomainIndexes(index, pgidx, pidx);
 
+    OstProto::PortStats stats = pgl->mPortGroups.at(pgidx)
+                                        ->mPorts[pidx]->getStats();
     // Check role
     if (role == Qt::DisplayRole)
     {
-        OstProto::PortStats    stats;
-
-        stats = pgl->mPortGroups.at(pgidx)->mPorts[pidx]->getStats();
-
         switch(row)
         {
             // Info
@@ -128,14 +134,8 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
                 return pgl->mPortGroups.at(pgidx)->mPorts[pidx]->userName();
 
             // States
-            case e_LINK_STATE:
-                return LinkStateName.at(stats.state().link_state());
-
-            case e_TRANSMIT_STATE:
-                return BoolStateName.at(stats.state().is_transmit_on());
-
-            case e_CAPTURE_STATE:
-                return BoolStateName.at(stats.state().is_capture_on());
+            case e_COMBO_STATE:
+                return QVariant();
 
             // Statistics
             case e_STAT_FRAMES_RCVD:
@@ -201,12 +201,26 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
                 return 0;
         }
     }
-    else if (role == Qt::TextAlignmentRole) 
+    else if (role == Qt::DecorationRole)
     {
-        if (row >= e_STATISTICS_START && row <= e_STATISTICS_END)
-            return Qt::AlignRight;      // right-align numbers
+        if (row == e_COMBO_STATE)
+            return statusIcons(
+                        stats.state().link_state(),
+                        stats.state().is_transmit_on(),
+                        stats.state().is_capture_on());
         else
-            return Qt::AlignHCenter;    // center-align everything else
+            return QVariant();
+    }
+    else if (role == Qt::ToolTipRole)
+    {
+        if (row == e_COMBO_STATE)
+            return QString("Transmit:<b><i>%1</i></b> Link:<b><i>%2</i></b> "
+                           "Capture:<b><i>%3</i></b>")
+                        .arg(BoolStateName.at(stats.state().is_transmit_on()))
+                        .arg(LinkStateName.at(stats.state().link_state()))
+                        .arg(BoolStateName.at(stats.state().is_capture_on()));
+        else
+            return QVariant();
     }
     else
         return QVariant();
@@ -350,4 +364,50 @@ void PortStatsModel::when_portGroup_stats_update(quint32 /*portGroupId*/)
     QModelIndex bottomRight = index(rowCount()-1, columnCount()-1, QModelIndex());
 
     emit dataChanged(topLeft, bottomRight);
+}
+
+QPixmap PortStatsModel::statusIcons(
+        int linkState, bool transmit, bool capture) const
+{
+    QPixmap pixmap;
+    QString key = QString("$ost:statusList:%1:%2:%3")
+                    .arg(linkState).arg(transmit).arg(capture);
+
+    if (QPixmapCache::find(key, pixmap))
+        return pixmap;
+
+    static int sz = QPixmap(":/icons/transmit_on.png").width();
+
+    // Assume all icons are of same size and are square
+    QPixmap blank(sz, sz);
+    blank.fill(Qt::transparent);
+
+    pixmap = QPixmap(sz*3, sz);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+
+    painter.drawPixmap(0, 0,
+            transmit ? QPixmap(":/icons/transmit_on.png") : blank);
+
+    switch (linkState) {
+    case OstProto::LinkStateUp:
+        painter.drawPixmap(sz, 0, QPixmap(":/icons/bullet_green.png"));
+        break;
+    case OstProto::LinkStateDown:
+        painter.drawPixmap(sz, 0, QPixmap(":/icons/bullet_red.png"));
+        break;
+    case OstProto::LinkStateUnknown:
+        painter.drawPixmap(sz, 0, QPixmap(":/icons/bullet_white.png"));
+        break;
+    default:
+        painter.drawPixmap(sz, 0, blank);
+    }
+
+    painter.drawPixmap(sz*2, 0,
+            capture ? QPixmap(":/icons/sound_none.png") : blank);
+
+
+    QPixmapCache::insert(key, pixmap);
+    return pixmap;
 }
