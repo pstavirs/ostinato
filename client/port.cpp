@@ -531,7 +531,9 @@ void Port::updateStats(OstProto::PortStats *portStats)
     oldState = stats.state(); 
     stats.MergeFrom(*portStats);
 
-    if (oldState.link_state() != stats.state().link_state())
+    if ((oldState.link_state() != stats.state().link_state())
+        || (oldState.is_transmit_on() != stats.state().is_transmit_on())
+        || (oldState.is_capture_on() != stats.state().is_capture_on()))
     {
         qDebug("portstate changed");
         emit portDataChanged(mPortGroupId, mPortId);

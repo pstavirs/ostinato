@@ -50,12 +50,6 @@ public:
     quint32 portGroupId(const QModelIndex& index);
     quint32 portId(const QModelIndex& index);
 
-private:
-    PortGroupList    *pgl;
-    static const int kLinkStatesCount = 3;
-    static const int kExclusiveStatesCount = 2;
-    QIcon portIconFactory[kLinkStatesCount][kExclusiveStatesCount];
-
 private slots:
     // FIXME: these are invoked from outside - how come they are "private"?
     void when_portGroupDataChanged(int portGroupId, int portId);
@@ -71,6 +65,12 @@ private slots:
     void triggerLayoutAboutToBeChanged();
     void triggerLayoutChanged();
 #endif
+
+private:
+    QPixmap statusIcon(int linkState, bool exclusive,
+            bool transmit, bool capture) const;
+
+    PortGroupList    *pgl;
 };
 
 #endif

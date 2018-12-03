@@ -130,6 +130,10 @@ public:
     }
     OstProto::LinkState linkState()
         { return stats.state().link_state(); }
+    bool isTransmitting()
+        { return stats.state().is_transmit_on(); }
+    bool isCapturing()
+        { return stats.state().is_capture_on(); }
 
     OstProto::PortStats    getStats() { return stats; }
     QTemporaryFile* getCaptureFile() 

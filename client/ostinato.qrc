@@ -1,6 +1,5 @@
 <RCC>
   <qresource prefix="/">
-    <file>icons/transmit_on.png</file>
     <file>icons/about.png</file>
     <file>icons/add.png</file>
     <file>icons/arrow_down.png</file>
@@ -15,12 +14,17 @@
     <file>icons/bullet_yellow.png</file>
     <file>icons/control_play.png</file>
     <file>icons/control_stop.png</file>
-    <file>icons/deco_exclusive.png</file>
     <file>icons/delete.png</file>
     <file>icons/devicegroup_add.png</file>
     <file>icons/devicegroup_delete.png</file>
     <file>icons/devicegroup_edit.png</file>
     <file>icons/exit.png</file>
+    <file>icons/frag_capture.png</file>
+    <file>icons/frag_exclusive.png</file>
+    <file>icons/frag_link_down.png</file>
+    <file>icons/frag_link_unknown.png</file>
+    <file>icons/frag_link_up.png</file>
+    <file>icons/frag_transmit.png</file>
     <file>icons/gaps.png</file>
     <file>icons/help.png</file>
     <file>icons/logo.png</file>
@@ -45,5 +49,6 @@
     <file>icons/stream_duplicate.png</file>
     <file>icons/stream_edit.png</file>
     <file>icons/stream_stats.png</file>
+    <file>icons/transmit_on.png</file>
   </qresource>
 </RCC>
