@@ -213,12 +213,33 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
     }
     else if (role == Qt::ToolTipRole)
     {
-        if (row == e_COMBO_STATE)
-            return QString("Transmit:<b><i>%1</i></b> Link:<b><i>%2</i></b> "
-                           "Capture:<b><i>%3</i></b>")
-                        .arg(BoolStateName.at(stats.state().is_transmit_on()))
-                        .arg(LinkStateName.at(stats.state().link_state()))
-                        .arg(BoolStateName.at(stats.state().is_capture_on()));
+        if (row == e_COMBO_STATE) {
+            QString linkIcon;
+            switch (stats.state().link_state()) {
+                case OstProto::LinkStateUp:
+                    linkIcon = ":/icons/bullet_green.png";
+                    break;
+                case OstProto::LinkStateDown:
+                    linkIcon = ":/icons/bullet_red.png";
+                    break;
+                case OstProto::LinkStateUnknown:
+                    linkIcon = ":/icons/bullet_white.png";
+                    break;
+            }
+            // FIXME: Ideally, the text should be vertically centered wrt icon
+            // but style='vertical-align:middle for the img tag doesn't work
+            QString tooltip = QString("<img src='%1'/> Link %2")
+                                .arg(linkIcon)
+                                .arg(LinkStateName.at(
+                                            stats.state().link_state()));
+            if (stats.state().is_transmit_on())
+                tooltip.prepend("<img src=':/icons/transmit_on.png'/>"
+                                " Transmit On<br/>");
+            if (stats.state().is_capture_on())
+                tooltip.append("<br/><img src=':/icons/sound_none.png'/>"
+                               " Capture On");
+            return tooltip;
+        }
         else
             return QVariant();
     }

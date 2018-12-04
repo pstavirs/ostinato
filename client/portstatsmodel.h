@@ -106,11 +106,6 @@ static QStringList LinkStateName = (QStringList()
     << "Up"
 );
 
-static QStringList BoolStateName = (QStringList()
-    << "Off"
-    << "On"
-);
-
 class PortGroupList;
 
 class PortStatsModel : public QAbstractTableModel
