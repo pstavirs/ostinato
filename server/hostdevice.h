@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _HOST_DEVICE_H
 #define _HOST_DEVICE_H
 
+#include "bsdhostdevice.h"
 #include "linuxhostdevice.h"
 #include "winhostdevice.h"
 
@@ -37,6 +38,8 @@ public:
         return new WindowsHostDevice(portName, deviceManager);
 #elif defined(Q_OS_LINUX)
         return new LinuxHostDevice(portName, deviceManager);
+#elif defined(Q_OS_BSD4)
+        return new BsdHostDevice(portName, deviceManager);
 #else
         (void)portName;      // squelch unused warning
         (void)deviceManager; // squelch unused warning

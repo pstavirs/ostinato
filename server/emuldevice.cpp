@@ -315,6 +315,8 @@ void EmulDevice::sendArpRequest(quint32 tgtIp)
     // we don't want to send duplicate ARP requests, so we check
     // if the tgtIP is already in the cache (resolved or unresolved)
     // and if so, we don't resend it
+    // FIXME: this check needs to happen at caller so that HostDevices
+    // can also benefit from this check
     if (arpTable_.contains(tgtIp))
         return;
 
