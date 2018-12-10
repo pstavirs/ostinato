@@ -36,6 +36,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <pcap.h>
 #include <unistd.h>
 
+#ifndef SA_SIZE // For some reason MacOS doesn't define this while BSD does
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
+
 // FIXME: also defined in emuldevice.cpp - move to common .h
 static const quint64 kBcastMac = 0xffffffffffffULL;
 static const quint16 kEthTypeArp = 0x0806;
