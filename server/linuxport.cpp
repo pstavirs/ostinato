@@ -248,7 +248,7 @@ void LinuxPort::populateInterfaceInfo()
     quint32 gw4 = 0;
     UInt128 gw6 = 0;
     for (rtnl_route *rt = routeCache_ ? (rtnl_route*) nl_cache_get_first(routeCache_) : 0;
-            rt && (!gw4 || !gw6));
+            rt && (!gw4 || !gw6);
             rt = (rtnl_route*) nl_cache_get_next(OBJ_CAST(rt))) {
         if (rtnl_route_get_table(rt) != RT_TABLE_MAIN) // we want only main RTT
             continue;
