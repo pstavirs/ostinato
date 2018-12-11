@@ -64,7 +64,7 @@ void DeviceManager::createHostDevices(void)
 
     int count = ifInfo->ip4.size();
     for (int i = 0; i < count; i++) {
-        // FIXME: Since we can't support multiple IPs with same mac,
+        // XXX: Since we can't support multiple IPs with same mac,
         // skip link-local IP - unless it is the only one
         if (((ifInfo->ip4.at(i).address & 0xffff0000) == 0xa9fe0000)
                 && (count > 1))
@@ -88,12 +88,12 @@ void DeviceManager::createHostDevices(void)
         bcastList_.insert(bcastDevice.key(), device);
         qDebug("host(add): %s", qPrintable(device->config()));
 
-        break; // FIXME: support multiple IPs with same mac
+        break; // TODO: support multiple IPs with same mac
     }
 
     count = ifInfo->ip6.size();
     for (int i = 0; i < count; i++) {
-        // FIXME: Since we can't support multiple IPs with same mac,
+        // XXX: Since we can't support multiple IPs with same mac,
         // skip link-local IP - unless it is the only one
         if (((ifInfo->ip6.at(i).address.hi64() >> 48) == 0xfe80)
                 && (count > 1))
@@ -121,7 +121,7 @@ void DeviceManager::createHostDevices(void)
             qDebug("host(update): %s", qPrintable(device->config()));
         }
 
-        break; // FIXME: support multiple IPs with same mac
+        break; // TODO: support multiple IPs with same mac
     }
 }
 

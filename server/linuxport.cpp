@@ -131,7 +131,7 @@ LinuxPort::~LinuxPort()
     }
 }
 
-void LinuxPort::classInit() // FIXME: rename
+void LinuxPort::fetchHostNetworkInfo()
 {
     netSock_ = nl_socket_alloc();
     if (!netSock_) {
@@ -158,6 +158,14 @@ void LinuxPort::classInit() // FIXME: rename
         qWarning("Failed to populate addr cache");
         return;
     }
+}
+
+void LinuxPort::freeHostNetworkInfo()
+{
+    nl_cache_put(routeCache_);
+    nl_cache_put(addressCache_);
+    nl_cache_put(linkCache_);
+    nl_socket_free(netSock_);
 }
 
 void LinuxPort::init()
@@ -238,9 +246,9 @@ void LinuxPort::populateInterfaceInfo()
     // Find gateways
     //
     quint32 gw4 = 0;
-    UInt128 gw6 = UInt128(0,0); // FIXME - just 0
+    UInt128 gw6 = 0;
     for (rtnl_route *rt = routeCache_ ? (rtnl_route*) nl_cache_get_first(routeCache_) : 0;
-            rt && (!gw4 || gw6 == UInt128(0,0)); // FIXME: !UInt128
+            rt && (!gw4 || !gw6));
             rt = (rtnl_route*) nl_cache_get_next(OBJ_CAST(rt))) {
         if (rtnl_route_get_table(rt) != RT_TABLE_MAIN) // we want only main RTT
             continue;
@@ -260,7 +268,7 @@ void LinuxPort::populateInterfaceInfo()
             gw4 = qFromBigEndian<quint32>(
                     nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
         }
-        else if (gw6 == UInt128(0,0) && rtnl_route_get_family(rt) == AF_INET6) { // FIXME: !gw6
+        else if (!gw6 && rtnl_route_get_family(rt) == AF_INET6) {
             gw6 = UInt128((quint8*)
                     nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
         }

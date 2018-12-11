@@ -40,7 +40,8 @@ public:
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
 
-    static void populateAdapterList();
+    static void fetchHostNetworkInfo();
+    static void freeHostNetworkInfo();
 
 protected:
     class PortMonitor: public PcapPort::PortMonitor 

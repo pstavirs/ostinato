@@ -309,7 +309,7 @@ void WinPcapPort::populateInterfaceInfo()
 #undef SOCKET_ADDRESS_IP6
 }
 
-void WinPcapPort::populateAdapterList()
+void WinPcapPort::fetchHostNetworkInfo()
 {
     DWORD ret;
     ULONG bufLen = 15*1024; // MS recommended starting size
@@ -330,6 +330,12 @@ void WinPcapPort::populateAdapterList()
         adapterList_ = NULL;
         return;
     }
+}
+
+void WinPcapPort::freeHostNetworkInfo()
+{
+    free(adapterList_);
+    adapterList_ = NULL;
 }
 
 #endif

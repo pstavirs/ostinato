@@ -38,7 +38,8 @@ public:
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
 
-    static void classInit();
+    static void fetchHostNetworkInfo();
+    static void freeHostNetworkInfo();
 
 protected:
     class StatsMonitor: public QThread

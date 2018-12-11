@@ -52,11 +52,11 @@ PortManager::PortManager()
     qDebug("Retrieving the device list from the local machine\n"); 
 
 #if defined(Q_OS_WIN32)
-    WinPcapPort::populateAdapterList();
+    WinPcapPort::fetchHostNetworkInfo();
 #elif defined(Q_OS_LINUX)
-    LinuxPort::classInit();
+    LinuxPort::fetchHostNetworkInfo();
 #elif defined(Q_OS_BSD4)
-    BsdPort::classInit();
+    BsdPort::fetchHostNetworkInfo();
 #endif
 
     txRateAccuracy = rateAccuracy();
@@ -114,11 +114,11 @@ PortManager::PortManager()
         port->init();
     
 #if defined(Q_OS_WIN32)
-    // TODO: WinPcapPort::freeAdapterList();
+    WinPcapPort::freeHostNetworkInfo();
 #elif defined(Q_OS_LINUX)
-    // TODO: LinuxPort::classDone();
+    LinuxPort::freeHostNetworkInfo();
 #elif defined(Q_OS_BSD4)
-    BsdPort::classDone();
+    BsdPort::freeHostNetworkInfo();
 #endif
 
     return;

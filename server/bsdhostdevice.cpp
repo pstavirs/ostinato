@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "bsdhostdevice.h"
+#include "netdefs.h"
 #include "packetbuffer.h"
 
 #include <QHostAddress>
@@ -42,13 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
         sizeof(long)            :                               \
         1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
 #endif
-
-// FIXME: also defined in emuldevice.cpp - move to common .h
-static const quint64 kBcastMac = 0xffffffffffffULL;
-static const quint16 kEthTypeArp = 0x0806;
-static const quint16 kEthTypeIp6 = 0x86dd;
-static const int kIp6HdrLen = 40;
-static const quint8 kIpProtoIcmp6 = 58;
 
 quint32 sumUInt128(UInt128 value);
 

@@ -129,7 +129,7 @@ BsdPort::~BsdPort()
     }
 }
 
-void BsdPort::classInit() // FIXME: rename
+void BsdPort::fetchHostNetworkInfo()
 {
     if (getifaddrs(&addressList_) < 0)
     {
@@ -153,12 +153,12 @@ void BsdPort::classInit() // FIXME: rename
     }
 }
 
-void BsdPort::classDone() // FIXME: rename
+void BsdPort::freeHostNetworkInfo()
 {
     freeifaddrs(addressList_);
     addressList_ = nullptr;
 
-    routeListBuffer_.resize(0); // FIXME: does this actually free memory?
+    routeListBuffer_.resize(0); // release allocated memory
 }
 
 void BsdPort::init()
@@ -215,10 +215,10 @@ void BsdPort::populateInterfaceInfo()
     static_assert(RTA_DST == 0x1, "RTA_DST is not 0x1"); // Validate assumption
     static_assert(RTA_GATEWAY == 0x2, "RTA_GATEWAY is not 0x2"); // Validate assumption
     quint32 gw4 = 0;
-    UInt128 gw6 = UInt128(0,0); // FIXME - just 0
+    UInt128 gw6 = 0;
     const char *p = routeListBuffer_.constData();
     const char *end = p + routeListBuffer_.size();
-    while (!gw4 || gw6 == UInt128(0,0)) // FIXME: !UInt128
+    while (!gw4 || !gw6)
     {
         const struct rt_msghdr *rt = (const struct rt_msghdr*) p;
         const struct sockaddr *sa = (const struct sockaddr*)(rt + 1); // RTA_DST = 0x1
@@ -234,7 +234,7 @@ void BsdPort::populateInterfaceInfo()
                             ((sockaddr_in*)sa)->sin_addr.s_addr); // RTA_GW = 0x2
                 }
             }
-            if (gw6 == UInt128(0,0) && sa->sa_family == AF_INET6) // FIXME: !UInt128
+            if (!gw6 && sa->sa_family == AF_INET6)
             {
                 if (UInt128((quint8*)(((sockaddr_in6*)sa)->sin6_addr.s6_addr))
                         == UInt128(0,0)) // default route ::

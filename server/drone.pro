@@ -4,6 +4,7 @@ QT += network script xml
 QT -= gui
 linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
     DEFINES += HAVE_IFLA_STATS64
+INCLUDEPATH += "../common"
 INCLUDEPATH += "../rpc"
 win32 {
     # Support Windows Vista and above only

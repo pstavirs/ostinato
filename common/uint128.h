@@ -29,6 +29,7 @@ class UInt128
 {
 public:
     UInt128();
+    UInt128(int lo);
     UInt128(quint64 hi, quint64 lo);
     UInt128(quint8 *value);
 
@@ -36,6 +37,7 @@ public:
     quint64 lo64() const;
     quint8* toArray() const;
 
+    bool operator!() const;
     bool operator==(const UInt128 &other) const;
     bool operator!=(const UInt128 &other) const;
     UInt128 operator+(const UInt128 &other) const;
@@ -54,6 +56,12 @@ private:
 inline UInt128::UInt128()
 {
     // Do nothing - value will be garbage like any other uint
+}
+
+inline UInt128::UInt128(int lo)
+{
+    hi_ = 0;
+    lo_ = lo;
 }
 
 inline UInt128::UInt128(quint64 hi, quint64 lo)
@@ -99,6 +107,11 @@ inline quint8* UInt128::toArray() const
     qToBigEndian(lo_, const_cast<uchar*>(array_ + 8));
 
     return (quint8*)array_;
+}
+
+inline bool UInt128::operator!() const
+{
+    return (hi_ == 0) && (lo_ == 0);
 }
 
 inline bool UInt128::operator==(const UInt128 &other) const
