@@ -80,7 +80,7 @@ private:
     QMultiHash<DeviceKey, Device*> bcastList_;
     QHash<quint16, uint> tpidList_; // Key: TPID, Value: RefCount
 
-    QList<Device*> hostDeviceList_; // TODO: use to add/remove from devicelist on useHostDevice flag toggle
+    QList<Device*> hostDeviceList_;
 };
 
 #endif

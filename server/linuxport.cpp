@@ -277,16 +277,14 @@ void LinuxPort::populateInterfaceInfo()
     //
     // Find self IP
     //
-    bool foundIp4 = false; // FIXME: needed? why?
-    bool foundIp6 = false; // FIXME: needed? why?
     if (!addressCache_) {
         qWarning("rtnetlink address cache empty for %s", name());
         return;
     }
     rtnl_addr *l3addr = (rtnl_addr*) nl_cache_get_first(addressCache_);
-    while (l3addr && !foundIp4 && !foundIp6) {
+    while (l3addr) {
         if (rtnl_addr_get_ifindex(l3addr) == ifIndex) {
-            if (rtnl_addr_get_family(l3addr) == AF_INET && !foundIp4) {
+            if (rtnl_addr_get_family(l3addr) == AF_INET) {
                 Ip4Config ip;
                 ip.address = qFromBigEndian<quint32>(
                                 nl_addr_get_binary_addr(
@@ -295,7 +293,7 @@ void LinuxPort::populateInterfaceInfo()
                 ip.gateway = gw4;
                 interfaceInfo_->ip4.append(ip);
             }
-            else if (rtnl_addr_get_family(l3addr) == AF_INET6 && !foundIp6) {
+            else if (rtnl_addr_get_family(l3addr) == AF_INET6) {
                 Ip6Config ip;
                 ip.address = UInt128((quint8*)nl_addr_get_binary_addr(
                                                     rtnl_addr_get_local(l3addr)));

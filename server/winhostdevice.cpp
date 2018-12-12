@@ -78,8 +78,20 @@ void WindowsHostDevice::clearNeighbors(Device::NeighborSet set)
 void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
 {
     PMIB_IPNET_TABLE2 nbrs = NULL;
-    // TODO: optimization: use AF_UNSPEC only if hasIp4 and hasIp6
-    ulong status = GetIpNetTable2(AF_UNSPEC, &nbrs) != NO_ERROR;
+    ADDRESS_FAMILY af = AF_UNSPEC;
+
+    // TODO: the following can potentially be used elsewhere
+    // but definition of AF_XXX may be different in different
+    // platforms
+    if (!hasIp4_)
+        if (!hasIp6_)
+            return;
+        else
+            af = AF_INET6;
+    else if (!hasIp6_)
+        af = AF_INET;
+
+    ulong status = GetIpNetTable2(af, &nbrs) != NO_ERROR;
     if (status != NO_ERROR) {
         qWarning("Get ARP/ND table failed for LUID %llx: %s",
                  luid_.Value, errMsg(status));

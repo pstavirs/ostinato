@@ -231,7 +231,7 @@ bool DeviceManager::modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup)
 
 int DeviceManager::deviceCount()
 {
-    return deviceList_.size() + 1; // FIXME: why +1 for hostdev?
+    return deviceList_.size() + hostDeviceList_.size();
 }
 
 void DeviceManager::getDeviceList(
