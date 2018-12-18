@@ -60,6 +60,7 @@ public slots:
     void on_actionPreferences_triggered();
     void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpOnline_triggered();
+    void on_actionDonate_triggered();
     void on_actionHelpAbout_triggered();
 
 private slots:

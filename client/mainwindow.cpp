@@ -352,6 +352,11 @@ void MainWindow::on_actionHelpOnline_triggered()
     QDesktopServices::openUrl(QUrl(jumpUrl("help", "app", "menu")));
 }
 
+void MainWindow::on_actionDonate_triggered()
+{
+    QDesktopServices::openUrl(QUrl(jumpUrl("donate", "app", "menu")));
+}
+
 void MainWindow::on_actionHelpAbout_triggered()
 {
     QDialog *aboutDialog = new QDialog;
