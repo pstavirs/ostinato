@@ -59,9 +59,6 @@ void DeviceManager::createHostDevices(void)
     if (!ifInfo)
         return;
 
-    NullDevice bcastDevice(this);
-    bcastDevice.setMac(kBcastMac);
-
     int count = ifInfo->ip4.size();
     for (int i = 0; i < count; i++) {
         // XXX: Since we can't support multiple IPs with same mac,
@@ -82,10 +79,7 @@ void DeviceManager::createHostDevices(void)
             continue;
         }
         hostDeviceList_.append(device);
-        deviceList_.insert(device->key(), device);
-        sortedDeviceList_.insert(device->key(), device);
-
-        bcastList_.insert(bcastDevice.key(), device);
+        insertDevice(device->key(), device);
         qDebug("host(add): %s", qPrintable(device->config()));
 
         break; // TODO: support multiple IPs with same mac
@@ -108,10 +102,7 @@ void DeviceManager::createHostDevices(void)
                            ifInfo->ip6.at(i).prefixLength,
                            ifInfo->ip6.at(i).gateway);
             hostDeviceList_.append(device);
-            deviceList_.insert(device->key(), device);
-            sortedDeviceList_.insert(device->key(), device);
-
-            bcastList_.insert(bcastDevice.key(), device);
+            insertDevice(device->key(), device);
             qDebug("host(add): %s", qPrintable(device->config()));
         }
         else {
@@ -539,27 +530,19 @@ void DeviceManager::enumerateDevices(
                     }
                     device = new EmulDevice(this);
                     *device = dk;
-                    deviceList_.insert(dk.key(), device);
-                    sortedDeviceList_.insert(dk.key(), device);
-
-                    dk.setMac(kBcastMac);
-                    bcastList_.insert(dk.key(), device);
+                    insertDevice(dk.key(), device);
                     qDebug("enumerate(add): %p %s", device, qPrintable(device->config()));
                     break;
 
                 case kDelete:
-                    device = deviceList_.take(dk.key());
+                    device = deviceList_.value(dk.key());
                     if (!device) {
                         qWarning("%s: error deleting device %s (NOTFOUND)",
                                 __FUNCTION__, qPrintable(dk.config()));
                         break;
                     }
                     qDebug("enumerate(del): %p %s", device, qPrintable(device->config()));
-                    delete device;
-                    sortedDeviceList_.take(dk.key()); // already freed above
-
-                    dk.setMac(kBcastMac);
-                    bcastList_.take(dk.key()); // device already freed above
+                    deleteDevice(dk.key());
                     break;
 
                 default:
@@ -568,3 +551,32 @@ void DeviceManager::enumerateDevices(
         } // foreach device
     } // foreach vlan
 }
+
+bool DeviceManager::insertDevice(DeviceKey key, Device *device)
+{
+    deviceList_.insert(key, device);
+    sortedDeviceList_.insert(key, device);
+
+    NullDevice bcastDevice = *(static_cast<NullDevice*>(device));
+    bcastDevice.setMac(kBcastMac);
+
+    bcastList_.insert(bcastDevice.key(), device);
+
+    return true;
+}
+
+bool DeviceManager::deleteDevice(DeviceKey key)
+{
+    Device *device = deviceList_.take(key);
+    if (!device)
+        return false;
+    sortedDeviceList_.take(key);
+
+    NullDevice bcastDevice = *(static_cast<NullDevice*>(device));
+    bcastDevice.setMac(kBcastMac);
+    bcastList_.take(bcastDevice.key());
+
+    delete device;
+    return true;
+}
+

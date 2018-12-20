@@ -71,6 +71,8 @@ private:
     void enumerateDevices(
             const OstProto::DeviceGroup *deviceGroup,
             Operation oper);
+    bool insertDevice(DeviceKey key, Device *device);
+    bool deleteDevice(DeviceKey key);
 
     AbstractPort *port_;
 
