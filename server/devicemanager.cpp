@@ -166,8 +166,9 @@ bool DeviceManager::addDeviceGroup(uint deviceGroupId)
 
     enumerateDevices(deviceGroup, kAdd);
 
-    // Start emulation when first device is added
-    if ((deviceCount() == 1) && port_)
+    // Start emulation when first device group is added
+    // NOTE: Host devices don't have a deviceGroup and don't need emulation
+    if ((deviceGroupCount() == 1) && port_)
         port_->startDeviceEmulation();
 
     return true;
@@ -186,8 +187,9 @@ bool DeviceManager::deleteDeviceGroup(uint deviceGroupId)
     enumerateDevices(deviceGroup, kDelete);
     delete deviceGroup;
 
-    // Stop emulation if no devices remain
-    if ((deviceCount() == 0) && port_)
+    // Stop emulation if no device groups remain
+    // NOTE: Host devices don't have a deviceGroup and don't need emulation
+    if ((deviceGroupCount() == 0) && port_)
         port_->stopDeviceEmulation();
 
     return true;
@@ -222,7 +224,7 @@ bool DeviceManager::modifyDeviceGroup(const OstProto::DeviceGroup *deviceGroup)
 
 int DeviceManager::deviceCount()
 {
-    return deviceList_.size() + hostDeviceList_.size();
+    return deviceList_.size();
 }
 
 void DeviceManager::getDeviceList(
