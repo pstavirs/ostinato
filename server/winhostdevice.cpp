@@ -24,15 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifdef Q_OS_WIN32
 
 static WCHAR errBuf[256];
-static inline const char* errMsg(ulong err)
+static inline QString errStr(ulong err)
 {
     return FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                   errBuf, sizeof(errBuf)-1, NULL) > 0 ?
         QString("error 0x%1 %2").arg(err, 0, 16)
-                          .arg(QString().fromWCharArray(errBuf))
-                          .toLocal8Bit().constData() :
-        QString("error 0x%1").arg(err, 0, 16).toLocal8Bit().constData();
+                          .arg(QString().fromWCharArray(errBuf)) :
+        QString("error 0x%1").arg(err, 0, 16);
 }
 
 WindowsHostDevice::WindowsHostDevice(QString portName,
@@ -43,7 +42,7 @@ WindowsHostDevice::WindowsHostDevice(QString portName,
     ulong status = ConvertInterfaceGuidToLuid(&guid, &luid_);
     if (status != NO_ERROR) {
         qWarning("ConvertInterfaceGuidToLuid failed for %s: %s",
-                 qPrintable(portName), errMsg(status));
+                 qPrintable(portName), qPrintable(errStr(status)));
         luid_.Value = 0;
     }
     qInfo("Port %s: Luid %llx", qPrintable(portName), luid_.Value);
@@ -65,14 +64,14 @@ void WindowsHostDevice::clearNeighbors(Device::NeighborSet set)
     ulong status = ConvertInterfaceLuidToIndex(&luid_, &ifIndex);
     if (status != NO_ERROR) {
         qWarning("luid2ifIdx convert failed for LUID %llx: %s",
-                 luid_.Value, errMsg(status));
+                 luid_.Value, qPrintable(errStr(status)));
         return;
     }
 
     status = FlushIpNetTable2(AF_UNSPEC, ifIndex);
     if(status != NO_ERROR)
         qWarning("Flush ARP/ND table failed for LUID %llx: %s",
-                 luid_.Value, errMsg(status));
+                 luid_.Value, qPrintable(errStr(status)));
 }
 
 void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
@@ -94,7 +93,7 @@ void WindowsHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
     ulong status = GetIpNetTable2(af, &nbrs) != NO_ERROR;
     if (status != NO_ERROR) {
         qWarning("Get ARP/ND table failed for LUID %llx: %s",
-                 luid_.Value, errMsg(status));
+                 luid_.Value, qPrintable(errStr(status)));
         return;
     }
 
@@ -172,7 +171,7 @@ void WindowsHostDevice::sendArpRequest(quint32 tgtIp)
     ulong status = ResolveIpNetEntry2(&arpEntry, &src);
     if (ResolveIpNetEntry2(&arpEntry, &src) != NO_ERROR)
         qWarning("Resolve arp failed for LUID %llx: %s",
-                 luid_.Value, errMsg(status));
+                 luid_.Value, qPrintable(errStr(status)));
 }
 
 void WindowsHostDevice::sendNeighborSolicit(UInt128 tgtIp)
@@ -188,7 +187,7 @@ void WindowsHostDevice::sendNeighborSolicit(UInt128 tgtIp)
     ulong status = ResolveIpNetEntry2(&ndpEntry, &src);
     if (ResolveIpNetEntry2(&ndpEntry, &src) != NO_ERROR)
         qWarning("Resolve ndp failed for LUID %llx: %s",
-                 luid_.Value, errMsg(status));
+                 luid_.Value, qPrintable(errStr(status)));
 }
 
 #endif
