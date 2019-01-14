@@ -59,6 +59,9 @@ void DeviceManager::createHostDevices(void)
     if (!ifInfo)
         return;
 
+    Device *device = HostDevice::create(port_->name(), this);
+    device->setMac(ifInfo->mac);
+
     int count = ifInfo->ip4.size();
     for (int i = 0; i < count; i++) {
         // XXX: Since we can't support multiple IPs with same mac,
@@ -66,21 +69,9 @@ void DeviceManager::createHostDevices(void)
         if (((ifInfo->ip4.at(i).address & 0xffff0000) == 0xa9fe0000)
                 && (count > 1))
             continue;
-        Device *device = HostDevice::create(port_->name(), this);
-        device->setMac(ifInfo->mac);
         device->setIp4(ifInfo->ip4.at(i).address,
                        ifInfo->ip4.at(i).prefixLength,
                        ifInfo->ip4.at(i).gateway);
-
-        if (deviceList_.contains(device->key())) {
-            qWarning("%s: error adding host device %s (EEXIST)",
-                    __FUNCTION__, qPrintable(device->config()));
-            delete device;
-            continue;
-        }
-        hostDeviceList_.append(device);
-        insertDevice(device->key(), device);
-        qDebug("host(add): %s", qPrintable(device->config()));
 
         break; // TODO: support multiple IPs with same mac
     }
@@ -92,28 +83,22 @@ void DeviceManager::createHostDevices(void)
         if (((ifInfo->ip6.at(i).address.hi64() >> 48) == 0xfe80)
                 && (count > 1))
             continue;
-        NullDevice dk(this);
-        dk.setMac(ifInfo->mac);
-        Device *device = deviceList_.value(dk.key());
-        if (!device) {
-            device = HostDevice::create(port_->name(), this);
-            device->setMac(ifInfo->mac);
-            device->setIp6(ifInfo->ip6.at(i).address,
-                           ifInfo->ip6.at(i).prefixLength,
-                           ifInfo->ip6.at(i).gateway);
-            hostDeviceList_.append(device);
-            insertDevice(device->key(), device);
-            qDebug("host(add): %s", qPrintable(device->config()));
-        }
-        else {
-            device->setIp6(ifInfo->ip6.at(i).address,
-                           ifInfo->ip6.at(i).prefixLength,
-                           ifInfo->ip6.at(i).gateway);
-            qDebug("host(update): %s", qPrintable(device->config()));
-        }
+        device->setIp6(ifInfo->ip6.at(i).address,
+                       ifInfo->ip6.at(i).prefixLength,
+                       ifInfo->ip6.at(i).gateway);
 
         break; // TODO: support multiple IPs with same mac
     }
+
+    if (deviceList_.contains(device->key())) {
+        qWarning("%s: error adding host device %s (EEXIST)",
+                __FUNCTION__, qPrintable(device->config()));
+        delete device;
+        return;
+    }
+    hostDeviceList_.append(device);
+    insertDevice(device->key(), device);
+    qDebug("host(add): %s", qPrintable(device->config()));
 }
 
 DeviceManager::~DeviceManager()

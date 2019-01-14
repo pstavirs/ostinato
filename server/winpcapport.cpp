@@ -316,8 +316,10 @@ void WinPcapPort::fetchHostNetworkInfo()
 
     while (1) {
         adapterList_ = (IP_ADAPTER_ADDRESSES *) malloc(bufLen);
-        ret = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, 0,
-                                   adapterList_, &bufLen);
+        ret = GetAdaptersAddresses(AF_UNSPEC,
+                                   GAA_FLAG_INCLUDE_ALL_INTERFACES
+                                   | GAA_FLAG_INCLUDE_GATEWAYS,
+                                   0, adapterList_, &bufLen);
         if (ret == ERROR_BUFFER_OVERFLOW) {
             free(adapterList_);
             continue;
