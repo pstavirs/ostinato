@@ -240,7 +240,7 @@ void WinPcapPort::populateInterfaceInfo()
     }
 
     PIP_ADAPTER_ADDRESSES adapter = adapterList_;
-    while (!QString(name()).endsWith(QString(adapter->AdapterName)))
+    while (adapter && !QString(name()).endsWith(QString(adapter->AdapterName)))
         adapter = adapter->Next;
 
     if (!adapter) {
