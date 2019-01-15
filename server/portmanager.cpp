@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portmanager.h"
 
 #include "bsdport.h"
+#include "interfaceinfo.h"
 #include "linuxport.h"
 #include "pcapport.h"
 #include "settings.h"
 #include "winpcapport.h"
 
+#include <QHostAddress>
 #include <QStringList>
 
 PortManager *PortManager::instance_ = NULL;
@@ -101,6 +103,19 @@ PortManager::PortManager()
             i--;
             continue;
         }
+
+        const InterfaceInfo *intfInfo = port->interfaceInfo();
+        qDebug("Mac: %012llx", intfInfo->mac);
+        foreach(Ip4Config ip, intfInfo->ip4)
+            qDebug("Ip4: %s/%d gw: %s",
+                    qPrintable(QHostAddress(ip.address).toString()),
+                    ip.prefixLength,
+                    qPrintable(QHostAddress(ip.gateway).toString()));
+        foreach(Ip6Config ip, intfInfo->ip6)
+            qDebug("Ip6: %s/%d gw: %s",
+                    qPrintable(QHostAddress(ip.address.toArray()).toString()),
+                    ip.prefixLength,
+                    qPrintable(QHostAddress(ip.gateway.toArray()).toString()));
 
         if (!port->setRateAccuracy(txRateAccuracy))
             qWarning("failed to set rateAccuracy (%d)", txRateAccuracy);

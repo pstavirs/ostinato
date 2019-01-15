@@ -255,7 +255,6 @@ void WinPcapPort::populateInterfaceInfo()
     }
     else
         interfaceInfo_->mac = 0;
-    qDebug("mac = %llx", interfaceInfo_->mac);
 
 #define SOCKET_ADDRESS_FAMILY(x) \
     (x.lpSockaddr->sa_family)
