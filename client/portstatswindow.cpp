@@ -225,6 +225,13 @@ void PortStatsWindow::on_tbResolveNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             resolveDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 
@@ -240,6 +247,13 @@ void PortStatsWindow::on_tbClearNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 
