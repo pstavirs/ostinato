@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streambase.h"
 #include "abstractprotocol.h"
+#include "framevalueattrib.h"
 #include "protocollist.h"
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
@@ -536,7 +537,8 @@ int StreamBase::frameCount() const
 
 // Returns packet length - if bufMaxSize < frameLen(), returns truncated
 // length i.e. bufMaxSize
-int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
+int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex,
+        FrameValueAttrib *attrib) const
 {
     int maxSize, size, pktLen, len = 0;
 
@@ -556,10 +558,13 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
     while (iter->hasNext())
     {
         AbstractProtocol    *proto;
-        QByteArray            ba;
+        QByteArray          ba;
+        FrameValueAttrib    protoAttrib;
 
         proto = iter->next();
-        ba = proto->protocolFrameValue(frameIndex);
+        ba = proto->protocolFrameValue(frameIndex, false, &protoAttrib);
+        if (attrib)
+            *attrib += protoAttrib;
 
         size = qMin(ba.size(), maxSize-len);
         memcpy(buf+len, ba.constData(), size);

@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define BASE_DEC (10)
 #define BASE_HEX (16)
 
+class FrameValueAttrib;
 class StreamBase;
 class ProtocolListIterator;
 
@@ -147,8 +148,8 @@ public:
     const OstProto::VariableField& variableField(int index) const;
     OstProto::VariableField* mutableVariableField(int index);
 
-    QByteArray protocolFrameValue(int streamIndex = 0,
-        bool forCksum = false) const;
+    virtual QByteArray protocolFrameValue(int streamIndex = 0,
+        bool forCksum = false, FrameValueAttrib *attrib = nullptr) const;
     virtual int protocolFrameSize(int streamIndex = 0) const;
     int protocolFrameOffset(int streamIndex = 0) const;
     int protocolFramePayloadSize(int streamIndex = 0) const;

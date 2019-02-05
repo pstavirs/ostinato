@@ -596,7 +596,8 @@ int AbstractProtocol::protocolFramePayloadSize(int streamIndex) const
   the FrameValue of all the 'frame' fields of the protocol also taking care of 
   fields which are not an integral number of bytes\n 
 */
-QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) const
+QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum,
+        FrameValueAttrib */*attrib*/) const
 {
     QByteArray proto, field;
     uint bits, lastbitpos = 0;

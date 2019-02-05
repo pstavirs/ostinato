@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractport.h"
 
 #include "../common/abstractprotocol.h"
+#include "../common/framevalueattrib.h"
 #include "../common/streambase.h"
 #include "devicemanager.h"
 #include "interfaceinfo.h"
@@ -219,6 +220,7 @@ void AbstractPort::updatePacketList()
 
 void AbstractPort::updatePacketListSequential()
 {
+    FrameValueAttrib packetListAttrib;
     long    sec = 0; 
     long    nsec = 0;
 
@@ -320,8 +322,10 @@ void AbstractPort::updatePacketListSequential()
                 
                 if (j == 0 || frameVariableCount > 1)
                 {
+                    FrameValueAttrib attrib;
                     len = streamList_[i]->frameValue(
-                            pktBuf_, sizeof(pktBuf_), j);
+                            pktBuf_, sizeof(pktBuf_), j, &attrib);
+                    packetListAttrib += attrib;
                 }
                 if (len <= 0)
                     continue;
@@ -392,10 +396,14 @@ void AbstractPort::updatePacketListSequential()
 
 _stop_no_more_pkts:
     isSendQueueDirty_ = false;
+
+    // FIXME: send attrib back in Ack
+    qDebug("PacketListAttrib = %x", (int)packetListAttrib.errorFlags);
 }
 
 void AbstractPort::updatePacketListInterleaved()
 {
+    FrameValueAttrib packetListAttrib;
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e9);
@@ -540,11 +548,14 @@ void AbstractPort::updatePacketListInterleaved()
         }
         else
         {
+            FrameValueAttrib attrib;
             isVariable.append(false);
             pktBuf.append(QByteArray());
             pktBuf.last().resize(kMaxPktSize);
             pktLen.append(streamList_[i]->frameValue(
-                    (uchar*)pktBuf.last().data(), pktBuf.last().size(), 0));
+                    (uchar*)pktBuf.last().data(), pktBuf.last().size(),
+                    0, &attrib));
+            packetListAttrib += attrib;
         }
 
         numStreams++;
@@ -573,9 +584,11 @@ void AbstractPort::updatePacketListInterleaved()
             {
                 if (isVariable.at(i))
                 {
+                    FrameValueAttrib attrib;
                     buf = pktBuf_;
                     len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 
-                            pktCount[i]);
+                            pktCount[i], &attrib);
+                    packetListAttrib += attrib;
                 }
                 else
                 {
@@ -629,6 +642,9 @@ void AbstractPort::updatePacketListInterleaved()
     qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
     setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
+
+    // FIXME: send attrib back in Ack
+    qDebug("PacketListAttrib = %x", (int)packetListAttrib.errorFlags);
 }
 
 void AbstractPort::stats(PortStats *stats)

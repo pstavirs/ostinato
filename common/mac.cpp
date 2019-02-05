@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "mac.h"
 
+#include "framevalueattrib.h"
 #include "../common/streambase.h"
 
 #include <QRegExp>
@@ -369,5 +370,30 @@ int MacProtocol::protocolFrameVariableCount() const
     }
 
     return count;
+}
+
+QByteArray MacProtocol::protocolFrameValue(int streamIndex, bool /*forCksum*/,
+        FrameValueAttrib *attrib) const
+{
+    QByteArray ba;
+    ba.resize(12);
+    quint64 dstMac = fieldData(mac_dstAddr, FieldValue, streamIndex)
+                        .toULongLong();
+    quint64 srcMac = fieldData(mac_srcAddr, FieldValue, streamIndex)
+                        .toULongLong();
+    char *p = ba.data();
+    *(quint32*)(p     ) =  qToBigEndian(quint32(dstMac >> 16));
+    *(quint16*)(p +  4) =  qToBigEndian(quint16(dstMac & 0xffff));
+    *(quint32*)(p +  6) =  qToBigEndian(quint32(srcMac >> 16));
+    *(quint16*)(p + 10) =  qToBigEndian(quint16(srcMac & 0xffff));
+
+    if (attrib) {
+        if (!dstMac && data.dst_mac_mode() == OstProto::Mac::e_mm_resolve)
+            attrib->errorFlags |= FrameValueAttrib::UnresolvedDstMacError;
+        if (!srcMac && data.src_mac_mode() == OstProto::Mac::e_mm_resolve)
+            attrib->errorFlags |= FrameValueAttrib::UnresolvedSrcMacError;
+    }
+
+    return ba;
 }
 
