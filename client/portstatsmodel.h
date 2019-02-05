@@ -36,11 +36,9 @@ typedef enum {
     // State
     e_STATE_START,
 
-    e_LINK_STATE = e_STATE_START,
-    e_TRANSMIT_STATE,
-    e_CAPTURE_STATE,
+    e_COMBO_STATE = e_STATE_START,
 
-    e_STATE_END = e_CAPTURE_STATE,
+    e_STATE_END = e_COMBO_STATE,
 
     // Statistics
     e_STATISTICS_START,
@@ -77,9 +75,7 @@ typedef enum {
 static QStringList PortStatName = (QStringList()
     << "User"
 
-    << "Link State"
-    << "Transmit State"
-    << "Capture State"
+    << "Status"
 
     << "Frames Received"
     << "Frames Sent"
@@ -108,11 +104,6 @@ static QStringList LinkStateName = (QStringList()
     << "Unknown"
     << "Down"
     << "Up"
-);
-
-static QStringList BoolStateName = (QStringList()
-    << "Off"
-    << "On"
 );
 
 class PortGroupList;
@@ -160,6 +151,7 @@ class PortStatsModel : public QAbstractTableModel
 
         void getDomainIndexes(const QModelIndex &index,
               uint &portGroupIdx, uint &portIdx) const;
+        QPixmap statusIcons(int linkState, bool transmit, bool capture) const;
 
 };
 

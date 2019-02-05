@@ -192,4 +192,6 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int /*pos*/,
             }
         }
     }
+    else if (name == "frame.number")
+        stream->mutable_control()->set_num_packets(1);
 }

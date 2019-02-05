@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QIcon>
 #include <QPainter>
+#include <QPixmapCache>
 
 #if 0
 #define DBG0(x)    qDebug(x)
@@ -35,23 +36,6 @@ PortModel::PortModel(PortGroupList *p, QObject *parent)
     : QAbstractItemModel(parent) 
 {
     pgl = p;
-
-    portIconFactory[OstProto::LinkStateUnknown][false] = 
-        QIcon(":/icons/bullet_white.png");
-    portIconFactory[OstProto::LinkStateDown][false] = 
-        QIcon(":/icons/bullet_red.png");
-    portIconFactory[OstProto::LinkStateUp][false] = 
-        QIcon(":/icons/bullet_green.png");
-
-    for (int linkState = 0; linkState < kLinkStatesCount; linkState++)
-    {
-        QPixmap pixmap(":/icons/deco_exclusive.png");
-        QPainter painter(&pixmap);
-        QIcon icon = portIconFactory[linkState][false]; 
-
-        painter.drawPixmap(0, 0, icon.pixmap(QSize(32,32))); 
-        portIconFactory[linkState][true] = QIcon(pixmap);
-    }
 }
 
 int PortModel::rowCount(const QModelIndex &parent) const
@@ -185,7 +169,11 @@ QVariant PortModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::DecorationRole)
         {
-            return portIconFactory[port->linkState()][port->hasExclusiveControl()];
+            return statusIcon(
+                    port->linkState(),
+                    port->hasExclusiveControl(),
+                    port->isTransmitting(),
+                    port->isCapturing());
         }
         else if (role == Qt::ForegroundRole)
         {
@@ -294,7 +282,50 @@ quint32 PortModel::portId(const QModelIndex& index)
     return (index.internalId()) & 0xFFFF;
 }
 
+QPixmap PortModel::statusIcon(
+        int linkState, bool exclusive, bool transmit, bool capture) const
+{
+    QPixmap pixmap;
+    QString key = QString("$ost:portStatusIcon:%1:%2:%3:%4")
+                    .arg(linkState).arg(exclusive).arg(transmit).arg(capture);
 
+    if (QPixmapCache::find(key, pixmap))
+        return pixmap;
+
+    static int sz = QPixmap(":/icons/frag_link_up.png").width();
+
+    // All frag_* icons must be of same size and can be overlayed
+    // on top of each other; assume square icons
+
+    pixmap = QPixmap(sz, sz);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+
+    switch (linkState) {
+    case OstProto::LinkStateUp:
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_link_up.png"));
+        break;
+    case OstProto::LinkStateDown:
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_link_down.png"));
+        break;
+    case OstProto::LinkStateUnknown:
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_link_unknown.png"));
+        break;
+    }
+
+    if (exclusive)
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_exclusive.png"));
+
+    if (transmit)
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_transmit.png"));
+
+    if (capture)
+        painter.drawPixmap(0, 0, QPixmap(":/icons/frag_capture.png"));
+
+    QPixmapCache::insert(key, pixmap);
+    return pixmap;
+}
 
 // ----------------------------------------------
 // Slots

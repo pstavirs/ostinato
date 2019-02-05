@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "../common/protocolwidgetfactory.h"
 
+#include "xqlocale.h"
+
 #include <QButtonGroup>
 #include <QMessageBox>
 
@@ -1124,9 +1126,9 @@ void StreamConfigDialog::StoreCurrentStream()
         pStream->setNumBursts(leNumBursts->text().toULong(&isOk));
         pStream->setBurstSize(lePacketsPerBurst->text().toULong(&isOk));
         pStream->setPacketRate(
-                QLocale().toDouble(lePacketsPerSec->text(), &isOk));
+                XLocale().toDouble(lePacketsPerSec->text(), &isOk));
         pStream->setBurstRate(
-                QLocale().toDouble(leBurstsPerSec->text(), &isOk));
+                XLocale().toDouble(leBurstsPerSec->text(), &isOk));
     }
 }
 
@@ -1172,7 +1174,7 @@ void StreamConfigDialog::on_lePacketsPerSec_textChanged(const QString &text)
 
     if (rbSendPackets->isChecked())
     {
-        double pktsPerSec = QLocale().toDouble(text, &isOk);
+        double pktsPerSec = XLocale().toDouble(text, &isOk);
         double bitsPerSec = pktsPerSec * double((frameLen+kEthFrameOverHead)*8);
 
         if (rbPacketsPerSec->isChecked())
@@ -1197,7 +1199,7 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
 
     if (rbSendBursts->isChecked())
     {
-        double burstsPerSec = QLocale().toDouble(text, &isOk);
+        double burstsPerSec = XLocale().toDouble(text, &isOk);
         double bitsPerSec = burstsPerSec *
                 double(burstSize * (frameLen + kEthFrameOverHead) * 8);
         if (rbBurstsPerSec->isChecked())
@@ -1222,13 +1224,13 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
 
     if (rbSendPackets->isChecked())
     {
-        double pktsPerSec = QLocale().toDouble(text, &isOk)/
+        double pktsPerSec = XLocale().toDouble(text, &isOk)/
                 double((frameLen+kEthFrameOverHead)*8);
         lePacketsPerSec->setText(QString("%L1").arg(pktsPerSec, 0, 'f', 4));
     }
     else if (rbSendBursts->isChecked())
     {
-        double burstsPerSec = QLocale().toDouble(text, &isOk)/
+        double burstsPerSec = XLocale().toDouble(text, &isOk)/
                 double(burstSize * (frameLen + kEthFrameOverHead) * 8);
         leBurstsPerSec->setText(QString("%L1").arg(burstsPerSec, 0, 'f', 4));
     }

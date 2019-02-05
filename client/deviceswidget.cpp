@@ -32,7 +32,7 @@ DevicesWidget::DevicesWidget(QWidget *parent)
     setupUi(this);
     deviceGroupList->setVisible(deviceConfig->isChecked());
     deviceList->setVisible(deviceInfo->isChecked());
-    refresh->setVisible(deviceInfo->isChecked());
+    setDeviceInfoButtonsVisible(deviceInfo->isChecked());
     deviceDetail->hide();
 
     deviceGroupList->verticalHeader()->setDefaultSectionSize(
@@ -162,7 +162,7 @@ void DevicesWidget::updateDeviceViewActions()
 
 void DevicesWidget::on_deviceInfo_toggled(bool checked)
 {
-    refresh->setVisible(checked);
+    setDeviceInfoButtonsVisible(checked);
     deviceGroupList->setHidden(checked);
     deviceList->setVisible(checked);
     deviceDetail->hide();
@@ -236,6 +236,40 @@ void DevicesWidget::on_refresh_clicked()
                     .getDeviceInfo(portGroups_->port(currentPortIndex_).id());
 }
 
+void DevicesWidget::on_resolveNeighbors_clicked()
+{
+    if (!portGroups_)
+       return;
+
+    Q_ASSERT(portGroups_->isPort(currentPortIndex_));
+    QModelIndex curPortGroup = portGroups_->getPortModel()
+                                                ->parent(currentPortIndex_);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(portGroups_->isPortGroup(curPortGroup));
+
+    deviceDetail->hide();
+    QList<uint> portList({portGroups_->port(currentPortIndex_).id()});
+    portGroups_->portGroup(curPortGroup).resolveDeviceNeighbors(&portList);
+    portGroups_->portGroup(curPortGroup).getDeviceInfo(portList.at(0));
+}
+
+void DevicesWidget::on_clearNeighbors_clicked()
+{
+    if (!portGroups_)
+       return;
+
+    Q_ASSERT(portGroups_->isPort(currentPortIndex_));
+    QModelIndex curPortGroup = portGroups_->getPortModel()
+                                                ->parent(currentPortIndex_);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(portGroups_->isPortGroup(curPortGroup));
+
+    deviceDetail->hide();
+    QList<uint> portList({portGroups_->port(currentPortIndex_).id()});
+    portGroups_->portGroup(curPortGroup).clearDeviceNeighbors(&portList);
+    portGroups_->portGroup(curPortGroup).getDeviceInfo(portList.at(0));
+}
+
 void DevicesWidget::when_deviceList_currentChanged(const QModelIndex &index)
 {
     if (!index.isValid() || !portGroups_)
@@ -246,4 +280,12 @@ void DevicesWidget::when_deviceList_currentChanged(const QModelIndex &index)
 
     deviceDetail->setModel(detailModel);
     deviceDetail->setVisible(detailModel != NULL);
+}
+
+void DevicesWidget::setDeviceInfoButtonsVisible(bool show)
+{
+    refresh->setVisible(show);
+    arpNdpLabel->setVisible(show);
+    resolveNeighbors->setVisible(show);
+    clearNeighbors->setVisible(show);
 }

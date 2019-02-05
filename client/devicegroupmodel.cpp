@@ -118,7 +118,7 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
                         return v;
                     return QString("None");
                 case Qt::TextAlignmentRole:
-                    return Qt::AlignRight;
+                    return static_cast<int>(Qt::AlignRight|Qt::AlignVCenter);
                 default:
                     break;
             }
@@ -129,7 +129,7 @@ QVariant DeviceGroupModel::data(const QModelIndex &index, int role) const
                 case Qt::DisplayRole:
                     return qMax(vlanCount(devGrp), 1)*devGrp->device_count();
                 case Qt::TextAlignmentRole:
-                    return Qt::AlignRight;
+                    return static_cast<int>(Qt::AlignRight|Qt::AlignVCenter);
                 default:
                     break;
             }

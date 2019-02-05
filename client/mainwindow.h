@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMainWindow>
 #include <QProcess>
 
+class LogsWindow;
 class PortsWindow;
 class PortStatsWindow;
 
@@ -41,8 +42,10 @@ private:
     QProcess        *localServer_;
     PortsWindow        *portsWindow;
     PortStatsWindow *statsWindow;
+    LogsWindow         *logsWindow_;
     QDockWidget        *portsDock;
     QDockWidget        *statsDock;
+    QDockWidget        *logsDock_;
 
     QRect defaultGeometry_;
     QByteArray defaultLayout_;
@@ -57,6 +60,7 @@ public slots:
     void on_actionPreferences_triggered();
     void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpOnline_triggered();
+    void on_actionDonate_triggered();
     void on_actionHelpAbout_triggered();
 
 private slots:

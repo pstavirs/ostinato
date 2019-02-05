@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portstatswindow.h"
 
+#include "icononlydelegate.h"
 #include "portstatsfilterdialog.h"
 #include "portstatsmodel.h"
 #include "portstatsproxymodel.h"
@@ -53,6 +54,24 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     tvPortStats->verticalHeader()->setHighlightSections(false);
     tvPortStats->verticalHeader()->setDefaultSectionSize(
         tvPortStats->verticalHeader()->minimumSectionSize());
+    
+    statusDelegate = new IconOnlyDelegate(this);
+#if 0
+    // XXX: Ideally we should use this, but it doesn't work because in
+    // this constructor, the port model is empty and model->index() returns
+    // an invalid index ...
+    tvPortStats->setItemDelegateForRow(
+            proxyStatsModel ?
+                proxyStatsModel->mapFromSource(model->index(e_COMBO_STATE, 0))
+                                    .row() :
+                e_COMBO_STATE,
+            statusDelegate);
+#else
+    // ... so we use this hard-coded hack
+    tvPortStats->setItemDelegateForRow(
+            proxyStatsModel ?  e_COMBO_STATE-1 : e_COMBO_STATE,
+            statusDelegate);
+#endif
 
     connect(tvPortStats->selectionModel(),
             SIGNAL(selectionChanged(
@@ -65,6 +84,7 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
 PortStatsWindow::~PortStatsWindow()
 {
     delete proxyStatsModel;
+    delete statusDelegate;
 }
 
 /* ------------- SLOTS (public) -------------- */
@@ -205,6 +225,13 @@ void PortStatsWindow::on_tbResolveNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             resolveDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 
@@ -220,6 +247,13 @@ void PortStatsWindow::on_tbClearNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 

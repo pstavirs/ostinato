@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2018 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,23 +17,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _IP4_PDML_H
-#define _IP4_PDML_H
+#ifndef _ICON_ONLY_DELEGATE
+#define _ICON_ONLY_DELEGATE
 
-#include "pdmlprotocol.h"
+#include <QStyledItemDelegate>
 
-class PdmlIp4Protocol : public PdmlProtocol
+class IconOnlyDelegate : public QStyledItemDelegate
 {
-public:
-    static PdmlProtocol* createInstance();
+    using QStyledItemDelegate::QStyledItemDelegate;
 
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
-protected:
-    PdmlIp4Protocol();
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const
+    {
+        QStyleOptionViewItem opt = option;
+        opt.decorationPosition = QStyleOptionViewItem::Top;
+        opt.features &= ~QStyleOptionViewItem::HasDisplay;
+        QStyledItemDelegate::paint(painter, opt, index);
+    }
 };
 
 #endif
+

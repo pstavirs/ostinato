@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2018 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,23 +17,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _IP4_PDML_H
-#define _IP4_PDML_H
+#ifndef _LOGS_WINDOW_H
+#define _LOGS_WINDOW_H
 
-#include "pdmlprotocol.h"
+#include "ui_logswindow.h"
 
-class PdmlIp4Protocol : public PdmlProtocol
+class LogsModel;
+class QDockWidget;
+class QShowEvent;
+
+class LogsWindow: public QWidget, private Ui::LogsWindow
 {
+    Q_OBJECT
 public:
-    static PdmlProtocol* createInstance();
+    LogsWindow(LogsModel *model, QWidget *parent = 0);
+    ~LogsWindow();
 
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
-protected:
-    PdmlIp4Protocol();
+private slots:
+    void when_visibilityChanged(bool visible);
+    void when_rowsInserted(const QModelIndex &parent, int first, int last);
+    void on_autoScroll_toggled(bool checked);
+
+private:
+    QDockWidget *parentDock_;
+    QString windowTitle_;
+    QString annotation_;
+    bool isVisible_{false};
+    QObject *logsModelTest_;
 };
 
 #endif
+

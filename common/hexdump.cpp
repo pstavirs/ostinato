@@ -109,8 +109,8 @@ QVariant HexDumpProtocol::fieldData(int index, FieldAttrib attrib,
                 case FieldValue:
                 case FieldTextValue:
                 case FieldFrameValue:
-                    ba.append(QString().fromStdString(data.content()));
-                    if (data.pad_until_end())
+                    ba.append(data.content().c_str(), data.content().length());
+                    if (padUntilEnd())
                     {
                         pad = QByteArray(
                             protocolFrameSize(streamIndex) - ba.size(), '\0');
@@ -144,7 +144,7 @@ QVariant HexDumpProtocol::fieldData(int index, FieldAttrib attrib,
             switch(attrib)
             {
                 case FieldValue:
-                    return data.pad_until_end();
+                    return padUntilEnd();
                 default:
                     break;
             }
@@ -197,7 +197,7 @@ int HexDumpProtocol::protocolFrameSize(int streamIndex) const
 {
     int len = data.content().size();
 
-    if (data.pad_until_end())
+    if (padUntilEnd())
     {
         int pad = mpStream->frameLen(streamIndex) 
                     - (protocolFrameOffset(streamIndex)
@@ -212,3 +212,10 @@ int HexDumpProtocol::protocolFrameSize(int streamIndex) const
     return len;
 }
 
+bool HexDumpProtocol::padUntilEnd() const
+{
+    if (next)
+        return false; // No padding if we are not the last protocol
+
+    return data.pad_until_end();
+}

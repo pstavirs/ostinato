@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2011 Srivats P.
+Copyright (C) 2018 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,23 +17,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _IP4_PDML_H
-#define _IP4_PDML_H
+#ifndef _X_LOCALE_H
+#define _X_LOCALE_H
 
-#include "pdmlprotocol.h"
+#include <QLocale>
 
-class PdmlIp4Protocol : public PdmlProtocol
+class XLocale: public QLocale
 {
 public:
-    static PdmlProtocol* createInstance();
-
-    virtual void unknownFieldHandler(QString name, int pos, int size, 
-            const QXmlStreamAttributes &attributes, 
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
-protected:
-    PdmlIp4Protocol();
+    double toDouble(const QString &s, bool *ok = Q_NULLPTR) const {
+        QString s2 = s;
+        return QLocale::toDouble(s2.remove(groupSeparator()), ok);
+    }
 };
 
 #endif
+

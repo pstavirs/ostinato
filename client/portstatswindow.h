@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsmodel.h"
 
 class QSortFilterProxyModel;
+class QStyledItemDelegate;
 
 class PortStatsWindow : public QWidget, public Ui::PortStatsWindow
 {
@@ -63,6 +64,7 @@ private:
     PortGroupList           *pgl;
     PortStatsModel          *model;
     QSortFilterProxyModel   *proxyStatsModel;
+    QStyledItemDelegate     *statusDelegate;
     QModelIndexList         selectedColumns;
 
 };
