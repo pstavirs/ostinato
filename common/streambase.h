@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 const int kFcsSize = 4;
 
 class AbstractProtocol;
-class FrameValueAttrib;
+struct FrameValueAttrib;
 class ProtocolList;
 class ProtocolListIterator;
 
