@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define BASE_DEC (10)
 #define BASE_HEX (16)
 
-class FrameValueAttrib;
+struct FrameValueAttrib;
 class StreamBase;
 class ProtocolListIterator;
 
