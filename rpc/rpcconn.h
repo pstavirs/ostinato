@@ -35,6 +35,7 @@ namespace google {
             class CopyingOutputStreamAdaptor;
         }
         class Message;
+        class MethodDescriptor;
     }
 }
 
@@ -52,7 +53,8 @@ public:
 private:
     void writeHeader(char* header, quint16 type, quint16 method, 
                      quint32 length);
-    void sendRpcReply(PbRpcController *controller);
+    void sendRpcReply(const ::google::protobuf::MethodDescriptor *method,
+                      PbRpcController *controller);
 
 signals:
     void closed();

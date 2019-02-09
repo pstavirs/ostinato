@@ -114,7 +114,9 @@ void RpcConnection::writeHeader(char* header, quint16 type, quint16 method,
     *((quint32*)(header+4)) = qToBigEndian(length);
 }
 
-void RpcConnection::sendRpcReply(PbRpcController *controller)
+void RpcConnection::sendRpcReply(
+        const ::google::protobuf::MethodDescriptor *method,
+        PbRpcController *controller)
 {
     google::protobuf::Message *response = controller->response();
     QIODevice *blob;
@@ -178,8 +180,10 @@ void RpcConnection::sendRpcReply(PbRpcController *controller)
         qDebug("Server(%s): sending %d bytes to client <----",
             __FUNCTION__, len + PB_HDR_SIZE);
         BUFDUMP(msg, 8);
-        qDebug("method = %d\nreq = \n%s---->", 
-            pendingMethodId, response->DebugString().c_str());
+        qDebug("method = %d:%s\nresp = %s\n%s---->",
+            pendingMethodId, method ? method->name().c_str() : "",
+            method ? method->output_type()->name().c_str() : "",
+            response->DebugString().c_str());
     }
 
     clientSock->write(msg, PB_HDR_SIZE);
@@ -343,16 +347,19 @@ void RpcConnection::on_clientSock_dataAvail()
         bool ok = req->ParseFromBoundedZeroCopyStream(inStream, len);
         if (!ok)
             qWarning("ParseFromBoundedZeroCopyStream fail "
-                     "for method %d and len %d", method, len);
+                     "for method %d:%s and len %d",
+                     method, methodDesc->name().c_str(),len);
     }
 
     if (!req->IsInitialized())
     {
         qWarning("Missing required fields in request <----");
-        qDebug("method = %d\n"
-               "req = \n%s"
+        qDebug("method = %d:%s\n"
+               "req = %s\n%s"
                "missing = \n%s----->",
-                method, req->DebugString().c_str(),
+                method, methodDesc->name().c_str(),
+                methodDesc->input_type()->name().c_str(),
+                req->DebugString().c_str(),
                 req->InitializationErrorString().c_str());
         error = QString("RPC %1() missing required fields in request - %2")
                     .arg(QString::fromStdString(
@@ -367,9 +374,10 @@ void RpcConnection::on_clientSock_dataAvail()
     
     if (method != 13) {
         qDebug("Server(%s): successfully received/parsed msg <----", __FUNCTION__);
-        qDebug("method = %d\n"
-               "req = \n%s---->",
-                method,
+        qDebug("method = %d:%s\n"
+               "req = %s\n%s---->",
+                method, methodDesc->name().c_str(),
+                methodDesc->input_type()->name().c_str(),
                 req->DebugString().c_str());
     }
 
@@ -379,7 +387,7 @@ void RpcConnection::on_clientSock_dataAvail()
 
     service->CallMethod(methodDesc, controller, req, resp,
         google::protobuf::NewCallback(this, &RpcConnection::sendRpcReply, 
-                                      controller));
+                                      methodDesc, controller));
 
     return;
 
@@ -394,7 +402,7 @@ _error_exit2:
     controller->SetFailed(error);
     if (disconnect)
         controller->TriggerDisconnect();
-    sendRpcReply(controller);
+    sendRpcReply(methodDesc, controller);
     return;
 }
 
