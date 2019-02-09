@@ -172,6 +172,8 @@ signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 
 private:
+    QString frameValueErrorNotes(int portId, int error);
+
     /* 
      * NOTES:
      * - AbstractPort::id() and index into portInfo[] are same!

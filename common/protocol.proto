@@ -175,7 +175,12 @@ message Void {
 }
 
 message Ack {
-    //! \todo (LOW) do we need any fields in 'Ack'
+    enum RpcStatus {
+        kRpcSuccess = 0;
+        kRpcFail = 1;
+    }
+    optional RpcStatus status = 1; // FIXME: make required
+    optional string notes = 2;
 }
 
 message PortId {

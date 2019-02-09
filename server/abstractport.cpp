@@ -202,23 +202,24 @@ bool AbstractPort::setRateAccuracy(Accuracy accuracy)
     return true;
 }
 
-void AbstractPort::updatePacketList()
+int AbstractPort::updatePacketList()
 {
     switch(data_.transmit_mode())
     {
     case OstProto::kSequentialTransmit:
-        updatePacketListSequential();
+        return updatePacketListSequential();
         break;
     case OstProto::kInterleavedTransmit:
-        updatePacketListInterleaved();
+        return updatePacketListInterleaved();
         break;
     default:
         Q_ASSERT(false); // Unreachable!!!
         break;
     }
+    return 0;
 }
 
-void AbstractPort::updatePacketListSequential()
+int AbstractPort::updatePacketListSequential()
 {
     FrameValueAttrib packetListAttrib;
     long    sec = 0; 
@@ -397,11 +398,12 @@ void AbstractPort::updatePacketListSequential()
 _stop_no_more_pkts:
     isSendQueueDirty_ = false;
 
-    // FIXME: send attrib back in Ack
-    qDebug("PacketListAttrib = %x", (int)packetListAttrib.errorFlags);
+    qDebug("PacketListAttrib = %x",
+            static_cast<int>(packetListAttrib.errorFlags));
+    return static_cast<int>(packetListAttrib.errorFlags);
 }
 
-void AbstractPort::updatePacketListInterleaved()
+int AbstractPort::updatePacketListInterleaved()
 {
     FrameValueAttrib packetListAttrib;
     int numStreams = 0;
@@ -432,7 +434,7 @@ void AbstractPort::updatePacketListInterleaved()
     if (activeStreamCount == 0)
     {
         isSendQueueDirty_ = false;
-        return;
+        return 0;
     }
 
     // First sort the streams by ordinalValue
@@ -643,8 +645,9 @@ void AbstractPort::updatePacketListInterleaved()
     setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
 
-    // FIXME: send attrib back in Ack
-    qDebug("PacketListAttrib = %x", (int)packetListAttrib.errorFlags);
+    qDebug("PacketListAttrib = %x",
+            static_cast<int>(packetListAttrib.errorFlags));
+    return static_cast<int>(packetListAttrib.errorFlags);
 }
 
 void AbstractPort::stats(PortStats *stats)

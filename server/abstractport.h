@@ -105,7 +105,7 @@ public:
             int length) = 0;
     virtual void setPacketListLoopMode(bool loop, 
             quint64 secDelay, quint64 nsecDelay) = 0;
-    void updatePacketList();
+    int updatePacketList();
 
     virtual void startTransmit() = 0;
     virtual void stopTransmit() = 0;
@@ -140,8 +140,8 @@ protected:
 
     void addNote(QString note);
 
-    void updatePacketListSequential();
-    void updatePacketListInterleaved();
+    int updatePacketListSequential();
+    int updatePacketListInterleaved();
 
     bool isUsable_;
     OstProto::Port          data_;

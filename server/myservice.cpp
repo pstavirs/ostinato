@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/abstractprotocol.h"
 #endif
 
+#include "../common/framevalueattrib.h"
 #include "../common/streambase.h"
 #include "../rpc/pbrpccontroller.h"
 #include "device.h"
@@ -116,9 +117,11 @@ void MyService::getPortConfig(::google::protobuf::RpcController* /*controller*/,
 
 void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortConfigList* request,
-    ::OstProto::Ack* /*response*/,
+    ::OstProto::Ack *response,
     ::google::protobuf::Closure* done)
 {
+    bool fail = false;
+    QString notes;
     // notification needs to be on heap because signal/slot is across threads!
     OstProto::Notification *notif = new OstProto::Notification;
 
@@ -127,7 +130,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     for (int i = 0; i < request->port_size(); i++)
     {
         OstProto::Port port;
-        int id;
+        int id, err = 0;
 
         port = request->port(i);
         id = port.port_id().id();
@@ -143,15 +146,22 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
             if (dirty)
-                portInfo[id]->updatePacketList();
+                err = portInfo[id]->updatePacketList();
             portLock[id]->unlock();
-
-
+            if (err) {
+                notes += frameValueErrorNotes(id, err);
+                fail = true;
+            }
             notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
     }
 
-    //! \todo (LOW): fill-in response "Ack"????
+    if (fail) {
+        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_notes(notes.toStdString());
+    }
+    else
+        response->set_status(OstProto::Ack::kRpcSuccess);
     done->Run();
 
     if (notif->port_id_list().port_id_size()) {
@@ -318,10 +328,11 @@ _exit:
 
 void MyService::modifyStream(::google::protobuf::RpcController* controller,
     const ::OstProto::StreamConfigList* request,
-    ::OstProto::Ack* /*response*/,
+    ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
     int    portId;
+    int    err = 0;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
@@ -346,11 +357,16 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
     }
 
     if (portInfo[portId]->isDirty())
-        portInfo[portId]->updatePacketList();
+        err = portInfo[portId]->updatePacketList();
     portLock[portId]->unlock();
 
-    //! \todo(LOW): fill-in response "Ack"????
-
+    if (err) {
+        QString notes = frameValueErrorNotes(portId, err);
+        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_notes(notes.toStdString());
+    }
+    else
+        response->set_status(OstProto::Ack::kRpcSuccess);
     done->Run();
     return;
 
@@ -365,14 +381,18 @@ _exit:
 
 void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     const ::OstProto::PortIdList* request,
-    ::OstProto::Ack* /*response*/,
+    ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
+    bool fail = false;
+    QString notes;
+
     qDebug("In %s", __PRETTY_FUNCTION__);
 
     for (int i = 0; i < request->port_id_size(); i++)
     {
         int portId;
+        int err = 0;
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size()))
@@ -380,12 +400,21 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
 
         portLock[portId]->lockForWrite();
         if (portInfo[portId]->isDirty())
-            portInfo[portId]->updatePacketList();
+            err = portInfo[portId]->updatePacketList();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
+        if (err) {
+            notes += frameValueErrorNotes(portId, err);
+            fail = true;
+        }
     }
 
-    //! \todo (LOW): fill-in response "Ack"????
+    if (fail) {
+        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_notes(notes.toStdString());
+    }
+    else
+        response->set_status(OstProto::Ack::kRpcSuccess);
 
     done->Run();
 }
@@ -998,6 +1027,29 @@ void MyService::getDeviceNeighbors(
 _invalid_port:
     controller->SetFailed("Invalid Port Id");
     done->Run();
+}
+
+QString MyService::frameValueErrorNotes(int portId, int error)
+{
+    if (!error)
+        return QString();
+
+    QString pfx = QString("Port %1: ").arg(portId);
+    auto errorFlags = static_cast<FrameValueAttrib::ErrorFlags>(error);
+
+    // If smac resolve fails, dmac will always fail - so check that first
+    // and report only that so as not to confuse users (they may not realize
+    // that without a source device, we have no ARP table to lookup for dmac)
+
+    if (errorFlags & FrameValueAttrib::UnresolvedSrcMacError)
+        return pfx + "Source mac resolve failed for one or more "
+                     "streams - Device matching stream's source ip not found\n";
+
+    if (errorFlags & FrameValueAttrib::UnresolvedDstMacError)
+        return pfx + "Destination mac resolve failed for one or more "
+                     "streams - possible ARP/ND failure\n";
+
+    return QString();
 }
 
 /*

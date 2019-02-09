@@ -667,6 +667,11 @@ void PortGroup::processModifyStreamAck(int portIndex,
 
     qDebug("apply completed");
     logInfo(id(), mPorts[portIndex]->id(), QString("All port changes applied"));
+
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (ack->status())
+        logError(id(), mPorts[portIndex]->id(),
+                 QString::fromStdString(ack->notes()));
     mPorts[portIndex]->when_syncComplete();
 
     mainWindow->setEnabled(true);
@@ -803,6 +808,7 @@ void PortGroup::modifyPort(int portIndex, OstProto::Port portConfig)
 
 void PortGroup::processModifyPortAck(bool restoreUi,PbRpcController *controller)
 {
+
     qDebug("In %s", __FUNCTION__);
 
     if (controller->Failed())
@@ -812,6 +818,10 @@ void PortGroup::processModifyPortAck(bool restoreUi,PbRpcController *controller)
         logError(id(), QString("modifyPort RPC failed: %1")
                             .arg(controller->ErrorString()));
     }
+
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
 
     if (restoreUi) {
         mainWindow->setEnabled(true);
@@ -1339,6 +1349,9 @@ void PortGroup::processStartTxAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
     delete controller;
 }
 
