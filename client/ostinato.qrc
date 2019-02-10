@@ -2,6 +2,8 @@
   <qresource prefix="/">
     <file>icons/about.png</file>
     <file>icons/add.png</file>
+    <file>icons/anime_error.gif</file>
+    <file>icons/anime_warn.gif</file>
     <file>icons/arrow_down.png</file>
     <file>icons/arrow_left.png</file>
     <file>icons/arrow_right.png</file>

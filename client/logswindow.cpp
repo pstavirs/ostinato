@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QDockWidget>
 #include <QHeaderView>
+#include <QMainWindow>
+#include <QMovie>
+
+extern QMainWindow *mainWindow;
 
 LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
     : QWidget(parent)
@@ -41,6 +45,9 @@ LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
 
     parentDock_ = qobject_cast<QDockWidget*>(parent);
     windowTitle_ = parentDock_->windowTitle();
+
+    warnAnime_ = new QMovie(":/icons/anime_warn.gif", QByteArray(), this);
+    errorAnime_ = new QMovie(":/icons/anime_error.gif", QByteArray(), this);
 
     connect(level, SIGNAL(currentIndexChanged(int)),
             model, SLOT(setLogLevel(int)));
@@ -60,14 +67,16 @@ LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
 
 LogsWindow::~LogsWindow()
 {
+    delete warnAnime_;
+    delete errorAnime_;
     delete logsModelTest_;
 }
 
 void LogsWindow::when_visibilityChanged(bool visible)
 {
     if (visible) {
-        parentDock_->setWindowTitle(windowTitle_);
-        annotation_.clear();
+        state_ = kInfo;
+        notify();
     }
 
     isVisible_ = visible;
@@ -80,7 +89,7 @@ void LogsWindow::when_rowsInserted(const QModelIndex &parent,
     if (isVisible_)
         return;
 
-    if (annotation_.contains("Error"))
+    if (state_ == kError)
         return;
 
     for (int i = first; i <= last; i++) {
@@ -89,14 +98,14 @@ void LogsWindow::when_rowsInserted(const QModelIndex &parent,
         QString level = logs->model()->data(logs->model()->index(i, 1, parent))
                                         .toString();
         if (level == "Error") {
-            annotation_ = QString(" - Error(s)");
+            state_ = kError;
             break; // Highest level - no need to look further
         }
         else if (level == "Warning") {
-            annotation_ = QString(" - Warning(s)");
+            state_ = kWarning;
         }
     }
-    parentDock_->setWindowTitle(windowTitle_+annotation_);
+    notify();
 }
 
 void LogsWindow::on_autoScroll_toggled(bool checked)
@@ -112,3 +121,60 @@ void LogsWindow::on_autoScroll_toggled(bool checked)
                 logs, SLOT(scrollToBottom()));
     }
 }
+
+QLabel* LogsWindow::tabIcon()
+{
+    QList<QTabBar*> tabBars = mainWindow->findChildren<QTabBar*>();
+    foreach(QTabBar* tabBar, tabBars) {
+        for (int i = 0; i < tabBar->count(); i++) {
+            if (tabBar->tabText(i).startsWith(windowTitle_)) {
+                QLabel *icon = qobject_cast<QLabel*>(
+                                    tabBar->tabButton(i, QTabBar::LeftSide));
+                if (!icon) { // Lazy create
+                    icon = new QLabel();
+                    tabBar->setTabButton(i, QTabBar::LeftSide, icon);
+                }
+                return icon;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+void LogsWindow::notify()
+{
+    QString annotation;
+    QMovie *anime = nullptr;
+
+    // Stop all animations before we start a new one
+    warnAnime_->stop();
+    errorAnime_->stop();
+
+    switch (state_) {
+    case kError:
+        anime = errorAnime_;
+        annotation = " - Error(s)";
+        break;
+    case kWarning:
+        anime = warnAnime_;
+        annotation = " - Warning(s)";
+        break;
+    case kInfo:
+    default:
+        break;
+    }
+
+    QLabel *icon = tabIcon(); // NOTE: we may not have a icon if not tabified
+    if (icon) {
+        if (anime) {
+            icon->setMovie(anime);
+            anime->start();
+        }
+        else
+            icon->clear();
+        icon->adjustSize();
+    }
+    parentDock_->setWindowTitle(windowTitle_ + annotation);
+}
+

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class LogsModel;
 class QDockWidget;
 class QShowEvent;
+class QMovie;
 
 class LogsWindow: public QWidget, private Ui::LogsWindow
 {
@@ -39,9 +40,16 @@ private slots:
     void on_autoScroll_toggled(bool checked);
 
 private:
+    enum State {kInfo, kWarning, kError};
+
+    QLabel* tabIcon();
+    void notify();
+
+    State state_{kInfo};
     QDockWidget *parentDock_;
+    QMovie *warnAnime_{nullptr};
+    QMovie *errorAnime_{nullptr};
     QString windowTitle_;
-    QString annotation_;
     bool isVisible_{false};
     QObject *logsModelTest_;
 };
