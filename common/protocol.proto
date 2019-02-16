@@ -177,9 +177,9 @@ message Void {
 message Ack {
     enum RpcStatus {
         kRpcSuccess = 0;
-        kRpcFail = 1;
+        kRpcError = 1;
     }
-    optional RpcStatus status = 1; // FIXME: make required
+    required RpcStatus status = 1;
     optional string notes = 2;
 }
 

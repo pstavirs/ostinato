@@ -166,7 +166,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -295,7 +295,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
     portLock[portId]->unlock();
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -346,7 +346,7 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     portLock[portId]->unlock();
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -407,7 +407,7 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
 
     if (fail || err) {
         notes += frameValueErrorNotes(portId, err);
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -461,7 +461,7 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -498,7 +498,7 @@ void MyService::stopTransmit(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -534,7 +534,7 @@ void MyService::startCapture(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -569,7 +569,7 @@ void MyService::stopCapture(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -688,7 +688,7 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -759,7 +759,7 @@ void MyService::clearStreamStats(
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -942,7 +942,7 @@ void MyService::addDeviceGroup(
     portLock[portId]->unlock();
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -998,7 +998,7 @@ void MyService::deleteDeviceGroup(
     portLock[portId]->unlock();
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -1052,7 +1052,7 @@ void MyService::modifyDeviceGroup(
     portLock[portId]->unlock();
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -1132,7 +1132,7 @@ void MyService::resolveDeviceNeighbors(
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
@@ -1169,7 +1169,7 @@ void MyService::clearDeviceNeighbors(
     }
 
     if (fail) {
-        response->set_status(OstProto::Ack::kRpcFail);
+        response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
     else
