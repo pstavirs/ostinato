@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
     int exitCode = 0;
     QCoreApplication app(argc, argv);
 
+    qDebug("Version: %s", version);
+    qDebug("Revision: %s", revision);
+
     // TODO: command line options
     // -v (--version)
     // -h (--help)
