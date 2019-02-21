@@ -121,7 +121,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack *response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     // notification needs to be on heap because signal/slot is across threads!
@@ -132,7 +132,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     for (int i = 0; i < request->port_size(); i++)
     {
         OstProto::Port port;
-        int id, err = 0;
+        int id, frameError = 0;
 
         port = request->port(i);
         id = port.port_id().id();
@@ -142,7 +142,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
 
             if (!portInfo[id]->canModify(port, &dirty)) {
                 qDebug("Port %d cannot be modified - stop tx and retry", id);
-                fail = true;
+                error = true;
                 notes += QString("Port %1 modify: operation disallowed on "
                                  "transmitting port\n").arg(id);
                 continue;
@@ -151,21 +151,21 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
             if (dirty)
-                err = portInfo[id]->updatePacketList();
+                frameError = portInfo[id]->updatePacketList();
             portLock[id]->unlock();
-            if (err) {
-                fail = true;
-                notes += frameValueErrorNotes(id, err);
+            if (frameError) {
+                error = true;
+                notes += frameValueErrorNotes(id, frameError);
             }
             notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
         else {
-            fail = true;
+            error = true;
             notes += QString("Port %1 modify: invalid port\n").arg(id);
         }
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -257,7 +257,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     int portId;
 
@@ -278,7 +278,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
         // If stream with same id as in request exists already ==> error!!
         stream = portInfo[portId]->stream(request->stream_id(i).id());
         if (stream) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 Stream %2 add stream: "
                              "stream already exists\n")
                         .arg(portId).arg(request->stream_id(i).id());
@@ -294,7 +294,7 @@ void MyService::addStream(::google::protobuf::RpcController* controller,
     }
     portLock[portId]->unlock();
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -321,7 +321,7 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     int portId;
 
@@ -337,7 +337,7 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     portLock[portId]->lockForWrite();
     for (int i = 0; i < request->stream_id_size(); i++) {
         if (!portInfo[portId]->deleteStream(request->stream_id(i).id())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 Stream %2 stream delete: "
                              "stream not found\n")
                         .arg(portId).arg(request->stream_id(i).id());
@@ -345,7 +345,7 @@ void MyService::deleteStream(::google::protobuf::RpcController* controller,
     }
     portLock[portId]->unlock();
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -370,10 +370,10 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     int    portId;
-    int    err = 0;
+    int    frameError = 0;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
@@ -395,18 +395,18 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
             portInfo[portId]->setDirty();
         }
         else {
-            fail = true;
+            error = true;
             notes += QString("Port %1 Stream %2 modify stream: "
                              "stream not found\n").arg(portId).arg(sid);
         }
     }
 
     if (portInfo[portId]->isDirty())
-        err = portInfo[portId]->updatePacketList();
+        frameError = portInfo[portId]->updatePacketList();
     portLock[portId]->unlock();
 
-    if (fail || err) {
-        notes += frameValueErrorNotes(portId, err);
+    if (error || frameError) {
+        notes += frameValueErrorNotes(portId, frameError);
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -431,7 +431,7 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -439,11 +439,11 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     for (int i = 0; i < request->port_id_size(); i++)
     {
         int portId;
-        int err = 0;
+        int frameError = 0;
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 start transmit: invalid port\n")
                         .arg(portId);
             continue;
@@ -451,16 +451,16 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
 
         portLock[portId]->lockForWrite();
         if (portInfo[portId]->isDirty())
-            err = portInfo[portId]->updatePacketList();
+            frameError = portInfo[portId]->updatePacketList();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
-        if (err) {
-            fail = true;
-            notes += frameValueErrorNotes(portId, err);
+        if (frameError) {
+            error = true;
+            notes += frameValueErrorNotes(portId, frameError);
         }
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -475,7 +475,7 @@ void MyService::stopTransmit(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -486,7 +486,7 @@ void MyService::stopTransmit(::google::protobuf::RpcController* /*controller*/,
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 stop transmit: invalid port\n")
                         .arg(portId);
             continue;
@@ -497,7 +497,7 @@ void MyService::stopTransmit(::google::protobuf::RpcController* /*controller*/,
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -511,7 +511,7 @@ void MyService::startCapture(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -522,7 +522,7 @@ void MyService::startCapture(::google::protobuf::RpcController* /*controller*/,
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 start capture: invalid port\n")
                         .arg(portId);
             continue;
@@ -533,7 +533,7 @@ void MyService::startCapture(::google::protobuf::RpcController* /*controller*/,
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -547,7 +547,7 @@ void MyService::stopCapture(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -557,7 +557,7 @@ void MyService::stopCapture(::google::protobuf::RpcController* /*controller*/,
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 stop capture: invalid port\n")
                         .arg(portId);
             continue;
@@ -568,7 +568,7 @@ void MyService::stopCapture(::google::protobuf::RpcController* /*controller*/,
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -665,7 +665,7 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -676,7 +676,7 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 clear statistics: invalid port\n")
                         .arg(portId);
             continue;
@@ -687,7 +687,7 @@ void MyService::clearStats(::google::protobuf::RpcController* /*controller*/,
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -731,7 +731,7 @@ void MyService::clearStreamStats(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -742,7 +742,7 @@ void MyService::clearStreamStats(
 
         portId = request->port_id_list().port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 clear stream statistics: invalid port\n")
                         .arg(portId);
             continue;
@@ -758,7 +758,7 @@ void MyService::clearStreamStats(
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -906,7 +906,7 @@ void MyService::addDeviceGroup(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     DeviceManager *devMgr;
     int portId;
@@ -930,7 +930,7 @@ void MyService::addDeviceGroup(
 
         // If device group with same id as in request exists already ==> error!
         if (dg) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 DeviceGroup %2 add device group: "
                              " device group already exists\n")
                         .arg(portId).arg(id);
@@ -941,7 +941,7 @@ void MyService::addDeviceGroup(
     }
     portLock[portId]->unlock();
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -970,7 +970,7 @@ void MyService::deleteDeviceGroup(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     DeviceManager *devMgr;
     int portId;
@@ -990,14 +990,14 @@ void MyService::deleteDeviceGroup(
     for (int i = 0; i < request->device_group_id_size(); i++) {
         quint32 id = request->device_group_id(i).id();
         if (!devMgr->deleteDeviceGroup(id)) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 DeviceGroup %2 delete device group: "
                              "device group not found\n").arg(portId).arg(id);
         }
     }
     portLock[portId]->unlock();
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -1024,7 +1024,7 @@ void MyService::modifyDeviceGroup(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
     DeviceManager *devMgr;
     int portId;
@@ -1044,14 +1044,14 @@ void MyService::modifyDeviceGroup(
     for (int i = 0; i < request->device_group_size(); i++) {
         quint32 id = request->device_group(i).device_group_id().id();
         if (!devMgr->modifyDeviceGroup(&request->device_group(i))) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 DeviceGroup %2 modify device group: "
                              "device group not found\n").arg(portId).arg(id);
         }
     }
     portLock[portId]->unlock();
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -1109,7 +1109,7 @@ void MyService::resolveDeviceNeighbors(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -1120,7 +1120,7 @@ void MyService::resolveDeviceNeighbors(
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 resolve device neighbors: "
                              "invalid port\n").arg(portId);
             continue;
@@ -1131,7 +1131,7 @@ void MyService::resolveDeviceNeighbors(
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -1146,7 +1146,7 @@ void MyService::clearDeviceNeighbors(
     ::OstProto::Ack* response,
     ::google::protobuf::Closure* done)
 {
-    bool fail = false;
+    bool error = false;
     QString notes;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
@@ -1157,7 +1157,7 @@ void MyService::clearDeviceNeighbors(
 
         portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
-            fail = true;
+            error = true;
             notes += QString("Port %1 clear device neighbors: "
                              "invalid port\n").arg(portId);
             continue;
@@ -1168,7 +1168,7 @@ void MyService::clearDeviceNeighbors(
         portLock[portId]->unlock();
     }
 
-    if (fail) {
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
