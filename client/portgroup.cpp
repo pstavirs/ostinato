@@ -364,8 +364,7 @@ void PortGroup::processPortIdList(PbRpcController *controller)
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(controller->ErrorString()));
-        logError(id(), QString("getPortIdList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
         goto _error_exit;
     }
 
@@ -421,8 +420,7 @@ void PortGroup::processPortConfigList(PbRpcController *controller)
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(controller->ErrorString()));
-        logError(id(), QString("getPortConfig RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
         goto _error_exit;
     }
 
@@ -632,12 +630,46 @@ void PortGroup::when_configApply(int portIndex)
 void PortGroup::processAddDeviceGroupAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::DeviceGroupIdList *dgidList
+            = static_cast<OstProto::DeviceGroupIdList*>(controller->request());
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), dgidList->port_id().id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), dgidList->port_id().id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
     delete controller;
 }
 
 void PortGroup::processDeleteDeviceGroupAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::DeviceGroupIdList *dgidList
+            = static_cast<OstProto::DeviceGroupIdList*>(controller->request());
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), dgidList->port_id().id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), dgidList->port_id().id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
     delete controller;
 }
 
@@ -645,18 +677,71 @@ void PortGroup::processModifyDeviceGroupAck(int /*portIndex*/,
         PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::DeviceGroupIdList *dgidList
+            = static_cast<OstProto::DeviceGroupIdList*>(controller->request());
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), dgidList->port_id().id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), dgidList->port_id().id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
     delete controller;
 }
 
 void PortGroup::processAddStreamAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+
+    OstProto::StreamIdList *streamIdList = static_cast<OstProto::StreamIdList*>(
+                                                controller->request());
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), streamIdList->port_id().id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), streamIdList->port_id().id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
     delete controller;
 }
 
 void PortGroup::processDeleteStreamAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+
+    OstProto::StreamIdList *streamIdList = static_cast<OstProto::StreamIdList*>(
+                                                controller->request());
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), streamIdList->port_id().id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), streamIdList->port_id().id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
     delete controller;
 }
 
@@ -665,13 +750,24 @@ void PortGroup::processModifyStreamAck(int portIndex,
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
     qDebug("apply completed");
     logInfo(id(), mPorts[portIndex]->id(), QString("All port changes applied"));
 
-    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
     if (ack->status())
         logError(id(), mPorts[portIndex]->id(),
                  QString::fromStdString(ack->notes()));
+
+_error_exit:
     mPorts[portIndex]->when_syncComplete();
 
     mainWindow->setEnabled(true);
@@ -721,9 +817,7 @@ void PortGroup::processDeviceList(int portIndex, PbRpcController *controller)
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(), mPorts[portIndex]->id(),
-                 QString("getDeviceList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -758,9 +852,7 @@ void PortGroup::processDeviceNeighbors(
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(),  mPorts[portIndex]->id(),
-                 QString("getPortIdList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(),  mPorts[portIndex]->id(),controller->ErrorString());
         goto _exit;
     }
 
@@ -813,10 +905,9 @@ void PortGroup::processModifyPortAck(bool restoreUi,PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(), QString("modifyPort RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
     }
 
     OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
@@ -839,10 +930,9 @@ void PortGroup::processUpdatedPortConfig(PbRpcController *controller)
 
     if (controller->Failed())
     {
-        qDebug("%s: rpc failed(%s)", __FUNCTION__, 
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(), QString("getPortConfig RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -891,9 +981,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(controller->ErrorString()));
-        logError(id(),  mPorts[portIndex]->id(),
-                 QString("geStreamIdList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -1108,9 +1196,7 @@ void PortGroup::processStreamConfigList(int portIndex,
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(controller->ErrorString()));
-        logError(id(), mPorts[portIndex]->id(),
-                 QString("getStreamConfigList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -1181,9 +1267,7 @@ void PortGroup::processDeviceGroupIdList(
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(), mPorts[portIndex]->id(),
-                 QString("getDeviceGroupIdList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -1278,9 +1362,7 @@ void PortGroup::processDeviceGroupConfigList(int portIndex,
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__,
                 qPrintable(controller->ErrorString()));
-        logError(id(), mPorts[portIndex]->id(),
-                 QString("getDeviceGroupConfigList RPC failed: %1")
-                            .arg(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
         goto _exit;
     }
 
@@ -1350,8 +1432,18 @@ void PortGroup::processStartTxAck(PbRpcController *controller)
     qDebug("In %s", __FUNCTION__);
 
     OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+
     if (ack->status())
         logError(id(), QString::fromStdString(ack->notes()));
+
+_exit:
     delete controller;
 }
 
@@ -1387,6 +1479,19 @@ void PortGroup::processStopTxAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+
+_exit:
     delete controller;
 }
 
@@ -1422,6 +1527,17 @@ void PortGroup::processStartCaptureAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 
@@ -1457,6 +1573,17 @@ void PortGroup::processStopCaptureAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 
@@ -1493,12 +1620,22 @@ _exit:
 
 void PortGroup::processViewCaptureAck(PbRpcController *controller)
 {
+    OstProto::PortId *portId = static_cast<OstProto::PortId*>(
+                                                controller->request());
     QFile *capFile = static_cast<QFile*>(controller->binaryBlob());
 
     QString viewer = appSettings->value(kWiresharkPathKey, 
             kWiresharkPathDefaultValue).toString();
 
     qDebug("In %s", __FUNCTION__);
+
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), portId->id(), controller->ErrorString());
+        goto _exit;
+    }
 
     capFile->flush();
     capFile->close();
@@ -1553,7 +1690,19 @@ _exit:
 void PortGroup::processResolveDeviceNeighborsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
 
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 
@@ -1589,7 +1738,19 @@ _exit:
 void PortGroup::processClearDeviceNeighborsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
 
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 
@@ -1625,8 +1786,7 @@ void PortGroup::processPortStatsList()
     {
         qDebug("%s: rpc failed(%s)", __FUNCTION__, 
                 qPrintable(statsController->ErrorString()));
-        logError(id(), QString("getPortStatsList RPC failed: %1")
-                            .arg(statsController->ErrorString()));
+        logError(id(), statsController->ErrorString());
         goto _error_exit;
     }
 
@@ -1677,10 +1837,22 @@ _exit:
 void PortGroup::processClearPortStatsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
 
     // Refresh stats immediately after a stats clear/reset
     getPortStats();
 
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 
@@ -1713,6 +1885,17 @@ void PortGroup::processClearStreamStatsAck(PbRpcController *controller)
 {
     qDebug("In %s", __FUNCTION__);
 
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+        goto _exit;
+    }
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+_exit:
     delete controller;
 }
 

@@ -140,6 +140,8 @@ void LogsModel::log(int logLevel,QString port, QString message)
     logs_.last().timeStamp = QTime::currentTime();
     logs_.last().logLevel = logLevel;
     logs_.last().port = port;
-    logs_.last().message = message;
+    // XXX: QTableView does not honour newline unless we increase the
+    // row height, so we replace newlines with semicolon for now
+    logs_.last().message = message.trimmed().replace("\n", "; ");
     endInsertRows();
 }
