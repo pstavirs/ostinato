@@ -153,6 +153,12 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(onNewVersion(QString)));
     updater->checkForNewVersion();
 
+    // Add the "Local" Port Group
+    if (appParams.optLocalDrone()) {
+        PortGroup *pg = new PortGroup;
+        pgl->addPortGroup(*pg);
+    }
+
     if (appParams.argumentCount()) {
         QString fileName = appParams.argument(0);
         if (QFile::exists(fileName))
