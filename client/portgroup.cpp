@@ -669,6 +669,8 @@ void PortGroup::processModifyStreamAck(int portIndex,
     logInfo(id(), mPorts[portIndex]->id(), QString("All port changes applied"));
     mPorts[portIndex]->when_syncComplete();
 
+    emit applyFinished();
+
     mainWindow->setEnabled(true);
     QApplication::restoreOverrideCursor();
     delete controller;

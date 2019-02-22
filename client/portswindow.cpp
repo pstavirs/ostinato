@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portswindow.h"
 
+#include "applymsg.h"
 #include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
@@ -52,6 +53,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     plm = pgl;
 
     setupUi(this);
+    applyMsg_ = new ApplyMessage();
     devicesWidget->setPortGroupList(plm);
 
     tvPortList->header()->hide();
@@ -173,6 +175,7 @@ PortsWindow::~PortsWindow()
 {
     delete delegate;
     delete proxyPortModel;
+    delete applyMsg_;
 }
 
 int PortsWindow::portGroupCount()
@@ -646,6 +649,11 @@ void PortsWindow::on_pbApply_clicked()
         qDebug("%s: curPortGroup is not a portGroup", __FUNCTION__);
         goto _exit;
     }
+
+    disconnect(applyMsg_);
+    connect(&(plm->portGroup(curPortGroup)), SIGNAL(applyFinished()),
+            applyMsg_, SLOT(hide()));
+    applyMsg_->show();
 
     // FIXME(HI): shd this be a signal?
     //portGroup.when_configApply(port);

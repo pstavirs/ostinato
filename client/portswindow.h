@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ui_portswindow.h"
 #include "portgrouplist.h"
 
+class ApplyMessage;
 class QAbstractItemDelegate;
 class QProgressDialog;
 class QSortFilterProxyModel;
@@ -61,6 +62,7 @@ private:
     QString        lastNewPortGroup;
     QAbstractItemDelegate *delegate;
     QSortFilterProxyModel *proxyPortModel;
+    ApplyMessage *applyMsg_;
 
 public slots:
     void showMyReservedPortsOnly(bool enabled);
