@@ -33,13 +33,13 @@ message Mac {
 
     // Dst Mac
     optional uint64            dst_mac = 1;
-    optional MacAddrMode    dst_mac_mode = 2 [default = e_mm_fixed];
+    optional MacAddrMode       dst_mac_mode = 2 [default = e_mm_resolve];
     optional uint32            dst_mac_count = 3 [default = 16];
     optional uint32            dst_mac_step = 4 [default = 1];
 
     // Src Mac
     optional uint64            src_mac = 5;
-    optional MacAddrMode    src_mac_mode = 6 [default = e_mm_fixed];
+    optional MacAddrMode       src_mac_mode = 6 [default = e_mm_resolve];
     optional uint32            src_mac_count = 7 [default = 16];
     optional uint32            src_mac_step = 8 [default = 1];
 }
