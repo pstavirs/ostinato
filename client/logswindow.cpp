@@ -58,6 +58,9 @@ LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
     connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             SLOT(when_rowsInserted(const QModelIndex&, int, int)));
 
+    connect(logs->horizontalHeader(), SIGNAL(sectionResized(int, int, int)),
+            logs, SLOT(resizeRowsToContents()));
+
 #if defined(QT_NO_DEBUG) || QT_VERSION < 0x050700
     logsModelTest_ = nullptr;
 #else
@@ -75,6 +78,7 @@ LogsWindow::~LogsWindow()
 void LogsWindow::when_visibilityChanged(bool visible)
 {
     if (visible) {
+        logs->resizeRowsToContents();
         state_ = kInfo;
         notify();
     }
@@ -86,8 +90,11 @@ void LogsWindow::when_visibilityChanged(bool visible)
 void LogsWindow::when_rowsInserted(const QModelIndex &parent,
                                    int first, int last)
 {
-    if (isVisible_)
+
+    if (isVisible_) {
+        logs->resizeRowsToContents();
         return;
+    }
 
     if (state_ == kError)
         return;
