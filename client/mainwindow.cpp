@@ -162,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (appParams.argumentCount()) {
         QString fileName = appParams.argument(0);
         if (QFile::exists(fileName))
-            on_actionOpenSession_triggered(fileName);
+            openSession(fileName);
         else
             QMessageBox::information(NULL, qApp->applicationName(),
                     QString("File not found: " + fileName));
@@ -207,7 +207,7 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::on_actionOpenSession_triggered(QString fileName)
+void MainWindow::openSession(QString fileName)
 {
     qDebug("Open Session Action (%s)", qPrintable(fileName));
 
@@ -257,6 +257,11 @@ _skip_prompt:
 
 _exit:
     return;
+}
+
+void MainWindow::on_actionOpenSession_triggered()
+{
+    openSession();
 }
 
 void MainWindow::on_actionSaveSession_triggered()
