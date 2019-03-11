@@ -106,6 +106,8 @@ protected: // data
 private: // methods
     void sendArpRequest(PacketBuffer *pktBuf);
     void sendNeighborSolicit(PacketBuffer *pktBuf);
+    bool isResolved(quint32 ip);
+    bool isResolved(UInt128 ip);
 
 };
 

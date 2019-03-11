@@ -303,14 +303,14 @@ void EmulDevice::sendArpRequest(quint32 tgtIp)
     if (!tgtIp)
         return;
 
+    // FIXME: Now that the caller does a isResolved check, re-evaluate
+    // the below behaviour
     // This function will be called once per unique stream - which
     // may all have the same dst IP; even if dst IP are different the
     // gateway for the different dst IP may all be same. However,
     // we don't want to send duplicate ARP requests, so we check
     // if the tgtIP is already in the cache (resolved or unresolved)
     // and if so, we don't resend it
-    // FIXME: this check needs to happen at caller so that HostDevices
-    // can also benefit from this check
     if (arpTable_.contains(tgtIp))
         return;
 

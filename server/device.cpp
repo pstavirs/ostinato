@@ -186,10 +186,10 @@ void Device::transmitPacket(PacketBuffer *pktBuf)
 
 void Device::resolveGateway()
 {
-    if (hasIp4_)
+    if (hasIp4_ && !isResolved(ip4Gateway_))
         sendArpRequest(ip4Gateway_);
 
-    if (hasIp6_)
+    if (hasIp6_ && !isResolved(ip6Gateway_))
         sendNeighborSolicit(ip6Gateway_);
 }
 
@@ -368,7 +368,8 @@ void Device::sendArpRequest(PacketBuffer *pktBuf)
 
     tgtIp = ((dstIp & ip4Mask_) == ip4Subnet_) ? dstIp : ip4Gateway_;
 
-    sendArpRequest(tgtIp);
+    if (!isResolved(tgtIp))
+        sendArpRequest(tgtIp);
 
 }
 
@@ -390,7 +391,18 @@ void Device::sendNeighborSolicit(PacketBuffer *pktBuf)
 
     tgtIp = ((dstIp & ip6Mask_) == ip6Subnet_) ? dstIp : ip6Gateway_;
 
-    sendNeighborSolicit(tgtIp);
+    if (!isResolved(tgtIp))
+        sendNeighborSolicit(tgtIp);
+}
+
+bool Device::isResolved(quint32 ip)
+{
+    return arpLookup(ip) > 0;
+}
+
+bool Device::isResolved(UInt128 ip)
+{
+    return ndpLookup(ip) > 0;
 }
 
 //
