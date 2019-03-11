@@ -1322,8 +1322,11 @@ void PortGroup::getDeviceGroupConfigList(int portIndex)
     using OstProto::DeviceGroupIdList;
     using OstProto::DeviceGroupConfigList;
 
-    if (mPorts[portIndex]->numDeviceGroups() == 0)
+    if (mPorts[portIndex]->numDeviceGroups() == 0) {
+        // No devGrps but we may still have devices (hostDev)
+        getDeviceInfo(portIndex);
         return;
+    }
 
     qDebug("requesting device group config list (port %d) ...", portIndex);
 
@@ -1383,8 +1386,7 @@ void PortGroup::processDeviceGroupConfigList(int portIndex,
                                     devGrpCfgList->mutable_device_group(i));
     }
 
-    if (devGrpCfgList->device_group_size())
-        getDeviceInfo(portIndex);
+    getDeviceInfo(portIndex);
 
 #if 0
     // FIXME: incorrect check - will never be true if last port does not have any deviceGroups configured
