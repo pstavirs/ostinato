@@ -303,17 +303,6 @@ void EmulDevice::sendArpRequest(quint32 tgtIp)
     if (!tgtIp)
         return;
 
-    // FIXME: Now that the caller does a isResolved check, re-evaluate
-    // the below behaviour
-    // This function will be called once per unique stream - which
-    // may all have the same dst IP; even if dst IP are different the
-    // gateway for the different dst IP may all be same. However,
-    // we don't want to send duplicate ARP requests, so we check
-    // if the tgtIP is already in the cache (resolved or unresolved)
-    // and if so, we don't resend it
-    if (arpTable_.contains(tgtIp))
-        return;
-
     reqPkt = new PacketBuffer;
     reqPkt->reserve(encapSize());
     pktData = reqPkt->put(28);
@@ -668,11 +657,6 @@ void EmulDevice::sendNeighborSolicit(UInt128 tgtIp)
 
     // Validate target IP
     if (tgtIp == UInt128(0, 0))
-        return;
-
-    // Do we already have a NDP entry (resolved or unresolved)?
-    // If so, don't resend (see note in sendArpRequest())
-    if (ndpTable_.contains(tgtIp))
         return;
 
     // Form the solicited node address to be used as dstIp
