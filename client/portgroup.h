@@ -171,6 +171,7 @@ public:
     void processStreamStatsList(PbRpcController *controller);
 
 signals:
+    void applyFinished();
     void portGroupDataChanged(int portGroupId, int portId = 0xFFFF);
     void portListAboutToBeChanged(quint32 portGroupId);
     void portListChanged(quint32 portGroupId);
