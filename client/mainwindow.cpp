@@ -446,12 +446,14 @@ void MainWindow::reportLocalServerError()
 
 void MainWindow::onNewVersion(QString newVersion)
 {
-    QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
-                   "<a href='%2'>ostinato.org</a> to download")
+    QMessageBox::information(this, tr("Update available"),
+            tr("<p><b>Ostinato version %1 is now available</b> (you have %2). "
+                "See <a href='%3'>change log</a>.</p>"
+                "<p>Visit <a href='%4'>ostinato.org</a> to download.</p>")
                 .arg(newVersion)
+                .arg(version)
+                .arg(jumpUrl("changelog", "app", "status", "update"))
                 .arg(jumpUrl("download", "app", "status", "update")));
-    msg->setOpenExternalLinks(true);
-    statusBar()->addPermanentWidget(msg);
 }
 
 //! Returns true on success (or user cancel) and false on failure
