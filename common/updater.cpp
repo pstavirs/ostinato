@@ -87,6 +87,8 @@ void Updater::parseXml(QNetworkReply *reply)
     if (!newVersion.isEmpty() && isVersionNewer(newVersion, QString(version)))
         emit newVersionAvailable(newVersion);
 
+    emit latestVersion(newVersion);
+
 _exit:
     // Job done, time to self-destruct
     deleteLater();

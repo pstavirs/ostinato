@@ -35,6 +35,7 @@
     <addaction name="actionHelpOnline" />
     <addaction name="separator" />
     <addaction name="actionDonate" />
+    <addaction name="actionCheckForUpdates" />
     <addaction name="separator" />
     <addaction name="actionHelpAbout" />
     <addaction name="actionAboutQt" />
@@ -120,6 +121,11 @@
    </property>
    <property name="text" >
     <string>Donate</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdates" >
+   <property name="text" >
+    <string>Check for Updates...</string>
    </property>
   </action>
  </widget>

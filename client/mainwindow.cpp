@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "fileformat.pb.h"
 
+#include <QDate>
 #include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
@@ -368,6 +369,14 @@ void MainWindow::on_actionDonate_triggered()
     QDesktopServices::openUrl(QUrl(jumpUrl("donate", "app", "menu")));
 }
 
+void MainWindow::on_actionCheckForUpdates_triggered()
+{
+    Updater *updater = new Updater();
+    connect(updater, SIGNAL(latestVersion(QString)),
+            this, SLOT(onLatestVersion(QString)));
+    updater->checkForNewVersion();
+}
+
 void MainWindow::on_actionHelpAbout_triggered()
 {
     QDialog *aboutDialog = new QDialog;
@@ -446,7 +455,12 @@ void MainWindow::reportLocalServerError()
 
 void MainWindow::onNewVersion(QString newVersion)
 {
-    QMessageBox::information(this, tr("Update available"),
+    QDate today = QDate::currentDate();
+    QDate lastChecked = QDate::fromString(
+                            appSettings->value(kLastUpdateCheck).toString(),
+                            Qt::ISODate);
+    if (lastChecked.daysTo(today) >= 5) {
+        QMessageBox::information(this, tr("Update check"),
             tr("<p><b>Ostinato version %1 is now available</b> (you have %2). "
                 "See <a href='%3'>change log</a>.</p>"
                 "<p>Visit <a href='%4'>ostinato.org</a> to download.</p>")
@@ -454,6 +468,39 @@ void MainWindow::onNewVersion(QString newVersion)
                 .arg(version)
                 .arg(jumpUrl("changelog", "app", "status", "update"))
                 .arg(jumpUrl("download", "app", "status", "update")));
+    }
+    else {
+        QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
+                    "<a href='%2'>ostinato.org</a> to download")
+                .arg(newVersion)
+                .arg(jumpUrl("download", "app", "status", "update")));
+        msg->setOpenExternalLinks(true);
+        statusBar()->addPermanentWidget(msg);
+    }
+
+    appSettings->setValue(kLastUpdateCheck, today.toString(Qt::ISODate));
+    sender()->deleteLater();
+}
+
+void MainWindow::onLatestVersion(QString latestVersion)
+{
+    if (version != latestVersion) {
+        QMessageBox::information(this, tr("Update check"),
+            tr("<p><b>Ostinato version %1 is now available</b> (you have %2). "
+                "See <a href='%3'>change log</a>.</p>"
+                "<p>Visit <a href='%4'>ostinato.org</a> to download.</p>")
+                .arg(latestVersion)
+                .arg(version)
+                .arg(jumpUrl("changelog", "app", "status", "update"))
+                .arg(jumpUrl("download", "app", "status", "update")));
+    }
+    else {
+        QMessageBox::information(this, tr("Update check"),
+            tr("You are already running the latest Ostinato version - %1")
+                .arg(version));
+    }
+
+    sender()->deleteLater();
 }
 
 //! Returns true on success (or user cancel) and false on failure

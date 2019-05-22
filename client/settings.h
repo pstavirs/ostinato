@@ -82,6 +82,7 @@ extern QString kUserDefaultValue;
 //
 const QString kApplicationWindowGeometryKey("LastUse/ApplicationWindowGeometry");
 const QString kApplicationWindowLayout("LastUse/ApplicationWindowLayout");
+const QString kLastUpdateCheck("LastUse/UpdateCheck");
 
 #endif
 

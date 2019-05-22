@@ -62,6 +62,7 @@ public slots:
     void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpOnline_triggered();
     void on_actionDonate_triggered();
+    void on_actionCheckForUpdates_triggered();
     void on_actionHelpAbout_triggered();
 
 private slots:
@@ -70,6 +71,7 @@ private slots:
     void onLocalServerError(QProcess::ProcessError error);
     void reportLocalServerError();
     void onNewVersion(QString version);
+    void onLatestVersion(QString version);
 };
 
 #endif
