@@ -46,10 +46,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #endif
 
 #ifndef SA_SIZE // For some reason MacOS doesn't define this while BSD does
+// And the story of how to roundup is ugly - see
+// https://github.com/FRRouting/frr/blob/master/zebra/kernel_socket.c
+#ifdef __APPLE__
+#define ROUNDUP_TYPE int
+#else
+#define ROUNDUP_TYPE long
+#endif
 #define SA_SIZE(sa)                                             \
     (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
-        sizeof(long)            :                               \
-        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+        sizeof(ROUNDUP_TYPE)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(ROUNDUP_TYPE) - 1) ) )
 #endif
 
 struct ifaddrs *BsdPort::addressList_{nullptr};
@@ -240,8 +247,8 @@ void BsdPort::populateInterfaceInfo()
                         == UInt128(0,0)) // default route ::
                 {
                     sa = (struct sockaddr *)((char *)sa + SA_SIZE(sa)); 
-                    gw6 = UInt128((quint8*)
-                            ((sockaddr_in6*)sa)->sin6_addr.s6_addr); // RTA_GW = 0x2
+                    gw6 = UInt128((quint8*)(
+                            ((sockaddr_in6*)sa)->sin6_addr.s6_addr)); // RTA_GW = 0x2
                 }
             }
         }

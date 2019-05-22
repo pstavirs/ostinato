@@ -38,10 +38,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <unistd.h>
 
 #ifndef SA_SIZE // For some reason MacOS doesn't define this while BSD does
+// And the story of how to roundup is ugly - see
+// https://github.com/FRRouting/frr/blob/master/zebra/kernel_socket.c
+#ifdef __APPLE__
+#define ROUNDUP_TYPE int
+#else
+#define ROUNDUP_TYPE long
+#endif
 #define SA_SIZE(sa)                                             \
     (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
-        sizeof(long)            :                               \
-        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+        sizeof(ROUNDUP_TYPE)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(ROUNDUP_TYPE) - 1) ) )
 #endif
 
 quint32 sumUInt128(UInt128 value);
@@ -186,11 +193,10 @@ void BsdHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
     while (p < end)
     {
         const struct rt_msghdr *rtm = (const struct rt_msghdr*) p;
-
-        if (rtm->rtm_index == ifIndex_) {
-            const struct sockaddr_in *sin = (const struct sockaddr_in*)(rtm + 1);
-            const struct sockaddr_dl *sdl = (const struct sockaddr_dl*)
-                                                ((char*)sin + SA_SIZE(sin));
+        const struct sockaddr_in *sin = (const struct sockaddr_in*)(rtm + 1);
+        const struct sockaddr_dl *sdl = (const struct sockaddr_dl*)
+                                            ((char*)sin + SA_SIZE(sin));
+        if (sdl->sdl_index == ifIndex_) {
             OstEmul::ArpEntry *arp = neighbors->add_arp();
             arp->set_ip4(qFromBigEndian<quint32>(sin->sin_addr.s_addr));
             arp->set_mac(qFromBigEndian<quint64>(LLADDR(sdl)) >> 16);
@@ -217,15 +223,21 @@ void BsdHostDevice::getNeighbors(OstEmul::DeviceNeighborList *neighbors)
     while (p < end)
     {
         const struct rt_msghdr *rtm = (const struct rt_msghdr*) p;
-
-        if (rtm->rtm_index == ifIndex_) {
-            const struct sockaddr_in6 *sin = (const struct sockaddr_in6*)(rtm + 1);
-            const struct sockaddr_dl *sdl = (const struct sockaddr_dl*)
-                                                ((char*)sin + SA_SIZE(sin));
+        const struct sockaddr_in6 *sin = (const struct sockaddr_in6*)(rtm + 1);
+        const struct sockaddr_dl *sdl = (const struct sockaddr_dl*)
+                                            ((char*)sin + SA_SIZE(sin));
+        if (sdl->sdl_index == ifIndex_) {
+#ifdef __KAME__
+            if (IN6_IS_ADDR_LINKLOCAL(&sin->sin6_addr)
+                    || IN6_IS_ADDR_MC_LINKLOCAL(&sin->sin6_addr)) {
+                // remove the embedded ifIndex in the 2nd hextet (u16)
+                const_cast<struct sockaddr_in6*>(sin)->sin6_addr.s6_addr[2] = 0;
+                const_cast<struct sockaddr_in6*>(sin)->sin6_addr.s6_addr[3] = 0;
+#endif
+            }
             OstEmul::NdpEntry *ndp = neighbors->add_ndp();
             ndp->mutable_ip6()->set_hi(qFromBigEndian<quint64>(sin->sin6_addr.s6_addr));
             ndp->mutable_ip6()->set_lo(qFromBigEndian<quint64>(sin->sin6_addr.s6_addr+8));
-            ndp->set_mac(qFromBigEndian<quint64>(LLADDR(sdl)) >> 16);
             ndp->set_mac(qFromBigEndian<quint64>(LLADDR(sdl)) >> 16);
         }
         p += rtm->rtm_msglen;

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QHostAddress>
 
-inline quint32 sumUInt128(UInt128 value)
+quint32 sumUInt128(UInt128 value)
 {
     quint8 *arr = value.toArray();
     quint32 sum = 0;
