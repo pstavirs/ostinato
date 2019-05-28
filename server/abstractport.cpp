@@ -87,6 +87,8 @@ bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
         *dirty = true;
         allow = !isTransmitOn();
     }
+    if (*dirty)
+        isSendQueueDirty_ = true;
 
     return allow;
 }

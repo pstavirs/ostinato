@@ -115,6 +115,11 @@ public:
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
 
+    virtual void build(::google::protobuf::RpcController* controller,
+        const ::OstProto::BuildConfig* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+
     // DeviceGroup and Protocol Emulation
     virtual void getDeviceGroupIdList(
         ::google::protobuf::RpcController* controller,

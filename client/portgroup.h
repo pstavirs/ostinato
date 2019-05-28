@@ -118,6 +118,7 @@ public:
     void processAddStreamAck(PbRpcController *controller);
     void processDeleteStreamAck(PbRpcController *controller);
     void processModifyStreamAck(int portIndex, PbRpcController *controller);
+    void processApplyBuildAck(int portIndex, PbRpcController *controller);
 
     void processAddDeviceGroupAck(PbRpcController *controller);
     void processDeleteDeviceGroupAck(PbRpcController *controller);
@@ -127,7 +128,8 @@ public:
     void processDeviceNeighbors(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, OstProto::Port portConfig);
-    void processModifyPortAck(bool restoreUi, PbRpcController *controller);
+    void processModifyPortAck(PbRpcController *controller);
+    void processModifyPortBuildAck(bool restoreUi, PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);
 
     void getStreamIdList();

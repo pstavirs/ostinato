@@ -304,6 +304,9 @@ message Notification {
     optional PortIdList port_id_list = 6;
 }
 
+message BuildConfig {
+    required PortId port_id = 1;
+}
 
 /*
  * Protocol Emulation
@@ -392,6 +395,8 @@ service OstService {
     // Stream Stats
     rpc getStreamStats(StreamGuidList) returns (StreamStatsList);
     rpc clearStreamStats(StreamGuidList) returns (Ack);
+
+    rpc build(BuildConfig) returns (Ack);
 
     // XXX: Add new RPCs at the end only to preserve backward compatibility
 }

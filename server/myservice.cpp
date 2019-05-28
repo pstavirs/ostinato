@@ -132,7 +132,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
     for (int i = 0; i < request->port_size(); i++)
     {
         OstProto::Port port;
-        int id, frameError = 0;
+        int id;
 
         port = request->port(i);
         id = port.port_id().id();
@@ -150,13 +150,7 @@ void MyService::modifyPort(::google::protobuf::RpcController* /*controller*/,
 
             portLock[id]->lockForWrite();
             portInfo[id]->modify(port);
-            if (dirty)
-                frameError = portInfo[id]->updatePacketList();
             portLock[id]->unlock();
-            if (frameError) {
-                error = true;
-                notes += frameValueErrorNotes(id, frameError);
-            }
             notif->mutable_port_id_list()->add_port_id()->set_id(id);
         }
         else {
@@ -373,7 +367,6 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
     bool error = false;
     QString notes;
     int    portId;
-    int    frameError = 0;
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
@@ -400,13 +393,9 @@ void MyService::modifyStream(::google::protobuf::RpcController* controller,
                              "stream not found\n").arg(portId).arg(sid);
         }
     }
-
-    if (portInfo[portId]->isDirty())
-        frameError = portInfo[portId]->updatePacketList();
     portLock[portId]->unlock();
 
-    if (error || frameError) {
-        notes += frameValueErrorNotes(portId, frameError);
+    if (error) {
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
@@ -809,6 +798,50 @@ void MyService::checkVersion(::google::protobuf::RpcController* controller,
 
 _invalid_version:
     controller->SetFailed("invalid version information");
+    done->Run();
+}
+
+void MyService::build(::google::protobuf::RpcController* controller,
+    const ::OstProto::BuildConfig* request,
+    ::OstProto::Ack* response,
+    ::google::protobuf::Closure* done)
+{
+    QString notes;
+    int    portId;
+    int    frameError = 0;
+
+    qDebug("In %s", __PRETTY_FUNCTION__);
+
+    portId = request->port_id().id();
+    if ((portId < 0) || (portId >= portInfo.size()))
+        goto _invalid_port;
+
+    if (portInfo[portId]->isTransmitOn())
+        goto _port_busy;
+
+    portLock[portId]->lockForWrite();
+    if (portInfo[portId]->isDirty())
+        frameError = portInfo[portId]->updatePacketList();
+    portLock[portId]->unlock();
+
+    if (frameError) {
+        notes += frameValueErrorNotes(portId, frameError);
+        response->set_status(OstProto::Ack::kRpcError);
+        response->set_notes(notes.toStdString());
+    }
+    else
+        response->set_status(OstProto::Ack::kRpcSuccess);
+    done->Run();
+    return;
+
+_port_busy:
+    controller->SetFailed(QString("Port %1 build: operation disallowed "                                  "on transmitting port")
+                            .arg(portId).toStdString());
+    goto _exit;
+_invalid_port:
+    controller->SetFailed(QString("Port %1 build: invalid port")
+                            .arg(portId).toStdString());
+_exit:
     done->Run();
 }
 

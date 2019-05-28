@@ -502,6 +502,7 @@ void PortGroup::when_configApply(int portIndex)
 {
     OstProto::StreamIdList *streamIdList;
     OstProto::StreamConfigList *streamConfigList;
+    OstProto::BuildConfig *buildConfig;
     OstProto::Ack *ack;
     PbRpcController *controller;
 
@@ -625,6 +626,17 @@ void PortGroup::when_configApply(int portIndex)
             NewCallback(this, &PortGroup::processModifyStreamAck,
                 portIndex, controller));
 
+    qDebug("finish apply by building ...");
+    logInfo(id(), mPorts[portIndex]->id(),
+            QString("Re-building packets"));
+    buildConfig = new OstProto::BuildConfig;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(buildConfig, ack);
+
+    buildConfig->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    serviceStub->build(controller, buildConfig, ack,
+            NewCallback(this, &PortGroup::processApplyBuildAck,
+                portIndex, controller));
 }
 
 void PortGroup::processAddDeviceGroupAck(PbRpcController *controller)
@@ -752,6 +764,30 @@ void PortGroup::processModifyStreamAck(int portIndex,
 
     OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
 
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), mPorts[portIndex]->id(), controller->ErrorString());
+        goto _error_exit;
+    }
+
+    if (ack->status())
+        logError(id(), mPorts[portIndex]->id(),
+                 QString::fromStdString(ack->notes()));
+
+_error_exit:
+    mPorts[portIndex]->when_syncComplete();
+
+    delete controller;
+}
+
+void PortGroup::processApplyBuildAck(int portIndex, PbRpcController *controller)
+{
+    qDebug("In %s", __FUNCTION__);
+
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+
     qDebug("apply completed");
     logInfo(id(), mPorts[portIndex]->id(), QString("All port changes applied"));
 
@@ -768,8 +804,6 @@ void PortGroup::processModifyStreamAck(int portIndex,
                  QString::fromStdString(ack->notes()));
 
 _error_exit:
-    mPorts[portIndex]->when_syncComplete();
-
     emit applyFinished();
 
     mainWindow->setEnabled(true);
@@ -891,18 +925,47 @@ void PortGroup::modifyPort(int portIndex, OstProto::Port portConfig)
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     mainWindow->setDisabled(true);
 
+    logInfo(id(), mPorts[portIndex]->id(),
+            QString("Modifying port configuration"));
     OstProto::Port *port = portConfigList->add_port();
     port->CopyFrom(portConfig);
     port->mutable_port_id()->set_id(mPorts[portIndex]->id());
 
     PbRpcController *controller = new PbRpcController(portConfigList, ack);
     serviceStub->modifyPort(controller, portConfigList, ack, 
-        NewCallback(this, &PortGroup::processModifyPortAck, true, controller));
+        NewCallback(this, &PortGroup::processModifyPortAck, controller));
+
+    logInfo(id(), mPorts[portIndex]->id(),
+            QString("Re-building packets"));
+    OstProto::BuildConfig *buildConfig = new OstProto::BuildConfig;
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(buildConfig, ack);
+    buildConfig->mutable_port_id()->set_id(mPorts[portIndex]->id());
+    serviceStub->build(controller, buildConfig, ack,
+        NewCallback(this, &PortGroup::processModifyPortBuildAck,
+                    true, controller));
 }
 
-void PortGroup::processModifyPortAck(bool restoreUi,PbRpcController *controller)
+void PortGroup::processModifyPortAck(PbRpcController *controller)
 {
+    qDebug("In %s", __FUNCTION__);
 
+    if (controller->Failed())
+    {
+        qDebug("%s: rpc failed(%s)", __FUNCTION__,
+                qPrintable(controller->ErrorString()));
+        logError(id(), controller->ErrorString());
+    }
+
+    OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
+    if (ack->status())
+        logError(id(), QString::fromStdString(ack->notes()));
+
+    delete controller;
+}
+
+void PortGroup::processModifyPortBuildAck(bool restoreUi, PbRpcController *controller)
+{
     qDebug("In %s", __FUNCTION__);
 
     if (controller->Failed())
@@ -1048,7 +1111,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
 
             serviceStub->modifyPort(controller, portConfigList, ack,
                 NewCallback(this, &PortGroup::processModifyPortAck,
-                            false, controller));
+                            controller));
         }
 
         // add/modify deviceGroups
@@ -1114,6 +1177,15 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
                     NewCallback(this, &PortGroup::processModifyStreamAck,
                         portIndex, controller));
         }
+
+        // build packets using the new config
+        OstProto::BuildConfig *buildConfig = new OstProto::BuildConfig;
+        OstProto::Ack *ack = new OstProto::Ack;
+        controller = new PbRpcController(buildConfig, ack);
+        buildConfig->mutable_port_id()->set_id(mPorts[portIndex]->id());
+        serviceStub->build(controller, buildConfig, ack,
+            NewCallback(this, &PortGroup::processModifyPortBuildAck,
+                        false, controller));
 
         // delete newPortConfig
         atConnectPortConfig_[portIndex] = NULL;
