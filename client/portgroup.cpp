@@ -623,6 +623,18 @@ void PortGroup::when_configApply(int portIndex)
     else
         delete streamConfigList;
 
+    qDebug("resolve neighbors before building ...");
+    logInfo(id(), mPorts[portIndex]->id(),
+            QString("Resolving device neighbors"));
+    OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+    OstProto::PortId *portId = portIdList->add_port_id();
+    portId->set_id(mPorts[portIndex]->id());
+    ack = new OstProto::Ack;
+    controller = new PbRpcController(portIdList, ack);
+    serviceStub->resolveDeviceNeighbors(controller, portIdList, ack,
+        NewCallback(this, &PortGroup::processResolveDeviceNeighborsAck,
+                    controller));
+
     qDebug("finish apply by building ...");
     logInfo(id(), mPorts[portIndex]->id(),
             QString("Re-building packets"));
