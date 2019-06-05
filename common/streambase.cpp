@@ -636,6 +636,18 @@ bool StreamBase::preflightCheck(QStringList &result) const
             break;
     }
 
+    ProtocolListIterator *iter = createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        QStringList errors;
+        AbstractProtocol *proto = iter->next();
+        if (proto->hasErrors(&errors)) {
+            result += errors;
+            pass = false;
+        }
+    }
+    delete iter;
+
     if (isFrameVariable()) {
         if (frameVariableCount() > frameCount())
         {
@@ -668,6 +680,12 @@ bool StreamBase::preflightCheck(QStringList &result) const
         }
     }
 
+#if 0 // see XXX note below
+    // XXX: This causes false positives for -
+    // * interleaved streams (a port property that we don't have access to)
+    // * pcap imported streams where each stream has only one packet
+    // Ideally we need to get the transmit duration for all the streams
+    // to perform this check
     if (frameCount() < averagePacketRate() && nextWhat() != e_nw_goto_id)
     {
         result << QObject::tr("Only %L1 frames at the rate of "
@@ -681,6 +699,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
             .arg(frameCount()/averagePacketRate(), 0, 'f');
         pass = false;
     }
+#endif
 
     return pass;
 }

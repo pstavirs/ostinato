@@ -397,3 +397,27 @@ QByteArray MacProtocol::protocolFrameValue(int streamIndex, bool /*forCksum*/,
     return ba;
 }
 
+bool MacProtocol::hasErrors(QStringList *errors) const
+{
+    bool result = false;
+
+    if ((data.dst_mac() == 0ULL)
+            && (data.dst_mac_mode() != OstProto::Mac::e_mm_resolve)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Destination Mac "
+                                   "00:00:00:00:00:00 are likely "
+                                   "to be dropped");
+        result = true;
+    }
+
+    if ((data.src_mac() == 0ULL)
+            && (data.src_mac_mode() != OstProto::Mac::e_mm_resolve)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Source Mac "
+                                   "00:00:00:00:00:00 are likely "
+                                   "to be dropped");
+        result = true;
+    }
+
+    return result;
+}

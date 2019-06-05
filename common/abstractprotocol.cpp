@@ -1027,6 +1027,17 @@ out:
     return cksum;
 }
 
+/*!
+    Returns true, if the protocol fields are incorrect or may cause
+    overall packet to be invalid
+
+    Error details are put in the optional INOUT param 'errors', if true.
+*/
+bool AbstractProtocol::hasErrors(QStringList* /*errors*/) const
+{
+    return false;
+}
+
 // Stein's binary GCD algo - from wikipedia
 quint64 AbstractProtocol::gcd(quint64 u, quint64 v)
 {

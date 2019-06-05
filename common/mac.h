@@ -68,6 +68,7 @@ public:
     virtual QByteArray protocolFrameValue(int streamIndex = 0,
         bool forCksum = false, FrameValueAttrib *attrib = nullptr) const;
 
+    virtual bool hasErrors(QStringList *errors = nullptr) const;
 private:
     OstProto::Mac    data;
     mutable bool forResolve_;

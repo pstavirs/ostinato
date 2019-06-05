@@ -172,6 +172,8 @@ public:
         CksumType cksumType = CksumIp,
         CksumScope cksumScope = CksumScopeAllProtocols) const;
 
+    virtual bool hasErrors(QStringList *errors = nullptr) const;
+
     static quint64 lcm(quint64 u, quint64 v);
     static quint64 gcd(quint64 u, quint64 v);
 

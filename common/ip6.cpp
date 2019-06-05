@@ -797,3 +797,25 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }
 
+bool Ip6Protocol::hasErrors(QStringList *errors) const
+{
+    bool result = false;
+
+    if ((data.dst_addr_hi() == 0ULL) && (data.dst_addr_lo() == 0ULL)
+            && (data.dst_addr_mode() == OstProto::Ip6::kFixed)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Destination IP :: (all zeroes) "
+                                   "are likely to be dropped");
+        result = true;
+    }
+
+    if ((data.src_addr_hi() == 0ULL) && (data.src_addr_lo() == 0ULL)
+            && (data.src_addr_mode() == OstProto::Ip6::kFixed)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Source IP :: (all zeroes) "
+                                   "are likely to be dropped");
+        result = true;
+    }
+
+    return result;
+}

@@ -91,6 +91,7 @@ public:
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp) const;
 
+    virtual bool hasErrors(QStringList *errors = nullptr) const;
 private:
     OstProto::Ip4    data;
 };
