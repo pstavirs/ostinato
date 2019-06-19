@@ -72,6 +72,8 @@ private slots:
     void updatePortViewActions(const QModelIndex& currentIndex);
     void updateStreamViewActions();
 
+    void on_startTx_clicked();
+    void on_stopTx_clicked();
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();
     void updatePortRates();

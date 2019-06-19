@@ -380,8 +380,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
                 updateApplyHint(plm->port(current).portGroupId(),
                                 plm->port(current).id(), true);
             else if (plm->port(current).numStreams())
-                applyHint->setText("Use the Statistics window to transmit "
-                                   "packets");
+                applyHint->setText("Click <img src=':/icons/control_play'/> "
+                                   "to transmit packets");
             else
                 applyHint->setText("");
         }
@@ -428,6 +428,40 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
 void PortsWindow::when_portModel_reset()
 {
     when_portView_currentChanged(QModelIndex(), tvPortList->currentIndex());
+}
+
+void PortsWindow::on_startTx_clicked()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    if (proxyPortModel)
+        current = proxyPortModel->mapToSource(current);
+
+    Q_ASSERT(plm->isPort(current));
+
+    QModelIndex curPortGroup = plm->getPortModel()->parent(current);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(plm->isPortGroup(curPortGroup));
+
+    QList<uint> portList({plm->port(current).id()});
+    plm->portGroup(curPortGroup).startTx(&portList);
+}
+
+void PortsWindow::on_stopTx_clicked()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    if (proxyPortModel)
+        current = proxyPortModel->mapToSource(current);
+
+    Q_ASSERT(plm->isPort(current));
+
+    QModelIndex curPortGroup = plm->getPortModel()->parent(current);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(plm->isPortGroup(curPortGroup));
+
+    QList<uint> portList({plm->port(current).id()});
+    plm->portGroup(curPortGroup).stopTx(&portList);
 }
 
 void PortsWindow::on_averagePacketsPerSec_editingFinished()
@@ -524,6 +558,9 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
+
+    startTx->setEnabled(tvStreamList->model()->rowCount() > 0);
+    stopTx->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
 void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
@@ -533,9 +570,12 @@ void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
         applyHint->setText("Configuration has changed - "
                            "<font color='red'><b>click Apply</b></font> "
                            "to activate the changes");
+    else if (tvStreamList->model()->rowCount() > 0)
+        applyHint->setText("Configuration activated - "
+                           "click <img src=':/icons/control_play'/> "
+                           "to transmit packets");
     else
-        applyHint->setText("Configuration activated. Use the Statistics "
-                           "window to transmit packets");
+        applyHint->setText("Configuration activated");
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)

@@ -197,6 +197,53 @@
             <item>
              <layout class="QHBoxLayout">
               <item>
+               <widget class="QToolButton" name="startTx">
+                <property name="toolTip">
+                 <string>Start Transmit</string>
+                </property>
+                <property name="statusTip">
+                 <string>Start transmit on selected port</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="ostinato.qrc">
+                  <normaloff>:/icons/control_play.png</normaloff>:/icons/control_play.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="stopTx">
+                <property name="toolTip">
+                 <string>Stop Transmit</string>
+                </property>
+                <property name="statusTip">
+                 <string>Stop transmit on selected port</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="ostinato.qrc">
+                  <normaloff>:/icons/control_stop.png</normaloff>:/icons/control_stop.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QRadioButton" name="radioButton">
                 <property name="text">
                  <string>Avg pps</string>
@@ -222,19 +269,6 @@
                  <bool>false</bool>
                 </property>
                </widget>
-              </item>
-              <item>
-               <spacer>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </item>
