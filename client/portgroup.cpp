@@ -514,6 +514,8 @@ void PortGroup::when_configApply(int portIndex)
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     mainWindow->setDisabled(true);
 
+    applyTimer_.start();
+
     //
     // Update/Sync DeviceGroups
     //
@@ -796,7 +798,9 @@ void PortGroup::processApplyBuildAck(int portIndex, PbRpcController *controller)
     OstProto::Ack *ack = static_cast<OstProto::Ack*>(controller->response());
 
     qDebug("apply completed");
-    logInfo(id(), mPorts[portIndex]->id(), QString("All port changes applied"));
+    logInfo(id(), mPorts[portIndex]->id(),
+            QString("All port changes applied - in %1s")
+                .arg(applyTimer_.elapsed()/1e3));
 
     if (controller->Failed())
     {

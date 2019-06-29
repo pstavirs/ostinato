@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_GROUP_H
 
 #include "port.h"
+#include <QElapsedTimer>
 #include <QHostAddress>
 #include <QTcpSocket>
 
@@ -62,6 +63,7 @@ private:
     PbRpcChannel    *rpcChannel;
     PbRpcController *statsController;
     bool            isGetStatsPending_;
+    QElapsedTimer   applyTimer_;
 
     OstProto::OstService::Stub *serviceStub;
 
