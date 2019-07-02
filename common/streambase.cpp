@@ -112,7 +112,7 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
     while (iter->hasNext())
     {
         AbstractProtocol *p = iter->next();
-        p->toBeNamed();
+        p->updateCacheability();
     }
 
     delete iter;
