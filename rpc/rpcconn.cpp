@@ -406,9 +406,13 @@ _error_exit2:
     return;
 }
 
+bool logsEnabled = false;
 void RpcConnection::connIdMsgHandler(QtMsgType /*type*/,
         const QMessageLogContext &/*context*/, const QString &msg)
 {
+    if (!logsEnabled)
+        return;
+
     if (connId.hasLocalData()) {
         QString newMsg(*connId.localData());
         newMsg.append(msg);

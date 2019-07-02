@@ -82,6 +82,9 @@ AbstractProtocol::AbstractProtocol(StreamBase *stream, AbstractProtocol *parent)
     protoSize = -1;
     _hasPayload = true;
     _cacheFlags |= FieldFrameBitOffsetCache;
+
+    // FIXME: temporary for testing only
+    _frameValueCache.isEnabled = qEnvironmentVariableIsSet("PFVCACHE");
 }
 
 /*!
@@ -173,6 +176,36 @@ void AbstractProtocol::commonProtoDataCopyFrom(const OstProto::Protocol &protoco
   this function. See the SampleProtocol for an example
 */
 
+/*!
+  Update protocol's frame value cacheability based on current protocol
+  configuration
+*/
+void AbstractProtocol::updateCacheability()
+{
+    if (!_frameValueCache.isEnabled
+            || isProtocolFrameValueVariable()
+            || isProtocolFrameSizeVariable()
+            || isProtocolFrameHeaderValueVariable()
+            || isProtocolFramePayloadValueVariable()
+            || isProtocolFramePayloadSizeVariable())
+    {
+        // TODO: cache following cases
+        // * isProtocolFrameHeaderValueVariable AND !hasTcpUdpCksum
+        // * isProtocolFramePayloadValueVariable AND !hasPayloadDependentField
+        // * isProtocolFramePayloadSizeVariable AND !hasPayloadDependentField
+        // * External Variables AND !hasCksumField
+        // * streamIndex == 0 for variable frames (value/size)
+        qDebug("Stream %u %6s: FrameValue is NOT cacheable",
+                mpStream->id(), qPrintable(shortName()));
+        _cacheFlags &= ~FrameValueCache; // can't cache frame value
+    }
+    else {
+        qDebug("Stream %u %6s: FrameValue is cacheable",
+                mpStream->id(), qPrintable(shortName()));
+        _cacheFlags |= FrameValueCache; // frame value is cacheable
+    }
+    _frameValueCache.isValid = false;
+}
 
 /*!
   Returns the full name of the protocol
@@ -517,7 +550,7 @@ quint32 AbstractProtocol::payloadProtocolId(ProtocolIdType type) const
   Returns the protocol's size in bytes
 
   The default implementation sums up the individual field bit sizes and
-  returns it. The default implementation calculates the caches the size on
+  returns it. The default implementation calculates and caches the size on
   the first invocation and subsequently returns the cached size.
 
   If the subclass protocol has a varying protocol size, it MUST reimplement
@@ -602,6 +635,17 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum,
     QByteArray proto, field;
     uint bits, lastbitpos = 0;
     FieldFlags flags;
+    bool cacheable = (_cacheFlags & FrameValueCache) && !forCksum;
+
+    qDebug("Stream %u %6s: In frameValue frameIdx %u forCksum %d cacheable %d",
+            mpStream->id(), qPrintable(shortName()),
+            streamIndex, forCksum, cacheable);
+    if (cacheable && _frameValueCache.isValid)
+    {
+        qDebug("Stream %u %6s: frameIdx %u using FV cache",
+                mpStream->id(), qPrintable(shortName()), streamIndex);
+        return _frameValueCache.value;
+    }
 
     for (int i=0; i < fieldCount() ; i++) 
     {
@@ -698,6 +742,17 @@ QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum,
         varyProtocolFrameValue(proto, streamIndex, vf);
     }
 
+    if (cacheable)
+    {
+        qDebug("Stream %u %6s: frameIdx %d forCksum %d saving cache",
+                mpStream->id(), qPrintable(shortName()), streamIndex, forCksum);
+        _frameValueCache.value = proto;
+        _frameValueCache.isValid = true;
+    }
+
+    qDebug("Stream %u %6s: frameIdx %d forCksum %d return",
+            mpStream->id(), qPrintable(shortName()), streamIndex, forCksum);
+
     return proto;
 }
 
@@ -772,6 +827,28 @@ bool AbstractProtocol::isProtocolFramePayloadValueVariable() const
         p = p->next;
     }
     if (parent && parent->isProtocolFramePayloadValueVariable())
+        return true;
+
+    return false;
+}
+
+/*!
+  Returns true if the header content for a protocol varies at run-time,
+  false otherwise
+
+  This is useful for subclasses which have fields dependent on header content
+  (e.g. UDP has a checksum field that varies if the IP header varies)
+*/
+bool AbstractProtocol::isProtocolFrameHeaderValueVariable() const
+{
+    AbstractProtocol *p = prev;
+
+    if (p)
+    {
+        if (p->isProtocolFrameValueVariable())
+            return true;
+    }
+    if (parent && parent->isProtocolFrameHeaderValueVariable())
         return true;
 
     return false;

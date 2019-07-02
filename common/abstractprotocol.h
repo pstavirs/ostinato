@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _ABSTRACT_PROTOCOL_H
 #define _ABSTRACT_PROTOCOL_H
 
+#include "cache.h"
+
 #include <QByteArray>
 #include <QFlags>
 #include <QHash>
@@ -53,6 +55,7 @@ private:
     mutable int protoSize;
     mutable QString protoAbbr;
     mutable QHash<int, int> _fieldFrameBitOffset;
+    mutable Cache<QByteArray> _frameValueCache;
     OstProto::Protocol _data;
 
 protected:
@@ -66,7 +69,8 @@ protected:
 
     //! Caching Control Flags
     enum CacheFlag {
-        FieldFrameBitOffsetCache = 0x1
+        FieldFrameBitOffsetCache = 0x1,
+        FrameValueCache          = 0x2
     };
     quint32  _cacheFlags;
 
@@ -124,6 +128,8 @@ public:
     virtual void protoDataCopyInto(OstProto::Protocol &protocol) const = 0;
     virtual void protoDataCopyFrom(const OstProto::Protocol &protocol) = 0;
 
+    void updateCacheability();
+
     virtual QString name() const;
     virtual QString shortName() const;
 
@@ -157,6 +163,7 @@ public:
     virtual bool isProtocolFrameValueVariable() const;
     virtual bool isProtocolFrameSizeVariable() const;
     virtual int protocolFrameVariableCount() const;
+    bool isProtocolFrameHeaderValueVariable() const;
     bool isProtocolFramePayloadValueVariable() const;
     bool isProtocolFramePayloadSizeVariable() const;
     int protocolFramePayloadVariableCount() const;

@@ -771,8 +771,10 @@ void AbstractPort::resolveDeviceNeighbors()
     for (int i = 0; i < streamList_.size(); i++)
     {
         const StreamBase *stream = streamList_.at(i);
-        int frameCount = stream->frameVariableCount();
+        if (!stream->isEnabled())
+            continue;
 
+        int frameCount = stream->frameVariableCount();
         for (int j = 0; j < frameCount; j++) {
             // we need the packet contents only uptil the L3 header
             int pktLen = stream->frameValue(pktBuf_, kMaxL3PktSize, j);

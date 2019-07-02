@@ -108,6 +108,13 @@ void StreamBase::protoDataCopyFrom(const OstProto::Stream &stream)
         iter->insert(proto);
     }
 
+    iter->toFront();
+    while (iter->hasNext())
+    {
+        AbstractProtocol *p = iter->next();
+        p->toBeNamed();
+    }
+
     delete iter;
 }
 
