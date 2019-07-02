@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016 Srivats P.
+Copyright (C) 2019 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -27,15 +27,15 @@ public:
     Params();
     int parseCommandLine(int argc, char* argv[]);
 
-    bool optLocalDrone();
     bool optLogsDisabled();
+    int servicePortNumber();
 
     int argumentCount();
     QString argument(int index);
 
 private:
-    bool localDrone_;
     bool logsDisabled_;
+    int myPort_;
     QStringList args_;
 };
 

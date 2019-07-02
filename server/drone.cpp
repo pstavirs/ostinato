@@ -20,13 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "drone.h"
 
 #include "myservice.h"
+#include "params.h"
 #include "rpcserver.h"
 #include "settings.h"
 #include "../common/updater.h"
 
 #include <QMetaType>
 
-extern int myport;
+extern Params appParams;
 extern const char* version;
 extern const char* revision;
 
@@ -35,7 +36,13 @@ Drone::Drone(QObject *parent)
 {
     Updater *updater = new Updater();
 
-    rpcServer = new RpcServer();
+#ifdef QT_DEBUG
+    bool enableLogs = true;
+#else
+    bool enableLogs = !appParams.optLogsDisabled();
+#endif
+
+    rpcServer = new RpcServer(enableLogs);
     service = new MyService();
 
     connect(updater, SIGNAL(newVersionAvailable(QString)),
@@ -66,7 +73,7 @@ bool Drone::init()
         address = QHostAddress::Any;
     }
 
-    if (!rpcServer->registerService(service, address, myport ? myport : 7878))
+    if (!rpcServer->registerService(service, address, appParams.servicePortNumber()))
     {
         //qCritical(qPrintable(rpcServer->errorString()));
         return false;

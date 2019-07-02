@@ -37,7 +37,7 @@ class RpcServer : public QTcpServer
     Q_OBJECT
 
 public:
-    RpcServer();    //! \todo (LOW) use 'parent' param
+    RpcServer(bool perConnLogs);    //! \todo (LOW) use 'parent' param
     virtual ~RpcServer();
 
     bool registerService(::google::protobuf::Service *service,

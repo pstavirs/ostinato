@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016 Srivats P.
+Copyright (C) 2019 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -26,8 +26,8 @@ extern char *revision;
 
 Params::Params()
 {
-    localDrone_ = true;
     logsDisabled_ = true;
+    myPort_ = 7878;
 }
 
 int Params::parseCommandLine(int argc, char* argv[])
@@ -35,21 +35,21 @@ int Params::parseCommandLine(int argc, char* argv[])
     int c, n = 0;
 
     opterr = 0;
-    while ((c = getopt (argc, argv, "cdhv")) != -1) {
+    while ((c = getopt (argc, argv, "dhp:v")) != -1) {
         switch (c)
         {
-        case 'c':
-            localDrone_ = false;
-            break;
         case 'd':
             logsDisabled_ = false;
             break;
+        case 'p':
+            myPort_ = atoi(optarg);
+            break;
         case 'v':
-            qDebug("Ostinato %s rev %s\n", version, revision);
+            printf("Ostinato Drone %s rev %s\n", version, revision);
             exit(0);
         case 'h':
         default:
-            qDebug("usage: %s [-cdhv]\n", argv[0]);
+            printf("usage: %s [-dhv] [-p <port-number>]\n", argv[0]);
             exit(1);
         }
         n++;
@@ -61,14 +61,14 @@ int Params::parseCommandLine(int argc, char* argv[])
     return n;
 }
 
-bool Params::optLocalDrone()
-{
-    return localDrone_;
-}
-
 bool Params::optLogsDisabled()
 {
     return logsDisabled_;
+}
+
+int Params::servicePortNumber()
+{
+    return myPort_;
 }
 
 int Params::argumentCount()

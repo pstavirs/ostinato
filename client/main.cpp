@@ -42,6 +42,9 @@ Params appParams;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
+                  const QString &msg);
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
@@ -53,6 +56,11 @@ int main(int argc, char* argv[])
     app.setProperty("revision", revision);
 
     appParams.parseCommandLine(argc, argv);
+
+#ifndef QT_DEBUG // Release mode
+    if (appParams.optLogsDisabled())
+        qInstallMessageHandler(NoMsgHandler);
+#endif
 
     OstProtocolManager = new ProtocolManager();
     OstProtocolWidgetFactory = new ProtocolWidgetFactory();
@@ -87,3 +95,14 @@ int main(int argc, char* argv[])
 
     return exitCode;
 }
+
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &/*context*/,
+                const QString &msg)
+{
+    if (type == QtFatalMsg) {
+        fprintf(stderr, qPrintable(msg));
+        fflush(stderr);
+        abort();
+    }
+}
+

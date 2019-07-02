@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "drone.h"
 
 #include "../common/protocolmanager.h"
+#include "params.h"
 #include "settings.h"
 
 #include <google/protobuf/stubs/common.h>
@@ -37,7 +38,10 @@ extern char *revision;
 
 Drone *drone;
 QSettings *appSettings;
-int myport;
+Params appParams;
+
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
+                  const QString &msg);
 
 void cleanup(int /*signum*/)
 {
@@ -49,18 +53,18 @@ int main(int argc, char *argv[])
     int exitCode = 0;
     QCoreApplication app(argc, argv);
 
-    qDebug("Version: %s", version);
-    qDebug("Revision: %s", revision);
-
-    // TODO: command line options
-    // -v (--version)
-    // -h (--help)
-    // -p (--portnum)
-    if (argc > 1)
-        myport = atoi(argv[1]);
-
     app.setApplicationName("Drone");
     app.setOrganizationName("Ostinato");
+
+    appParams.parseCommandLine(argc, argv);
+
+#ifdef QT_NO_DEBUG
+    if (appParams.optLogsDisabled())
+        qInstallMessageHandler(NoMsgHandler);
+#endif
+
+    qDebug("Version: %s", version);
+    qDebug("Revision: %s", revision);
 
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location
@@ -108,3 +112,12 @@ _exit:
     return exitCode;
 } 
 
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &/*context*/,
+                const QString &msg)
+{
+    if (type == QtFatalMsg) {
+        fprintf(stderr, qPrintable(msg));
+        fflush(stderr);
+        abort();
+    }
+}

@@ -32,11 +32,12 @@ protected:
     void run() { exec(); }
 };
 
-RpcServer::RpcServer()
+RpcServer::RpcServer(bool perConnLogs)
 {
     service = NULL; 
 
-    qInstallMessageHandler(RpcConnection::connIdMsgHandler);
+    if (perConnLogs)
+        qInstallMessageHandler(RpcConnection::connIdMsgHandler);
 }
 
 RpcServer::~RpcServer()
