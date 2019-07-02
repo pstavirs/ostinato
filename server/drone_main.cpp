@@ -116,7 +116,7 @@ void NoMsgHandler(QtMsgType type, const QMessageLogContext &/*context*/,
                 const QString &msg)
 {
     if (type == QtFatalMsg) {
-        fprintf(stderr, qPrintable(msg));
+        fprintf(stderr, "%s\n", qPrintable(msg));
         fflush(stderr);
         abort();
     }
