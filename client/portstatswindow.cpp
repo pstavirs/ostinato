@@ -289,6 +289,11 @@ void PortStatsWindow::on_tbClearAll_clicked()
         }
     }
 
+    if (proxyStatsModel) {
+        for(QModelIndex &index : shownColumns)
+            index = proxyStatsModel->mapToSource(index);
+    }
+
     // Get ports corresponding to the shown columns
     model->portListFromIndex(shownColumns, portList);
 
