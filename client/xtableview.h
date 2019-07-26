@@ -53,7 +53,7 @@ protected:
             QString text;
             int lastRow = -1;
             QModelIndexList selected = selectionModel()->selectedIndexes();
-            qSort(selected);
+            std::sort(selected.begin(), selected.end());
             foreach(QModelIndex index, selected) {
                 if (index.row() != lastRow) {
                     if (!text.isEmpty())

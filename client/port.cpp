@@ -98,7 +98,7 @@ void Port::updateStreamOrdinalsFromIndex()
 
 void Port::reorderStreamsByOrdinals()
 {
-    qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
+    std::sort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
 }
 
 void Port::setDirty(bool dirty)

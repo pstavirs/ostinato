@@ -230,7 +230,7 @@ int AbstractPort::updatePacketListSequential()
     qDebug("In %s", __FUNCTION__);
 
     // First sort the streams by ordinalValue
-    qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
+    std::sort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
     clearPacketList();
 
@@ -440,7 +440,7 @@ int AbstractPort::updatePacketListInterleaved()
     }
 
     // First sort the streams by ordinalValue
-    qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
+    std::sort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
     for (int i = 0; i < streamList_.size(); i++)
     {

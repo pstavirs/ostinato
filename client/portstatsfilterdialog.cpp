@@ -87,7 +87,7 @@ void PortStatsFilterDialog::on_tbSelectIn_clicked()
 
     foreach(QModelIndex idx, lvUnselected->selectionModel()->selectedIndexes())
         rows.append(idx.row());
-    qSort(rows.begin(), rows.end(), qGreater<int>());
+    std::sort(rows.begin(), rows.end(), qGreater<int>());
 
     QModelIndex idx = lvSelected->selectionModel()->currentIndex();
     int insertAt = idx.isValid() ? idx.row() : mSelected.rowCount();
@@ -105,7 +105,7 @@ void PortStatsFilterDialog::on_tbSelectOut_clicked()
 
     foreach(QModelIndex idx, lvSelected->selectionModel()->selectedIndexes())
         rows.append(idx.row());
-    qSort(rows.begin(), rows.end(), qGreater<int>());
+    std::sort(rows.begin(), rows.end(), qGreater<int>());
 
     foreach(int row, rows)
     {
