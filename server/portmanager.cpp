@@ -105,17 +105,19 @@ PortManager::PortManager()
         }
 
         const InterfaceInfo *intfInfo = port->interfaceInfo();
-        qDebug("Mac: %012llx", intfInfo->mac);
-        foreach(Ip4Config ip, intfInfo->ip4)
-            qDebug("Ip4: %s/%d gw: %s",
-                    qPrintable(QHostAddress(ip.address).toString()),
-                    ip.prefixLength,
-                    qPrintable(QHostAddress(ip.gateway).toString()));
-        foreach(Ip6Config ip, intfInfo->ip6)
-            qDebug("Ip6: %s/%d gw: %s",
-                    qPrintable(QHostAddress(ip.address.toArray()).toString()),
-                    ip.prefixLength,
-                    qPrintable(QHostAddress(ip.gateway.toArray()).toString()));
+        if (intfInfo) {
+            qDebug("Mac: %012llx", intfInfo->mac);
+            foreach(Ip4Config ip, intfInfo->ip4)
+                qDebug("Ip4: %s/%d gw: %s",
+                        qPrintable(QHostAddress(ip.address).toString()),
+                        ip.prefixLength,
+                        qPrintable(QHostAddress(ip.gateway).toString()));
+            foreach(Ip6Config ip, intfInfo->ip6)
+                qDebug("Ip6: %s/%d gw: %s",
+                        qPrintable(QHostAddress(ip.address.toArray()).toString()),
+                        ip.prefixLength,
+                        qPrintable(QHostAddress(ip.gateway.toArray()).toString()));
+        }
 
         if (!port->setRateAccuracy(txRateAccuracy))
             qWarning("failed to set rateAccuracy (%d)", txRateAccuracy);
