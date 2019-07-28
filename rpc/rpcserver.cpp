@@ -22,15 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "rpcconn.h"
 
 #include <QThread>
-#include <QThread>
-
-// FIXME: QThreadX till we change minimum version of Qt from Qt4.3+ to Qt4.4+
-class QThreadX: public QThread
-{
-protected:
-    virtual ~QThreadX() { qDebug("QThreadX going down!"); }
-    void run() { exec(); }
-};
 
 RpcServer::RpcServer(bool perConnLogs)
 {
@@ -65,7 +56,7 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
 
 void RpcServer::incomingConnection(qintptr socketDescriptor)
 {
-    QThread *thread = new QThreadX; // FIXME:QThreadX pending Qt4.4+
+    QThread *thread = new QThread;
     RpcConnection *conn = new RpcConnection(socketDescriptor, service);
 
     conn->moveToThread(thread);
