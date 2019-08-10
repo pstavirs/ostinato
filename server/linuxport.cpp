@@ -73,6 +73,8 @@ LinuxPort::LinuxPort(int id, const char *device)
     populateInterfaceInfo();
 
     // We don't need per port Rx/Tx monitors for Linux
+    // No need to stop them because we start them only in
+    // PcapPort::init which has not yet been called
     delete monitorRx_;
     delete monitorTx_;
     monitorRx_ = monitorTx_ = NULL;

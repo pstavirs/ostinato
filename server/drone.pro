@@ -50,6 +50,7 @@ SOURCES += \
     portmanager.cpp \
     abstractport.cpp \
     pcapport.cpp \
+    pcapsession.cpp \
     pcaptransmitter.cpp \
     pcaprxstats.cpp \
     pcaptxstats.cpp \

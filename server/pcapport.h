@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractport.h"
 #include "pcapextra.h"
 #include "pcaprxstats.h"
+#include "pcapsession.h"
 #include "pcaptransmitter.h"
 
 class PcapPort : public AbstractPort
@@ -84,7 +85,7 @@ protected:
         kDirectionTx
     };
 
-    class PortMonitor: public QThread
+    class PortMonitor: public QThread // TODO: inherit from PcapSession (only if required)
     {
     public:
         PortMonitor(const char *device, Direction direction,
@@ -106,7 +107,7 @@ protected:
         bool isPromisc_;
     };
 
-    class PortCapturer: public QThread
+    class PortCapturer: public PcapSession
     {
     public:
         PortCapturer(const char *device);
@@ -133,7 +134,7 @@ protected:
         volatile State  state_;
     };
 
-    class EmulationTransceiver: public QThread
+    class EmulationTransceiver: public PcapSession
     {
     public:
         EmulationTransceiver(const char *device, DeviceManager *deviceManager);

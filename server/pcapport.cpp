@@ -404,6 +404,7 @@ _retry:
     }
 
     dumpHandle_ = pcap_dump_open(handle_, qPrintable(capFile_.fileName()));
+    PcapSession::preRun();
     state_ = kRunning;
     while (1)
     {
@@ -425,16 +426,21 @@ _retry:
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qDebug("Loop/signal break or some other error");
+                break;
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+                qWarning("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+                stop_ = true;
         }
 
         if (stop_) 
         {
-            qDebug("user requested capture stop\n");
+            qDebug("user requested capture stop");
             break;
         }
     }
+    PcapSession::postRun();
+
     pcap_dump_close(dumpHandle_);
     pcap_close(handle_);
     dumpHandle_ = NULL;
@@ -464,6 +470,7 @@ void PcapPort::PortCapturer::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
+        PcapSession::stop(handle_);
         while (state_ == kRunning)
             QThread::msleep(10);
     }
@@ -606,6 +613,7 @@ _retry:
     }
 
 _skip_filter:
+    PcapSession::preRun();
     state_ = kRunning;
     while (1)
     {
@@ -643,17 +651,22 @@ _skip_filter:
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qDebug("Loop/signal break or some other error");
+                break;
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
+                qWarning("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
                         ret);
+                stop_ = true;
         }
 
         if (stop_)
         {
-            qDebug("user requested receiver stop\n");
+            qDebug("user requested receiver stop");
             break;
         }
     }
+    PcapSession::postRun();
+
     pcap_close(handle_);
     handle_ = NULL;
     stop_ = false;
@@ -680,6 +693,7 @@ void PcapPort::EmulationTransceiver::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
+        PcapSession::stop(handle_);
         while (state_ == kRunning)
             QThread::msleep(10);
     }

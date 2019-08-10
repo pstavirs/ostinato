@@ -104,6 +104,7 @@ void PcapRxStats::run()
     }
 
 _skip_filter:
+    PcapSession::preRun();
     state_ = kRunning;
     while (1) {
         int ret;
@@ -128,16 +129,21 @@ _skip_filter:
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qDebug("Loop/signal break or some other error");
+                break;
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
+                qWarning("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
                         ret);
+                stop_ = true;
         }
 
         if (stop_) {
-            qDebug("user requested receiver stop\n");
+            qDebug("user requested rxstats stop");
             break;
         }
     }
+    PcapSession::postRun();
+
     pcap_close(handle_);
     handle_ = NULL;
     stop_ = false;
@@ -154,7 +160,7 @@ bool PcapRxStats::start()
     }
 
     state_ = kNotStarted;
-    QThread::start();
+    PcapSession::start();
 
     while (state_ == kNotStarted)
         QThread::msleep(10);
@@ -166,6 +172,7 @@ bool PcapRxStats::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
+        PcapSession::stop(handle_);
         while (state_ == kRunning)
             QThread::msleep(10);
     }

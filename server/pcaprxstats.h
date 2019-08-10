@@ -22,10 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streamstats.h"
 
-#include <QThread>
-#include <pcap.h>
+#include "pcapsession.h"
 
-class PcapRxStats: public QThread
+class PcapRxStats: public PcapSession
 {
 public:
     PcapRxStats(const char *device, StreamStats &portStreamStats);
