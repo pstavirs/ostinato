@@ -103,14 +103,12 @@ void DeviceManager::createHostDevices(void)
 
 DeviceManager::~DeviceManager()
 {
+    // Delete *all* devices - host and enumerated
     foreach(Device *dev, deviceList_)
         delete dev;
 
     foreach(OstProto::DeviceGroup *devGrp, deviceGroupList_)
         delete devGrp;
-
-    foreach(Device *dev, hostDeviceList_)
-        delete dev;
 }
 
 int DeviceManager::deviceGroupCount()
