@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #ifdef Q_OS_UNIX
 #include <signal.h>
+#include <typeinfo>
 
 #define MY_BREAK_SIGNAL SIGUSR1
 
