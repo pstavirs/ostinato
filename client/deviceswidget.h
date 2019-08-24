@@ -58,7 +58,7 @@ private:
     void setDeviceInfoButtonsVisible(bool show);
 
     PortGroupList *portGroups_;
-    QPersistentModelIndex currentPortIndex_;
+    QModelIndex currentPortIndex_;
 };
 
 #endif
