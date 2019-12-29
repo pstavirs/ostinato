@@ -50,7 +50,7 @@ inline QWidget* IPv4AddressDelegate::createEditor(QWidget *parent,
     ipEdit = static_cast<QLineEdit*>(QItemDelegate::createEditor(
                 parent, option, index));
 
-    ipEdit->setInputMask("009.009.009.009;"); // FIXME: use validator
+    ipEdit->setInputMask("000.000.000.000;"); // FIXME: use validator
 
     return ipEdit;
 }
