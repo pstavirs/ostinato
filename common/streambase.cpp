@@ -608,7 +608,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
     bool pass = true;
     bool chkTrunc = true;
     bool chkJumbo = true;
-    int count = isFrameSizeVariable() ? frameCount() : 1;
+    int count = isFrameSizeVariable() ? frameSizeVariableCount() : 1;
 
     for (int i = 0; i < count; i++)
     {
@@ -627,6 +627,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
         {
             result << QObject::tr("Jumbo frames may be truncated or dropped "
                 "if not supported by the hardware");
+            chkJumbo = false;
             pass = false;
         }
 
