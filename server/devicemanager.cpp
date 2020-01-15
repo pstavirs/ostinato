@@ -264,7 +264,7 @@ _eth_type:
 
     if (tpidList_.contains(ethType)) {
         offset += 2;
-        vlan = qFromBigEndian<quint16>(pktData + offset);
+        vlan = qFromBigEndian<quint16>(pktData + offset) & 0x0FFF;
         dk.setVlan(idx++, vlan);
         offset += 2;
         qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
