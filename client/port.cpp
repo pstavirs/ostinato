@@ -495,6 +495,11 @@ bool Port::modifiablePortConfig(OstProto::Port &config) const
         modCfg.set_user_name(config.user_name());
         change = true;
     }
+    if (config.is_tracking_stream_stats() != d.is_tracking_stream_stats()) {
+        modCfg.set_is_tracking_stream_stats(config.is_tracking_stream_stats());
+        change = true;
+    }
+
 
     if (change) {
         modCfg.mutable_port_id()->set_id(id());
