@@ -265,10 +265,11 @@ _eth_type:
 
     if (tpidList_.contains(ethType)) {
         offset += 2;
-        vlan = qFromBigEndian<quint16>(pktData + offset) & 0x0FFF;
+        vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
         offset += 2;
-        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
+        qDebug("%s: idx: %d vlan: 0x%04x/%d", __FUNCTION__,
+                idx, vlan, vlan & 0x0fff);
         goto _eth_type;
     }
 
@@ -383,7 +384,8 @@ _eth_type:
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
         offset += 2;
-        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
+        qDebug("%s: idx: %d vlan: 0x%04x/%d", __FUNCTION__,
+                idx, vlan, vlan & 0x0fff);
         goto _eth_type;
     }
 

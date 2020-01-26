@@ -33,7 +33,8 @@ const int kIp6HdrLen = 40;
 
 /*
  * NOTE:
- * 1. Device Key is (VLANS + MAC) - is assumed to be unique for a device
+ * 1. Device Key is (VLANS [without prio/cfi] + MAC)
+ *    - is assumed to be unique for a device
  * 2. Device clients/users (viz. DeviceManager) should take care when
  *    setting params that change the key, if the key is used elsewhere
  *    (e.g. in a hash)
@@ -67,7 +68,7 @@ void Device::setVlan(int index, quint16 vlan, quint16 tpid)
     vlan_[index] = (tpid << 16) | vlan;
 
     ofs = index * sizeof(quint16);
-    key_[ofs]   = vlan >> 8;
+    key_[ofs]   = (vlan >> 8) & 0x0f; // Vlan prio/cfi should not be part of key
     key_[ofs+1] = vlan & 0xff;
 
     if (index >= numVlanTags_)
