@@ -222,6 +222,7 @@ void DeviceManager::getDeviceList(
 
 void DeviceManager::receivePacket(PacketBuffer *pktBuf)
 {
+    QMutexLocker locker(&listLock_);
     uchar *pktData = pktBuf->data();
     int offset = 0;
     EmulDevice dk(this);
@@ -401,6 +402,7 @@ void DeviceManager::enumerateDevices(
     const OstProto::DeviceGroup *deviceGroup,
     Operation oper)
 {
+    QMutexLocker locker(&listLock_);
     EmulDevice dk(this);
     OstEmul::VlanEmulation pbVlan = deviceGroup->encap()
                                         .GetExtension(OstEmul::vlan);

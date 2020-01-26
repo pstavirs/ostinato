@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QHash>
 #include <QMap>
 #include <QMultiHash>
+#include <QMutex>
 #include <QtGlobal>
 
 class AbstractPort;
@@ -76,6 +77,7 @@ private:
 
     AbstractPort *port_;
 
+    QMutex listLock_; // protects all the lists
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_; // fast access to devices
     QMap<DeviceKey, Device*> sortedDeviceList_; // sorted access to devices
