@@ -187,6 +187,11 @@ void Port::setAveragePacketRate(double packetsPerSec)
             Q_ASSERT(false); // Unreachable!!
         }
 
+        // if old avgPps is 0, new rate will be calculated as nan (infinity)
+        // because of divide by 0 (old avgPps) above - fix that
+        if (std::isnan(rate))
+            rate = packetsPerSec;
+
         qDebug("cur stream pps = %g", s->averagePacketRate());
 
         s->setAveragePacketRate(rate);
@@ -260,6 +265,11 @@ void Port::setAverageBitRate(double bitsPerSec)
         default:
             Q_ASSERT(false); // Unreachable!!
         }
+
+        // if old avgBps is 0, new rate will be calculated as nan (infinity)
+        // because of divide by 0 (old avgBps) above - fix that
+        if (std::isnan(rate))
+            rate = bitsPerSec/((s->frameLenAvg()+kEthOverhead)*8);
 
         qDebug("cur stream pps = %g", s->averagePacketRate());
 
