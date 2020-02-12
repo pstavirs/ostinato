@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "params.h"
+#include "pcapextra.h"
 
 #include <unistd.h>
 
@@ -46,6 +47,11 @@ int Params::parseCommandLine(int argc, char* argv[])
             break;
         case 'v':
             printf("Ostinato Drone %s rev %s\n", version, revision);
+            printf("PCAP Lib: %s\n", pcap_lib_version());
+#ifdef Q_OS_WIN32
+            printf("Service npf status %s\n", pcapServiceStatus(L"npf"));
+            printf("Service npcap status %s\n", pcapServiceStatus(L"npcap"));
+#endif
             exit(0);
         case 'h':
         default:

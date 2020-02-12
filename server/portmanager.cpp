@@ -51,6 +51,11 @@ PortManager::PortManager()
     AbstractPort::Accuracy txRateAccuracy;
 
     qDebug("PCAP Lib: %s", pcap_lib_version());
+#ifdef Q_OS_WIN32
+    qDebug("Service npf status %s\n", pcapServiceStatus(L"npf"));
+    qDebug("Service npcap status %s\n", pcapServiceStatus(L"npcap"));
+#endif
+
     qDebug("Retrieving the device list from the local machine\n"); 
 
 #if defined(Q_OS_WIN32)

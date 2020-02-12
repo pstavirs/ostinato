@@ -342,7 +342,8 @@ void PcapPort::PortMonitor::run()
 void PcapPort::PortMonitor::stop()
 {
     stop_ = true;
-    pcap_breakloop(handle());
+    if (handle())
+        pcap_breakloop(handle());
 }
 
 /*
@@ -404,6 +405,11 @@ _retry:
     }
 
     dumpHandle_ = pcap_dump_open(handle_, qPrintable(capFile_.fileName()));
+    if (!dumpHandle_) {
+        qDebug("failed to start capture: %s", pcap_geterr(handle_));
+        goto _exit;
+    }
+
     PcapSession::preRun();
     state_ = kRunning;
     while (1)

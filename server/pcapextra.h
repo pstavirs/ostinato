@@ -23,7 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <pcap.h>
 #include <QtGlobal>
 
-#ifndef Q_OS_WIN32
+#ifdef Q_OS_WIN32
+
+const char* pcapServiceStatus(const wchar_t *name);
+
+#else // non-windows
 
 #define PCAP_OPENFLAG_PROMISCUOUS    1
 

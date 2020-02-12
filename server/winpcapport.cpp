@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #ifdef Q_OS_WIN32
 
+#include <ntddndis.h>
 #include <ws2ipdef.h>
 
 PIP_ADAPTER_ADDRESSES WinPcapPort::adapterList_ = NULL;
-const uint OID_GEN_MEDIA_CONNECT_STATUS = 0x00010114;
 
 WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
     : PcapPort(id, device)
@@ -53,7 +53,7 @@ WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
     if (!adapter_)
         qFatal("Unable to open adapter %s", device);
     linkStateOid_ = (PPACKET_OID_DATA) malloc(sizeof(PACKET_OID_DATA) + 
-            sizeof(uint));
+            sizeof(NDIS_LINK_STATE));
     if (!linkStateOid_)
         qFatal("failed to alloc oidData");
 
@@ -67,27 +67,39 @@ WinPcapPort::~WinPcapPort()
 
 OstProto::LinkState WinPcapPort::linkState()
 {
-    memset(linkStateOid_, 0, sizeof(PACKET_OID_DATA) + sizeof(uint));
+    memset(linkStateOid_, 0, sizeof(PACKET_OID_DATA) + sizeof(NDIS_LINK_STATE));
 
-    linkStateOid_->Oid = OID_GEN_MEDIA_CONNECT_STATUS;
-    linkStateOid_->Length = sizeof(uint);
+    linkStateOid_->Oid = OID_GEN_LINK_STATE;
+    linkStateOid_->Length = sizeof(NDIS_LINK_STATE);
 
+    // TODO: migrate to the npcap-only pcap_oid_get_request() when Ostinato
+    // stops supporting WinPcap
     if (PacketRequest(adapter_, 0, linkStateOid_))
     {
         uint state;
 
-        if (linkStateOid_->Length == sizeof(state))
+        if (linkStateOid_->Length == sizeof(NDIS_LINK_STATE))
         {
-            memcpy((void*)&state, (void*)linkStateOid_->Data, 
-                    linkStateOid_->Length);
+            memcpy((void*)&state,
+                   (void*)(linkStateOid_->Data+sizeof(NDIS_OBJECT_HEADER)),
+                   sizeof(state));
+            //qDebug("%s: state = %d", data_.description().c_str(), state);
             if (state == 0)
-                linkState_ = OstProto::LinkStateUp;
+                linkState_ = OstProto::LinkStateUnknown;
             else if (state == 1)
+                linkState_ = OstProto::LinkStateUp;
+            else if (state == 2)
                 linkState_ = OstProto::LinkStateDown;
         }
+        else {
+            //qDebug("%s: link state fail", data_.description().c_str());
+        }
+    }
+    else {
+        //qDebug("%s: link state request fail", data_.description().c_str());
     }
 
-    return linkState_; 
+    return linkState_;
 }
 
 bool WinPcapPort::hasExclusiveControl() 
