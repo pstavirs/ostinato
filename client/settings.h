@@ -31,7 +31,7 @@ const QString kWiresharkPathDefaultValue(
         "C:/Program Files/Wireshark/wireshark.exe");
 #elif defined(Q_OS_MAC)
 const QString kWiresharkPathDefaultValue(
-        "/Applications/Wireshark.app/Contents/Resources/bin/wireshark");
+        "/Applications/Wireshark.app/Contents/MacOS/Wireshark");
 #else
 const QString kWiresharkPathDefaultValue("/usr/bin/wireshark");
 #endif
