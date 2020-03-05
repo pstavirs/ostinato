@@ -48,23 +48,13 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event)
     {
         // Copy selection to clipboard (base class copies only current item)
+        // Selection, by default, is in the order in which items were selected
+        //  - sort them before copying
         if (event->matches(QKeySequence::Copy)
                 && selectionBehavior() == SelectRows) {
-            QString text;
-            int lastRow = -1;
             QModelIndexList selected = selectionModel()->selectedIndexes();
             std::sort(selected.begin(), selected.end());
-            foreach(QModelIndex index, selected) {
-                if (index.row() != lastRow) {
-                    if (!text.isEmpty())
-                        text.append("\n");
-                }
-                else
-                    text.append("\t");
-                text.append(model()->data(index).toString());
-                lastRow = index.row();
-            }
-            qApp->clipboard()->setText(text);
+            qApp->clipboard()->setMimeData(model()->mimeData(selected));
         }
         else
             QTableView::keyPressEvent(event);
