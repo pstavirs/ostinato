@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QClipboard>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QPainter>
 
 class XTableView : public QTableView
@@ -47,17 +48,75 @@ protected:
 
     virtual void keyPressEvent(QKeyEvent *event)
     {
+        if (event->matches(QKeySequence::Cut)) {
+            cut();
+        } else if (event->matches(QKeySequence::Copy)) {
+            copy();
+        } else if (event->matches(QKeySequence::Paste)) {
+            paste();
+        } else
+            QTableView::keyPressEvent(event);
+    }
+
+private:
+    void cut()
+    {
+        copy();
+        foreach(QItemSelectionRange range, selectionModel()->selection())
+            model()->removeRows(range.top(), range.height());
+    }
+
+    void copy()
+    {
         // Copy selection to clipboard (base class copies only current item)
         // Selection, by default, is in the order in which items were selected
         //  - sort them before copying
-        if (event->matches(QKeySequence::Copy)
-                && selectionBehavior() == SelectRows) {
-            QModelIndexList selected = selectionModel()->selectedIndexes();
-            std::sort(selected.begin(), selected.end());
-            qApp->clipboard()->setMimeData(model()->mimeData(selected));
+        QModelIndexList selected = selectionModel()->selectedIndexes();
+
+        if (selected.isEmpty())
+            return;
+
+        std::sort(selected.begin(), selected.end());
+        QMimeData *mimeData = model()->mimeData(selected);
+        qApp->clipboard()->setMimeData(mimeData);
+        qDebug("Copied data in %d format(s) to clipboard",
+                mimeData->formats().size());
+        for (int i = 0; i < mimeData->formats().size(); i++) {
+            qDebug("    %d: %s, %d bytes", i+1,
+                    qPrintable(mimeData->formats().at(i)),
+                    mimeData->data(mimeData->formats().at(i)).size());
         }
-        else
-            QTableView::keyPressEvent(event);
+    }
+
+    void paste()
+    {
+        const QMimeData *mimeData = qApp->clipboard()->mimeData();
+
+        if (!mimeData)
+            return;
+
+        if (selectionModel()->hasSelection()
+                && selectionModel()->selection().size() > 1) {
+            qWarning("Cannot paste into multiple(%d) selections",
+                    selectionModel()->selection().size());
+            return;
+        }
+
+        // If no selection, insert at the end
+        int row, column;
+        if (selectionModel()->hasSelection()
+                && selectionModel()->selection().size() == 1) {
+            row = selectionModel()->selection().first().top();
+            column = selectionModel()->selection().first().left();
+        } else {
+            row = model()->rowCount();
+            column = model()->columnCount();
+        }
+
+        if (model()->canDropMimeData(mimeData, Qt::CopyAction,
+                    row, column, QModelIndex()))
+            model()->dropMimeData(mimeData, Qt::CopyAction,
+                    row, column, QModelIndex());
     }
 };
 

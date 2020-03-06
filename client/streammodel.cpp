@@ -22,6 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 #include "qicon.h"
 
+#include <QMimeData>
+
+const QLatin1String kStreamsMimeType("application/vnd.ostinato.streams");
+
 StreamModel::StreamModel(PortGroupList *p, QObject *parent)
     : QAbstractTableModel(parent) 
 {
@@ -221,6 +225,77 @@ QVariant StreamModel::headerData(int section, Qt::Orientation orientation, int r
         return QString("%1").arg(section+1);
 
     return QVariant();
+}
+
+QStringList StreamModel::mimeTypes() const
+{
+    return QStringList() << kStreamsMimeType;
+}
+
+QMimeData* StreamModel::mimeData(const QModelIndexList &indexes) const
+{
+    using ::google::protobuf::uint8;
+
+    if (indexes.isEmpty())
+        return nullptr;
+
+    // indexes may include multiple columns for a row - but we are only
+    // interested in rows 'coz we have a single data for all columns
+    // XXX: use QMap instead of QSet to keep rows in sorted order
+    QMap<int, int> rows;
+    foreach(QModelIndex index, indexes)
+        rows.insert(index.row(), index.row());
+
+    OstProto::StreamConfigList streams;
+    streams.mutable_port_id()->set_id(mCurrentPort->id());
+    foreach(int row, rows) {
+        OstProto::Stream *stream = streams.add_stream();
+        mCurrentPort->streamByIndex(row)->protoDataCopyInto(*stream);
+    }
+
+    QByteArray data;
+    data.resize(streams.ByteSize());
+    streams.SerializeWithCachedSizesToArray((uint8*)data.data());
+    //qDebug("copy %s", streams.DebugString().c_str());
+    //TODO: copy DebugString as text/plain?
+
+    QMimeData *mimeData = new QMimeData();
+    mimeData->setData(kStreamsMimeType, data);
+    return mimeData; // XXX: caller is expected to take ownership and free!
+}
+
+bool StreamModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+        int row, int /*column*/, const QModelIndex &parent)
+{
+    if (!data)
+        return false;
+
+    if (!data->hasFormat(kStreamsMimeType))
+        return false;
+
+    if (action != Qt::CopyAction)
+        return false;
+
+    OstProto::StreamConfigList streamsData;
+    QByteArray ba(data->data(kStreamsMimeType));
+    streamsData.ParseFromArray((void*)ba.constData(), ba.size());
+    //qDebug("paste %s", streamsData.DebugString().c_str());
+
+    QList<Stream*> streams;
+    for (int i = 0; i < streamsData.stream_size(); i++) {
+        Stream *stream = new Stream;
+        stream->protoDataCopyFrom(streamsData.stream(i));
+        streams.append(stream);
+    }
+
+    if ((row < 0) || (row > rowCount(parent)))
+        row = rowCount(parent);
+
+    // Delete rows that we are going to overwrite
+    if (row < rowCount(parent))
+        removeRows(row, qMin(rowCount() - row, streams.size()));
+
+    return insert(row, streams); // callee will free streams after insert
 }
 
 /*!
