@@ -25,6 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "uint128.h"
 
 #include <QHostAddress>
+#include <QMimeData>
+
+const QLatin1String kDeviceGroupsMimeType(
+                        "application/vnd.ostinato.devicegroups");
 
 enum {
     kName,
@@ -203,6 +207,85 @@ bool DeviceGroupModel::setData(
     // TODO; when implementing also implement flags() to
     // return ItemIsEditable
     return false;
+}
+
+QStringList DeviceGroupModel::mimeTypes() const
+{
+    return QStringList() << kDeviceGroupsMimeType;
+}
+
+QMimeData* DeviceGroupModel::mimeData(const QModelIndexList &indexes) const
+{
+    using ::google::protobuf::uint8;
+
+    if (indexes.isEmpty())
+        return nullptr;
+
+    // indexes may include multiple columns for a row - but we are only
+    // interested in rows 'coz we have a single data for all columns
+    // XXX: use QMap instead of QSet to keep rows in sorted order
+    QMap<int, int> rows;
+    foreach(QModelIndex index, indexes)
+        rows.insert(index.row(), index.row());
+
+    OstProto::DeviceGroupConfigList dgList;
+    dgList.mutable_port_id()->set_id(port_->id());
+    foreach(int row, rows) {
+        OstProto::DeviceGroup *devGrp = dgList.add_device_group();
+        devGrp->CopyFrom(*port_->deviceGroupByIndex(row));
+    }
+
+    QByteArray data;
+    data.resize(dgList.ByteSize());
+    dgList.SerializeWithCachedSizesToArray((uint8*)data.data());
+    //qDebug("copy %s", dgList.DebugString().c_str());
+    //TODO: copy DebugString as text/plain?
+
+    QMimeData *mimeData = new QMimeData();
+    mimeData->setData(kDeviceGroupsMimeType, data);
+    return mimeData; // XXX: caller is expected to take ownership and free!
+}
+
+bool DeviceGroupModel::dropMimeData(const QMimeData *data,
+        Qt::DropAction action, int row, int /*column*/,
+        const QModelIndex &parent)
+{
+    if (!data)
+        return false;
+
+    if (!data->hasFormat(kDeviceGroupsMimeType))
+        return false;
+
+    if (action != Qt::CopyAction)
+        return false;
+
+    OstProto::DeviceGroupConfigList dgList;
+    QByteArray ba(data->data(kDeviceGroupsMimeType));
+    dgList.ParseFromArray((void*)ba.constData(), ba.size());
+    //qDebug("paste %s", dgList.DebugString().c_str());
+
+    if ((row < 0) || (row > rowCount(parent)))
+        row = rowCount(parent);
+
+    // Delete rows that we are going to overwrite
+    int c = 0, count = dgList.device_group_size();
+    if (row < rowCount(parent))
+        removeRows(row, qMin(rowCount() - row, count));
+
+    beginInsertRows(parent, row, row+count-1);
+    for (int i = 0; i < count; i++) {
+        if (port_->newDeviceGroupAt(row+i, &dgList.device_group(i)))
+            c++;
+    }
+    endInsertRows();
+
+    if (c != count) {
+        qWarning("failed to copy rows in DeviceGroupModel at row %d; "
+                 "requested = %d, actual = %d", row, count, c);
+        return false;
+    }
+
+    return true;
 }
 
 bool DeviceGroupModel::insertRows(
