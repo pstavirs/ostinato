@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTableView>
 
+#include <QApplication>
 #include <QClipboard>
 #include <QKeyEvent>
 #include <QMimeData>
@@ -29,9 +30,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 class XTableView : public QTableView
 {
+    Q_OBJECT
+
 public:
     XTableView(QWidget *parent) : QTableView(parent) {}
     virtual ~XTableView() {}
+
+#if 0
+    Q_INVOKABLE bool hasSelection() const
+    {
+        return !selectionModel()->selectedIndexes().isEmpty();
+    }
+#endif
 
 protected:
     virtual void paintEvent(QPaintEvent *event)
@@ -58,7 +68,7 @@ protected:
             QTableView::keyPressEvent(event);
     }
 
-private:
+public slots:
     void cut()
     {
         copy();

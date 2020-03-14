@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dbgthread.h"
 #endif
 
+#include "clipboardhelper.h"
 #include "jumpurl.h"
 #include "logsmodel.h"
 #include "logswindow.h"
@@ -60,6 +61,7 @@ extern const char* revision;
 
 PortGroupList    *pgl;
 LogsModel        *appLogs;
+ClipboardHelper  *clipboardHelper;
 
 MainWindow::MainWindow(QWidget *parent) 
     : QMainWindow (parent)
@@ -94,6 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     pgl = new PortGroupList;
     appLogs = new LogsModel(this);
+    clipboardHelper = new ClipboardHelper(this);
 
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
@@ -117,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupUi(this);
 
     menuFile->insertActions(menuFile->actions().at(3), portsWindow->actions());
+    menuEdit->addActions(clipboardHelper->actions());
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);

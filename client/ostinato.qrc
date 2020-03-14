@@ -14,8 +14,10 @@
     <file>icons/bullet_red.png</file>
     <file>icons/bullet_white.png</file>
     <file>icons/bullet_yellow.png</file>
+    <file>icons/copy.png</file>
     <file>icons/control_play.png</file>
     <file>icons/control_stop.png</file>
+    <file>icons/cut.png</file>
     <file>icons/delete.png</file>
     <file>icons/devicegroup_add.png</file>
     <file>icons/devicegroup_delete.png</file>
@@ -35,6 +37,7 @@
     <file>icons/name.png</file>
     <file>icons/neighbor_clear.png</file>
     <file>icons/neighbor_resolve.png</file>
+    <file>icons/paste.png</file>
     <file>icons/portgroup_add.png</file>
     <file>icons/portgroup_connect.png</file>
     <file>icons/portgroup_delete.png</file>

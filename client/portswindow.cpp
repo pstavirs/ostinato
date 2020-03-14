@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portswindow.h"
 
 #include "applymsg.h"
+#include "clipboardhelper.h"
 #include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
@@ -38,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
+extern ClipboardHelper *clipboardHelper;
 extern QMainWindow *mainWindow;
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
@@ -78,9 +80,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->addAction(actionDuplicate_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
-    sep = new QAction(this);
-    sep->setSeparator(true);
-    tvStreamList->addAction(sep);
+    QAction *sep2 = new QAction(this);
+    sep2->setSeparator(true);
+    tvStreamList->addAction(sep2);
 
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
@@ -96,6 +98,14 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     sep->setSeparator(true);
     addAction(sep);
     addActions(devicesWidget->actions());
+
+    // Add the clipboard actions to the context menu of streamList
+    // but not to PortsWindow's actions since they are already available
+    // in the global Edit Menu
+    sep = new QAction("Clipboard", this);
+    sep->setSeparator(true);
+    tvStreamList->insertAction(sep2, sep);
+    tvStreamList->insertActions(sep2, clipboardHelper->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
 

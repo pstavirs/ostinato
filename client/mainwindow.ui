@@ -40,6 +40,11 @@
     <addaction name="actionHelpAbout" />
     <addaction name="actionAboutQt" />
    </widget>
+   <widget class="QMenu" name="menuEdit" >
+    <property name="title" >
+     <string>&amp;Edit</string>
+    </property>
+   </widget>
    <widget class="QMenu" name="menuView" >
     <property name="title" >
      <string>&amp;View</string>
@@ -48,6 +53,7 @@
     <addaction name="actionViewRestoreDefaults" />
    </widget>
    <addaction name="menuFile" />
+   <addaction name="menuEdit" />
    <addaction name="menuView" />
    <addaction name="menuHelp" />
   </widget>

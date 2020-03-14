@@ -19,12 +19,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>
 
 #include "deviceswidget.h"
 
+#include "clipboardhelper.h"
 #include "devicegroupdialog.h"
 #include "port.h"
 #include "portgrouplist.h"
 
 #include <QHeaderView>
 #include <QKeyEvent>
+
+extern ClipboardHelper *clipboardHelper;
 
 DevicesWidget::DevicesWidget(QWidget *parent)
     : QWidget(parent), portGroups_(NULL)
@@ -49,6 +52,14 @@ DevicesWidget::DevicesWidget(QWidget *parent)
 
     // DevicesWidget's actions is an aggegate of all sub-widget's actions
     addActions(deviceGroupList->actions());
+
+    // Add the clipboard actions to the context menu of deviceGroupList
+    // but not to DeviceWidget's actions since they are already available
+    // in the global Edit Menu
+    QAction *sep = new QAction("Clipboard", this);
+    sep->setSeparator(true);
+    deviceGroupList->addAction(sep);
+    deviceGroupList->addActions(clipboardHelper->actions());
 }
 
 void DevicesWidget::setPortGroupList(PortGroupList *portGroups)
