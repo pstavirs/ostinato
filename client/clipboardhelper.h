@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _CLIPBOARD_HELPER_H
 #define _CLIPBOARD_HELPER_H
 
+#include <QObject>
 #include <QList>
 
 class QAction;
