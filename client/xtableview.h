@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTableView>
 
+#include "devicegroupmodel.h"
+#include "streammodel.h"
+
 #include <QApplication>
 #include <QClipboard>
 #include <QKeyEvent>
@@ -36,36 +39,33 @@ public:
     XTableView(QWidget *parent) : QTableView(parent) {}
     virtual ~XTableView() {}
 
-#if 0
-    Q_INVOKABLE bool hasSelection() const
+    void setModel(QAbstractItemModel *model)
+    {
+        // XXX: yes, this is hacky; but there's no way to figure out
+        // if a model allows removeRows() or not
+        if (dynamic_cast<StreamModel*>(model)
+                || dynamic_cast<DeviceGroupModel*>(model))
+            _modelAllowsRemove = true;
+        else
+            _modelAllowsRemove = false;
+
+        QTableView::setModel(model);
+    }
+
+    bool hasSelection() const
     {
         return !selectionModel()->selectedIndexes().isEmpty();
     }
-#endif
 
-protected:
-    virtual void paintEvent(QPaintEvent *event)
+    bool canCut() const
     {
-        if (!model()->hasChildren())  {
-            QPainter painter(viewport());
-            style()->drawItemText(&painter, viewport()->rect(),
-                    layoutDirection() | Qt::AlignCenter, palette(),
-                    true, whatsThis(), QPalette::WindowText);
-        }
-        else
-            QTableView::paintEvent(event);
+        return _modelAllowsRemove;
     }
 
-    virtual void keyPressEvent(QKeyEvent *event)
+    bool canPaste(const QMimeData *data) const
     {
-        if (event->matches(QKeySequence::Cut)) {
-            cut();
-        } else if (event->matches(QKeySequence::Copy)) {
-            copy();
-        } else if (event->matches(QKeySequence::Paste)) {
-            paste();
-        } else
-            QTableView::keyPressEvent(event);
+        return model()->canDropMimeData(data, Qt::CopyAction,
+                0, 0, QModelIndex());
     }
 
 public slots:
@@ -102,7 +102,7 @@ public slots:
     {
         const QMimeData *mimeData = qApp->clipboard()->mimeData();
 
-        if (!mimeData)
+        if (!mimeData || mimeData->formats().isEmpty())
             return;
 
         if (selectionModel()->hasSelection()
@@ -128,6 +128,34 @@ public slots:
             model()->dropMimeData(mimeData, Qt::CopyAction,
                     row, column, QModelIndex());
     }
+
+protected:
+    virtual void paintEvent(QPaintEvent *event)
+    {
+        if (!model()->hasChildren())  {
+            QPainter painter(viewport());
+            style()->drawItemText(&painter, viewport()->rect(),
+                    layoutDirection() | Qt::AlignCenter, palette(),
+                    true, whatsThis(), QPalette::WindowText);
+        }
+        else
+            QTableView::paintEvent(event);
+    }
+
+    virtual void keyPressEvent(QKeyEvent *event)
+    {
+        if (event->matches(QKeySequence::Cut)) {
+            cut();
+        } else if (event->matches(QKeySequence::Copy)) {
+            copy();
+        } else if (event->matches(QKeySequence::Paste)) {
+            paste();
+        } else
+            QTableView::keyPressEvent(event);
+    }
+
+private:
+    bool _modelAllowsRemove{false};
 };
 
 #endif

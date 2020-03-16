@@ -19,10 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "clipboardhelper.h"
 
+#include "xtableview.h"
+
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
 #include <QIcon>
+#include <QItemSelection>
+
+#if 0 // change 0 to 1 for debug
+#define xDebug(...) qDebug(__VA_ARGS__)
+#else
+#define xDebug(...)
+#endif
 
 ClipboardHelper::ClipboardHelper(QObject *parent)
     : QObject(parent)
@@ -43,10 +52,13 @@ ClipboardHelper::ClipboardHelper(QObject *parent)
     connect(actionCopy_, SIGNAL(triggered()), SLOT(actionTriggered()));
     connect(actionPaste_, SIGNAL(triggered()), SLOT(actionTriggered()));
 
-#if 0 // FIXME: doesn't work correctly yet
-    connect(qGuiApp, SIGNAL(focusChanged(QWidget*, QWidget*)),
-            SLOT(updateClipboardActions()));
-#endif
+    connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)),
+            SLOT(updateCutCopyStatus(QWidget*, QWidget*)));
+
+    connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)),
+            SLOT(updatePasteStatus()));
+    connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
+            SLOT(updatePasteStatus()));
 }
 
 QList<QAction*> ClipboardHelper::actions()
@@ -57,7 +69,7 @@ QList<QAction*> ClipboardHelper::actions()
 
 void ClipboardHelper::actionTriggered()
 {
-    QWidget *focusWidget = QApplication::focusWidget();
+    QWidget *focusWidget = qApp->focusWidget();
 
     if  (!focusWidget)
         return;
@@ -66,7 +78,7 @@ void ClipboardHelper::actionTriggered()
     QString action = sender()->objectName()
                         .remove("action").append("()").toLower();
     if (focusWidget->metaObject()->indexOfSlot(qPrintable(action)) < 0) {
-        qDebug("%s slot not found for object %s:%s ",
+        xDebug("%s slot not found for object %s:%s ",
                 qPrintable(action),
                 qPrintable(focusWidget->objectName()),
                 focusWidget->metaObject()->className());
@@ -78,32 +90,126 @@ void ClipboardHelper::actionTriggered()
             Qt::DirectConnection);
 }
 
-void ClipboardHelper::updateActionStatus()
+void ClipboardHelper::updateCutCopyStatus(QWidget *old, QWidget *now)
 {
-    QWidget *focusWidget = QApplication::focusWidget();
-    if  (!focusWidget)
-        return;
+    xDebug("In %s", __FUNCTION__);
 
-    qDebug("In %s", __FUNCTION__);
-
-    const QMetaObject *meta = focusWidget->metaObject();
-    // FIXME: we should check if the mimeData's mimeType can be pasted in
-    // the focusWidget
-    actionPaste_->setEnabled(qGuiApp->clipboard()->mimeData()
-            && (meta->indexOfSlot("paste()") >= 0));
-
-    bool hasSelection = false;
-    if (meta->indexOfProperty("hasSelectedText") >= 0)
-        hasSelection |= focusWidget->property("hasSelectedText").toBool();
-
-    bool ret = false;
-    if (meta->indexOfMethod("hasSelection()") >= 0) {
-        if (QMetaObject::invokeMethod(focusWidget, "hasSelection",
-                    Qt::DirectConnection, Q_RETURN_ARG(bool, ret)))
-            hasSelection |= ret;
+    const XTableView *view = dynamic_cast<XTableView*>(old);
+    if (view) {
+        disconnect(view->selectionModel(),
+                   SIGNAL(selectionChanged(const QItemSelection&,
+                                           const QItemSelection&)),
+                   this,
+                   SLOT(focusWidgetSelectionChanged(const QItemSelection&,
+                                                    const QItemSelection&)));
+        disconnect(view->model(), SIGNAL(modelReset()),
+                   this, SLOT(focusWidgetModelReset()));
     }
 
-    actionCut_->setEnabled(hasSelection && (meta->indexOfSlot("cut") >= 0));
-    actionCopy_->setEnabled(hasSelection && (meta->indexOfSlot("copy") >= 0));
+    if  (!now) {
+        xDebug("No focus widget to copy from");
+        actionCut_->setEnabled(false);
+        actionCopy_->setEnabled(false);
+        return;
+    }
+
+    const QMetaObject *meta = now->metaObject();
+    if (meta->indexOfSlot("copy()") < 0) {
+        xDebug("Focus Widget (%s) doesn't have a copy slot",
+                qPrintable(now->objectName()));
+        actionCut_->setEnabled(false);
+        actionCopy_->setEnabled(false);
+        return;
+    }
+
+    view = dynamic_cast<XTableView*>(now);
+    if (view) {
+        connect(view->selectionModel(),
+                SIGNAL(selectionChanged(const QItemSelection&,
+                                        const QItemSelection&)),
+                SLOT(focusWidgetSelectionChanged(const QItemSelection&,
+                                                 const QItemSelection&)));
+        connect(view->model(), SIGNAL(modelReset()),
+                this, SLOT(focusWidgetModelReset()));
+        if (!view->hasSelection()) {
+            xDebug("%s doesn't have anything selected to copy",
+                    qPrintable(view->objectName()));
+            actionCut_->setEnabled(false);
+            actionCopy_->setEnabled(false);
+            return;
+        }
+    }
+
+    xDebug("%s model can cut: %d", qPrintable(view->objectName()),
+            view->canCut());
+    actionCut_->setEnabled(view->canCut());
+
+    xDebug("%s has a selection and copy slot: copy possible",
+            qPrintable(now->objectName()));
+    actionCopy_->setEnabled(true);
 }
+
+void ClipboardHelper::focusWidgetSelectionChanged(
+        const QItemSelection &selected, const QItemSelection &/*deselected*/)
+{
+    xDebug("In %s", __FUNCTION__);
+
+    // Selection changed in the XTableView that has focus
+    const XTableView *view = dynamic_cast<XTableView*>(qApp->focusWidget());
+    xDebug("canCut:%d empty:%d", view->canCut(), selected.indexes().isEmpty());
+    actionCut_->setEnabled(!selected.indexes().isEmpty()
+            && view && view->canCut());
+    actionCopy_->setEnabled(!selected.indexes().isEmpty());
+}
+
+void ClipboardHelper::updatePasteStatus()
+{
+    xDebug("In %s", __FUNCTION__);
+
+    QWidget *focusWidget = qApp->focusWidget();
+    if  (!focusWidget) {
+        xDebug("No focus widget to paste into");
+        actionPaste_->setEnabled(false);
+        return;
+    }
+
+    const QMimeData *item = QGuiApplication::clipboard()->mimeData();
+    if  (!item || item->formats().isEmpty()) {
+        xDebug("Nothing on clipboard to paste");
+        actionPaste_->setEnabled(false);
+        return;
+    }
+
+    const QMetaObject *meta = focusWidget->metaObject();
+    if (meta->indexOfSlot("paste()") < 0) {
+        xDebug("Focus Widget (%s) doesn't have a paste slot",
+                qPrintable(focusWidget->objectName()));
+        actionPaste_->setEnabled(false);
+        return;
+    }
+
+    const XTableView *view = dynamic_cast<XTableView*>(focusWidget);
+    if (view && !view->canPaste(item)) {
+        xDebug("%s cannot accept this item (%s)",
+                qPrintable(view->objectName()),
+                qPrintable(item->formats().join("|")));
+        actionPaste_->setEnabled(false);
+        return;
+    }
+
+    xDebug("%s can accept this item (%s): paste possible",
+            qPrintable(focusWidget->objectName()),
+            qPrintable(item->formats().join("|")));
+    actionPaste_->setEnabled(true);
+}
+
+void ClipboardHelper::focusWidgetModelReset()
+{
+    xDebug("In %s", __FUNCTION__);
+
+    QWidget *focusWidget = qApp->focusWidget();
+    updateCutCopyStatus(focusWidget, focusWidget); // re-eval cut/copy status
+}
+
+#undef xDebug
 

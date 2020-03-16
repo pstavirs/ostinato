@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QList>
 
 class QAction;
+class QItemSelection;
 
 class ClipboardHelper : public QObject
 {
@@ -35,7 +36,11 @@ public:
 
 private slots:
     void actionTriggered();
-    void updateActionStatus();
+    void updateCutCopyStatus(QWidget *old, QWidget *now);
+    void focusWidgetSelectionChanged(const QItemSelection &selected,
+                                     const QItemSelection &deselected);
+    void focusWidgetModelReset();
+    void updatePasteStatus();
 
 private:
     QAction *actionCut_{nullptr};

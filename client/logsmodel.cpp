@@ -109,6 +109,11 @@ QVariant LogsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions LogsModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 QStringList LogsModel::mimeTypes() const
 {
     return QStringList() << "text/plain";
