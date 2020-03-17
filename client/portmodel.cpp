@@ -200,6 +200,11 @@ QVariant PortModel::headerData(int /*section*/, Qt::Orientation orientation, int
         return QString("Name");
 }
 
+Qt::DropActions PortModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 QModelIndex PortModel::index (int row, int col, 
     const QModelIndex & parent) const
 {

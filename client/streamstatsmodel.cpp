@@ -156,6 +156,11 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions StreamStatsModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 // --------------------------------------------- //
 // Slots
 // --------------------------------------------- //

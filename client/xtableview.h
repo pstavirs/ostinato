@@ -22,9 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTableView>
 
-#include "devicegroupmodel.h"
-#include "streammodel.h"
-
 #include <QApplication>
 #include <QClipboard>
 #include <QKeyEvent>
@@ -41,10 +38,8 @@ public:
 
     void setModel(QAbstractItemModel *model)
     {
-        // XXX: yes, this is hacky; but there's no way to figure out
-        // if a model allows removeRows() or not
-        if (dynamic_cast<StreamModel*>(model)
-                || dynamic_cast<DeviceGroupModel*>(model))
+        // This is only a heuristic, but works for us
+        if (model && model->supportedDropActions() != Qt::IgnoreAction)
             _modelAllowsRemove = true;
         else
             _modelAllowsRemove = false;

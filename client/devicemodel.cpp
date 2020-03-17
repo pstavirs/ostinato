@@ -242,6 +242,11 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions DeviceModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 void DeviceModel::setPort(Port *port)
 {
     beginResetModel();

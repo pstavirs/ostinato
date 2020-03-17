@@ -39,6 +39,8 @@ public:
             int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
 
+    Qt::DropActions supportedDropActions() const;
+
     void setPort(Port *port);
     QAbstractItemModel* detailModel(const QModelIndex &index);
 
