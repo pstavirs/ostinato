@@ -52,6 +52,13 @@ ClipboardHelper::ClipboardHelper(QObject *parent)
     connect(actionCopy_, SIGNAL(triggered()), SLOT(actionTriggered()));
     connect(actionPaste_, SIGNAL(triggered()), SLOT(actionTriggered()));
 
+    // XXX: failsafe in case updation of cut/copy/status causes issues
+    // Temporary for 1 release - will be removed after that
+    if (qEnvironmentVariableIsSet("X-OSTINATO-CCP-STATUS")) {
+        qWarning("FAILSAFE: Cut-Copy-Paste action status will not be updated");
+        return;
+    }
+
     connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)),
             SLOT(updateCutCopyStatus(QWidget*, QWidget*)));
 
@@ -138,11 +145,10 @@ void ClipboardHelper::updateCutCopyStatus(QWidget *old, QWidget *now)
             actionCopy_->setEnabled(false);
             return;
         }
+        xDebug("%s model can cut: %d", qPrintable(view->objectName()),
+                view->canCut());
+        actionCut_->setEnabled(view->canCut());
     }
-
-    xDebug("%s model can cut: %d", qPrintable(view->objectName()),
-            view->canCut());
-    actionCut_->setEnabled(view->canCut());
 
     xDebug("%s has a selection and copy slot: copy possible",
             qPrintable(now->objectName()));
