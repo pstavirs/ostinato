@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "logsmodel.h"
 
 #include <QBrush>
-#include <QMimeData>
 
 // XXX: Keep the enum in sync with it's string
 enum {
@@ -112,31 +111,6 @@ QVariant LogsModel::data(const QModelIndex &index, int role) const
 Qt::DropActions LogsModel::supportedDropActions() const
 {
     return Qt::IgnoreAction; // read-only model, doesn't accept any data
-}
-
-QStringList LogsModel::mimeTypes() const
-{
-    return QStringList() << "text/plain";
-}
-
-QMimeData* LogsModel::mimeData(const QModelIndexList &indexes) const
-{
-    int lastRow = -1;
-    QString text;
-    foreach(QModelIndex index, indexes) {
-        if (index.row() != lastRow) {
-            if (!text.isEmpty())
-                text.append("\n");
-        }
-        else
-            text.append("\t");
-        text.append(data(index).toString());
-        lastRow = index.row();
-    }
-
-    QMimeData *mimeData = new QMimeData();
-    mimeData->setText(text);
-    return mimeData; // caller is responsible for freeing!
 }
 
 // --------------------------------------------- //

@@ -45,8 +45,6 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     Qt::DropActions supportedDropActions() const;
-    QStringList mimeTypes() const;
-    QMimeData* mimeData(const QModelIndexList &indexes) const;
 
 public slots:
     void clear();
