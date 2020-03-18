@@ -158,8 +158,8 @@ To emulate a device, click on Configuration and create a device group</string>
      <property name="whatsThis">
       <string>IP neighbor cache is empty</string>
      </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
      </property>
     </widget>
    </item>

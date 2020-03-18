@@ -83,6 +83,7 @@ public slots:
 
         std::sort(selected.begin(), selected.end());
         QMimeData *mimeData = model()->mimeData(selected);
+        copyPlainText(selected, mimeData);
         qApp->clipboard()->setMimeData(mimeData);
         qDebug("Copied data in %d format(s) to clipboard",
                 mimeData->formats().size());
@@ -150,6 +151,41 @@ protected:
     }
 
 private:
+    void copyPlainText(const QModelIndexList &indexes, QMimeData *mimeData)
+    {
+        if (mimeData->hasText())
+            return;
+
+        bool includeHeaders = (selectionBehavior()
+                                    != QAbstractItemView::SelectItems);
+        QString text;
+        if (includeHeaders) {
+            text.append("\t"); // column header for row number/title
+            for (int i = 0; i < model()->columnCount(); i++)
+                text.append(model()->headerData(i, Qt::Horizontal)
+                                        .toString()+"\t");;
+            text.append("\n");
+        }
+
+        int lastRow = -1;
+        foreach(QModelIndex index, indexes) {
+            if (index.row() != lastRow) { // row changed
+                if (lastRow >= 0)
+                    text.append("\n");
+                if (includeHeaders)
+                    text.append(model()->headerData(index.row(), Qt::Vertical)
+                                            .toString()+"\t");
+            }
+            else
+                text.append("\t");
+            text.append(model()->data(index).toString());
+            lastRow = index.row();
+        }
+        text.append("\n");
+
+        mimeData->setText(text);
+    }
+
     bool _modelAllowsRemove{false};
 };
 
