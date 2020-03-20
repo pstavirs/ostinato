@@ -160,8 +160,13 @@ private:
                                     != QAbstractItemView::SelectItems);
         QString text;
         if (includeHeaders) {
+            int start = 0, end = model()->columnCount(); // assume SelectRows
+            if (selectionBehavior() == QAbstractItemView::SelectColumns) {
+                start = indexes.first().column();
+                end = indexes.last().column()+1;
+            }
             text.append("\t"); // column header for row number/title
-            for (int i = 0; i < model()->columnCount(); i++)
+            for (int i = start; i < end; i++)
                 text.append(model()->headerData(i, Qt::Horizontal)
                                         .toString()+"\t");;
             text.append("\n");
