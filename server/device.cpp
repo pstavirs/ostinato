@@ -85,7 +85,7 @@ void Device::setMac(quint64 mac)
     int ofs = kMaxVlan * sizeof(quint16);
 
     mac_ = mac & ~(0xffffULL << 48);
-    qToBigEndian(mac_, key_.data()+ofs);
+    qToBigEndian(mac_, (uchar*)key_.data()+ofs);
 }
 
 void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
