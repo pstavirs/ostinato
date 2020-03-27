@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "ip6.h"
+
+#include "uint128.h"
 #include <QHostAddress>
 
 
@@ -313,49 +315,34 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
 
         case ip6_srcAddress:
         {
-            int u, p, q;
-            quint64 maskHi = 0, maskLo = 0;
-            quint64 prefixHi, prefixLo;
-            quint64 hostHi = 0, hostLo = 0;
-            quint64 srcHi = 0, srcLo = 0;
+            int u;
+            UInt128 mask = 0;
+            UInt128 prefix = 0;
+            UInt128 host = 0;
+            UInt128 src(data.src_addr_hi(), data.src_addr_lo());
 
             switch(data.src_addr_mode())
             {
                 case OstProto::Ip6::kFixed:
-                    srcHi = data.src_addr_hi();
-                    srcLo = data.src_addr_lo();
                     break;
                 case OstProto::Ip6::kIncHost:
                 case OstProto::Ip6::kDecHost:
                 case OstProto::Ip6::kRandomHost:
                     u = streamIndex % data.src_addr_count();
-                    if (data.src_addr_prefix() > 64) {
-                        p = 64;
-                        q = data.src_addr_prefix() - 64;
-                    } else {
-                        p = data.src_addr_prefix();
-                        q = 0;
-                    }
-                    if (p > 0) 
-                        maskHi = ~((quint64(1) << p) - 1);
-                    if (q > 0) 
-                        maskLo = ~((quint64(1) << q) - 1);
-                    prefixHi = data.src_addr_hi() & maskHi;
-                    prefixLo = data.src_addr_lo() & maskLo;
+                    mask = ~UInt128(0, 0) << (128 - data.src_addr_prefix());
+                    prefix = src & mask;
                     if (data.src_addr_mode() == OstProto::Ip6::kIncHost) {
-                        hostHi = ((data.src_addr_hi() & ~maskHi) + u) & ~maskHi;
-                        hostLo = ((data.src_addr_lo() & ~maskLo) + u) & ~maskLo;
+                        host = ((src & ~mask) + u) & ~mask;
                     } 
                     else if (data.src_addr_mode() == OstProto::Ip6::kDecHost) {
-                        hostHi = ((data.src_addr_hi() & ~maskHi) - u) & ~maskHi;
-                        hostLo = ((data.src_addr_lo() & ~maskLo) - u) & ~maskLo;
+                        host = ((src & ~mask) - u) & ~mask;
                     } 
                     else if (data.src_addr_mode()==OstProto::Ip6::kRandomHost) {
-                        hostHi = qrand() & ~maskHi;
-                        hostLo = qrand() & ~maskLo;
+                        // XXX: qrand is int (32bit) not 64bit, some stdlib
+                        // implementations have RAND_MAX as low as 0x7FFF
+                        host = UInt128(qrand(), qrand()) & ~mask;
                     }
-                    srcHi = prefixHi | hostHi;
-                    srcLo = prefixLo | hostLo;
+                    src = prefix | host;
                     break;
                 default:
                     qWarning("Unhandled src_addr_mode = %d", 
@@ -372,10 +359,9 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     QByteArray fv;
                     fv.resize(16);
-                    qToBigEndian(srcHi, (uchar*) fv.data());
-                    qToBigEndian(srcLo, (uchar*) (fv.data() + 8));
+                    qToBigEndian(src, (uchar*) fv.data());
                     if (attrib == FieldTextValue)
-                        return QHostAddress((quint8*)fv.constData()).toString();
+                        return QHostAddress(src.toArray()).toString();
                     else
                         return fv;
                 }
@@ -387,49 +373,34 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
 
         case ip6_dstAddress:
         {
-            int u, p, q;
-            quint64 maskHi = 0, maskLo = 0;
-            quint64 prefixHi, prefixLo;
-            quint64 hostHi = 0, hostLo = 0;
-            quint64 dstHi = 0, dstLo = 0;
+            int u;
+            UInt128 mask = 0;
+            UInt128 prefix = 0;
+            UInt128 host = 0;
+            UInt128 dst(data.dst_addr_hi(), data.dst_addr_lo());
 
             switch(data.dst_addr_mode())
             {
                 case OstProto::Ip6::kFixed:
-                    dstHi = data.dst_addr_hi();
-                    dstLo = data.dst_addr_lo();
                     break;
                 case OstProto::Ip6::kIncHost:
                 case OstProto::Ip6::kDecHost:
                 case OstProto::Ip6::kRandomHost:
                     u = streamIndex % data.dst_addr_count();
-                    if (data.dst_addr_prefix() > 64) {
-                        p = 64;
-                        q = data.dst_addr_prefix() - 64;
-                    } else {
-                        p = data.dst_addr_prefix();
-                        q = 0;
-                    }
-                    if (p > 0) 
-                        maskHi = ~((quint64(1) << p) - 1);
-                    if (q > 0) 
-                        maskLo = ~((quint64(1) << q) - 1);
-                    prefixHi = data.dst_addr_hi() & maskHi;
-                    prefixLo = data.dst_addr_lo() & maskLo;
+                    mask = ~UInt128(0, 0) << (128 - data.dst_addr_prefix());
+                    prefix = dst & mask;
                     if (data.dst_addr_mode() == OstProto::Ip6::kIncHost) {
-                        hostHi = ((data.dst_addr_hi() & ~maskHi) + u) & ~maskHi;
-                        hostLo = ((data.dst_addr_lo() & ~maskLo) + u) & ~maskLo;
+                        host = ((dst & ~mask) + u) & ~mask;
                     } 
                     else if (data.dst_addr_mode() == OstProto::Ip6::kDecHost) {
-                        hostHi = ((data.dst_addr_hi() & ~maskHi) - u) & ~maskHi;
-                        hostLo = ((data.dst_addr_lo() & ~maskLo) - u) & ~maskLo;
+                        host = ((dst & ~mask) - u) & ~mask;
                     } 
                     else if (data.dst_addr_mode()==OstProto::Ip6::kRandomHost) {
-                        hostHi = qrand() & ~maskHi;
-                        hostLo = qrand() & ~maskLo;
+                        // XXX: qrand is int (32bit) not 64bit, some stdlib
+                        // implementations have RAND_MAX as low as 0x7FFF
+                        host = UInt128(qrand(), qrand()) & ~mask;
                     }
-                    dstHi = prefixHi | hostHi;
-                    dstLo = prefixLo | hostLo;
+                    dst = prefix | host;
                     break;
                 default:
                     qWarning("Unhandled dst_addr_mode = %d", 
@@ -446,10 +417,9 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 {
                     QByteArray fv;
                     fv.resize(16);
-                    qToBigEndian(dstHi, (uchar*) fv.data());
-                    qToBigEndian(dstLo, (uchar*) (fv.data() + 8));
+                    qToBigEndian(dst, (uchar*) fv.data());
                     if (attrib == FieldTextValue)
-                        return QHostAddress((quint8*)fv.constData()).toString();
+                        return QHostAddress(dst.toArray()).toString();
                     else
                         return fv;
                 }
