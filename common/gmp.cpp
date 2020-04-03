@@ -404,8 +404,8 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     grpRec["overrideAuxDataLength"] = 
                                 rec.is_override_aux_data_length();
                     grpRec["auxDataLength"] = rec.aux_data_length();
-                    grpRec["auxData"] = QByteArray().append(
-                            QString::fromStdString(rec.aux_data()));
+                    grpRec["auxData"] = QByteArray(rec.aux_data().data(),
+                                                   rec.aux_data().size());
 
                     grpRecords.append(grpRec);
                 }
@@ -434,7 +434,7 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     // group_address => subclass responsibility
                     // source list => subclass responsibility
 
-                    rv.append(QString().fromStdString(rec.aux_data()));
+                    rv.append(QByteArray(rec.aux_data().data(), rv[1]*4));
 
                     fv.append(rv);
                 }
@@ -467,9 +467,9 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     default: 
                         str.append("UNKNOWN"); break;
                     }
-                    str.append(QString("; AuxLen: %1").arg(
-                        rec.is_override_aux_data_length() ? 
-                            rec.aux_data_length() : rec.aux_data().size()/4));
+                    int auxLen = rec.is_override_aux_data_length() ?
+                            rec.aux_data_length() : rec.aux_data().size()/4;
+                    str.append(QString("; AuxLen: %1").arg(auxLen));
                     str.append(QString("; Source Count: %1").arg(
                         rec.is_override_source_count() ?
                             rec.source_count(): rec.sources_size()));
@@ -479,8 +479,8 @@ QVariant GmpProtocol::fieldData(int index, FieldAttrib attrib,
                     str.append(QString("; XXX"));
 
                     str.append(QString("; AuxData: ").append(
-                                QByteArray().append(QString().fromStdString(
-                                        rec.aux_data())).toHex()));
+                                QByteArray(rec.aux_data().data(), auxLen*4)
+                                        .toHex()));
 
                     list.append(str);
                 }
