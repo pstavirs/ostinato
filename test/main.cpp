@@ -23,8 +23,8 @@ QString kAwkPathDefaultValue;
 /*
  * Dummy Stuff for successful linking
  */
-char *version = "";
-char *revision = "";
+const char *version = "";
+const char *revision = "";
 quint64 getDeviceMacAddress(
         int /*portId*/,
         int /*streamId*/,
