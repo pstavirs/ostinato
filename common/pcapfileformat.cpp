@@ -276,6 +276,7 @@ bool PcapFileFormat::open(const QString fileName,
                 QStringList() 
                 << QString("-r%1").arg(fileName)
                 << "-otcp.desegment_tcp_streams:FALSE"
+                << "-P"
                 << "-x");
         if (!tshark.waitForStarted(-1))
         {
@@ -336,6 +337,7 @@ bool PcapFileFormat::open(const QString fileName,
                 QStringList() 
                 << QString("-r%1").arg(importedPcapFile.fileName())
                 << "-otcp.desegment_tcp_streams:FALSE"
+                << "-P"
                 << "-x");
         if (!tshark.waitForStarted(-1))
         {
