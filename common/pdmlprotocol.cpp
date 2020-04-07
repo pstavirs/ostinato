@@ -165,7 +165,8 @@ void PdmlProtocol::fieldHandler(QString name,
                 qPrintable(name), 
                 qPrintable(valueHexStr));
 
-        knownFieldHandler(name, valueHexStr, pbProto);
+        if (!valueHexStr.isEmpty())
+            knownFieldHandler(name, valueHexStr, pbProto);
     }
     else
     {
