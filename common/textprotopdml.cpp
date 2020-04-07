@@ -75,6 +75,9 @@ void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size,
             const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
             OstProto::Stream* /*stream*/)
 {
+    if (name == "http.file_data") // ignore as it's dup of other fields
+        return;
+
 _retry:
     switch(contentType_)
     {
