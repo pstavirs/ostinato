@@ -75,6 +75,8 @@ private:
         quint32 origLen;       /* actual length of packet */
     } PcapPacketHeader;
 
+    bool convertToStandardPcap(QString fileName, QString outputFileName,
+                               QString &error);
     bool readPacket(PcapPacketHeader &pktHdr, QByteArray &pktBuf);
 
     QDataStream fd_;

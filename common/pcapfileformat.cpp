@@ -94,6 +94,7 @@ bool PcapFileFormat::open(const QString fileName,
     qint64 byteCount = 0;
     qint64 byteTotal;
     QByteArray pktBuf;
+    bool tryConvert = true;
 
     if (!file.open(QIODevice::ReadOnly))
         goto _err_open;
@@ -144,6 +145,7 @@ bool PcapFileFormat::open(const QString fileName,
         fd_.setDevice(&file);
     }
 
+_retry:
     byteTotal = fd_.device()->size() - sizeof(fileHdr);
 
     emit status("Reading File Header...");
@@ -153,7 +155,11 @@ bool PcapFileFormat::open(const QString fileName,
 
     qDebug("magic = %08x", magic);
 
-    if (magic == kPcapFileMagicSwapped)
+    if (magic == kPcapFileMagic)
+    {
+        // Do nothing
+    }
+    else if (magic == kPcapFileMagicSwapped)
     {
         // Toggle Byte order
         if (fd_.byteOrder() == QDataStream::BigEndian)
@@ -161,8 +167,37 @@ bool PcapFileFormat::open(const QString fileName,
         else
             fd_.setByteOrder(QDataStream::BigEndian);
     }
-    else if (magic != kPcapFileMagic)
-        goto _err_bad_magic;
+    else // Not a pcap file
+    {
+        if (tryConvert)
+        {
+            // Close and reopen the temp file to be safe
+            file2.close();
+            if (!file2.open())
+            {
+                error.append("Unable to open temporary file to convert to PCAP\n");
+                goto _err_convert2pcap;
+            }
+            fd_.setDevice(0); // disconnect data stream from file
+
+            if (convertToStandardPcap(fileName, file2.fileName(), error))
+            {
+                fd_.setDevice(&file2);
+                tryConvert = false;
+                goto _retry;
+            }
+            else
+            {
+                error = QString(tr("Unable to convert %1 to standard PCAP format"))
+                    .arg(fileName);
+                goto _err_convert2pcap;
+            }
+        }
+        else
+            goto _err_bad_magic;
+    }
+
+    qDebug("reading filehdr");
 
     fd_ >> fileHdr.versionMajor;
     fd_ >> fileHdr.versionMinor;
@@ -171,6 +206,7 @@ bool PcapFileFormat::open(const QString fileName,
     fd_ >> fileHdr.snapLen;
     fd_ >> fileHdr.network;
    
+    qDebug("version check");
     if ((fileHdr.versionMajor != kPcapFileVersionMajor) ||
             (fileHdr.versionMinor != kPcapFileVersionMinor))
         goto _err_unsupported_version;
@@ -183,6 +219,7 @@ bool PcapFileFormat::open(const QString fileName,
 
     pktBuf.resize(fileHdr.snapLen);
 
+    qDebug("pdml check");
     if (importOptions_.value("ViaPdml").toBool())
     {
         QProcess tshark;
@@ -502,13 +539,51 @@ _err_reading_magic:
     error = QString(tr("Unable to read magic from %1")).arg(fileName);
     goto _exit;
 
+_err_convert2pcap:
+    goto _exit;
+
 _err_open:
     error = QString(tr("Unable to open file: %1")).arg(fileName);
     goto _exit;
 
 _exit:
+    if (!error.isEmpty())
+        qDebug("%s", qPrintable(error));
     file.close();
     return isOk;
+}
+
+/*!
+  Converts a non-PCAP capture file to standard PCAP file format using tshark
+
+  Returns true if conversion was successful, false otherwise.
+*/
+bool PcapFileFormat::convertToStandardPcap(
+        QString fileName, QString outputFileName, QString &error)
+{
+    qDebug("converting to PCAP %s", qPrintable(outputFileName));
+    emit status("Unsupported format. Converting to standard PCAP format...");
+    emit target(0);
+
+    QProcess tshark;
+    tshark.start(OstProtoLib::tsharkPath(),
+            QStringList()
+            << QString("-r%1").arg(fileName)
+            << "-Fpcap"
+            << QString("-w%1").arg(outputFileName));
+    if (!tshark.waitForStarted(-1))
+    {
+        error.append(QString("Unable to start tshark. Check path in preferences.\n"));
+        return false;
+    }
+
+    if (!tshark.waitForFinished(-1))
+    {
+        error.append(QString("Error running tshark\n"));
+        return false;
+    }
+
+    return true;
 }
 
 /*!
