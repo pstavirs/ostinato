@@ -31,12 +31,20 @@ public:
 
     static PdmlProtocol *createInstance();
 
+    void preProtocolHandler(QString name,
+                            const QXmlStreamAttributes& attributes,
+                            int expectedPos, OstProto::Protocol* pbProto,
+                            OstProto::Stream* stream);
     void unknownFieldHandler(QString name, int pos, int size,
                              const QXmlStreamAttributes &attributes,
                              OstProto::Protocol *pbProto, OstProto::Stream* stream);
 
 protected:
     PdmlStpProtocol();
+
+private:
+    int relativePos(int pos) { return pos - _protoStartPos; }
+    int _protoStartPos{0};
 };
 
 #endif
