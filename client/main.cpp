@@ -65,6 +65,8 @@ int main(int argc, char* argv[])
     OstProtocolManager = new ProtocolManager();
     OstProtocolWidgetFactory = new ProtocolWidgetFactory();
 
+    Preferences::initDefaults();
+
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location
        and format for the settings */
@@ -81,7 +83,6 @@ int main(int argc, char* argv[])
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
 
-    Preferences::initDefaults();
     qsrand(QDateTime::currentDateTime().toTime_t());
 
     mainWindow = new MainWindow;
