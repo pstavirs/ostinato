@@ -217,6 +217,11 @@ void LinuxPort::populateInterfaceInfo()
     }
 
     nl_addr *addr = rtnl_link_get_addr(link);
+    if (!addr) {
+        qWarning("rtnetlink mac addr not found for %s", name());
+        return;
+    }
+
     if (nl_addr_get_family(addr) != AF_LLC) {
         qWarning("unexpected mac family found for %s:%d",
                 name(), nl_addr_get_family(addr));
