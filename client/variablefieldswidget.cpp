@@ -297,7 +297,7 @@ void VariableFieldsWidget::on_type_currentIndexChanged(int index)
         bitmask->setInputMask("HH");
         bitmask->setText("FF");
         valueRange_->setRange(0, 0xFF);
-        count->setRange(0, 0xFF);
+        count->setRange(1, 0x100);
         step->setRange(0, 0xFF);
         break;
     case OstProto::VariableField::kCounter16:
@@ -305,7 +305,7 @@ void VariableFieldsWidget::on_type_currentIndexChanged(int index)
         bitmask->setInputMask("HHHH");
         bitmask->setText("FFFF");
         valueRange_->setRange(0, 0xFFFF);
-        count->setRange(0, 0xFFFF);
+        count->setRange(1, 0x10000);
         step->setRange(0, 0xFFFF);
         break;
     case OstProto::VariableField::kCounter32:
@@ -313,7 +313,7 @@ void VariableFieldsWidget::on_type_currentIndexChanged(int index)
         bitmask->setInputMask("HHHHHHHH");
         bitmask->setText("FFFFFFFF");
         valueRange_->setRange(0, 0xFFFFFFFF);
-        count->setRange(0, 0x7FFFFFFF);
+        count->setRange(1, 0x7FFFFFFF); // XXX: QSpinBox max limited to int32
         step->setRange(0, 0x7FFFFFFF);
         break;
     default:
