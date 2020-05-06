@@ -133,6 +133,11 @@ MainWindow::MainWindow(QWidget *parent)
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
 
+#if QT_VERSION >= 0x050600
+    // Set top and bottom docks to equal height
+    resizeDocks({portsDock, statsDock}, {height()/2, height()/2}, Qt::Vertical);
+#endif
+
     // Save the default window geometry and layout ...
     defaultGeometry_ = geometry();
     defaultLayout_ = saveState(0);
