@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
                                     QSettings::UserScope,
                                     app.organizationName(), 
                                     app.applicationName().toLower());
+    qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();

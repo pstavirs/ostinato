@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
         appSettings = new QSettings(portableIni, QSettings::IniFormat);
     else
         appSettings = new QSettings();
+    qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
     OstProtoLib::setExternalApplicationPaths(
         appSettings->value(kTsharkPathKey, kTsharkPathDefaultValue).toString(),
