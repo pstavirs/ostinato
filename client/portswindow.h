@@ -65,6 +65,7 @@ private:
     ApplyMessage *applyMsg_;
 
 public slots:
+    void clearCurrentSelection();
     void showMyReservedPortsOnly(bool enabled);
 
 private slots:

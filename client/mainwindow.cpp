@@ -138,6 +138,8 @@ MainWindow::MainWindow(QWidget *parent)
     resizeDocks({portsDock, statsDock}, {height()/2, height()/2}, Qt::Vertical);
 #endif
 
+    portsWindow->setFocus();
+
     // Save the default window geometry and layout ...
     defaultGeometry_ = geometry();
     defaultLayout_ = saveState(0);
@@ -366,6 +368,10 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     statsDock->raise();
 
     actionViewShowMyReservedPortsOnly->setChecked(false);
+
+    portsWindow->clearCurrentSelection();
+    statsWindow->clearCurrentSelection();
+    logsWindow_->clearCurrentSelection();
 }
 
 void MainWindow::on_actionHelpOnline_triggered()

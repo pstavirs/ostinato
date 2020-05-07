@@ -298,6 +298,12 @@ bool PortsWindow::saveSession(
     return true;
 }
 
+void PortsWindow::clearCurrentSelection()
+{
+    tvPortList->selectionModel()->clearCurrentIndex();
+    tvPortList->clearSelection();
+}
+
 void PortsWindow::showMyReservedPortsOnly(bool enabled)
 {
     if (!proxyPortModel)

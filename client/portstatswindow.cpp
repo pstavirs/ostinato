@@ -89,6 +89,12 @@ PortStatsWindow::~PortStatsWindow()
 
 /* ------------- SLOTS (public) -------------- */
 
+void PortStatsWindow::clearCurrentSelection()
+{
+    tvPortStats->selectionModel()->clearCurrentIndex();
+    tvPortStats->clearSelection();
+}
+
 void PortStatsWindow::showMyReservedPortsOnly(bool enabled)
 {
     if (!proxyStatsModel)

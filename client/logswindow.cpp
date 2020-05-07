@@ -75,6 +75,12 @@ LogsWindow::~LogsWindow()
     delete logsModelTest_;
 }
 
+void LogsWindow::clearCurrentSelection()
+{
+    logs->selectionModel()->clearCurrentIndex();
+    logs->clearSelection();
+}
+
 void LogsWindow::when_visibilityChanged(bool visible)
 {
     if (visible) {

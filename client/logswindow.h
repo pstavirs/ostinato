@@ -34,6 +34,9 @@ public:
     LogsWindow(LogsModel *model, QWidget *parent = 0);
     ~LogsWindow();
 
+public slots:
+    void clearCurrentSelection();
+
 private slots:
     void when_visibilityChanged(bool visible);
     void when_rowsInserted(const QModelIndex &parent, int first, int last);
