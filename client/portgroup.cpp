@@ -241,7 +241,8 @@ _error_exit:
 
 void PortGroup::on_rpcChannel_disconnected()
 {
-    qDebug("disconnected\n");
+    qDebug("disconnected %s:%u",
+            qPrintable(rpcChannel->serverName()), rpcChannel->serverPort());
     logError(id(), "PortGroup disconnected");
     emit portListAboutToBeChanged(mPortGroupId);
 
@@ -265,11 +266,26 @@ void PortGroup::on_rpcChannel_disconnected()
 
 void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
 {
-    qDebug("%s: error %d", __FUNCTION__, socketError);
+    qDebug("%s: error %d %s:%u", __FUNCTION__, socketError,
+            qPrintable(rpcChannel->serverName()), rpcChannel->serverPort());
     emit portGroupDataChanged(mPortGroupId);
 
-    if (socketError == QAbstractSocket::RemoteHostClosedError)
+    switch(socketError)
+    {
+    case QAbstractSocket::SslInvalidUserDataError: // actually abort()
+        logWarn(id(), QString("Bad data received from portgroup, "
+                              "aborting connection; "
+                              "who is listening on %1:%2 "
+                              " - is it drone or some other process?")
+                            .arg(rpcChannel->serverName())
+                            .arg(rpcChannel->serverPort()));
+        // fall-through
+    case QAbstractSocket::RemoteHostClosedError:
         reconnect = false;
+        break;
+    default:
+        break;
+    }
 
     qDebug("%s: state %d", __FUNCTION__, rpcChannel->state());
     if ((rpcChannel->state() == QAbstractSocket::UnconnectedState) && reconnect)

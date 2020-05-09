@@ -421,8 +421,13 @@ _top:
         }
 
         default:
-            qFatal("%s: unexpected type %d", __PRETTY_FUNCTION__, type);
-            goto _error_exit;
+            qWarning("%s: unexpected type %d", __PRETTY_FUNCTION__, type);
+            qWarning("aborting %s:%u", qPrintable(mServerHost), mServerPort);
+            // emit a error for user reporting; we are not a SSL socket,
+            // so we overload a SSL error to indicate abort
+            emit error(QAbstractSocket::SslInvalidUserDataError);
+            mpSocket->abort();
+            goto _exit2;
                 
     }
 
@@ -467,6 +472,7 @@ _exit:
     }
     if (mpSocket->bytesAvailable())
         qDebug("%s (exit): bytesAvail = %lld", __FUNCTION__, mpSocket->bytesAvailable());
+_exit2:
     return;
 }
 
