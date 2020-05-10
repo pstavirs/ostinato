@@ -23,6 +23,7 @@
     <file>icons/devicegroup_delete.png</file>
     <file>icons/devicegroup_edit.png</file>
     <file>icons/donate.png</file>
+    <file>icons/error.svg</file>
     <file>icons/exit.png</file>
     <file>icons/frag_capture.png</file>
     <file>icons/frag_exclusive.png</file>
@@ -56,5 +57,6 @@
     <file>icons/stream_edit.png</file>
     <file>icons/stream_stats.png</file>
     <file>icons/transmit_on.png</file>
+    <file>icons/warn.svg</file>
   </qresource>
 </RCC>

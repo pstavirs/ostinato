@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QHeaderView>
 #include <QMainWindow>
 #include <QMovie>
+#include <QPropertyAnimation>
 
 extern QMainWindow *mainWindow;
 
@@ -48,6 +49,13 @@ LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
 
     warnAnime_ = new QMovie(":/icons/anime_warn.gif", QByteArray(), this);
     errorAnime_ = new QMovie(":/icons/anime_error.gif", QByteArray(), this);
+
+    alert_ = new QLabel("ALERT!", this,
+                        Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
+    alert_->setScaledContents(true);
+    alertAnime_ = new QPropertyAnimation(alert_, "geometry", this);
+    alertAnime_->setDuration(2000);
+    alertAnime_->setEasingCurve(QEasingCurve::InOutExpo);
 
     connect(level, SIGNAL(currentIndexChanged(int)),
             model, SLOT(setLogLevel(int)));
@@ -85,8 +93,7 @@ void LogsWindow::when_visibilityChanged(bool visible)
 {
     if (visible) {
         logs->resizeRowsToContents();
-        state_ = kInfo;
-        notify();
+        setState(kInfo);
     }
 
     isVisible_ = visible;
@@ -96,29 +103,26 @@ void LogsWindow::when_visibilityChanged(bool visible)
 void LogsWindow::when_rowsInserted(const QModelIndex &parent,
                                    int first, int last)
 {
-
-    if (isVisible_) {
+    if (isVisible_)
         logs->resizeRowsToContents();
-        return;
-    }
 
-    if (state_ == kError)
-        return;
-
+    State incrementalState = kInfo;
     for (int i = first; i <= last; i++) {
         // FIXME: use a user-role instead, so we don't need to know column and
         // have to compare strings?
         QString level = logs->model()->data(logs->model()->index(i, 1, parent))
                                         .toString();
         if (level == "Error") {
-            state_ = kError;
+            incrementalState = kError;
             break; // Highest level - no need to look further
         }
         else if (level == "Warning") {
-            state_ = kWarning;
+            incrementalState = kWarning;
         }
     }
-    notify();
+    alert(incrementalState);
+    if (incrementalState > state())
+        setState(incrementalState);
 }
 
 void LogsWindow::on_autoScroll_toggled(bool checked)
@@ -133,6 +137,19 @@ void LogsWindow::on_autoScroll_toggled(bool checked)
                 SIGNAL(rowsInserted(const QModelIndex&, int, int)),
                 logs, SLOT(scrollToBottom()));
     }
+}
+
+LogsWindow::State LogsWindow::state()
+{
+   return state_;
+}
+
+void LogsWindow::setState(State state)
+{
+    if (isVisible_)
+        return;
+    state_ = state;
+    notify();
 }
 
 QLabel* LogsWindow::tabIcon()
@@ -155,6 +172,48 @@ QLabel* LogsWindow::tabIcon()
     return nullptr;
 }
 
+void LogsWindow::alert(State state)
+{
+    if (state == kInfo)
+        return;
+
+    QRect start;
+    QWidget *view = isVisible_ ? dynamic_cast<QWidget*>(this) : mainWindow;
+    alert_->setParent(view);
+    start.setSize(QSize(256, 256).scaled(view->size()/2, Qt::KeepAspectRatio));
+    start.moveCenter(QPoint(view->size().width()/2,
+                            view->size().height()/2));
+    QPoint c;
+    QLabel *icon = tabIcon();
+    if (icon && !isVisible_) {
+        c = icon->geometry().center();  // in icon's parent (tabBar) coords
+        c = icon->mapFromParent(c);     // in icon's own coords
+        c = icon->mapTo(view, c);       // in view's coords
+    }
+    else
+        c = view->geometry().center();
+
+    QRect end;
+    end.moveCenter(c);
+
+    switch (state) {
+    case kError:
+        alert_->setPixmap(QPixmap(":/icons/error.svg"));
+        break;
+    case kWarning:
+        alert_->setPixmap(QPixmap(":/icons/warn.svg"));
+        break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    alertAnime_->setStartValue(start);
+    alertAnime_->setEndValue(end);
+    alert_->show(); // ensure it's visible before starting animation
+    alertAnime_->start();
+}
+
 void LogsWindow::notify()
 {
     QString annotation;
@@ -164,7 +223,7 @@ void LogsWindow::notify()
     warnAnime_->stop();
     errorAnime_->stop();
 
-    switch (state_) {
+    switch (state()) {
     case kError:
         anime = errorAnime_;
         annotation = " - Error(s)";

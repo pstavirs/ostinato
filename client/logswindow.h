@@ -26,6 +26,7 @@ class LogsModel;
 class QDockWidget;
 class QShowEvent;
 class QMovie;
+class QPropertyAnimation;
 
 class LogsWindow: public QWidget, private Ui::LogsWindow
 {
@@ -46,12 +47,17 @@ private:
     enum State {kInfo, kWarning, kError};
 
     QLabel* tabIcon();
+    State state();
+    void setState(State state);
+    void alert(State state);
     void notify();
 
     State state_{kInfo};
     QDockWidget *parentDock_;
     QMovie *warnAnime_{nullptr};
     QMovie *errorAnime_{nullptr};
+    QLabel *alert_{nullptr};
+    QPropertyAnimation *alertAnime_{nullptr};
     QString windowTitle_;
     bool isVisible_{false};
     QObject *logsModelTest_;
