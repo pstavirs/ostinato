@@ -59,8 +59,12 @@ private:
     QLabel *alert_{nullptr};
     QPropertyAnimation *alertAnime_{nullptr};
     QString windowTitle_;
-    bool isVisible_{false};
+    bool isVisible_{false}; // see XXX below
     QObject *logsModelTest_;
+
+    // XXX: We cannot use isVisible() instead of isVisible_ since
+    // LogsWindow::isVisible() returns true even when the parent LogsDock
+    // is tabified but not the selected tab
 };
 
 #endif
