@@ -417,6 +417,13 @@ _top:
             // so we overload a SSL error to indicate abort
             emit error(QAbstractSocket::SslInvalidUserDataError);
             mpSocket->abort();
+
+            // reset inStream - there's no way to do that currently, so
+            // we delete-create
+            delete inStream;
+            inStream = new google::protobuf::io::CopyingInputStreamAdaptor(
+                            new PbQtInputStream(mpSocket));
+            inStream->SetOwnsCopyingStream(true);
             goto _exit2;
                 
     }
