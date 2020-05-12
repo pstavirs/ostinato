@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QtGlobal>
 #include <qendian.h>
 
-static uchar msgBuf[4096];
-
 PbRpcChannel::PbRpcChannel(QString serverName, quint16 port,
                            const ::google::protobuf::Message &notifProto)
     : notifPrototype(notifProto)
@@ -100,7 +98,7 @@ void PbRpcChannel::CallMethod(
     ::google::protobuf::Message *response,
     ::google::protobuf::Closure* done)
 {
-    char* msg = (char*) &msgBuf[0];
+    char* msg = (char*) &sendBuffer_[0];
     int     len;
     bool    ret;
   
@@ -174,9 +172,6 @@ void PbRpcChannel::on_mpSocket_readyRead()
 {
     const uchar      *msg;
     int               msgLen;
-    static bool parsing = false;
-    static quint16    type, method;
-    static quint32    len;
 
 _top:
     //qDebug("%s(entry): bytesAvail = %d", __FUNCTION__, mpSocket->bytesAvailable());
@@ -196,7 +191,7 @@ _top:
         }
 
         type = qFromBigEndian<quint16>(msg+0);
-        method = qFromBigEndian<quint16>(msg+2);
+        methodId = qFromBigEndian<quint16>(msg+2);
         len = qFromBigEndian<quint32>(msg+4);
 
         if (msgLen > PB_HDR_SIZE)
@@ -212,7 +207,6 @@ _top:
     {
         case PB_MSG_TYPE_BINBLOB:
         {
-            static quint32 cumLen = 0;
             QIODevice *blob;
             int l = 0;
 
@@ -251,9 +245,9 @@ _top:
                 goto _error_exit2;
             }
 
-            if (pendingMethodId != method)
+            if (pendingMethodId != methodId)
             {
-                qWarning("invalid method id %d (expected = %d)", method, 
+                qWarning("invalid method id %d (expected = %d)", methodId,
                     pendingMethodId);
                 goto _error_exit2;
             }
@@ -263,8 +257,6 @@ _top:
 
         case PB_MSG_TYPE_RESPONSE:
         {
-            static quint32 cumLen = 0;
-            static QByteArray buffer;
             int l = 0;
 
             if (!isPending)
@@ -273,9 +265,9 @@ _top:
                 goto _error_exit;
             }
 
-            if (pendingMethodId != method)
+            if (pendingMethodId != methodId)
             {
-                qWarning("invalid method id %d (expected = %d)", method, 
+                qWarning("invalid method id %d (expected = %d)", methodId,
                     pendingMethodId);
                 goto _error_exit;
             }
@@ -311,11 +303,11 @@ _top:
             buffer.resize(0);
 
             // Avoid printing stats
-            if (method != 13)
+            if (methodId != 13)
             {
                 qDebug("client(%s): Received Msg <---- ", __FUNCTION__);
                 qDebug("method = %d:%s\nresp = %s\n%s\n---->",
-                        method, this->method->name().c_str(),
+                        methodId, this->method->name().c_str(),
                         this->method->output_type()->name().c_str(),
                         response->DebugString().c_str());
             }
@@ -335,8 +327,6 @@ _top:
         }
         case PB_MSG_TYPE_ERROR:
         {
-            static quint32 cumLen = 0;
-            static QByteArray error;
             int l = 0;
 
             msgLen = 0;
@@ -348,7 +338,7 @@ _top:
                 }
 
                 l = qMin(msgLen, int(len - cumLen));
-                error.append(QByteArray((char*)msg, l));
+                errorBuf.append(QByteArray((char*)msg, l));
                 cumLen += l;
                 //qDebug("%s: error rcvd %d/%d/%d", __PRETTY_FUNCTION__, l, cumLen, len);
             }
@@ -364,10 +354,10 @@ _top:
                 goto _exit;
 
             static_cast<PbRpcController*>(controller)->SetFailed(
-                    QString::fromUtf8(error, len));
+                    QString::fromUtf8(errorBuf, len));
 
             cumLen = 0;
-            error.resize(0);
+            errorBuf.resize(0);
 
             if (!isPending)
             {
@@ -375,9 +365,9 @@ _top:
                 goto _error_exit2;
             }
 
-            if (pendingMethodId != method)
+            if (pendingMethodId != methodId)
             {
-                qWarning("invalid method id %d (expected = %d)", method, 
+                qWarning("invalid method id %d (expected = %d)", methodId,
                     pendingMethodId);
                 goto _error_exit2;
             }
@@ -399,7 +389,7 @@ _top:
 
             qDebug("client(%s): Received Notif Msg <---- ", __FUNCTION__);
             qDebug("type = %d\nnotif = \n%s\n---->",
-                    method, notif->DebugString().c_str());
+                    methodId, notif->DebugString().c_str());
 
             if (!notif->IsInitialized())
             {
@@ -409,7 +399,7 @@ _top:
                         notif->InitializationErrorString().c_str());
             }
             else 
-                emit notification(method, notif);
+                emit notification(methodId, notif);
 
             delete notif;
             notif = NULL;
@@ -460,7 +450,7 @@ _error_exit:
 _error_exit2:
     parsing = false;
     qDebug("client(%s) discarding received msg <----", __FUNCTION__);
-    qDebug("method = %d\n---->", method);
+    qDebug("method = %d\n---->", methodId);
 _exit:
     // If we have some data still available continue reading/parsing
     if (inStream->Next((const void**)&msg, &msgLen)) {
@@ -498,8 +488,7 @@ void PbRpcChannel::on_mpSocket_disconnected()
     controller = NULL;
     response = NULL;
     isPending = false;
-    // \todo convert parsing from static to data member
-    //parsing = false 
+    parsing = false;
     pendingCallList.clear();
 
     emit disconnected();

@@ -73,6 +73,17 @@ class PbRpcChannel : public QObject, public ::google::protobuf::RpcChannel
     ::google::protobuf::io::CopyingInputStreamAdaptor  *inStream;
     ::google::protobuf::io::CopyingOutputStreamAdaptor *outStream;
 
+    uchar sendBuffer_[4096];
+
+    // receive RPC related vars
+    bool parsing{false};
+    QByteArray buffer;   // used for response type messages
+    QByteArray errorBuf; // used for error type messages
+    quint32 cumLen{0};
+    quint16 type;
+    quint16 methodId;
+    quint32 len;
+
 public:
     PbRpcChannel(QString serverName, quint16 port,
                  const ::google::protobuf::Message &notifProto);
