@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QVariant>
 #include <google/protobuf/descriptor.h>
 #include <vector>
+#include <cmath>
 
 extern QMainWindow *mainWindow;
 
