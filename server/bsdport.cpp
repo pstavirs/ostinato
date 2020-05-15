@@ -301,6 +301,7 @@ void BsdPort::populateInterfaceInfo()
 BsdPort::StatsMonitor::StatsMonitor()
     : QThread()
 {
+    setObjectName("StatsMon");
     stop_ = false;
     setupDone_ = false;
 }

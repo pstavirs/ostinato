@@ -26,6 +26,8 @@ PcapTxThread::PcapTxThread(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE] = "";
 
+    setObjectName(QString("Tx:%1").arg(device));
+
 #ifdef Q_OS_WIN32
     LARGE_INTEGER   freq;
     if (QueryPerformanceFrequency(&freq))

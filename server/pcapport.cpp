@@ -207,6 +207,9 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     bool noLocalCapture;
 
+    setObjectName(QString("Mon%1:%2")
+                    .arg(direction == kDirectionRx ? "Rx" : "Tx")
+                    .arg(device));
     direction_ = direction;
     isDirectional_ = true;
     isPromisc_ = true;
@@ -354,6 +357,7 @@ void PcapPort::PortMonitor::stop()
 PcapPort::PortCapturer::PortCapturer(const char *device)
 {
     device_ = QString::fromLatin1(device);
+    setObjectName(QString("Capture:%1").arg(device_));
     stop_ = false;
     state_ = kNotStarted;
 
@@ -507,6 +511,7 @@ PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
         DeviceManager *deviceManager)
 {
     device_ = QString::fromLatin1(device);
+    setObjectName(QString("EmulXcvr:%1").arg(device_));
     deviceManager_ = deviceManager;
     stop_ = false;
     state_ = kNotStarted;

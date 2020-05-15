@@ -59,6 +59,7 @@ void RpcServer::incomingConnection(qintptr socketDescriptor)
     QThread *thread = new QThread;
     RpcConnection *conn = new RpcConnection(socketDescriptor, service);
 
+    thread->setObjectName("RPC");
     conn->moveToThread(thread);
 
     connect(thread, SIGNAL(started()), conn, SLOT(start()));

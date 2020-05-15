@@ -316,6 +316,7 @@ void LinuxPort::populateInterfaceInfo()
 LinuxPort::StatsMonitor::StatsMonitor()
     : QThread()
 {
+    setObjectName("StatsMon");
     stop_ = false;
     setupDone_ = false;
     ioctlSocket_ = socket(AF_INET, SOCK_DGRAM, 0);
