@@ -172,26 +172,32 @@ QLabel* LogsWindow::tabIcon()
     return nullptr;
 }
 
+//! Popup and animate a big icon
 void LogsWindow::alert(State state)
 {
     if (state == kInfo)
         return;
 
+    // start - center of main window
     QRect start;
-    QWidget *view = isVisible_ ? dynamic_cast<QWidget*>(this) : mainWindow;
+    QWidget *view = mainWindow;
     alert_->setParent(view);
+    alert_->raise();
     start.setSize(QSize(256, 256).scaled(view->size()/2, Qt::KeepAspectRatio));
     start.moveCenter(QPoint(view->size().width()/2,
                             view->size().height()/2));
+    // end - center of logs window if visible, tab icon otherwise
     QPoint c;
     QLabel *icon = tabIcon();
+    view = isVisible_ ? dynamic_cast<QWidget*>(this) : mainWindow;
     if (icon && !isVisible_) {
         c = icon->geometry().center();  // in icon's parent (tabBar) coords
         c = icon->mapFromParent(c);     // in icon's own coords
-        c = icon->mapTo(view, c);       // in view's coords
-    }
-    else
+        c = icon->mapTo(view, c);       // in mainWindow's coords
+    } else {
         c = view->geometry().center();
+        c = view->mapTo(mainWindow, c); // in mainWindow's coords
+    }
 
     QRect end;
     end.moveCenter(c);
@@ -214,6 +220,7 @@ void LogsWindow::alert(State state)
     alertAnime_->start();
 }
 
+//! Show tab icon
 void LogsWindow::notify()
 {
     QString annotation;
