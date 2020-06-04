@@ -73,7 +73,9 @@ void PdmlIp4Protocol::unknownFieldHandler(QString name, int /*pos*/,
     {
         OstProto::Ip4 *ip4 = pbProto->MutableExtension(OstProto::ip4);
 
-        ip4->set_flags(attributes.value("value").toString().toUInt(&isOk, kBaseHex) >> 5);
+        int shift = attributes.value("size").toString().toUInt(&isOk) == 2 ?
+                        13 : 5;
+        ip4->set_flags(attributes.value("value").toString().toUInt(&isOk, kBaseHex) >> shift);
     }
 }
 
