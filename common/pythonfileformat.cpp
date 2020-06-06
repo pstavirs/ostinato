@@ -252,7 +252,7 @@ void PythonFileFormat::writeStandardImports(QTextStream &out)
         << " revision " << revision << "\n"
         << "# The script should work out of the box mostly,\n"
         << "# but occassionally might need minor tweaking\n"
-        << "# Please report any bugs at http://ostinato.org\n";
+        << "# Please report any bugs at https://ostinato.org\n";
     out << "\n";
     out << "# standard modules\n";
     out << "import logging\n";
@@ -275,9 +275,9 @@ void PythonFileFormat::writePrologue(QTextStream &out)
     out << "\n";
     out << "# get inputs, if required\n";
     out << "while len(host_name) == 0:\n";
-    out << "    host_name = raw_input('Drone\\'s Hostname/IP: ')\n";
+    out << "    host_name = input('Drone\\'s Hostname/IP: ')\n";
     out << "while tx_port_number < 0:\n";
-    out << "    tx_port_number = int(raw_input('Tx Port Number: '))\n";
+    out << "    tx_port_number = int(input('Tx Port Number: '))\n";
     out << "\n";
     out << "drone = DroneProxy(host_name)\n";
     out << "\n";
