@@ -187,10 +187,10 @@ void Device::transmitPacket(PacketBuffer *pktBuf)
 
 void Device::resolveGateway()
 {
-    if (hasIp4_ && !isResolved(ip4Gateway_))
+    if (hasIp4_ && ip4Gateway_ && !isResolved(ip4Gateway_))
         sendArpRequest(ip4Gateway_);
 
-    if (hasIp6_ && !isResolved(ip6Gateway_))
+    if (hasIp6_ && (ip6Gateway_ != 0) && !isResolved(ip6Gateway_))
         sendNeighborSolicit(ip6Gateway_);
 }
 
