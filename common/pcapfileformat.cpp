@@ -480,7 +480,7 @@ _non_pdml:
         stream->mutable_control()->set_num_packets(1);
 
         // setup packet rate to the timing in pcap (as close as possible)
-        const uint kUsecsInSec = uint(1e6);
+        const double kUsecsInSec = 1e6;
         uint usec = (pktHdr.tsSec*kUsecsInSec + pktHdr.tsUsec);
         uint delta = usec - lastUsec;
         

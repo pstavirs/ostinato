@@ -177,7 +177,7 @@ void PdmlFrameProtocol::unknownFieldHandler(QString name, int /*pos*/,
             
             if (decimal >= 0)
             {
-                const uint kNsecsInSec = 1000000000;
+                const double kNsecsInSec = 1e9;
                 uint sec = delta.left(decimal).toUInt();
                 uint nsec = delta.mid(decimal+1).toUInt();
                 uint ipg = sec*kNsecsInSec + nsec;
