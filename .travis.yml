@@ -31,6 +31,7 @@ addons:
     packages:
       - qtbase5-dev
       - qtscript5-dev
+      - libqt5svg5-dev
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
