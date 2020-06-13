@@ -53,6 +53,7 @@ LogsWindow::LogsWindow(LogsModel *model, QWidget *parent)
     alert_ = new QLabel("ALERT!", this,
                         Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
     alert_->setScaledContents(true);
+    alert_->hide();
     alertAnime_ = new QPropertyAnimation(alert_, "geometry", this);
     alertAnime_->setDuration(2000);
     alertAnime_->setEasingCurve(QEasingCurve::InOutExpo);
