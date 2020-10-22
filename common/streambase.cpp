@@ -468,7 +468,7 @@ int StreamBase::frameSizeVariableCount() const
         case OstProto::StreamCore::e_fl_inc:
         case OstProto::StreamCore::e_fl_dec:
         case OstProto::StreamCore::e_fl_random:
-            count = frameLenMax() - frameLenMin() + 1;
+            count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
             break;
         default:
             qWarning("%s: Unhandled len mode %d",  __FUNCTION__, lenMode());
