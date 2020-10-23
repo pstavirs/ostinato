@@ -225,7 +225,7 @@ void StreamStatsModel::appendStreamStatsList(
             guidList_.append(guid);
     }
 
-    if (guidList_.size())
+    if (guidList_.size() && !guidList_.contains(kAggrGuid))
         guidList_.append(kAggrGuid);
 
 #if QT_VERSION >= 0x040600
