@@ -411,6 +411,7 @@ int AbstractPort::updatePacketListInterleaved()
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e9);
+    QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
     QList<quint64> ipg1, ipg2;
@@ -447,6 +448,8 @@ int AbstractPort::updatePacketListInterleaved()
         if (!streamList_[i]->isEnabled())
             continue;
 
+        streamId.append(i);
+
         double numBursts = 0;
         double numPackets = 0;
 
@@ -457,6 +460,7 @@ int AbstractPort::updatePacketListInterleaved()
         double ipg = 0;
         quint64 _ipg1 = 0, _ipg2 = 0;
         quint64 _np1 = 0, _np2 = 0;
+
 
         switch (streamList_[i]->sendUnit())
         {
@@ -590,7 +594,7 @@ int AbstractPort::updatePacketListInterleaved()
                 {
                     FrameValueAttrib attrib;
                     buf = pktBuf_;
-                    len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 
+                    len = streamList_[streamId.at(i)]->frameValue(pktBuf_, sizeof(pktBuf_),
                             pktCount[i], &attrib);
                     packetListAttrib += attrib;
                 }
