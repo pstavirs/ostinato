@@ -33,6 +33,8 @@ RpcServer::RpcServer(bool perConnLogs)
 
 RpcServer::~RpcServer()
 { 
+    close();
+    emit closed();
 }
 
 bool RpcServer::registerService(::google::protobuf::Service *service,
@@ -73,6 +75,7 @@ void RpcServer::incomingConnection(qintptr socketDescriptor)
 
     connect(this, SIGNAL(notifyClients(int, SharedProtobufMessage)),
             conn, SLOT(sendNotification(int, SharedProtobufMessage)));
+    connect(this, SIGNAL(closed()), thread, SLOT(quit()));
 
     thread->start();
 }

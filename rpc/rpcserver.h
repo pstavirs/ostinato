@@ -44,6 +44,7 @@ public:
         QHostAddress address, quint16 tcpPortNum);
 
 signals:
+    void closed();
     void notifyClients(int notifType, SharedProtobufMessage notifData);
 
 protected:
