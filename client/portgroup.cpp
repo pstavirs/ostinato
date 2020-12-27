@@ -253,6 +253,16 @@ void PortGroup::on_rpcChannel_disconnected()
     emit portListChanged(mPortGroupId);
     emit portGroupDataChanged(mPortGroupId);
 
+    // Disconnected during apply? Restore UI.
+    if (applyTimer_.isValid()) {
+        applyTimer_.invalidate();
+
+        emit applyFinished();
+
+        mainWindow->setEnabled(true);
+        QApplication::restoreOverrideCursor();
+    }
+
     isGetStatsPending_ = false;
 
     if (reconnect)
@@ -817,6 +827,7 @@ void PortGroup::processApplyBuildAck(int portIndex, PbRpcController *controller)
     logInfo(id(), mPorts[portIndex]->id(),
             QString("All port changes applied - in %1s")
                 .arg(applyTimer_.elapsed()/1e3));
+    applyTimer_.invalidate();
 
     if (controller->Failed())
     {
