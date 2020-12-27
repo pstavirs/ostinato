@@ -2017,9 +2017,12 @@ bool PortGroup::getStreamStats(QList<uint> *portList)
     if (portList == NULL)
         guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
     else
-        for (int i = 0; i < portList->size(); i++)
+        for (int i = 0; i < portList->size(); i++) {
             guidList->mutable_port_id_list()->add_port_id()
                 ->set_id(portList->at(i));
+            if (mPorts.at(i)->isTransmitting())
+                logWarn(id(), i, "Port is still transmitting - stream stats may be unavailable or incomplete");
+        }
 
     serviceStub->getStreamStats(controller, guidList, statsList,
             NewCallback(this, &PortGroup::processStreamStatsList, controller));
