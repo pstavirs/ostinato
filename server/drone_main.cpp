@@ -28,9 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QCoreApplication>
 #include <QFile>
 
-#ifdef Q_OS_UNIX
 #include <signal.h>
-#endif
 
 extern ProtocolManager *OstProtocolManager;
 extern char *version;
@@ -99,6 +97,11 @@ int main(int argc, char *argv[])
     if (sigaction(SIGTERM, &sa, NULL))
         qDebug("Failed to install SIGTERM handler. Cleanup may not happen!!!");
     if (sigaction(SIGINT, &sa, NULL))
+        qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
+#elif defined(Q_OS_WIN32)
+    if (signal(SIGTERM, cleanup) == SIG_ERR)
+        qDebug("Failed to install SIGTERM handler. Cleanup may not happen!!!");
+    if (signal(SIGINT, cleanup) == SIG_ERR)
         qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
 #endif
 
