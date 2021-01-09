@@ -29,6 +29,7 @@ PROTOS += \
     ip4over6.proto \
     ip4over4.proto \
     ip6over6.proto \
+    gre.proto \
     icmp.proto \
     gmp.proto \
     igmp.proto \
@@ -69,6 +70,7 @@ HEADERS += \
     ip6over4.h \
     ip6over6.h \
     gmp.h \
+    gre.h \
     icmp.h \
     igmp.h \
     mld.h \
@@ -103,6 +105,7 @@ SOURCES += \
     ip4.cpp \
     ip6.cpp \
     gmp.cpp \
+    gre.cpp \
     icmp.cpp \
     igmp.cpp \
     mld.cpp \
