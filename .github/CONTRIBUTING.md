@@ -4,7 +4,8 @@ Please use a Pull Request to contribute code. Very small fixes (< 10 lines) can 
 In either case, you agree to the below legal terms and you indicate your acceptance by explicitly adding a comment to the issue or PR stating -
 
 ```
-I have read the contributing guidelines (CONTRIBUTING.md) and I hereby assign the copyrights of these changes to [Srivats P](https://github.com/pstavirs).
+I have read the contributing guidelines (CONTRIBUTING.md) and I hereby assign the copyrights of these
+changes to [Srivats P](https://github.com/pstavirs).
 ```
 
 ## Legal
