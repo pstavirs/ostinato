@@ -315,8 +315,10 @@ int AbstractPort::updatePacketListSequential()
             qDebug("npx2 = %llu", npx2);
             qDebug("npy2 = %llu\n", npy2);
 
-            if (n > 1)
+            if (n >= 1) {
                 loopNextPacketSet(x, n, 0, loopDelay);
+                qDebug("PacketSet: n = %lu, x = %lu", n, x);
+            }
             else if (n == 0)
                 x = 0;
 
@@ -333,10 +335,20 @@ int AbstractPort::updatePacketListSequential()
                 if (len <= 0)
                     continue;
 
+                // Create a packet set for 'y' with repeat = 1
+                if (j == x) {
+                    loopNextPacketSet(y, 1, 0, loopDelay);
+                    qDebug("PacketSet: n = 1, y = %lu", y);
+                }
+
                 qDebug("q(%d, %d) sec = %lu nsec = %lu",
                         i, j, sec, nsec);
 
-                appendToPacketList(sec, nsec, pktBuf_, len); 
+                if (!appendToPacketList(sec, nsec, pktBuf_, len)) {
+                    clearPacketList(); // don't leave it half baked/inconsitent
+                    packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
+                    goto _out_of_memory;
+                }
 
                 if ((j > 0) && (((j+1) % burstSize) == 0))
                 {
@@ -397,6 +409,7 @@ int AbstractPort::updatePacketListSequential()
         } // if (stream is enabled)
     } // for (numStreams)
 
+_out_of_memory:
 _stop_no_more_pkts:
     isSendQueueDirty_ = false;
 
@@ -410,7 +423,7 @@ int AbstractPort::updatePacketListInterleaved()
     FrameValueAttrib packetListAttrib;
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
-    quint64 duration = quint64(1e9);
+    quint64 duration = quint64(1e3);
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
     QList<quint64> ipg1, ipg2;
@@ -568,6 +581,11 @@ int AbstractPort::updatePacketListInterleaved()
     qDebug("minGap   = %llu", minGap);
     qDebug("duration = %llu", duration);
 
+    if (duration < minGap*100) {
+        duration = minGap*100;
+        qDebug("increase duration to %llu for better accuracy", duration);
+    }
+
     uchar* buf;
     int len;
     quint64 durSec = duration/ulong(1e9);
@@ -604,7 +622,11 @@ int AbstractPort::updatePacketListInterleaved()
                     continue;
 
                 qDebug("q(%d) sec = %llu nsec = %llu", i, sec, nsec);
-                appendToPacketList(sec, nsec, buf, len); 
+                if (!appendToPacketList(sec, nsec, buf, len)) {
+                    clearPacketList(); // don't leave it half baked/inconsitent
+                    packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
+                    goto _out_of_memory;
+                }
                 lastPktTxSec = sec;
                 lastPktTxNsec = nsec;
 
@@ -636,15 +658,19 @@ int AbstractPort::updatePacketListInterleaved()
         }
     } while ((sec < durSec) || (nsec < durNsec));
 
-    qint64 delaySec = durSec - lastPktTxSec;
-    qint64 delayNsec = durNsec - lastPktTxNsec;
-    while (delayNsec < 0)
     {
-        delayNsec += long(1e9);
-        delaySec--;
+        qint64 delaySec = durSec - lastPktTxSec;
+        qint64 delayNsec = durNsec - lastPktTxNsec;
+        while (delayNsec < 0)
+        {
+            delayNsec += long(1e9);
+            delaySec--;
+        }
+        qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
+        setPacketListLoopMode(true, delaySec, delayNsec);
     }
-    qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
-    setPacketListLoopMode(true, delaySec, delayNsec); 
+
+_out_of_memory:
     isSendQueueDirty_ = false;
 
     qDebug("PacketListAttrib = %x",
@@ -688,6 +714,9 @@ void AbstractPort::stats(PortStats *stats)
 
 void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
 {
+    // In case stats are being maintained elsewhere
+    updateStreamStats();
+
     if (streamStats_.contains(guid))
     {
         StreamStatsTuple sst = streamStats_.value(guid);
@@ -705,6 +734,9 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
 
 void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 {
+    // In case stats are being maintained elsewhere
+    updateStreamStats();
+
     // FIXME: change input param to a non-OstProto type and/or have
     // a getFirst/Next like API?
     StreamStatsIterator i(streamStats_);

@@ -30,7 +30,7 @@ class LinuxPort : public PcapPort
 {
 public:
     LinuxPort(int id, const char *device);
-    ~LinuxPort();
+    virtual ~LinuxPort();
 
     void init();
 

@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "pcaptransmitter.h"
+#include "pcaptxthread.h"
 
 #include "statstuple.h"
 #include "timestamp.h"
@@ -109,6 +109,11 @@ void PcapTxThread::clearPacketList()
 void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
         long repeatDelaySec, long repeatDelayNsec)
 {
+    // Since we create implicit packetset for this case, skip
+    // This case => Packet set for y when x = 0 or n==1 in n*x+y
+    if (repeats == 1)
+        return;
+
     currentPacketSequence_ = new PacketSequence(trackStreamStats_);
     currentPacketSequence_->repeatCount_ = repeats;
     currentPacketSequence_->usecDelay_ = repeatDelaySec * long(1e6)

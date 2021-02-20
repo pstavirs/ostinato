@@ -20,9 +20,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _TIMESTAMP_H
 #define _TIMESTAMP_H
 
+#include "timespecops.h"
+
 #include <QtGlobal>
 
 #if defined(Q_OS_LINUX)
+#include <sys/time.h>
+#ifdef USE_NSEC_TIMESTAMP
+typedef struct timespec TimeStamp;
+static void inline getTimeStamp(TimeStamp *stamp)
+{
+    clock_gettime(CLOCK_MONOTONIC, stamp);
+}
+
+// Returns time diff in nsecs between end and start
+static long inline ndiffTimeStamp(const TimeStamp *start, const TimeStamp *end)
+{
+    struct timespec diff;
+    timespecsub(end, start, &diff);
+
+    long nsecs = diff.tv_nsec;
+    if (diff.tv_sec)
+        nsecs += diff.tv_sec*1e9;
+
+    return nsecs;
+}
+#else
 typedef struct timeval TimeStamp;
 static void inline getTimeStamp(TimeStamp *stamp)
 {
@@ -43,6 +66,8 @@ static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end)
 
     return usecs;
 }
+#endif
+
 #elif defined(Q_OS_WIN32)
 static quint64 gTicksFreq;
 typedef LARGE_INTEGER TimeStamp;

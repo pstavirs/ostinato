@@ -27,6 +27,7 @@ struct FrameValueAttrib
     enum ErrorFlag {
         UnresolvedSrcMacError = 0x1,
         UnresolvedDstMacError = 0x2,
+        OutOfMemoryError      = 0x4,
     };
     Q_DECLARE_FLAGS(ErrorFlags, ErrorFlag);
     ErrorFlags errorFlags{0};

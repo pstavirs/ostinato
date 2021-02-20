@@ -124,6 +124,9 @@ public:
     void streamStatsAll(OstProto::StreamStatsList *stats);
     void resetStreamStats(uint guid);
     void resetStreamStatsAll();
+    virtual void updateStreamStats() {
+        // subclasses may implement - if required
+    }
 
     DeviceManager* deviceManager();
     virtual void startDeviceEmulation() = 0;

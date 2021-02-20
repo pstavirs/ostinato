@@ -1249,6 +1249,9 @@ QString MyService::frameValueErrorNotes(int portId, int error)
     QString pfx = QString("Port %1: ").arg(portId);
     auto errorFlags = static_cast<FrameValueAttrib::ErrorFlags>(error);
 
+    if (errorFlags & FrameValueAttrib::OutOfMemoryError)
+        return pfx + "Error building packet buffers - out of buffer memory\n";
+
     // If smac resolve fails, dmac will always fail - so check that first
     // and report only that so as not to confuse users (they may not realize
     // that without a source device, we have no ARP table to lookup for dmac)
