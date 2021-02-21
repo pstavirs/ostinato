@@ -96,7 +96,7 @@ void Device::setIp4(quint32 address, int prefixLength, quint32 gateway)
     hasIp4_ = true;
 
     // Precalculate our mask 'n subnet to avoid doing so at pkt rx/tx time
-    ip4Mask_ = ~0 << (32 - ip4PrefixLength_);
+    ip4Mask_ = ~0U << (32 - ip4PrefixLength_);
     ip4Subnet_ = ip4_ & ip4Mask_;
 }
 
