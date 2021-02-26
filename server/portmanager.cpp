@@ -17,10 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifdef TURBO
-#include "xdpport.h" // MUST be included first - see why in xdpport.h
-#endif
-
 #include "portmanager.h"
 
 #include "bsdport.h"
@@ -28,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "linuxport.h"
 #include "pcapport.h"
 #include "settings.h"
+#include "turbo.h"
 #include "winpcapport.h"
 
 #include <QHostAddress>
@@ -97,18 +94,17 @@ PortManager::PortManager()
 #if defined(Q_OS_WIN32)
         port = new WinPcapPort(i, device->name, device->description);
 #elif defined(Q_OS_LINUX)
-#ifdef TURBO
-        port = new XdpPort(i, device->name);
-#else
-        port = new LinuxPort(i, device->name);
-#endif
+        if (isTurboPort(device->name))
+            port = createTurboPort(i, device->name);
+        else
+            port = new LinuxPort(i, device->name);
 #elif defined(Q_OS_BSD4)
         port = new BsdPort(i, device->name);
 #else
         port = new PcapPort(i, device->name);
 #endif
 
-        if (!port->isUsable())
+        if (port && !port->isUsable())
         {
             qDebug("%s: unable to open %s. Skipping!", __FUNCTION__,
                     device->name);

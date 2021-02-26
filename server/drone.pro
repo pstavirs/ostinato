@@ -61,6 +61,7 @@ SOURCES += \
     linuxhostdevice.cpp \
     linuxport.cpp \
     params.cpp \
+    turbo.cpp \
     winhostdevice.cpp \
     winpcapport.cpp 
 SOURCES += myservice.cpp 
