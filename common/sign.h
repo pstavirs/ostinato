@@ -83,6 +83,7 @@ public:
 
     static quint32 magic();
     static bool packetGuid(const uchar *pkt, int pktLen, uint *guid);
+    static const quint32 kMaxGuid = 0x00ffffff;
 private:
     static const quint32 kSignMagic = 0x1d10c0da; // coda! (unicode - 0x1d10c)
     static const quint8 kTypeLenEnd = 0x00;
