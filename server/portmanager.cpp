@@ -73,7 +73,7 @@ PortManager::PortManager()
 
     for(device = deviceList, i = 0; device != NULL; device = device->next, i++)
     {
-        AbstractPort *port;
+        AbstractPort *port = nullptr;
       
         qDebug("%d. %s", i, device->name);
         if (device->description)
@@ -96,7 +96,7 @@ PortManager::PortManager()
 #elif defined(Q_OS_LINUX)
         if (isTurboPort(device->name))
             port = createTurboPort(i, device->name);
-        else
+        if (!port)
             port = new LinuxPort(i, device->name);
 #elif defined(Q_OS_BSD4)
         port = new BsdPort(i, device->name);

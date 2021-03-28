@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 class AbstractPort;
 
+void validateTurboLicense();
 bool isTurboPort(const char* device);
 AbstractPort* createTurboPort(int id, const char* device);
 

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "../common/protocolmanager.h"
 #include "params.h"
 #include "settings.h"
+#include "turbo.h"
 
 #include <google/protobuf/stubs/common.h>
 
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
                                     app.organizationName(), 
                                     app.applicationName().toLower());
     qDebug("Settings: %s", qPrintable(appSettings->fileName()));
+
+    validateTurboLicense();
 
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();

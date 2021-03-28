@@ -19,6 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "turbo.h"
 
+void validateTurboLicense()
+{
+    return;
+}
+
 bool isTurboPort(const char* device)
 {
     return false;
