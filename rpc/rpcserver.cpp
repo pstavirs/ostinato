@@ -53,6 +53,10 @@ bool RpcServer::registerService(::google::protobuf::Service *service,
     qDebug("The server is running on %s: %d", 
             qPrintable(serverAddress().toString()),
             serverPort());
+    fprintf(stderr, "Ready to send traffic! Listening on %s:%d ...\n",
+            qPrintable(serverAddress().toString()),
+            serverPort());
+    fflush(stderr);
     return true;
 }
 

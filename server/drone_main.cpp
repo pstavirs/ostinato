@@ -46,6 +46,8 @@ void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
 
 void cleanup(int /*signum*/)
 {
+    fprintf(stderr, "\nCleaning up ... (may take a few seconds) ... ");
+    fflush(stderr);
     QCoreApplication::instance()->exit(-1);
 }
 
@@ -53,6 +55,9 @@ int main(int argc, char *argv[])
 {
     int exitCode = 0;
     QCoreApplication app(argc, argv);
+
+    fprintf(stderr, "Starting (will take a few seconds) ...\n");
+    fflush(stderr);
 
     app.setApplicationName("Drone");
     app.setOrganizationName("Ostinato");
@@ -112,6 +117,9 @@ _exit:
     delete OstProtocolManager;
 
     google::protobuf::ShutdownProtobufLibrary();
+
+    fprintf(stderr, "done.\n");
+    fflush(stderr);
 
     return exitCode;
 } 
