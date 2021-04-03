@@ -56,13 +56,13 @@ int main(int argc, char *argv[])
     int exitCode = 0;
     QCoreApplication app(argc, argv);
 
-    fprintf(stderr, "Starting (will take a few seconds) ...\n");
-    fflush(stderr);
-
     app.setApplicationName("Drone");
     app.setOrganizationName("Ostinato");
 
     appParams.parseCommandLine(argc, argv);
+
+    fprintf(stderr, "Starting (will take a few seconds) ...\n");
+    fflush(stderr);
 
 #ifdef QT_NO_DEBUG
     if (appParams.optLogsDisabled())
