@@ -156,23 +156,7 @@
         <item>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="1" column="1">
-           <widget class="QLineEdit" name="ui_root_id">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="inputMask">
-             <string>&gt;HH HH HH HH HH HH; </string>
-            </property>
-            <property name="text">
-             <string>     </string>
-            </property>
-            <property name="cursorPosition">
-             <number>17</number>
-            </property>
-           </widget>
+            <widget class="MacEdit" name="ui_root_id"/>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_11">
@@ -254,11 +238,7 @@
         <item>
          <layout class="QGridLayout" name="gridLayout">
           <item row="1" column="1">
-           <widget class="QLineEdit" name="ui_bridge_id">
-            <property name="inputMask">
-             <string>&gt;HH HH HH HH HH HH; </string>
-            </property>
-           </widget>
+            <widget class="MacEdit" name="ui_bridge_id"/>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_15">
@@ -499,6 +479,13 @@
   <tabstop>ui_hello_time</tabstop>
   <tabstop>ui_forward_delay</tabstop>
  </tabstops>
+ <customwidgets>
+  <customwidget>
+   <class>MacEdit</class>
+   <extends>QLineEdit</extends>
+   <header>macedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
