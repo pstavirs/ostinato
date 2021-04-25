@@ -28,12 +28,14 @@ public:
     int parseCommandLine(int argc, char* argv[]);
 
     bool optLocalDrone();
+    bool optLogsDisabled();
 
     int argumentCount();
     QString argument(int index);
 
 private:
     bool localDrone_;
+    bool logsDisabled_;
     QStringList args_;
 };
 

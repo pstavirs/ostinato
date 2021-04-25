@@ -40,6 +40,8 @@ public:
             int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
 
+    Qt::DropActions supportedDropActions() const;
+
     void setDeviceIndex(Port *port, int deviceIndex);
 
 public slots:

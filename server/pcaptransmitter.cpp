@@ -25,6 +25,7 @@ PcapTransmitter::PcapTransmitter(
     : streamStats_(portStreamStats), txThread_(device)
 {
     adjustRxStreamStats_ = false;
+    txStats_.setObjectName(QString("TxStats:%1").arg(device));
     memset(&stats_, 0, sizeof(stats_));
     txStats_.setTxThreadStats(&stats_);
     txStats_.start(); // TODO: alongwith user transmit start

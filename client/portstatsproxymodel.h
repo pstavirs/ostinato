@@ -29,6 +29,7 @@ public:
     PortStatsProxyModel(QObject *parent = 0)
         : QSortFilterProxyModel(parent)
     {
+        setFilterRegExp(QRegExp(".*"));
     }
 
 protected:

@@ -38,6 +38,9 @@ public:
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
 
+    static void fetchHostNetworkInfo();
+    static void freeHostNetworkInfo();
+
 protected:
     class StatsMonitor: public QThread
     {
@@ -62,6 +65,14 @@ protected:
     bool clearPromisc_;
     static QList<LinuxPort*> allPorts_;
     static StatsMonitor *monitor_; // rx/tx stats for ALL ports
+
+private:
+    void populateInterfaceInfo();
+
+    static struct nl_sock *netSock_;
+    static struct nl_cache *linkCache_;
+    static struct nl_cache *addressCache_;
+    static struct nl_cache *routeCache_;
 };
 #endif
 

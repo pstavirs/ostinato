@@ -30,6 +30,8 @@ public:
     virtual void unknownFieldHandler(QString name, int pos, int size, 
             const QXmlStreamAttributes &attributes, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
+    virtual void postProtocolHandler(OstProto::Protocol *pbProto,
+            OstProto::Stream *stream);
 
 protected:
     PdmlEthProtocol();

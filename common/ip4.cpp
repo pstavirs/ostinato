@@ -878,3 +878,27 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
 
     return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
 }
+
+bool Ip4Protocol::hasErrors(QStringList *errors) const
+{
+    bool result = false;
+
+    if ((data.dst_ip() == 0)
+            && (data.dst_ip_mode() == OstProto::Ip4::e_im_fixed)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Destination IP 0.0.0.0 "
+                                   "are likely to be dropped");
+        result = true;
+    }
+
+    if ((data.src_ip() == 0)
+            && (data.src_ip_mode() == OstProto::Ip4::e_im_fixed)) {
+        if (errors)
+            *errors << QObject::tr("Frames with Source IP 0.0.0.0 "
+                                   "may be dropped except for special cases "
+                                   "like BOOTP/DHCP");
+        result = true;
+    }
+
+    return result;
+}

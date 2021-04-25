@@ -3,7 +3,7 @@ CONFIG += qt ver_info
 macx: TARGET = Ostinato
 win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
-QT += widgets network script xml
+QT += widgets network script xml svg
 INCLUDEPATH += "../rpc/" "../common/"
 win32 {
     QMAKE_LFLAGS += -static
@@ -35,6 +35,7 @@ LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
 HEADERS += \
     arpstatusmodel.h \
+    clipboardhelper.h \
     devicegroupdialog.h \
     devicegroupmodel.h \
     devicemodel.h \
@@ -64,7 +65,8 @@ HEADERS += \
     streamstatsfiltermodel.h \
     streamstatsmodel.h \
     streamstatswindow.h \
-    variablefieldswidget.h
+    variablefieldswidget.h \
+    xtableview.h
 
 FORMS += \
     about.ui \
@@ -83,6 +85,7 @@ FORMS += \
 
 SOURCES += \
     arpstatusmodel.cpp \
+    clipboardhelper.cpp \
     devicegroupdialog.cpp \
     devicegroupmodel.cpp \
     devicemodel.cpp \

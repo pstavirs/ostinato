@@ -75,6 +75,9 @@ void PdmlTextProtocol::unknownFieldHandler(QString name, int pos, int size,
             const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
             OstProto::Stream* /*stream*/)
 {
+    if (name == "http.file_data") // ignore as it's dup of other fields
+        return;
+
 _retry:
     switch(contentType_)
     {
@@ -96,6 +99,15 @@ _retry:
         {
             contentType_ = kOtherContent;
             goto _retry;
+        }
+
+        QByteArray line = QByteArray::fromHex(
+                attributes.value("value").toString().toUtf8());
+        foreach(char c, line) {
+            if (!isprint(c) && !isspace(c)) {
+                contentType_ = kOtherContent;
+                goto _retry;
+            }
         }
 
         if (pos < expPos_)
@@ -123,9 +135,6 @@ _retry:
             text->mutable_text()->append(filler.constData(), filler.size());
             expPos_ += gap;
         }
-
-        QByteArray line = QByteArray::fromHex(
-                attributes.value("value").toString().toUtf8());
 
         if (detectEol_)
         {

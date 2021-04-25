@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class LogsModel;
 class QDockWidget;
 class QShowEvent;
+class QMovie;
+class QPropertyAnimation;
 
 class LogsWindow: public QWidget, private Ui::LogsWindow
 {
@@ -33,17 +35,36 @@ public:
     LogsWindow(LogsModel *model, QWidget *parent = 0);
     ~LogsWindow();
 
+public slots:
+    void clearCurrentSelection();
+
 private slots:
     void when_visibilityChanged(bool visible);
     void when_rowsInserted(const QModelIndex &parent, int first, int last);
     void on_autoScroll_toggled(bool checked);
 
 private:
+    enum State {kInfo, kWarning, kError};
+
+    QLabel* tabIcon();
+    State state();
+    void setState(State state);
+    void alert(State state);
+    void notify();
+
+    State state_{kInfo};
     QDockWidget *parentDock_;
+    QMovie *warnAnime_{nullptr};
+    QMovie *errorAnime_{nullptr};
+    QLabel *alert_{nullptr};
+    QPropertyAnimation *alertAnime_{nullptr};
     QString windowTitle_;
-    QString annotation_;
-    bool isVisible_{false};
+    bool isVisible_{false}; // see XXX below
     QObject *logsModelTest_;
+
+    // XXX: We cannot use isVisible() instead of isVisible_ since
+    // LogsWindow::isVisible() returns true even when the parent LogsDock
+    // is tabified but not the selected tab
 };
 
 #endif

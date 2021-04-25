@@ -36,6 +36,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
     Q_OBJECT
 
 private:
+    void openSession(QString fileName = QString());
     bool openSession(QString fileName, QString &error);
     bool saveSession(QString fileName, QString fileType, QString &error);
 
@@ -55,11 +56,13 @@ public:
     ~MainWindow();
 
 public slots:
-    void on_actionOpenSession_triggered(QString fileName = QString());
+    void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
     void on_actionPreferences_triggered();
     void on_actionViewRestoreDefaults_triggered();
     void on_actionHelpOnline_triggered();
+    void on_actionDonate_triggered();
+    void on_actionCheckForUpdates_triggered();
     void on_actionHelpAbout_triggered();
 
 private slots:
@@ -68,6 +71,7 @@ private slots:
     void onLocalServerError(QProcess::ProcessError error);
     void reportLocalServerError();
     void onNewVersion(QString version);
+    void onLatestVersion(QString version);
 };
 
 #endif

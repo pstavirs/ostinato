@@ -37,19 +37,6 @@
       </widget>
      </item>
      <item>
-      <spacer>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>131</width>
-         <height>23</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QPushButton" name="refresh">
        <property name="toolTip">
         <string>Refresh information</string>
@@ -63,6 +50,60 @@
        <property name="icon">
         <iconset resource="ostinato.qrc">
          <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>131</width>
+         <height>23</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="arpNdpLabel">
+       <property name="text">
+        <string>ARP/ND</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="resolveNeighbors">
+       <property name="toolTip">
+        <string>Resolve Neighbors</string>
+       </property>
+       <property name="statusTip">
+        <string>Resolve Device Neighbors on selected port(s)</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="ostinato.qrc">
+         <normaloff>:/icons/neighbor_resolve.png</normaloff>:/icons/neighbor_resolve.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="clearNeighbors">
+       <property name="toolTip">
+        <string>Clear Neighbors</string>
+       </property>
+       <property name="statusTip">
+        <string>Clear Device Neighbors on selected port(s)</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="ostinato.qrc">
+         <normaloff>:/icons/neighbor_clear.png</normaloff>:/icons/neighbor_clear.png</iconset>
        </property>
       </widget>
      </item>
@@ -117,8 +158,8 @@ To emulate a device, click on Configuration and create a device group</string>
      <property name="whatsThis">
       <string>IP neighbor cache is empty</string>
      </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
      </property>
     </widget>
    </item>

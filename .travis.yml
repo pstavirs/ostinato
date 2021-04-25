@@ -1,5 +1,4 @@
 language: cpp
-#osx_image: xcode7.3
 
 os:
   - linux
@@ -32,9 +31,12 @@ addons:
     packages:
       - qtbase5-dev
       - qtscript5-dev
+      - libqt5svg5-dev
       - libpcap-dev
       - libprotobuf-dev
       - protobuf-compiler
+      - libnl-3-dev
+      - libnl-route-3-dev
 
 script:
   - QT_SELECT=qt5 qmake -config debug

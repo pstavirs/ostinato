@@ -63,6 +63,8 @@ PcapPort::PcapPort(int id, const char *device)
 
 void PcapPort::init()
 {
+    AbstractPort::init();
+
     if (!monitorTx_->isDirectional())
         transmitter_->useExternalStats(&stats_);
 
@@ -205,6 +207,9 @@ PcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     bool noLocalCapture;
 
+    setObjectName(QString("Mon%1:%2")
+                    .arg(direction == kDirectionRx ? "Rx" : "Tx")
+                    .arg(device));
     direction_ = direction;
     isDirectional_ = true;
     isPromisc_ = true;
@@ -340,7 +345,8 @@ void PcapPort::PortMonitor::run()
 void PcapPort::PortMonitor::stop()
 {
     stop_ = true;
-    pcap_breakloop(handle());
+    if (handle())
+        pcap_breakloop(handle());
 }
 
 /*
@@ -351,6 +357,7 @@ void PcapPort::PortMonitor::stop()
 PcapPort::PortCapturer::PortCapturer(const char *device)
 {
     device_ = QString::fromLatin1(device);
+    setObjectName(QString("Capture:%1").arg(device_));
     stop_ = false;
     state_ = kNotStarted;
 
@@ -402,6 +409,12 @@ _retry:
     }
 
     dumpHandle_ = pcap_dump_open(handle_, qPrintable(capFile_.fileName()));
+    if (!dumpHandle_) {
+        qDebug("failed to start capture: %s", pcap_geterr(handle_));
+        goto _exit;
+    }
+
+    PcapSession::preRun();
     state_ = kRunning;
     while (1)
     {
@@ -423,16 +436,21 @@ _retry:
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qDebug("Loop/signal break or some other error");
+                break;
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+                qWarning("%s: Unexpected return value %d", __PRETTY_FUNCTION__, ret);
+                stop_ = true;
         }
 
         if (stop_) 
         {
-            qDebug("user requested capture stop\n");
+            qDebug("user requested capture stop");
             break;
         }
     }
+    PcapSession::postRun();
+
     pcap_dump_close(dumpHandle_);
     pcap_close(handle_);
     dumpHandle_ = NULL;
@@ -462,6 +480,7 @@ void PcapPort::PortCapturer::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
+        PcapSession::stop(handle_);
         while (state_ == kRunning)
             QThread::msleep(10);
     }
@@ -492,6 +511,7 @@ PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
         DeviceManager *deviceManager)
 {
     device_ = QString::fromLatin1(device);
+    setObjectName(QString("EmulXcvr:%1").arg(device_));
     deviceManager_ = deviceManager;
     stop_ = false;
     state_ = kNotStarted;
@@ -604,6 +624,7 @@ _retry:
     }
 
 _skip_filter:
+    PcapSession::preRun();
     state_ = kRunning;
     while (1)
     {
@@ -641,17 +662,22 @@ _skip_filter:
                         __PRETTY_FUNCTION__, ret, pcap_geterr(handle_));
                 break;
             case -2:
+                qDebug("Loop/signal break or some other error");
+                break;
             default:
-                qFatal("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
+                qWarning("%s: Unexpected return value %d", __PRETTY_FUNCTION__,
                         ret);
+                stop_ = true;
         }
 
         if (stop_)
         {
-            qDebug("user requested receiver stop\n");
+            qDebug("user requested receiver stop");
             break;
         }
     }
+    PcapSession::postRun();
+
     pcap_close(handle_);
     handle_ = NULL;
     stop_ = false;
@@ -678,6 +704,7 @@ void PcapPort::EmulationTransceiver::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
+        PcapSession::stop(handle_);
         while (state_ == kRunning)
             QThread::msleep(10);
     }

@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portmanager.h"
 
 #include "bsdport.h"
+#include "interfaceinfo.h"
 #include "linuxport.h"
 #include "pcapport.h"
 #include "settings.h"
 #include "winpcapport.h"
 
+#include <QHostAddress>
 #include <QStringList>
 
 PortManager *PortManager::instance_ = NULL;
@@ -32,7 +34,6 @@ PortManager *PortManager::instance_ = NULL;
 #if defined(Q_OS_WIN32)
 #include <QUuid>
 #include <ipHlpApi.h>
-#define NETIO_STATUS NTSTATUS
 // Define the function prototypes since they are not defined in ipHlpApi.h
 NETIO_STATUS WINAPI ConvertInterfaceGuidToLuid(
         const GUID *InterfaceGuid, PNET_LUID InterfaceLuid);
@@ -50,7 +51,20 @@ PortManager::PortManager()
     AbstractPort::Accuracy txRateAccuracy;
 
     qDebug("PCAP Lib: %s", pcap_lib_version());
+#ifdef Q_OS_WIN32
+    qDebug("Service npf status %s\n", pcapServiceStatus(L"npf"));
+    qDebug("Service npcap status %s\n", pcapServiceStatus(L"npcap"));
+#endif
+
     qDebug("Retrieving the device list from the local machine\n"); 
+
+#if defined(Q_OS_WIN32)
+    WinPcapPort::fetchHostNetworkInfo();
+#elif defined(Q_OS_LINUX)
+    LinuxPort::fetchHostNetworkInfo();
+#elif defined(Q_OS_BSD4)
+    BsdPort::fetchHostNetworkInfo();
+#endif
 
     txRateAccuracy = rateAccuracy();
 
@@ -95,6 +109,21 @@ PortManager::PortManager()
             continue;
         }
 
+        const InterfaceInfo *intfInfo = port->interfaceInfo();
+        if (intfInfo) {
+            qDebug("Mac: %012llx", intfInfo->mac);
+            foreach(Ip4Config ip, intfInfo->ip4)
+                qDebug("Ip4: %s/%d gw: %s",
+                        qPrintable(QHostAddress(ip.address).toString()),
+                        ip.prefixLength,
+                        qPrintable(QHostAddress(ip.gateway).toString()));
+            foreach(Ip6Config ip, intfInfo->ip6)
+                qDebug("Ip6: %s/%d gw: %s",
+                        qPrintable(QHostAddress(ip.address.toArray()).toString()),
+                        ip.prefixLength,
+                        qPrintable(QHostAddress(ip.gateway.toArray()).toString()));
+        }
+
         if (!port->setRateAccuracy(txRateAccuracy))
             qWarning("failed to set rateAccuracy (%d)", txRateAccuracy);
 
@@ -106,6 +135,14 @@ PortManager::PortManager()
     foreach(AbstractPort *port, portList_)
         port->init();
     
+#if defined(Q_OS_WIN32)
+    WinPcapPort::freeHostNetworkInfo();
+#elif defined(Q_OS_LINUX)
+    LinuxPort::freeHostNetworkInfo();
+#elif defined(Q_OS_BSD4)
+    BsdPort::freeHostNetworkInfo();
+#endif
+
     return;
 }
 

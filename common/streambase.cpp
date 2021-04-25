@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streambase.h"
 #include "abstractprotocol.h"
+#include "framevalueattrib.h"
 #include "protocollist.h"
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
@@ -467,7 +468,7 @@ int StreamBase::frameSizeVariableCount() const
         case OstProto::StreamCore::e_fl_inc:
         case OstProto::StreamCore::e_fl_dec:
         case OstProto::StreamCore::e_fl_random:
-            count = frameLenMax() - frameLenMin() + 1;
+            count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
             break;
         default:
             qWarning("%s: Unhandled len mode %d",  __FUNCTION__, lenMode());
@@ -536,7 +537,8 @@ int StreamBase::frameCount() const
 
 // Returns packet length - if bufMaxSize < frameLen(), returns truncated
 // length i.e. bufMaxSize
-int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
+int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex,
+        FrameValueAttrib *attrib) const
 {
     int maxSize, size, pktLen, len = 0;
 
@@ -556,10 +558,13 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex) const
     while (iter->hasNext())
     {
         AbstractProtocol    *proto;
-        QByteArray            ba;
+        QByteArray          ba;
+        FrameValueAttrib    protoAttrib;
 
         proto = iter->next();
-        ba = proto->protocolFrameValue(frameIndex);
+        ba = proto->protocolFrameValue(frameIndex, false, &protoAttrib);
+        if (attrib)
+            *attrib += protoAttrib;
 
         size = qMin(ba.size(), maxSize-len);
         memcpy(buf+len, ba.constData(), size);
@@ -603,7 +608,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
     bool pass = true;
     bool chkTrunc = true;
     bool chkJumbo = true;
-    int count = isFrameSizeVariable() ? frameCount() : 1;
+    int count = isFrameSizeVariable() ? frameSizeVariableCount() : 1;
 
     for (int i = 0; i < count; i++)
     {
@@ -622,6 +627,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
         {
             result << QObject::tr("Jumbo frames may be truncated or dropped "
                 "if not supported by the hardware");
+            chkJumbo = false;
             pass = false;
         }
 
@@ -630,6 +636,18 @@ bool StreamBase::preflightCheck(QStringList &result) const
         if (!chkTrunc && !chkJumbo)
             break;
     }
+
+    ProtocolListIterator *iter = createProtocolListIterator();
+    while (iter->hasNext())
+    {
+        QStringList errors;
+        AbstractProtocol *proto = iter->next();
+        if (proto->hasErrors(&errors)) {
+            result += errors;
+            pass = false;
+        }
+    }
+    delete iter;
 
     if (isFrameVariable()) {
         if (frameVariableCount() > frameCount())
@@ -663,6 +681,12 @@ bool StreamBase::preflightCheck(QStringList &result) const
         }
     }
 
+#if 0 // see XXX note below
+    // XXX: This causes false positives for -
+    // * interleaved streams (a port property that we don't have access to)
+    // * pcap imported streams where each stream has only one packet
+    // Ideally we need to get the transmit duration for all the streams
+    // to perform this check
     if (frameCount() < averagePacketRate() && nextWhat() != e_nw_goto_id)
     {
         result << QObject::tr("Only %L1 frames at the rate of "
@@ -676,6 +700,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
             .arg(frameCount()/averagePacketRate(), 0, 'f');
         pass = false;
     }
+#endif
 
     return pass;
 }

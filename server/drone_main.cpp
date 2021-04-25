@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "drone.h"
 
 #include "../common/protocolmanager.h"
+#include "params.h"
 #include "settings.h"
 
 #include <google/protobuf/stubs/common.h>
@@ -27,9 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QCoreApplication>
 #include <QFile>
 
-#ifdef Q_OS_UNIX
 #include <signal.h>
-#endif
 
 extern ProtocolManager *OstProtocolManager;
 extern char *version;
@@ -37,7 +36,10 @@ extern char *revision;
 
 Drone *drone;
 QSettings *appSettings;
-int myport;
+Params appParams;
+
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
+                  const QString &msg);
 
 void cleanup(int /*signum*/)
 {
@@ -49,15 +51,18 @@ int main(int argc, char *argv[])
     int exitCode = 0;
     QCoreApplication app(argc, argv);
 
-    // TODO: command line options
-    // -v (--version)
-    // -h (--help)
-    // -p (--portnum)
-    if (argc > 1)
-        myport = atoi(argv[1]);
-
     app.setApplicationName("Drone");
     app.setOrganizationName("Ostinato");
+
+    appParams.parseCommandLine(argc, argv);
+
+#ifdef QT_NO_DEBUG
+    if (appParams.optLogsDisabled())
+        qInstallMessageHandler(NoMsgHandler);
+#endif
+
+    qDebug("Version: %s", version);
+    qDebug("Revision: %s", revision);
 
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location
@@ -71,6 +76,7 @@ int main(int argc, char *argv[])
                                     QSettings::UserScope,
                                     app.organizationName(), 
                                     app.applicationName().toLower());
+    qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();
@@ -92,6 +98,11 @@ int main(int argc, char *argv[])
         qDebug("Failed to install SIGTERM handler. Cleanup may not happen!!!");
     if (sigaction(SIGINT, &sa, NULL))
         qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
+#elif defined(Q_OS_WIN32)
+    if (signal(SIGTERM, cleanup) == SIG_ERR)
+        qDebug("Failed to install SIGTERM handler. Cleanup may not happen!!!");
+    if (signal(SIGINT, cleanup) == SIG_ERR)
+        qDebug("Failed to install SIGINT handler. Cleanup may not happen!!!");
 #endif
 
     exitCode = app.exec();
@@ -105,3 +116,12 @@ _exit:
     return exitCode;
 } 
 
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &/*context*/,
+                const QString &msg)
+{
+    if (type == QtFatalMsg) {
+        fprintf(stderr, "%s\n", qPrintable(msg));
+        fflush(stderr);
+        abort();
+    }
+}

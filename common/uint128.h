@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QHash>
 
+#include <QDebug>
 #include <QtGlobal>
 #include <qendian.h>
 
@@ -29,6 +30,7 @@ class UInt128
 {
 public:
     UInt128();
+    UInt128(int lo);
     UInt128(quint64 hi, quint64 lo);
     UInt128(quint8 *value);
 
@@ -36,9 +38,11 @@ public:
     quint64 lo64() const;
     quint8* toArray() const;
 
+    bool operator!() const;
     bool operator==(const UInt128 &other) const;
     bool operator!=(const UInt128 &other) const;
     UInt128 operator+(const UInt128 &other) const;
+    UInt128 operator-(const UInt128 &other) const;
     UInt128 operator*(const uint &other) const;
     UInt128 operator<<(const int &shift) const;
     UInt128 operator~() const;
@@ -54,6 +58,12 @@ private:
 inline UInt128::UInt128()
 {
     // Do nothing - value will be garbage like any other uint
+}
+
+inline UInt128::UInt128(int lo)
+{
+    hi_ = 0;
+    lo_ = lo;
 }
 
 inline UInt128::UInt128(quint64 hi, quint64 lo)
@@ -101,6 +111,11 @@ inline quint8* UInt128::toArray() const
     return (quint8*)array_;
 }
 
+inline bool UInt128::operator!() const
+{
+    return (hi_ == 0) && (lo_ == 0);
+}
+
 inline bool UInt128::operator==(const UInt128 &other) const
 {
     return ((hi_ == other.hi_) && (lo_ == other.lo_));
@@ -119,6 +134,16 @@ inline UInt128 UInt128::operator+(const UInt128 &other) const
     sum.hi_ = hi_ + other.hi_ + (sum.lo_ < lo_);
 
     return sum;
+}
+
+inline UInt128 UInt128::operator-(const UInt128 &other) const
+{
+    UInt128 diff;
+
+    diff.lo_ = lo_ - other.lo_;
+    diff.hi_ = hi_ - other.hi_ - (diff.lo_ > lo_);
+
+    return diff;
 }
 
 inline UInt128 UInt128::operator*(const uint &other) const
@@ -171,6 +196,15 @@ template <> inline UInt128 qFromBigEndian<UInt128>(const uchar *src)
     return UInt128(hi, lo);
 }
 
+#if QT_VERSION >= 0x050700
+template <> inline void qToBigEndian<UInt128>(UInt128 src, void *dest)
+#else
+template <> inline void qToBigEndian<UInt128>(UInt128 src, uchar *dest)
+#endif
+{
+    memcpy(dest, src.toArray(), 16);
+}
+
 template <> inline UInt128 qToBigEndian<UInt128>(const UInt128 src)
 {
     quint64 hi, lo;
@@ -179,6 +213,14 @@ template <> inline UInt128 qToBigEndian<UInt128>(const UInt128 src)
     lo = qToBigEndian<quint64>(src.lo64());
 
     return UInt128(hi, lo);
+}
+
+inline QDebug operator<<(QDebug debug, const UInt128 &value)
+{
+    QDebugStateSaver saver(debug);
+    debug.maybeSpace() << hex << value.hi64() << " " << value.lo64();
+
+    return debug;
 }
 
 inline uint qHash(const UInt128 &key)

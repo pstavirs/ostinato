@@ -94,7 +94,7 @@
            <item>
             <widget class="QLabel" name="CopyrightLabel" >
              <property name="text" >
-              <string>Copyright (c) 2007-2018 Srivats P.</string>
+              <string>Copyright (c) 2007-2020 Srivats P.</string>
              </property>
              <property name="alignment" >
               <set>Qt::AlignCenter</set>
@@ -104,7 +104,7 @@
            <item>
             <widget class="QLabel" name="LinksLabel" >
              <property name="text" >
-              <string>&lt;a href="http://ostinato.org">http://ostinato.org&lt;/a>&lt;br>&lt;a href="http://twitter.com/ostinato">@ostinato&lt;/a></string>
+              <string>&lt;a href="https://ostinato.org">ostinato.org&lt;/a>&lt;br>&lt;a href="https://twitter.com/ostinato">@ostinato&lt;/a></string>
              </property>
              <property name="textFormat" >
               <enum>Qt::RichText</enum>
@@ -155,7 +155,7 @@ Icons (c): Mark James (http://www.famfamfam.com/lab/icons/silk/)</string>
        <item>
         <widget class="QLabel" name="label_2" >
          <property name="text" >
-          <string>&lt;p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&lt;/p>&lt;p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.&lt;/p>&lt;p>You should have received a copy of the GNU General Public License along with this program. If not, see &lt;a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/&lt;/a>&lt;/p></string>
+          <string>&lt;p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&lt;/p>&lt;p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.&lt;/p>&lt;p>You should have received a copy of the GNU General Public License along with this program. If not, see &lt;a href="https://www.gnu.org/licenses/">https://www.gnu.org/licenses/&lt;/a>&lt;/p></string>
          </property>
          <property name="textFormat" >
           <enum>Qt::RichText</enum>

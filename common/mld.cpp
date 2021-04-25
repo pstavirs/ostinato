@@ -225,9 +225,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                 fv.resize(16);
                 for (int i = 0; i < data.sources_size(); i++)
                 {
-                    qToBigEndian(data.sources(i).v6_hi(), 
+                    qToBigEndian(quint64(data.sources(i).v6_hi()),
                             (uchar*)fv.data());
-                    qToBigEndian(data.sources(i).v6_lo(),
+                    qToBigEndian(quint64(data.sources(i).v6_lo()),
                             (uchar*)fv.data()+8);
 
                     list << QHostAddress((quint8*)fv.constData()).toString();
@@ -240,9 +240,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                 fv.resize(16 * data.sources_size());
                 for (int i = 0; i < data.sources_size(); i++)
                 {
-                    qToBigEndian(data.sources(i).v6_hi(), 
+                    qToBigEndian(quint64(data.sources(i).v6_hi()),
                             (uchar*)(fv.data() + i*16));
-                    qToBigEndian(data.sources(i).v6_lo(),
+                    qToBigEndian(quint64(data.sources(i).v6_lo()),
                             (uchar*)(fv.data() + i*16 + 8));
                 }
                 return fv;
@@ -254,9 +254,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                 fv.resize(16);
                 for (int i = 0; i < data.sources_size(); i++)
                 {
-                    qToBigEndian(data.sources(i).v6_hi(), 
+                    qToBigEndian(quint64(data.sources(i).v6_hi()),
                             (uchar*)fv.data());
-                    qToBigEndian(data.sources(i).v6_lo(),
+                    qToBigEndian(quint64(data.sources(i).v6_lo()),
                             (uchar*)fv.data()+8);
 
                     list << QHostAddress((quint8*)fv.constData()).toString();
@@ -285,7 +285,7 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                     QVariantMap grpRec = grpRecords.at(i).toMap();
                     OstProto::Gmp::GroupRecord rec = data.group_records(i);
 
-                    qToBigEndian(quint64(rec.group_address().v6_hi()), 
+                    qToBigEndian(quint64(rec.group_address().v6_hi()),
                             (uchar*)(ip.data()));
                     qToBigEndian(quint64(rec.group_address().v6_lo()),
                             (uchar*)(ip.data() + 8));
@@ -295,9 +295,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                     QStringList sl;
                     for (int j = 0; j < rec.sources_size(); j++)
                     {
-                        qToBigEndian(rec.sources(j).v6_hi(), 
+                        qToBigEndian(quint64(rec.sources(j).v6_hi()),
                                 (uchar*)(ip.data()));
-                        qToBigEndian(rec.sources(j).v6_lo(),
+                        qToBigEndian(quint64(rec.sources(j).v6_lo()),
                                 (uchar*)(ip.data() + 8));
                         sl.append(QHostAddress(
                                 (quint8*)ip.constData()).toString());
@@ -322,15 +322,15 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                     QByteArray rv = list.at(i).toByteArray();
 
                     rv.insert(4, QByteArray(16+16*rec.sources_size(), char(0)));
-                    qToBigEndian(rec.group_address().v6_hi(), 
+                    qToBigEndian(quint64(rec.group_address().v6_hi()),
                             (uchar*)(rv.data()+4));
-                    qToBigEndian(rec.group_address().v6_lo(), 
+                    qToBigEndian(quint64(rec.group_address().v6_lo()),
                             (uchar*)(rv.data()+4+8));
                     for (int j = 0; j < rec.sources_size(); j++)
                     {
-                        qToBigEndian(rec.sources(j).v6_hi(),
+                        qToBigEndian(quint64(rec.sources(j).v6_hi()),
                                 (uchar*)(rv.data()+20+16*j));
-                        qToBigEndian(rec.sources(j).v6_lo(),
+                        qToBigEndian(quint64(rec.sources(j).v6_lo()),
                                 (uchar*)(rv.data()+20+16*j+8));
                     }
 
@@ -352,9 +352,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                     QString recStr = list.at(i);
                     QString str;
 
-                    qToBigEndian(rec.group_address().v6_hi(), 
+                    qToBigEndian(quint64(rec.group_address().v6_hi()),
                             (uchar*)(ip.data()));
-                    qToBigEndian(rec.group_address().v6_lo(),
+                    qToBigEndian(quint64(rec.group_address().v6_lo()),
                             (uchar*)(ip.data() + 8));
                     str.append(QString("Group: %1").arg(
                         QHostAddress((quint8*)ip.constData()).toString()));
@@ -363,9 +363,9 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
                     QStringList sl;
                     for (int j = 0; j < rec.sources_size(); j++)
                     {
-                        qToBigEndian(rec.sources(j).v6_hi(), 
+                        qToBigEndian(quint64(rec.sources(j).v6_hi()),
                                 (uchar*)(ip.data()));
-                        qToBigEndian(rec.sources(j).v6_lo(),
+                        qToBigEndian(quint64(rec.sources(j).v6_lo()),
                                 (uchar*)(ip.data() + 8));
                         sl.append(QHostAddress(
                                 (quint8*)ip.constData()).toString());

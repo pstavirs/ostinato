@@ -215,7 +215,7 @@ void Ip6ConfigForm::storeWidget(AbstractProtocol *ip6Proto)
             srcAddrCount->text());
     ip6Proto->setFieldData(
             Ip6Protocol::ip6_srcAddrPrefix,
-            srcAddrPrefix->text());
+            srcAddrPrefix->text().remove('/'));
 
     ip6Proto->setFieldData(
             Ip6Protocol::ip6_dstAddress,
@@ -228,6 +228,6 @@ void Ip6ConfigForm::storeWidget(AbstractProtocol *ip6Proto)
             dstAddrCount->text());
     ip6Proto->setFieldData(
             Ip6Protocol::ip6_dstAddrPrefix,
-            dstAddrPrefix->text());
+            dstAddrPrefix->text().remove('/'));
 }
 

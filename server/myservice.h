@@ -115,6 +115,11 @@ public:
         ::OstProto::VersionCompatibility* response,
         ::google::protobuf::Closure* done);
 
+    virtual void build(::google::protobuf::RpcController* controller,
+        const ::OstProto::BuildConfig* request,
+        ::OstProto::Ack* response,
+        ::google::protobuf::Closure* done);
+
     // DeviceGroup and Protocol Emulation
     virtual void getDeviceGroupIdList(
         ::google::protobuf::RpcController* controller,
@@ -172,6 +177,8 @@ signals:
     void notification(int notifType, SharedProtobufMessage notifData);
 
 private:
+    QString frameValueErrorNotes(int portId, int error);
+
     /* 
      * NOTES:
      * - AbstractPort::id() and index into portInfo[] are same!

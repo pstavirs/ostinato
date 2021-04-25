@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dbgthread.h"
 #endif
 
+#include "clipboardhelper.h"
 #include "jumpurl.h"
 #include "logsmodel.h"
 #include "logswindow.h"
@@ -38,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "fileformat.pb.h"
 
+#include <QDate>
 #include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
@@ -59,6 +61,7 @@ extern const char* revision;
 
 PortGroupList    *pgl;
 LogsModel        *appLogs;
+ClipboardHelper  *clipboardHelper;
 
 MainWindow::MainWindow(QWidget *parent) 
     : QMainWindow (parent)
@@ -93,6 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     pgl = new PortGroupList;
     appLogs = new LogsModel(this);
+    clipboardHelper = new ClipboardHelper(this);
 
     portsWindow = new PortsWindow(pgl, this);
     statsWindow = new PortStatsWindow(pgl, this);
@@ -116,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupUi(this);
 
     menuFile->insertActions(menuFile->actions().at(3), portsWindow->actions());
+    menuEdit->addActions(clipboardHelper->actions());
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);
@@ -127,6 +132,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     portsDock->setWidget(portsWindow);
     addDockWidget(Qt::TopDockWidgetArea, portsDock);
+
+#if QT_VERSION >= 0x050600
+    // Set top and bottom docks to equal height
+    resizeDocks({portsDock, statsDock}, {height()/2, height()/2}, Qt::Vertical);
+#endif
+
+    portsWindow->setFocus();
 
     // Save the default window geometry and layout ...
     defaultGeometry_ = geometry();
@@ -153,10 +165,16 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(onNewVersion(QString)));
     updater->checkForNewVersion();
 
+    // Add the "Local" Port Group
+    if (appParams.optLocalDrone()) {
+        PortGroup *pg = new PortGroup;
+        pgl->addPortGroup(*pg);
+    }
+
     if (appParams.argumentCount()) {
         QString fileName = appParams.argument(0);
         if (QFile::exists(fileName))
-            on_actionOpenSession_triggered(fileName);
+            openSession(fileName);
         else
             QMessageBox::information(NULL, qApp->applicationName(),
                     QString("File not found: " + fileName));
@@ -201,7 +219,7 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::on_actionOpenSession_triggered(QString fileName)
+void MainWindow::openSession(QString fileName)
 {
     qDebug("Open Session Action (%s)", qPrintable(fileName));
 
@@ -251,6 +269,11 @@ _skip_prompt:
 
 _exit:
     return;
+}
+
+void MainWindow::on_actionOpenSession_triggered()
+{
+    openSession();
 }
 
 void MainWindow::on_actionSaveSession_triggered()
@@ -345,11 +368,28 @@ void MainWindow::on_actionViewRestoreDefaults_triggered()
     statsDock->raise();
 
     actionViewShowMyReservedPortsOnly->setChecked(false);
+
+    portsWindow->clearCurrentSelection();
+    statsWindow->clearCurrentSelection();
+    logsWindow_->clearCurrentSelection();
 }
 
 void MainWindow::on_actionHelpOnline_triggered()
 {
     QDesktopServices::openUrl(QUrl(jumpUrl("help", "app", "menu")));
+}
+
+void MainWindow::on_actionDonate_triggered()
+{
+    QDesktopServices::openUrl(QUrl(jumpUrl("donate", "app", "menu")));
+}
+
+void MainWindow::on_actionCheckForUpdates_triggered()
+{
+    Updater *updater = new Updater();
+    connect(updater, SIGNAL(latestVersion(QString)),
+            this, SLOT(onLatestVersion(QString)));
+    updater->checkForNewVersion();
 }
 
 void MainWindow::on_actionHelpAbout_triggered()
@@ -430,12 +470,52 @@ void MainWindow::reportLocalServerError()
 
 void MainWindow::onNewVersion(QString newVersion)
 {
-    QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
-                   "<a href='%2'>ostinato.org</a> to download")
+    QDate today = QDate::currentDate();
+    QDate lastChecked = QDate::fromString(
+                            appSettings->value(kLastUpdateCheck).toString(),
+                            Qt::ISODate);
+    if (lastChecked.daysTo(today) >= 5) {
+        QMessageBox::information(this, tr("Update check"),
+            tr("<p><b>Ostinato version %1 is now available</b> (you have %2). "
+                "See <a href='%3'>change log</a>.</p>"
+                "<p>Visit <a href='%4'>ostinato.org</a> to download.</p>")
+                .arg(newVersion)
+                .arg(version)
+                .arg(jumpUrl("changelog", "app", "status", "update"))
+                .arg(jumpUrl("download", "app", "status", "update")));
+    }
+    else {
+        QLabel *msg = new QLabel(tr("New Ostinato version %1 available. Visit "
+                    "<a href='%2'>ostinato.org</a> to download")
                 .arg(newVersion)
                 .arg(jumpUrl("download", "app", "status", "update")));
-    msg->setOpenExternalLinks(true);
-    statusBar()->addPermanentWidget(msg);
+        msg->setOpenExternalLinks(true);
+        statusBar()->addPermanentWidget(msg);
+    }
+
+    appSettings->setValue(kLastUpdateCheck, today.toString(Qt::ISODate));
+    sender()->deleteLater();
+}
+
+void MainWindow::onLatestVersion(QString latestVersion)
+{
+    if (version != latestVersion) {
+        QMessageBox::information(this, tr("Update check"),
+            tr("<p><b>Ostinato version %1 is now available</b> (you have %2). "
+                "See <a href='%3'>change log</a>.</p>"
+                "<p>Visit <a href='%4'>ostinato.org</a> to download.</p>")
+                .arg(latestVersion)
+                .arg(version)
+                .arg(jumpUrl("changelog", "app", "status", "update"))
+                .arg(jumpUrl("download", "app", "status", "update")));
+    }
+    else {
+        QMessageBox::information(this, tr("Update check"),
+            tr("You are already running the latest Ostinato version - %1")
+                .arg(version));
+    }
+
+    sender()->deleteLater();
 }
 
 //! Returns true on success (or user cancel) and false on failure

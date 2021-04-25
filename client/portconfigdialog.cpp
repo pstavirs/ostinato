@@ -87,6 +87,7 @@ void PortConfigDialog::accept()
     else
         Q_ASSERT(false); // Unreachable!!!
 
+    pc.set_user_name(portConfig_.user_name());
     switch (reservedBy_) {
         case kSelf:
             if (!reserveButton->isChecked())

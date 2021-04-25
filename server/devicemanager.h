@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QHash>
 #include <QMap>
 #include <QMultiHash>
+#include <QMutex>
 #include <QtGlobal>
 
 class AbstractPort;
@@ -38,6 +39,8 @@ class DeviceManager
 public:
     DeviceManager(AbstractPort *parent = 0);
     ~DeviceManager();
+
+    void createHostDevices();
 
     int deviceGroupCount();
     const OstProto::DeviceGroup* deviceGroupAtIndex(int index);
@@ -69,13 +72,19 @@ private:
     void enumerateDevices(
             const OstProto::DeviceGroup *deviceGroup,
             Operation oper);
+    bool insertDevice(DeviceKey key, Device *device);
+    bool deleteDevice(DeviceKey key);
 
     AbstractPort *port_;
+
+    QMutex listLock_; // protects all the lists
     QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_; // fast access to devices
     QMap<DeviceKey, Device*> sortedDeviceList_; // sorted access to devices
     QMultiHash<DeviceKey, Device*> bcastList_;
     QHash<quint16, uint> tpidList_; // Key: TPID, Value: RefCount
+
+    QList<Device*> hostDeviceList_;
 };
 
 #endif

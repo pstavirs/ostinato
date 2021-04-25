@@ -28,7 +28,7 @@ inline QString jumpUrl(
         QString medium="hint",
         QString name="help")
 {
-    return QString("http://jump.ostinato.org/" + keyword + "?"
+    return QString("https://jump.ostinato.org/" + keyword + "?"
             + "utm_source=" + source + "&"
             + "utm_medium=" + medium + "&"
             + "utm_campaign=" + name);

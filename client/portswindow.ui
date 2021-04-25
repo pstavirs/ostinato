@@ -51,13 +51,13 @@
         <item>
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>&lt;p&gt;&lt;b&gt;Welcome to Ostinato&lt;/b&gt;&lt;/p&gt;
+           <string>&lt;p&gt;&lt;b&gt;Welcome to Ostinato!&lt;/b&gt;&lt;/p&gt;
 &lt;p&gt;The port list on the left contains all the ports on which you can transmit packets.&lt;/p&gt;
 &lt;p&gt;Ports belong to a port group. Make sure the Port Group has a &lt;img src=&quot;:/icons/bullet_green.png&quot;/&gt; next to it, then double click the port group to show or hide the ports in the port group.&lt;/p&gt;
 &lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
 &lt;p&gt;To create a stream, select the port on which you want to send packets.&lt;/p&gt;
 &lt;hr/&gt;
-&lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;http://jump.ostinato.org/noports&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
+&lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;https://jump.ostinato.org/noports&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -96,7 +96,7 @@
 &lt;p&gt;To generate packets, you need to create and configure packet streams. A stream is a sequence of one or more packets.&lt;/p&gt;
 &lt;p&gt;To create a stream, select the port on which you want to send packets. &lt;/p&gt;
 &lt;hr/&gt;
-&lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;http://jump.ostinato.org/noports&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
+&lt;p&gt;Don't see the port that you want (or any ports at all) inside the port group? &lt;a href=&quot;https://jump.ostinato.org/noports&quot;&gt;Get Help!&lt;/a&gt;&lt;/p&gt;</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -197,6 +197,53 @@
             <item>
              <layout class="QHBoxLayout">
               <item>
+               <widget class="QToolButton" name="startTx">
+                <property name="toolTip">
+                 <string>Start Transmit</string>
+                </property>
+                <property name="statusTip">
+                 <string>Start transmit on selected port</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="ostinato.qrc">
+                  <normaloff>:/icons/control_play.png</normaloff>:/icons/control_play.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="stopTx">
+                <property name="toolTip">
+                 <string>Stop Transmit</string>
+                </property>
+                <property name="statusTip">
+                 <string>Stop transmit on selected port</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="ostinato.qrc">
+                  <normaloff>:/icons/control_stop.png</normaloff>:/icons/control_stop.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QRadioButton" name="radioButton">
                 <property name="text">
                  <string>Avg pps</string>
@@ -222,19 +269,6 @@
                  <bool>false</bool>
                 </property>
                </widget>
-              </item>
-              <item>
-               <spacer>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </item>

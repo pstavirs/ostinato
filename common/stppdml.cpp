@@ -23,8 +23,8 @@ This module is developed by PLVision  <developers@plvision.eu>
 
 #include "stp.pb.h"
 
-#define ROOT_IDENTIFIER_POS 22
-#define BRIDGE_IDENTIFIER_POS 34
+#define ROOT_IDENTIFIER_POS     5
+#define BRIDGE_IDENTIFIER_POS  17
 #define BASE_DEC 10
 #define BASE_HEX 16
 
@@ -55,6 +55,14 @@ PdmlProtocol* PdmlStpProtocol::createInstance()
     return new PdmlStpProtocol();
 }
 
+void PdmlStpProtocol::preProtocolHandler(QString /*name*/,
+        const QXmlStreamAttributes& attributes,
+        int /*expectedPos*/, OstProto::Protocol* /*pbProto*/,
+        OstProto::Stream* /*stream*/)
+{
+    _protoStartPos = attributes.value("pos").toUInt();
+}
+
 void PdmlStpProtocol::unknownFieldHandler(
         QString name, int pos, int /*size*/,
         const QXmlStreamAttributes &attributes, OstProto::Protocol *pbProto,
@@ -63,12 +71,12 @@ void PdmlStpProtocol::unknownFieldHandler(
     bool isOk;
     OstProto::Stp *stp = pbProto->MutableExtension(OstProto::stp);
 
-    if ((name == "") && (pos == ROOT_IDENTIFIER_POS))
+    if ((name == "") && (relativePos(pos) == ROOT_IDENTIFIER_POS))
     {
         stp->set_root_id(attributes.value("value").toString().
                          toULongLong(&isOk, BASE_HEX));
     }
-    if ((name == "") && (pos == BRIDGE_IDENTIFIER_POS))
+    if ((name == "") && (relativePos(pos) == BRIDGE_IDENTIFIER_POS))
     {
         stp->set_bridge_id(attributes.value("value").toString().
                            toULongLong(&isOk, BASE_HEX));

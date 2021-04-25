@@ -22,15 +22,108 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QTableView>
 
+#include <QApplication>
 #include <QClipboard>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QPainter>
 
 class XTableView : public QTableView
 {
+    Q_OBJECT
+
 public:
     XTableView(QWidget *parent) : QTableView(parent) {}
     virtual ~XTableView() {}
+
+    void setModel(QAbstractItemModel *model)
+    {
+        // This is only a heuristic, but works for us
+        if (model && model->supportedDropActions() != Qt::IgnoreAction)
+            _modelAllowsRemove = true;
+        else
+            _modelAllowsRemove = false;
+
+        QTableView::setModel(model);
+    }
+
+    bool hasSelection() const
+    {
+        return !selectionModel()->selectedIndexes().isEmpty();
+    }
+
+    bool canCut() const
+    {
+        return _modelAllowsRemove;
+    }
+
+    bool canPaste(const QMimeData *data) const
+    {
+        return model()->canDropMimeData(data, Qt::CopyAction,
+                0, 0, QModelIndex());
+    }
+
+public slots:
+    void cut()
+    {
+        copy();
+        foreach(QItemSelectionRange range, selectionModel()->selection())
+            model()->removeRows(range.top(), range.height());
+    }
+
+    void copy()
+    {
+        // Copy selection to clipboard (base class copies only current item)
+        // Selection, by default, is in the order in which items were selected
+        //  - sort them before copying
+        QModelIndexList selected = selectionModel()->selectedIndexes();
+
+        if (selected.isEmpty())
+            return;
+
+        std::sort(selected.begin(), selected.end());
+        QMimeData *mimeData = model()->mimeData(selected);
+        copyPlainText(selected, mimeData);
+        qApp->clipboard()->setMimeData(mimeData);
+        qDebug("Copied data in %d format(s) to clipboard",
+                mimeData->formats().size());
+        for (int i = 0; i < mimeData->formats().size(); i++) {
+            qDebug("    %d: %s, %d bytes", i+1,
+                    qPrintable(mimeData->formats().at(i)),
+                    mimeData->data(mimeData->formats().at(i)).size());
+        }
+    }
+
+    void paste()
+    {
+        const QMimeData *mimeData = qApp->clipboard()->mimeData();
+
+        if (!mimeData || mimeData->formats().isEmpty())
+            return;
+
+        if (selectionModel()->hasSelection()
+                && selectionModel()->selection().size() > 1) {
+            qWarning("Cannot paste into multiple(%d) selections",
+                    selectionModel()->selection().size());
+            return;
+        }
+
+        // If no selection, insert at the end
+        int row, column;
+        if (selectionModel()->hasSelection()
+                && selectionModel()->selection().size() == 1) {
+            row = selectionModel()->selection().first().top();
+            column = selectionModel()->selection().first().left();
+        } else {
+            row = model()->rowCount();
+            column = model()->columnCount();
+        }
+
+        if (model()->canDropMimeData(mimeData, Qt::CopyAction,
+                    row, column, QModelIndex()))
+            model()->dropMimeData(mimeData, Qt::CopyAction,
+                    row, column, QModelIndex());
+    }
 
 protected:
     virtual void paintEvent(QPaintEvent *event)
@@ -47,28 +140,59 @@ protected:
 
     virtual void keyPressEvent(QKeyEvent *event)
     {
-        // Copy selection to clipboard (base class copies only current item)
-        if (event->matches(QKeySequence::Copy)
-                && selectionBehavior() == SelectRows) {
-            QString text;
-            int lastRow = -1;
-            QModelIndexList selected = selectionModel()->selectedIndexes();
-            qSort(selected);
-            foreach(QModelIndex index, selected) {
-                if (index.row() != lastRow) {
-                    if (!text.isEmpty())
-                        text.append("\n");
-                }
-                else
-                    text.append("\t");
-                text.append(model()->data(index).toString());
-                lastRow = index.row();
-            }
-            qApp->clipboard()->setText(text);
-        }
-        else
+        if (event->matches(QKeySequence::Cut)) {
+            cut();
+        } else if (event->matches(QKeySequence::Copy)) {
+            copy();
+        } else if (event->matches(QKeySequence::Paste)) {
+            paste();
+        } else
             QTableView::keyPressEvent(event);
     }
+
+private:
+    void copyPlainText(const QModelIndexList &indexes, QMimeData *mimeData)
+    {
+        if (mimeData->hasText())
+            return;
+
+        bool includeHeaders = (selectionBehavior()
+                                    != QAbstractItemView::SelectItems);
+        QString text;
+        if (includeHeaders) {
+            int start = 0, end = model()->columnCount(); // assume SelectRows
+            if (selectionBehavior() == QAbstractItemView::SelectColumns) {
+                start = indexes.first().column();
+                end = indexes.last().column()+1;
+            }
+            text.append("\t"); // column header for row number/title
+            for (int i = start; i < end; i++)
+                if (indexes.contains(model()->index(indexes.first().row(), i)))
+                    text.append(model()->headerData(i, Qt::Horizontal)
+                                            .toString()+"\t");;
+            text.append("\n");
+        }
+
+        int lastRow = -1;
+        foreach(QModelIndex index, indexes) {
+            if (index.row() != lastRow) { // row changed
+                if (lastRow >= 0)
+                    text.append("\n");
+                if (includeHeaders)
+                    text.append(model()->headerData(index.row(), Qt::Vertical)
+                                            .toString()+"\t");
+            }
+            else
+                text.append("\t");
+            text.append(model()->data(index).toString());
+            lastRow = index.row();
+        }
+        text.append("\n");
+
+        mimeData->setText(text);
+    }
+
+    bool _modelAllowsRemove{false};
 };
 
 #endif

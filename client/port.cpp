@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QVariant>
 #include <google/protobuf/descriptor.h>
 #include <vector>
+#include <cmath>
 
 extern QMainWindow *mainWindow;
 
@@ -98,7 +99,7 @@ void Port::updateStreamOrdinalsFromIndex()
 
 void Port::reorderStreamsByOrdinals()
 {
-    qSort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
+    std::sort(mStreams.begin(), mStreams.end(), StreamBase::StreamLessThan);
 }
 
 void Port::setDirty(bool dirty)
@@ -187,6 +188,11 @@ void Port::setAveragePacketRate(double packetsPerSec)
             Q_ASSERT(false); // Unreachable!!
         }
 
+        // if old avgPps is 0, new rate will be calculated as nan (infinity)
+        // because of divide by 0 (old avgPps) above - fix that
+        if (std::isnan(rate))
+            rate = packetsPerSec;
+
         qDebug("cur stream pps = %g", s->averagePacketRate());
 
         s->setAveragePacketRate(rate);
@@ -260,6 +266,11 @@ void Port::setAverageBitRate(double bitsPerSec)
         default:
             Q_ASSERT(false); // Unreachable!!
         }
+
+        // if old avgBps is 0, new rate will be calculated as nan (infinity)
+        // because of divide by 0 (old avgBps) above - fix that
+        if (std::isnan(rate))
+            rate = bitsPerSec/((s->frameLenAvg()+kEthOverhead)*8);
 
         qDebug("cur stream pps = %g", s->averagePacketRate());
 
@@ -495,6 +506,11 @@ bool Port::modifiablePortConfig(OstProto::Port &config) const
         modCfg.set_user_name(config.user_name());
         change = true;
     }
+    if (config.is_tracking_stream_stats() != d.is_tracking_stream_stats()) {
+        modCfg.set_is_tracking_stream_stats(config.is_tracking_stream_stats());
+        change = true;
+    }
+
 
     if (change) {
         modCfg.mutable_port_id()->set_id(id());

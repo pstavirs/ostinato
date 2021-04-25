@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemanager.h"
 
 #include "abstractport.h"
-#include "device.h"
+#include "emuldevice.h"
 #include "../common/emulation.h"
+#include "hostdevice.h"
+#include "interfaceinfo.h"
+#include "nulldevice.h"
 #include "packetbuffer.h"
 
 #include "../common/emulproto.pb.h"
@@ -49,8 +52,58 @@ DeviceManager::DeviceManager(AbstractPort *parent)
     port_ = parent;
 }
 
+void DeviceManager::createHostDevices(void)
+{
+    const InterfaceInfo *ifInfo = port_->interfaceInfo();
+
+    if (!ifInfo)
+        return;
+
+    Device *device = HostDevice::create(port_->name(), this);
+    device->setMac(ifInfo->mac);
+
+    int count = ifInfo->ip4.size();
+    for (int i = 0; i < count; i++) {
+        // XXX: Since we can't support multiple IPs with same mac,
+        // skip link-local IP - unless it is the only one
+        if (((ifInfo->ip4.at(i).address & 0xffff0000) == 0xa9fe0000)
+                && (count > 1))
+            continue;
+        device->setIp4(ifInfo->ip4.at(i).address,
+                       ifInfo->ip4.at(i).prefixLength,
+                       ifInfo->ip4.at(i).gateway);
+
+        break; // TODO: support multiple IPs with same mac
+    }
+
+    count = ifInfo->ip6.size();
+    for (int i = 0; i < count; i++) {
+        // XXX: Since we can't support multiple IPs with same mac,
+        // skip link-local IP - unless it is the only one
+        if (((ifInfo->ip6.at(i).address.hi64() >> 48) == 0xfe80)
+                && (count > 1))
+            continue;
+        device->setIp6(ifInfo->ip6.at(i).address,
+                       ifInfo->ip6.at(i).prefixLength,
+                       ifInfo->ip6.at(i).gateway);
+
+        break; // TODO: support multiple IPs with same mac
+    }
+
+    if (deviceList_.contains(device->key())) {
+        qWarning("%s: error adding host device %s (EEXIST)",
+                __FUNCTION__, qPrintable(device->config()));
+        delete device;
+        return;
+    }
+    hostDeviceList_.append(device);
+    insertDevice(device->key(), device);
+    qDebug("host(add): %s", qPrintable(device->config()));
+}
+
 DeviceManager::~DeviceManager()
 {
+    // Delete *all* devices - host and enumerated
     foreach(Device *dev, deviceList_)
         delete dev;
 
@@ -96,8 +149,9 @@ bool DeviceManager::addDeviceGroup(uint deviceGroupId)
 
     enumerateDevices(deviceGroup, kAdd);
 
-    // Start emulation when first device is added
-    if ((deviceCount() == 1) && port_)
+    // Start emulation when first device group is added
+    // NOTE: Host devices don't have a deviceGroup and don't need emulation
+    if ((deviceGroupCount() == 1) && port_)
         port_->startDeviceEmulation();
 
     return true;
@@ -116,8 +170,9 @@ bool DeviceManager::deleteDeviceGroup(uint deviceGroupId)
     enumerateDevices(deviceGroup, kDelete);
     delete deviceGroup;
 
-    // Stop emulation if no devices remain
-    if ((deviceCount() == 0) && port_)
+    // Stop emulation if no device groups remain
+    // NOTE: Host devices don't have a deviceGroup and don't need emulation
+    if ((deviceGroupCount() == 0) && port_)
         port_->stopDeviceEmulation();
 
     return true;
@@ -167,9 +222,10 @@ void DeviceManager::getDeviceList(
 
 void DeviceManager::receivePacket(PacketBuffer *pktBuf)
 {
+    QMutexLocker locker(&listLock_);
     uchar *pktData = pktBuf->data();
     int offset = 0;
-    Device dk(this);
+    EmulDevice dk(this);
     Device *device;
     quint64 dstMac;
     quint16 ethType;
@@ -212,7 +268,8 @@ _eth_type:
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
         offset += 2;
-        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
+        qDebug("%s: idx: %d vlan: 0x%04x/%d", __FUNCTION__,
+                idx, vlan, vlan & 0x0fff);
         goto _eth_type;
     }
 
@@ -304,7 +361,7 @@ Device* DeviceManager::originDevice(PacketBuffer *pktBuf)
 {
     uchar *pktData = pktBuf->data();
     int offset = 12; // start parsing after mac addresses
-    Device dk(this);
+    EmulDevice dk(this);
     quint16 ethType;
     quint16 vlan;
     int idx = 0;
@@ -327,7 +384,8 @@ _eth_type:
         vlan = qFromBigEndian<quint16>(pktData + offset);
         dk.setVlan(idx++, vlan);
         offset += 2;
-        qDebug("%s: idx: %d vlan %d", __FUNCTION__, idx, vlan);
+        qDebug("%s: idx: %d vlan: 0x%04x/%d", __FUNCTION__,
+                idx, vlan, vlan & 0x0fff);
         goto _eth_type;
     }
 
@@ -346,7 +404,8 @@ void DeviceManager::enumerateDevices(
     const OstProto::DeviceGroup *deviceGroup,
     Operation oper)
 {
-    Device dk(this);
+    QMutexLocker locker(&listLock_);
+    EmulDevice dk(this);
     OstEmul::VlanEmulation pbVlan = deviceGroup->encap()
                                         .GetExtension(OstEmul::vlan);
     int numTags = pbVlan.stack_size();
@@ -458,29 +517,21 @@ void DeviceManager::enumerateDevices(
                                 __FUNCTION__, qPrintable(dk.config()));
                         break;
                     }
-                    device = new Device(this);
+                    device = new EmulDevice(this);
                     *device = dk;
-                    deviceList_.insert(dk.key(), device);
-                    sortedDeviceList_.insert(dk.key(), device);
-
-                    dk.setMac(kBcastMac);
-                    bcastList_.insert(dk.key(), device);
-                    qDebug("enumerate(add): %s", qPrintable(device->config()));
+                    insertDevice(dk.key(), device);
+                    qDebug("enumerate(add): %p %s", device, qPrintable(device->config()));
                     break;
 
                 case kDelete:
-                    device = deviceList_.take(dk.key());
+                    device = deviceList_.value(dk.key());
                     if (!device) {
                         qWarning("%s: error deleting device %s (NOTFOUND)",
                                 __FUNCTION__, qPrintable(dk.config()));
                         break;
                     }
-                    qDebug("enumerate(del): %s", qPrintable(device->config()));
-                    delete device;
-                    sortedDeviceList_.take(dk.key()); // already freed above
-
-                    dk.setMac(kBcastMac);
-                    bcastList_.take(dk.key()); // device already freed above
+                    qDebug("enumerate(del): %p %s", device, qPrintable(device->config()));
+                    deleteDevice(dk.key());
                     break;
 
                 default:
@@ -489,3 +540,32 @@ void DeviceManager::enumerateDevices(
         } // foreach device
     } // foreach vlan
 }
+
+bool DeviceManager::insertDevice(DeviceKey key, Device *device)
+{
+    deviceList_.insert(key, device);
+    sortedDeviceList_.insert(key, device);
+
+    NullDevice bcastDevice = *(static_cast<NullDevice*>(device));
+    bcastDevice.setMac(kBcastMac);
+
+    bcastList_.insert(bcastDevice.key(), device);
+
+    return true;
+}
+
+bool DeviceManager::deleteDevice(DeviceKey key)
+{
+    Device *device = deviceList_.take(key);
+    if (!device)
+        return false;
+    sortedDeviceList_.take(key);
+
+    NullDevice bcastDevice = *(static_cast<NullDevice*>(device));
+    bcastDevice.setMac(kBcastMac);
+    bcastList_.take(bcastDevice.key());
+
+    delete device;
+    return true;
+}
+

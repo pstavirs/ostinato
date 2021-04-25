@@ -43,6 +43,8 @@ public:
                         int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
+    Qt::DropActions supportedDropActions() const;
+
 public slots:
     void clearStats();
     void appendStreamStatsList(quint32 portGroupId,

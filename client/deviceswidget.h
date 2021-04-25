@@ -49,10 +49,14 @@ private slots:
     void on_deviceGroupList_activated(const QModelIndex &index);
 
     void on_refresh_clicked();
+    void on_resolveNeighbors_clicked();
+    void on_clearNeighbors_clicked();
 
     void when_deviceList_currentChanged(const QModelIndex &index);
 
 private:
+    void setDeviceInfoButtonsVisible(bool show);
+
     PortGroupList *portGroups_;
     QModelIndex currentPortIndex_;
 };

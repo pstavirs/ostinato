@@ -140,6 +140,11 @@ QVariant NdpStatusModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions NdpStatusModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 void NdpStatusModel::setDeviceIndex(Port *port, int deviceIndex)
 {
     beginResetModel();

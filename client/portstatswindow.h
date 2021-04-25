@@ -38,6 +38,7 @@ public:
     ~PortStatsWindow();
 
 public slots:
+    void clearCurrentSelection();
     void showMyReservedPortsOnly(bool enabled);
 
 private slots:

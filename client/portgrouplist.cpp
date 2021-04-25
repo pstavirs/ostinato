@@ -43,12 +43,6 @@ PortGroupList::PortGroupList()
     deviceGroupModelTester_ = new ModelTest(getDeviceGroupModel());
     deviceModelTester_ = new ModelTest(getDeviceModel());
 #endif 
-
-    // Add the "Local" Port Group
-    if (appParams.optLocalDrone()) {
-        PortGroup *pg = new PortGroup;
-        addPortGroup(*pg);
-    }
 }
 
 PortGroupList::~PortGroupList()

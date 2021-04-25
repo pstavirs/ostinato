@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QFileDialog>
 #include <QtGlobal>
+#include <QXmlStreamReader>
 
 #if defined(Q_OS_WIN32)
 QString kGzipPathDefaultValue;
@@ -98,6 +99,31 @@ void Preferences::on_wiresharkPathButton_clicked()
 
     path = QFileDialog::getOpenFileName(0, "Locate Wireshark",
             wiresharkPathEdit->text()); 
+#ifdef Q_OS_MAC
+    // Find executable inside app bundle using Info.plist
+    if (!path.isEmpty() && path.endsWith(".app")) {
+        QFile plist(path+"/Contents/Info.plist");
+        plist.open(QIODevice::ReadOnly);
+        QXmlStreamReader xml(&plist);
+
+        while (!xml.atEnd()) {
+            xml.readNext();
+            if (xml.isStartElement()
+                    && (xml.name() == "key")
+                    && (xml.readElementText() == "CFBundleExecutable")) {
+                xml.readNext(); // </key>
+                xml.readNext(); // <string>
+                if (xml.isStartElement() && (xml.name() == "string"))
+                    path = path+"/Contents/MacOs/"+xml.readElementText();
+                break;
+            }
+            if (xml.hasError())
+                qDebug("%lld:%lld Error reading Info.plist: %s",
+                       xml.lineNumber(), xml.columnNumber(),
+                       qPrintable(xml.errorString()));
+        }
+    }
+#endif
 
     if (!path.isEmpty())
         wiresharkPathEdit->setText(path);

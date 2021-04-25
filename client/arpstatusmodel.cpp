@@ -136,6 +136,11 @@ QVariant ArpStatusModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions ArpStatusModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 void ArpStatusModel::setDeviceIndex(Port *port, int deviceIndex)
 {
     beginResetModel();

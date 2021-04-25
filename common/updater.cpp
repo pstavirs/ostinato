@@ -87,6 +87,8 @@ void Updater::parseXml(QNetworkReply *reply)
     if (!newVersion.isEmpty() && isVersionNewer(newVersion, QString(version)))
         emit newVersionAvailable(newVersion);
 
+    emit latestVersion(newVersion);
+
 _exit:
     // Job done, time to self-destruct
     deleteLater();
@@ -126,6 +128,9 @@ QString Updater::userAgent()
 
 QString Updater::sysInfo()
 {
+#if QT_VERSION >= 0x050400
+    return QSysInfo::prettyProductName();
+#else
 #if defined(Q_OS_WIN32)
     return QString("Windows/0x%1").arg(QSysInfo::WindowsVersion, 0, 16);
 #elif defined(Q_OS_LINUX)
@@ -138,5 +143,6 @@ QString Updater::sysInfo()
     return QString("Unix");
 #else
     return QString("Unknown");
+#endif
 #endif
 }

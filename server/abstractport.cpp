@@ -20,8 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractport.h"
 
 #include "../common/abstractprotocol.h"
+#include "../common/framevalueattrib.h"
 #include "../common/streambase.h"
 #include "devicemanager.h"
+#include "interfaceinfo.h"
 #include "packetbuffer.h"
 
 #include <QString>
@@ -47,6 +49,7 @@ AbstractPort::AbstractPort(int id, const char *device)
     minPacketSetSize_ = 1;
 
     deviceManager_ = new DeviceManager(this);
+    interfaceInfo_ = NULL;
 
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
@@ -56,10 +59,13 @@ AbstractPort::AbstractPort(int id, const char *device)
 AbstractPort::~AbstractPort()
 {
     delete deviceManager_;
+    delete interfaceInfo_;
 }    
 
 void AbstractPort::init()
 {
+    if (deviceManager_)
+        deviceManager_->createHostDevices();
 }    
 
 /*! Can we modify Port with these params? Should modify cause port dirty? */
@@ -81,6 +87,8 @@ bool AbstractPort::canModify(const OstProto::Port &port, bool *dirty)
         *dirty = true;
         allow = !isTransmitOn();
     }
+    if (*dirty)
+        isSendQueueDirty_ = true;
 
     return allow;
 }
@@ -196,31 +204,33 @@ bool AbstractPort::setRateAccuracy(Accuracy accuracy)
     return true;
 }
 
-void AbstractPort::updatePacketList()
+int AbstractPort::updatePacketList()
 {
     switch(data_.transmit_mode())
     {
     case OstProto::kSequentialTransmit:
-        updatePacketListSequential();
+        return updatePacketListSequential();
         break;
     case OstProto::kInterleavedTransmit:
-        updatePacketListInterleaved();
+        return updatePacketListInterleaved();
         break;
     default:
         Q_ASSERT(false); // Unreachable!!!
         break;
     }
+    return 0;
 }
 
-void AbstractPort::updatePacketListSequential()
+int AbstractPort::updatePacketListSequential()
 {
+    FrameValueAttrib packetListAttrib;
     long    sec = 0; 
     long    nsec = 0;
 
     qDebug("In %s", __FUNCTION__);
 
     // First sort the streams by ordinalValue
-    qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
+    std::sort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
     clearPacketList();
 
@@ -315,8 +325,10 @@ void AbstractPort::updatePacketListSequential()
                 
                 if (j == 0 || frameVariableCount > 1)
                 {
+                    FrameValueAttrib attrib;
                     len = streamList_[i]->frameValue(
-                            pktBuf_, sizeof(pktBuf_), j);
+                            pktBuf_, sizeof(pktBuf_), j, &attrib);
+                    packetListAttrib += attrib;
                 }
                 if (len <= 0)
                     continue;
@@ -387,13 +399,19 @@ void AbstractPort::updatePacketListSequential()
 
 _stop_no_more_pkts:
     isSendQueueDirty_ = false;
+
+    qDebug("PacketListAttrib = %x",
+            static_cast<int>(packetListAttrib.errorFlags));
+    return static_cast<int>(packetListAttrib.errorFlags);
 }
 
-void AbstractPort::updatePacketListInterleaved()
+int AbstractPort::updatePacketListInterleaved()
 {
+    FrameValueAttrib packetListAttrib;
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e9);
+    QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
     QList<quint64> ipg1, ipg2;
@@ -419,16 +437,18 @@ void AbstractPort::updatePacketListInterleaved()
     if (activeStreamCount == 0)
     {
         isSendQueueDirty_ = false;
-        return;
+        return 0;
     }
 
     // First sort the streams by ordinalValue
-    qSort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
+    std::sort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
     for (int i = 0; i < streamList_.size(); i++)
     {
         if (!streamList_[i]->isEnabled())
             continue;
+
+        streamId.append(i);
 
         double numBursts = 0;
         double numPackets = 0;
@@ -440,6 +460,7 @@ void AbstractPort::updatePacketListInterleaved()
         double ipg = 0;
         quint64 _ipg1 = 0, _ipg2 = 0;
         quint64 _np1 = 0, _np2 = 0;
+
 
         switch (streamList_[i]->sendUnit())
         {
@@ -535,11 +556,14 @@ void AbstractPort::updatePacketListInterleaved()
         }
         else
         {
+            FrameValueAttrib attrib;
             isVariable.append(false);
             pktBuf.append(QByteArray());
             pktBuf.last().resize(kMaxPktSize);
             pktLen.append(streamList_[i]->frameValue(
-                    (uchar*)pktBuf.last().data(), pktBuf.last().size(), 0));
+                    (uchar*)pktBuf.last().data(), pktBuf.last().size(),
+                    0, &attrib));
+            packetListAttrib += attrib;
         }
 
         numStreams++;
@@ -568,9 +592,11 @@ void AbstractPort::updatePacketListInterleaved()
             {
                 if (isVariable.at(i))
                 {
+                    FrameValueAttrib attrib;
                     buf = pktBuf_;
-                    len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 
-                            pktCount[i]);
+                    len = streamList_[streamId.at(i)]->frameValue(pktBuf_, sizeof(pktBuf_),
+                            pktCount[i], &attrib);
+                    packetListAttrib += attrib;
                 }
                 else
                 {
@@ -624,6 +650,10 @@ void AbstractPort::updatePacketListInterleaved()
     qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
     setPacketListLoopMode(true, delaySec, delayNsec); 
     isSendQueueDirty_ = false;
+
+    qDebug("PacketListAttrib = %x",
+            static_cast<int>(packetListAttrib.errorFlags));
+    return static_cast<int>(packetListAttrib.errorFlags);
 }
 
 void AbstractPort::stats(PortStats *stats)
@@ -785,4 +815,9 @@ quint64 AbstractPort::neighborMacAddress(int streamId, int frameIndex)
     }
 
     return 0;
+}
+
+const InterfaceInfo* AbstractPort::interfaceInfo() const
+{
+    return interfaceInfo_;
 }

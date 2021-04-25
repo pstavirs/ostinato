@@ -297,6 +297,11 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
         return PortStatName.at(section);
 }
 
+Qt::DropActions PortStatsModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 void PortStatsModel::portListFromIndex(QModelIndexList indices, 
         QList<PortGroupAndPortList> &portList)
 {

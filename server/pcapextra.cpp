@@ -24,7 +24,66 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 /* NOTE: All code borrowed from WinPcap */
 
-#ifndef Q_OS_WIN32
+#ifdef Q_OS_WIN32
+
+const char* pcapServiceStatus(const wchar_t* name)
+{
+    SC_HANDLE scm, svc;
+    SERVICE_STATUS_PROCESS svcStatus;
+    DWORD size;
+    BOOL result;
+    const char *status = "unknown";
+
+    scm = OpenSCManager(nullptr, nullptr, SC_MANAGER_ENUMERATE_SERVICE);
+    if(!scm)
+        goto _exit;
+
+    svc = OpenService(scm, name, SERVICE_QUERY_STATUS);
+    if(!svc)
+        goto _close_exit;
+
+    result = QueryServiceStatusEx(svc, SC_STATUS_PROCESS_INFO,
+                reinterpret_cast<LPBYTE>(&svcStatus), sizeof(svcStatus),
+                &size);
+
+    if(result == 0)
+        goto _close_exit;
+
+    switch(svcStatus.dwCurrentState) {
+        case SERVICE_CONTINUE_PENDING:
+            status = "continue pending";
+            break;
+        case SERVICE_PAUSE_PENDING:
+            status = "pause pending";
+            break;
+        case SERVICE_PAUSED:
+            status = "paused";
+            break;
+        case SERVICE_RUNNING:
+            status = "running";
+            break;
+        case SERVICE_START_PENDING:
+            status = "start pending";
+            break;
+        case SERVICE_STOP_PENDING:
+            status = "stop pending";
+            break;
+        case SERVICE_STOPPED:
+            status = "stopped";
+            break;
+    }
+
+_close_exit:
+    if (svc)
+        CloseServiceHandle(svc);
+    if (scm)
+        CloseServiceHandle(scm);
+_exit:
+    return status;
+}
+
+#else // non-Windows
+
 pcap_send_queue* pcap_sendqueue_alloc (u_int memsize)
 {
     pcap_send_queue *tqueue;

@@ -42,6 +42,9 @@ Params appParams;
 QSettings *appSettings;
 QMainWindow *mainWindow;
 
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
+                  const QString &msg);
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
@@ -54,8 +57,15 @@ int main(int argc, char* argv[])
 
     appParams.parseCommandLine(argc, argv);
 
+#ifndef QT_DEBUG // Release mode
+    if (appParams.optLogsDisabled())
+        qInstallMessageHandler(NoMsgHandler);
+#endif
+
     OstProtocolManager = new ProtocolManager();
     OstProtocolWidgetFactory = new ProtocolWidgetFactory();
+
+    Preferences::initDefaults();
 
     /* (Portable Mode) If we have a .ini file in the same directory as the 
        executable, we use that instead of the platform specific location
@@ -66,6 +76,7 @@ int main(int argc, char* argv[])
         appSettings = new QSettings(portableIni, QSettings::IniFormat);
     else
         appSettings = new QSettings();
+    qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
     OstProtoLib::setExternalApplicationPaths(
         appSettings->value(kTsharkPathKey, kTsharkPathDefaultValue).toString(),
@@ -73,7 +84,6 @@ int main(int argc, char* argv[])
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
 
-    Preferences::initDefaults();
     qsrand(QDateTime::currentDateTime().toTime_t());
 
     mainWindow = new MainWindow;
@@ -87,3 +97,14 @@ int main(int argc, char* argv[])
 
     return exitCode;
 }
+
+void NoMsgHandler(QtMsgType type, const QMessageLogContext &/*context*/,
+                const QString &msg)
+{
+    if (type == QtFatalMsg) {
+        fprintf(stderr, "%s\n", qPrintable(msg));
+        fflush(stderr);
+        abort();
+    }
+}
+

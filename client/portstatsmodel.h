@@ -123,6 +123,8 @@ class PortStatsModel : public QAbstractTableModel
         QVariant headerData(int section, Qt::Orientation orientation, 
             int role = Qt::DisplayRole) const;
 
+        Qt::DropActions supportedDropActions() const;
+
         class PortGroupAndPortList {
             public:
             uint portGroupId;

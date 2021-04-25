@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>
 
 #include "deviceswidget.h"
 
+#include "clipboardhelper.h"
 #include "devicegroupdialog.h"
 #include "port.h"
 #include "portgrouplist.h"
@@ -26,13 +27,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>
 #include <QHeaderView>
 #include <QKeyEvent>
 
+extern ClipboardHelper *clipboardHelper;
+
 DevicesWidget::DevicesWidget(QWidget *parent)
     : QWidget(parent), portGroups_(NULL)
 {
     setupUi(this);
     deviceGroupList->setVisible(deviceConfig->isChecked());
     deviceList->setVisible(deviceInfo->isChecked());
-    refresh->setVisible(deviceInfo->isChecked());
+    setDeviceInfoButtonsVisible(deviceInfo->isChecked());
     deviceDetail->hide();
 
     deviceGroupList->verticalHeader()->setDefaultSectionSize(
@@ -49,6 +52,14 @@ DevicesWidget::DevicesWidget(QWidget *parent)
 
     // DevicesWidget's actions is an aggegate of all sub-widget's actions
     addActions(deviceGroupList->actions());
+
+    // Add the clipboard actions to the context menu of deviceGroupList
+    // but not to DeviceWidget's actions since they are already available
+    // in the global Edit Menu
+    QAction *sep = new QAction("Clipboard", this);
+    sep->setSeparator(true);
+    deviceGroupList->addAction(sep);
+    deviceGroupList->addActions(clipboardHelper->actions());
 }
 
 void DevicesWidget::setPortGroupList(PortGroupList *portGroups)
@@ -162,7 +173,7 @@ void DevicesWidget::updateDeviceViewActions()
 
 void DevicesWidget::on_deviceInfo_toggled(bool checked)
 {
-    refresh->setVisible(checked);
+    setDeviceInfoButtonsVisible(checked);
     deviceGroupList->setHidden(checked);
     deviceList->setVisible(checked);
     deviceDetail->hide();
@@ -236,6 +247,40 @@ void DevicesWidget::on_refresh_clicked()
                     .getDeviceInfo(portGroups_->port(currentPortIndex_).id());
 }
 
+void DevicesWidget::on_resolveNeighbors_clicked()
+{
+    if (!portGroups_)
+       return;
+
+    Q_ASSERT(portGroups_->isPort(currentPortIndex_));
+    QModelIndex curPortGroup = portGroups_->getPortModel()
+                                                ->parent(currentPortIndex_);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(portGroups_->isPortGroup(curPortGroup));
+
+    deviceDetail->hide();
+    QList<uint> portList({portGroups_->port(currentPortIndex_).id()});
+    portGroups_->portGroup(curPortGroup).resolveDeviceNeighbors(&portList);
+    portGroups_->portGroup(curPortGroup).getDeviceInfo(portList.at(0));
+}
+
+void DevicesWidget::on_clearNeighbors_clicked()
+{
+    if (!portGroups_)
+       return;
+
+    Q_ASSERT(portGroups_->isPort(currentPortIndex_));
+    QModelIndex curPortGroup = portGroups_->getPortModel()
+                                                ->parent(currentPortIndex_);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(portGroups_->isPortGroup(curPortGroup));
+
+    deviceDetail->hide();
+    QList<uint> portList({portGroups_->port(currentPortIndex_).id()});
+    portGroups_->portGroup(curPortGroup).clearDeviceNeighbors(&portList);
+    portGroups_->portGroup(curPortGroup).getDeviceInfo(portList.at(0));
+}
+
 void DevicesWidget::when_deviceList_currentChanged(const QModelIndex &index)
 {
     if (!index.isValid() || !portGroups_)
@@ -246,4 +291,12 @@ void DevicesWidget::when_deviceList_currentChanged(const QModelIndex &index)
 
     deviceDetail->setModel(detailModel);
     deviceDetail->setVisible(detailModel != NULL);
+}
+
+void DevicesWidget::setDeviceInfoButtonsVisible(bool show)
+{
+    refresh->setVisible(show);
+    arpNdpLabel->setVisible(show);
+    resolveNeighbors->setVisible(show);
+    clearNeighbors->setVisible(show);
 }

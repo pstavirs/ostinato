@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portswindow.h"
 
+#include "applymsg.h"
+#include "clipboardhelper.h"
 #include "deviceswidget.h"
 #include "portconfigdialog.h"
 #include "settings.h"
@@ -37,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
+extern ClipboardHelper *clipboardHelper;
 extern QMainWindow *mainWindow;
 
 PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
@@ -52,6 +55,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     plm = pgl;
 
     setupUi(this);
+    applyMsg_ = new ApplyMessage();
     devicesWidget->setPortGroupList(plm);
 
     tvPortList->header()->hide();
@@ -76,9 +80,9 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     tvStreamList->addAction(actionDuplicate_Stream);
     tvStreamList->addAction(actionDelete_Stream);
 
-    sep = new QAction(this);
-    sep->setSeparator(true);
-    tvStreamList->addAction(sep);
+    QAction *sep2 = new QAction(this);
+    sep2->setSeparator(true);
+    tvStreamList->addAction(sep2);
 
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
@@ -94,6 +98,14 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     sep->setSeparator(true);
     addAction(sep);
     addActions(devicesWidget->actions());
+
+    // Add the clipboard actions to the context menu of streamList
+    // but not to PortsWindow's actions since they are already available
+    // in the global Edit Menu
+    sep = new QAction("Clipboard", this);
+    sep->setSeparator(true);
+    tvStreamList->insertAction(sep2, sep);
+    tvStreamList->insertActions(sep2, clipboardHelper->actions());
 
     tvStreamList->setModel(plm->getStreamModel());
 
@@ -173,6 +185,7 @@ PortsWindow::~PortsWindow()
 {
     delete delegate;
     delete proxyPortModel;
+    delete applyMsg_;
 }
 
 int PortsWindow::portGroupCount()
@@ -285,6 +298,12 @@ bool PortsWindow::saveSession(
     return true;
 }
 
+void PortsWindow::clearCurrentSelection()
+{
+    tvPortList->selectionModel()->clearCurrentIndex();
+    tvPortList->clearSelection();
+}
+
 void PortsWindow::showMyReservedPortsOnly(bool enabled)
 {
     if (!proxyPortModel)
@@ -377,8 +396,8 @@ void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,
                 updateApplyHint(plm->port(current).portGroupId(),
                                 plm->port(current).id(), true);
             else if (plm->port(current).numStreams())
-                applyHint->setText("Use the Statistics window to transmit "
-                                   "packets");
+                applyHint->setText("Click <img src=':/icons/control_play'/> "
+                                   "to transmit packets");
             else
                 applyHint->setText("");
         }
@@ -425,6 +444,40 @@ void PortsWindow::when_portModel_dataChanged(const QModelIndex& topLeft,
 void PortsWindow::when_portModel_reset()
 {
     when_portView_currentChanged(QModelIndex(), tvPortList->currentIndex());
+}
+
+void PortsWindow::on_startTx_clicked()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    if (proxyPortModel)
+        current = proxyPortModel->mapToSource(current);
+
+    Q_ASSERT(plm->isPort(current));
+
+    QModelIndex curPortGroup = plm->getPortModel()->parent(current);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(plm->isPortGroup(curPortGroup));
+
+    QList<uint> portList({plm->port(current).id()});
+    plm->portGroup(curPortGroup).startTx(&portList);
+}
+
+void PortsWindow::on_stopTx_clicked()
+{
+    QModelIndex current = tvPortList->currentIndex();
+
+    if (proxyPortModel)
+        current = proxyPortModel->mapToSource(current);
+
+    Q_ASSERT(plm->isPort(current));
+
+    QModelIndex curPortGroup = plm->getPortModel()->parent(current);
+    Q_ASSERT(curPortGroup.isValid());
+    Q_ASSERT(plm->isPortGroup(curPortGroup));
+
+    QList<uint> portList({plm->port(current).id()});
+    plm->portGroup(curPortGroup).stopTx(&portList);
 }
 
 void PortsWindow::on_averagePacketsPerSec_editingFinished()
@@ -521,6 +574,9 @@ void PortsWindow::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(current));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
+
+    startTx->setEnabled(tvStreamList->model()->rowCount() > 0);
+    stopTx->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
 void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
@@ -530,9 +586,12 @@ void PortsWindow::updateApplyHint(int /*portGroupId*/, int /*portId*/,
         applyHint->setText("Configuration has changed - "
                            "<font color='red'><b>click Apply</b></font> "
                            "to activate the changes");
+    else if (tvStreamList->model()->rowCount() > 0)
+        applyHint->setText("Configuration activated - "
+                           "click <img src=':/icons/control_play'/> "
+                           "to transmit packets");
     else
-        applyHint->setText("Configuration activated. Use the Statistics "
-                           "window to transmit packets");
+        applyHint->setText("Configuration activated");
 }
 
 void PortsWindow::updatePortViewActions(const QModelIndex& currentIndex)
@@ -646,6 +705,11 @@ void PortsWindow::on_pbApply_clicked()
         qDebug("%s: curPortGroup is not a portGroup", __FUNCTION__);
         goto _exit;
     }
+
+    disconnect(applyMsg_);
+    connect(&(plm->portGroup(curPortGroup)), SIGNAL(applyFinished()),
+            applyMsg_, SLOT(hide()));
+    applyMsg_->show();
 
     // FIXME(HI): shd this be a signal?
     //portGroup.when_configApply(port);

@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 const int kFcsSize = 4;
 
 class AbstractProtocol;
+struct FrameValueAttrib;
 class ProtocolList;
 class ProtocolListIterator;
 
@@ -136,7 +137,8 @@ public:
     int frameVariableCount() const;
     int frameProtocolLength(int frameIndex) const;
     int frameCount() const;
-    int frameValue(uchar *buf, int bufMaxSize, int frameIndex) const;
+    int frameValue(uchar *buf, int bufMaxSize, int frameIndex,
+                   FrameValueAttrib *attrib = nullptr) const;
 
     quint64 deviceMacAddress(int frameIndex) const;
     quint64 neighborMacAddress(int frameIndex) const;

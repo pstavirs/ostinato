@@ -37,6 +37,7 @@ public:
 
 signals:
     void newVersionAvailable(QString);
+    void latestVersion(QString);
 
 private slots:
     void parseXml(QNetworkReply *reply);

@@ -89,6 +89,12 @@ PortStatsWindow::~PortStatsWindow()
 
 /* ------------- SLOTS (public) -------------- */
 
+void PortStatsWindow::clearCurrentSelection()
+{
+    tvPortStats->selectionModel()->clearCurrentIndex();
+    tvPortStats->clearSelection();
+}
+
 void PortStatsWindow::showMyReservedPortsOnly(bool enabled)
 {
     if (!proxyStatsModel)
@@ -225,6 +231,13 @@ void PortStatsWindow::on_tbResolveNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             resolveDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 
@@ -240,6 +253,13 @@ void PortStatsWindow::on_tbClearNeighbors_clicked()
     {
         pgl->portGroupByIndex(portList.at(i).portGroupId).
             clearDeviceNeighbors(&portList[i].portList);
+
+        // Update device info for the just processed portgroup
+        for (int j = 0; j < portList[i].portList.size(); j++)
+        {
+            pgl->portGroupByIndex(portList.at(i).portGroupId).
+                getDeviceInfo(portList[i].portList[j]);
+        }
     }
 }
 
@@ -275,6 +295,11 @@ void PortStatsWindow::on_tbClearAll_clicked()
         }
     }
 
+    if (proxyStatsModel) {
+        for(QModelIndex &index : shownColumns)
+            index = proxyStatsModel->mapToSource(index);
+    }
+
     // Get ports corresponding to the shown columns
     model->portListFromIndex(shownColumns, portList);
 
@@ -306,9 +331,24 @@ void PortStatsWindow::on_tbGetStreamStats_clicked()
         QDockWidget *statsDock = mainWindow->findChild<QDockWidget*>(
                                                             "statsDock");
         mainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+
+        // Add stream stats tab to the immediate right of port-stats ...
         mainWindow->tabifyDockWidget(statsDock, dock);
+        mainWindow->splitDockWidget(statsDock, dock, Qt::Horizontal);
+
+        // ... make it the currently visible tab  ...
         dock->show();
         dock->raise();
+
+        // ... and set tab remove behaviour
+        // XXX: unfortunately, there's no direct way to get the TabBar
+        QList<QTabBar*> tabBars = mainWindow->findChildren<QTabBar*>();
+        foreach(QTabBar* tabBar, tabBars) {
+            if (tabBar->tabText(tabBar->currentIndex())
+                            == dock->widget()->windowTitle())
+                tabBar->setSelectionBehaviorOnRemove(
+                        QTabBar::SelectPreviousTab);
+        }
     }
 
     // Get stream stats for selected ports, portgroup by portgroup

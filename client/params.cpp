@@ -21,9 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <unistd.h>
 
+extern char *version;
+extern char *revision;
+
 Params::Params()
 {
     localDrone_ = true;
+    logsDisabled_ = true;
 }
 
 int Params::parseCommandLine(int argc, char* argv[])
@@ -31,14 +35,22 @@ int Params::parseCommandLine(int argc, char* argv[])
     int c, n = 0;
 
     opterr = 0;
-    while ((c = getopt (argc, argv, "c")) != -1) {
+    while ((c = getopt (argc, argv, "cdhv")) != -1) {
         switch (c)
         {
         case 'c':
             localDrone_ = false;
             break;
+        case 'd':
+            logsDisabled_ = false;
+            break;
+        case 'v':
+            qDebug("Ostinato %s rev %s\n", version, revision);
+            exit(0);
+        case 'h':
         default:
-            qDebug("ignoring unrecognized option (%c)", c);
+            qDebug("usage: %s [-cdhv]\n", argv[0]);
+            exit(1);
         }
         n++;
     }
@@ -52,6 +64,11 @@ int Params::parseCommandLine(int argc, char* argv[])
 bool Params::optLocalDrone()
 {
     return localDrone_;
+}
+
+bool Params::optLogsDisabled()
+{
+    return logsDisabled_;
 }
 
 int Params::argumentCount()

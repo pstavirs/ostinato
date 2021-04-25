@@ -243,3 +243,9 @@ QVariant PacketModel::data(const QModelIndex &index, int role) const
 
     return QVariant();
 }
+
+Qt::DropActions PacketModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+

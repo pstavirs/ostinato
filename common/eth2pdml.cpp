@@ -122,3 +122,12 @@ void PdmlEthProtocol::unknownFieldHandler(QString name, int /*pos*/,
 #endif
 }
 
+void PdmlEthProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
+        OstProto::Stream* /*stream*/)
+{
+     OstProto::Mac *mac = pbProto->MutableExtension(OstProto::mac);
+
+     mac->set_dst_mac_mode(OstProto::Mac::e_mm_fixed);
+     mac->set_src_mac_mode(OstProto::Mac::e_mm_fixed);
+}
+

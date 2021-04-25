@@ -596,7 +596,8 @@ int AbstractProtocol::protocolFramePayloadSize(int streamIndex) const
   the FrameValue of all the 'frame' fields of the protocol also taking care of 
   fields which are not an integral number of bytes\n 
 */
-QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum) const
+QByteArray AbstractProtocol::protocolFrameValue(int streamIndex, bool forCksum,
+        FrameValueAttrib */*attrib*/) const
 {
     QByteArray proto, field;
     uint bits, lastbitpos = 0;
@@ -1024,6 +1025,17 @@ out:
     cksum = (quint16) ~sum;
     qDebug("%s: cksum = %u", __FUNCTION__, cksum);
     return cksum;
+}
+
+/*!
+    Returns true, if the protocol fields are incorrect or may cause
+    overall packet to be invalid
+
+    Error details are put in the optional INOUT param 'errors', if true.
+*/
+bool AbstractProtocol::hasErrors(QStringList* /*errors*/) const
+{
+    return false;
 }
 
 // Stein's binary GCD algo - from wikipedia

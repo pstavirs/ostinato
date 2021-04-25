@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "linuxport.h"
 
+#include "interfaceinfo.h"
+
 #ifdef Q_OS_LINUX
+
+#include "../common/qtport.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -27,7 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <errno.h>
 #include <fcntl.h>
+#include <netlink/route/addr.h>
+#include <netlink/route/link.h>
+#include <netlink/route/route.h>
+#if (LIBNL_VER_NUM > 0x0302) || ((LIBNL_VER_NUM == 0x0302) && (LIBNL_VER_MIC >= 26))
 #include <net/if.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -50,13 +59,22 @@ typedef struct rtnl_link_stats64 x_rtnl_link_stats;
 typedef struct rtnl_link_stats x_rtnl_link_stats;
 #endif
 
+nl_sock  *LinuxPort::netSock_{nullptr};
+nl_cache *LinuxPort::linkCache_{nullptr};
+nl_cache *LinuxPort::addressCache_{nullptr};
+nl_cache *LinuxPort::routeCache_{nullptr};
+
 LinuxPort::LinuxPort(int id, const char *device)
     : PcapPort(id, device) 
 {
     isPromisc_ = true;
     clearPromisc_ = false;
 
+    populateInterfaceInfo();
+
     // We don't need per port Rx/Tx monitors for Linux
+    // No need to stop them because we start them only in
+    // PcapPort::init which has not yet been called
     delete monitorRx_;
     delete monitorTx_;
     monitorRx_ = monitorTx_ = NULL;
@@ -115,6 +133,43 @@ LinuxPort::~LinuxPort()
     }
 }
 
+void LinuxPort::fetchHostNetworkInfo()
+{
+    netSock_ = nl_socket_alloc();
+    if (!netSock_) {
+        qWarning("Failed to open netlink socket");
+        return;
+    }
+
+    if (nl_connect(netSock_, NETLINK_ROUTE) < 0) {
+        qWarning("Failed to connect netlink socket");
+        return;
+    }
+
+    if (rtnl_link_alloc_cache(netSock_, AF_UNSPEC, &linkCache_) < 0) {
+        qWarning("Failed to populate link cache");
+        return;
+    }
+
+    if (rtnl_addr_alloc_cache(netSock_, &addressCache_) < 0) {
+        qWarning("Failed to populate addr cache");
+        return;
+    }
+
+    if (rtnl_route_alloc_cache(netSock_, AF_UNSPEC, 0, &routeCache_) < 0) {
+        qWarning("Failed to populate addr cache");
+        return;
+    }
+}
+
+void LinuxPort::freeHostNetworkInfo()
+{
+    nl_cache_put(routeCache_);
+    nl_cache_put(addressCache_);
+    nl_cache_put(linkCache_);
+    nl_socket_free(netSock_);
+}
+
 void LinuxPort::init()
 {
     if (!monitor_->isRunning())
@@ -124,6 +179,8 @@ void LinuxPort::init()
 
     if (!isPromisc_)
         addNote("Non Promiscuous Mode");
+
+    AbstractPort::init();
 }
 
 OstProto::LinkState LinuxPort::linkState()
@@ -143,9 +200,123 @@ bool LinuxPort::setExclusiveControl(bool /*exclusive*/)
     return false;
 }
 
+void LinuxPort::populateInterfaceInfo()
+{
+    //
+    // Find Mac
+    //
+    if (!linkCache_) {
+        qWarning("rtnetlink link cache empty for %s", name());
+        return;
+    }
+
+    rtnl_link *link = rtnl_link_get_by_name(linkCache_, name());
+    if (!link) {
+        qWarning("rtnetlink link not found for %s", name());
+        return;
+    }
+
+    nl_addr *addr = rtnl_link_get_addr(link);
+    if (!addr) {
+        qWarning("rtnetlink mac addr not found for %s", name());
+        return;
+    }
+
+    if (nl_addr_get_family(addr) != AF_LLC) {
+        qWarning("unexpected mac family found for %s:%d",
+                name(), nl_addr_get_family(addr));
+        rtnl_link_put(link);
+        return;
+    }
+
+    if (nl_addr_get_prefixlen(addr) != 48) {
+        qWarning("unexpected mac length for %s:%d",
+                name(), nl_addr_get_prefixlen(addr));
+        rtnl_link_put(link);
+        return;
+    }
+
+    quint64 mac = qFromBigEndian<quint64>(nl_addr_get_binary_addr(addr)) >> 16;
+    if (!mac) {
+        qWarning("zero mac for %s - skipping", name());
+        rtnl_link_put(link);
+        return;
+    }
+
+    int ifIndex = rtnl_link_get_ifindex(link);
+    rtnl_link_put(link);
+
+    interfaceInfo_ = new InterfaceInfo;
+    interfaceInfo_->mac = mac;
+
+    //
+    // Find gateways
+    //
+    quint32 gw4 = 0;
+    UInt128 gw6 = 0;
+    for (rtnl_route *rt = routeCache_ ? (rtnl_route*) nl_cache_get_first(routeCache_) : 0;
+            rt && (!gw4 || !gw6);
+            rt = (rtnl_route*) nl_cache_get_next(OBJ_CAST(rt))) {
+        if (rtnl_route_get_table(rt) != RT_TABLE_MAIN) // we want only main RTT
+            continue;
+
+        nl_addr *pfx = rtnl_route_get_dst(rt);
+        if (nl_addr_get_len(pfx)) // default route has len = 0
+            continue;
+
+        if (!rtnl_route_get_nnexthops(rt)) // at least one nh is required
+            continue;
+
+        rtnl_nexthop *nh = rtnl_route_nexthop_n(rt, 0);
+        if (rtnl_route_nh_get_ifindex(nh) != ifIndex) // ignore gw on other links
+            continue;
+
+        if (!gw4 && rtnl_route_get_family(rt) == AF_INET) {
+            gw4 = qFromBigEndian<quint32>(
+                    nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
+        }
+        else if (!gw6 && rtnl_route_get_family(rt) == AF_INET6) {
+            gw6 = UInt128((quint8*)
+                    nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
+        }
+    }
+
+    //
+    // Find self IP
+    //
+    if (!addressCache_) {
+        qWarning("rtnetlink address cache empty for %s", name());
+        return;
+    }
+    rtnl_addr *l3addr = (rtnl_addr*) nl_cache_get_first(addressCache_);
+    while (l3addr) {
+        if (rtnl_addr_get_ifindex(l3addr) == ifIndex) {
+            if (rtnl_addr_get_family(l3addr) == AF_INET) {
+                Ip4Config ip;
+                ip.address = qFromBigEndian<quint32>(
+                                nl_addr_get_binary_addr(
+                                    rtnl_addr_get_local(l3addr)));
+                ip.prefixLength = rtnl_addr_get_prefixlen(l3addr);
+                ip.gateway = gw4;
+                interfaceInfo_->ip4.append(ip);
+            }
+            else if (rtnl_addr_get_family(l3addr) == AF_INET6) {
+                Ip6Config ip;
+                ip.address = UInt128((quint8*)nl_addr_get_binary_addr(
+                                                    rtnl_addr_get_local(l3addr)));
+                ip.prefixLength = rtnl_addr_get_prefixlen(l3addr);
+                ip.gateway = gw6;
+                interfaceInfo_->ip6.append(ip);
+            }
+        }
+        l3addr = (rtnl_addr*) nl_cache_get_next((nl_object*)l3addr);
+    }
+}
+
 LinuxPort::StatsMonitor::StatsMonitor()
     : QThread()
 {
+    setObjectName("StatsMon");
     stop_ = false;
     setupDone_ = false;
     ioctlSocket_ = socket(AF_INET, SOCK_DGRAM, 0);

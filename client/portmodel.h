@@ -45,6 +45,8 @@ public:
             const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &index) const;    
 
+    Qt::DropActions supportedDropActions() const;
+
     bool isPortGroup(const QModelIndex& index);
     bool isPort(const QModelIndex& index);
     quint32 portGroupId(const QModelIndex& index);

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_GROUP_H
 
 #include "port.h"
+#include <QElapsedTimer>
 #include <QHostAddress>
 #include <QTcpSocket>
 
@@ -62,6 +63,7 @@ private:
     PbRpcChannel    *rpcChannel;
     PbRpcController *statsController;
     bool            isGetStatsPending_;
+    QElapsedTimer   applyTimer_;
 
     OstProto::OstService::Stub *serviceStub;
 
@@ -118,6 +120,7 @@ public:
     void processAddStreamAck(PbRpcController *controller);
     void processDeleteStreamAck(PbRpcController *controller);
     void processModifyStreamAck(int portIndex, PbRpcController *controller);
+    void processApplyBuildAck(int portIndex, PbRpcController *controller);
 
     void processAddDeviceGroupAck(PbRpcController *controller);
     void processDeleteDeviceGroupAck(PbRpcController *controller);
@@ -127,7 +130,8 @@ public:
     void processDeviceNeighbors(int portIndex, PbRpcController *controller);
 
     void modifyPort(int portId, OstProto::Port portConfig);
-    void processModifyPortAck(bool restoreUi, PbRpcController *controller);
+    void processModifyPortAck(PbRpcController *controller);
+    void processModifyPortBuildAck(bool restoreUi, PbRpcController *controller);
     void processUpdatedPortConfig(PbRpcController *controller);
 
     void getStreamIdList();
@@ -171,6 +175,7 @@ public:
     void processStreamStatsList(PbRpcController *controller);
 
 signals:
+    void applyFinished();
     void portGroupDataChanged(int portGroupId, int portId = 0xFFFF);
     void portListAboutToBeChanged(quint32 portGroupId);
     void portListChanged(quint32 portGroupId);

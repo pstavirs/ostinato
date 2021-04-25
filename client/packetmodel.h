@@ -42,6 +42,7 @@ public:
     QModelIndex index (int row, int col, const QModelIndex & parent = QModelIndex() ) const;
     QModelIndex parent(const QModelIndex &index) const;        
 
+    Qt::DropActions supportedDropActions() const;
 private:
     typedef union _IndexId
     {

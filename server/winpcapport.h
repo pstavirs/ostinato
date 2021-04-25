@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <packet32.h>
 
+#include <iphlpapi.h>
+
 class WinPcapPort : public PcapPort
 {
 public:
@@ -38,6 +40,9 @@ public:
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
 
+    static void fetchHostNetworkInfo();
+    static void freeHostNetworkInfo();
+
 protected:
     class PortMonitor: public PcapPort::PortMonitor 
     {
@@ -47,8 +52,12 @@ protected:
         void run();
     };
 private:
+    void populateInterfaceInfo();
+
     LPADAPTER adapter_;
     PPACKET_OID_DATA linkStateOid_ ;
+
+    static PIP_ADAPTER_ADDRESSES adapterList_;
 };
 
 #endif

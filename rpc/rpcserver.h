@@ -37,13 +37,14 @@ class RpcServer : public QTcpServer
     Q_OBJECT
 
 public:
-    RpcServer();    //! \todo (LOW) use 'parent' param
+    RpcServer(bool perConnLogs);    //! \todo (LOW) use 'parent' param
     virtual ~RpcServer();
 
     bool registerService(::google::protobuf::Service *service,
         QHostAddress address, quint16 tcpPortNum);
 
 signals:
+    void closed();
     void notifyClients(int notifType, SharedProtobufMessage notifData);
 
 protected:

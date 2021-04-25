@@ -156,6 +156,11 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::DropActions StreamStatsModel::supportedDropActions() const
+{
+    return Qt::IgnoreAction; // read-only model, doesn't accept any data
+}
+
 // --------------------------------------------- //
 // Slots
 // --------------------------------------------- //
@@ -220,7 +225,7 @@ void StreamStatsModel::appendStreamStatsList(
             guidList_.append(guid);
     }
 
-    if (guidList_.size())
+    if (guidList_.size() && !guidList_.contains(kAggrGuid))
         guidList_.append(kAggrGuid);
 
 #if QT_VERSION >= 0x040600
