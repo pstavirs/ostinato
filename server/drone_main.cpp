@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
                                     app.applicationName().toLower());
     qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
-    validateTurboLicense();
+    initTurbo();
 
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();
