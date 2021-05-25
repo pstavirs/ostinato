@@ -20,6 +20,7 @@ FORMS += \
     ip4.ui \
     ip6.ui \
     gmp.ui \
+    gre.ui \
     icmp.ui \
     tcp.ui \
     udp.ui \
@@ -75,6 +76,7 @@ HEADERS += \
     ip6config.h \
     ip4over4config.h \
     gmpconfig.h \
+    greconfig.h \
     icmpconfig.h \
     igmpconfig.h \
     mldconfig.h \
@@ -118,6 +120,7 @@ SOURCES += \
     ip4config.cpp \
     ip6config.cpp \
     gmpconfig.cpp \
+    greconfig.cpp \
     icmpconfig.cpp \
     igmpconfig.cpp \
     mldconfig.cpp \
@@ -139,6 +142,7 @@ SOURCES += \
     arppdml.cpp \
     ip4pdml.cpp \
     ip6pdml.cpp \
+    grepdml.cpp \
     icmppdml.cpp \
     icmp6pdml.cpp \
     igmppdml.cpp \
