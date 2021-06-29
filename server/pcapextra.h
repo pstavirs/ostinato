@@ -29,7 +29,9 @@ const char* pcapServiceStatus(const wchar_t *name);
 
 #else // non-windows
 
+#ifndef PCAP_OPENFLAG_PROMISCUOUS
 #define PCAP_OPENFLAG_PROMISCUOUS    1
+#endif
 
 struct pcap_send_queue
 {
