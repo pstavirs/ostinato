@@ -86,7 +86,11 @@ int main(int argc, char *argv[])
                                     app.applicationName().toLower());
     qDebug("Settings: %s", qPrintable(appSettings->fileName()));
 
-    initTurbo();
+    if (!initTurbo())
+    {
+        exitCode = 1;
+        goto _exit2;
+    }
 
     drone = new Drone();
     OstProtocolManager = new ProtocolManager();
@@ -116,6 +120,7 @@ _exit:
     delete drone;
     delete OstProtocolManager;
 
+_exit2:
     google::protobuf::ShutdownProtobufLibrary();
 
     fprintf(stderr, "done.\n");

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "params.h"
 #include "pcapextra.h"
+#include "turbo.h"
 
 #include <unistd.h>
 
@@ -55,6 +56,10 @@ int Params::parseCommandLine(int argc, char* argv[])
             exit(0);
         case 'h':
         default:
+            if (c != 'h') {
+                if (processTurboOption(optopt))
+                    continue;
+            }
             printf("usage: %s [-dhv] [-p <port-number>]\n", argv[0]);
             exit(1);
         }

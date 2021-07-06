@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "turbo.h"
 
-void initTurbo()
+bool initTurbo()
 {
-    return;
+    return true;
 }
 
 bool isTurboPort(const char* device)
@@ -34,5 +34,9 @@ AbstractPort* createTurboPort(int id, const char* device)
     return nullptr;
 }
 
+bool processTurboOption(int /*opt*/)
+{
+    return false;
+}
 #endif
 
