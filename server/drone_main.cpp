@@ -46,7 +46,7 @@ void NoMsgHandler(QtMsgType type, const QMessageLogContext &context,
 
 void cleanup(int /*signum*/)
 {
-    fprintf(stderr, "\nCleaning up ... (may take a few seconds) ... ");
+    fprintf(stderr, "\nCleaning up (may take a few seconds) ... ");
     fflush(stderr);
     QCoreApplication::instance()->exit(-1);
 }
