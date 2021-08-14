@@ -14,12 +14,8 @@ matrix:
     - os: osx
       compiler: gcc
 
-before_install:
+before_script:
   - "if [ $TRAVIS_OS_NAME = 'osx' ]; then \
-       brew update && \
-       brew install qt5 && \
-       brew link qt5 --force && \
-       brew install protobuf && \
        ls -lR /usr/local/include/google/protobuf; \
        which clang++; \
        clang++ -E -x c++ - -v < /dev/null; \
@@ -38,7 +34,10 @@ addons:
       - protobuf-compiler
       - libnl-3-dev
       - libnl-route-3-dev
-
+  homebrew:
+    packages:
+      - qt5
+      - protobuf
 script:
   - QT_SELECT=qt5 qmake -config debug
   - make
