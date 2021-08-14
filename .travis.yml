@@ -21,7 +21,7 @@ before_script:
        clang++ -E -x c++ - -v < /dev/null; \
        export CPLUS_INCLUDE_PATH=/usr/local/include; \
        export LIBRARY_PATH=/usr/local/lib; \
-       export PATH="/usr/local/opt/qt/bin:$PATH"; \
+       export PATH=/usr/local/opt/qt/bin:$PATH; \
      fi"
 
 addons:
