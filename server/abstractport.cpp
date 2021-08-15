@@ -364,10 +364,10 @@ int AbstractPort::updatePacketListSequential()
 
             switch(streamList_[i]->nextWhat())
             {
-                case ::OstProto::StreamControl::e_nw_stop:
+                case StreamBase::e_nw_stop:
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_id:
+                case StreamBase::e_nw_goto_id:
                     /*! \todo (MED): define and use 
                     streamList_[i].d.control().goto_stream_id(); */
 
@@ -385,7 +385,7 @@ int AbstractPort::updatePacketListSequential()
                                 StreamBase::e_su_bursts ? ibg1 : ipg1);
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_next:
+                case StreamBase::e_nw_goto_next:
                     break;
 
                 default:
