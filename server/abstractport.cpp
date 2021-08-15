@@ -256,7 +256,7 @@ int AbstractPort::updatePacketListSequential()
 
             switch (streamList_[i]->sendUnit())
             {
-            case OstProto::StreamControl::e_su_bursts:
+            case StreamBase::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
                 x = AbstractProtocol::lcm(frameVariableCount, burstSize);
                 n = ulong(burstSize * streamList_[i]->numBursts()) / x;
@@ -271,7 +271,7 @@ int AbstractPort::updatePacketListSequential()
                 }
                 loopDelay = ibg2;
                 break;
-            case OstProto::StreamControl::e_su_packets:
+            case StreamBase::e_su_packets:
                 x = frameVariableCount;
                 n = 2;
                 while (x < minPacketSetSize_) 
@@ -464,7 +464,7 @@ int AbstractPort::updatePacketListInterleaved()
 
         switch (streamList_[i]->sendUnit())
         {
-        case OstProto::StreamControl::e_su_bursts:
+        case StreamBase::e_su_bursts:
             numBursts = streamList_[i]->burstRate();
             if (streamList_[i]->burstRate() > 0)
             {
@@ -476,7 +476,7 @@ int AbstractPort::updatePacketListInterleaved()
                 _burstSize = streamList_[i]->burstSize();
             }
             break;
-        case OstProto::StreamControl::e_su_packets:
+        case StreamBase::e_su_packets:
             numPackets = streamList_[i]->packetRate();
             if (streamList_[i]->packetRate() > 0)
             {
