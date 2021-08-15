@@ -217,18 +217,18 @@ quint16    StreamBase::frameLen(int streamIndex) const
     // Decide a frame length based on length mode
     switch(lenMode())
     {
-        case OstProto::StreamCore::e_fl_fixed:
+        case e_fl_fixed:
             pktLen = mCore->frame_len();
             break;
-        case OstProto::StreamCore::e_fl_inc:
+        case e_fl_inc:
             pktLen = frameLenMin() + (streamIndex %
                 (frameLenMax() - frameLenMin() + 1));
             break;
-        case OstProto::StreamCore::e_fl_dec:
+        case e_fl_dec:
             pktLen = frameLenMax() - (streamIndex %
                 (frameLenMax() - frameLenMin() + 1));
             break;
-        case OstProto::StreamCore::e_fl_random:
+        case e_fl_random:
             //! \todo (MED) This 'random' sequence is same across iterations
             pktLen = 64; // to avoid the 'maybe used uninitialized' warning
             qsrand(reinterpret_cast<ulong>(this));
@@ -463,11 +463,11 @@ int StreamBase::frameSizeVariableCount() const
 
     switch(lenMode())
     {
-        case OstProto::StreamCore::e_fl_fixed:
+        case e_fl_fixed:
             break;
-        case OstProto::StreamCore::e_fl_inc:
-        case OstProto::StreamCore::e_fl_dec:
-        case OstProto::StreamCore::e_fl_random:
+        case e_fl_inc:
+        case e_fl_dec:
+        case e_fl_random:
             count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
             break;
         default:
