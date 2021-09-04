@@ -2,8 +2,6 @@
 
 [![Build Status](https://app.travis-ci.com/pstavirs/ostinato.svg?branch=master)](https://app.travis-ci.com/pstavirs/ostinato)
 
-https://app.travis-ci.com/pstavirs/ostinato.svg?branch=master
-
 This is the code repository for the Ostinato network packet crafter and traffic generator
 
 Visit https://ostinato.org for demo video and details
