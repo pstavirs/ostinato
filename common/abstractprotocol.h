@@ -106,6 +106,12 @@ public:
         CksumMax        //!< Marker for number of cksum types
     };
 
+    //! Flags affecting cksum calculation, can be OR'd
+    enum CksumFlag {
+        IncludeCksumField = 0x1, //!< Default: exclude cksum field(s)
+    };
+    Q_DECLARE_FLAGS(CksumFlags, CksumFlag);  //!< \private abcd
+
     //! Supported checksum scopes  
     enum CksumScope {
         CksumScopeAdjacentProtocol,   //!< Cksum only the adjacent protocol
@@ -164,7 +170,7 @@ public:
     bool protocolHasPayload() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const;
+        CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const;
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp,
         CksumScope cksumScope = CksumScopeAdjacentProtocol) const;

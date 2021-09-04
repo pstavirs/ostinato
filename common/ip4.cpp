@@ -845,7 +845,7 @@ int Ip4Protocol::protocolFrameVariableCount() const
 }
 
 quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
-    CksumType cksumType) const
+    CksumType cksumType, CksumFlags cksumFlags) const
 {
     switch (cksumType)
     {
@@ -876,7 +876,8 @@ quint32 Ip4Protocol::protocolFrameCksum(int streamIndex,
             break;
     }
 
-    return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+    return AbstractProtocol::protocolFrameCksum(
+                                streamIndex, cksumType, cksumFlags);
 }
 
 bool Ip4Protocol::hasErrors(QStringList *errors) const

@@ -740,7 +740,7 @@ int Ip6Protocol::protocolFrameVariableCount() const
 }
 
 quint32 Ip6Protocol::protocolFrameCksum(int streamIndex, 
-        CksumType cksumType) const
+        CksumType cksumType, CksumFlags cksumFlags) const
 {
     if (cksumType == CksumIpPseudo)
     {
@@ -764,7 +764,8 @@ quint32 Ip6Protocol::protocolFrameCksum(int streamIndex,
 
         return qFromBigEndian((quint16) ~sum);
     }
-    return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+    return AbstractProtocol::protocolFrameCksum(
+                                streamIndex, cksumType, cksumFlags);
 }
 
 bool Ip6Protocol::hasErrors(QStringList *errors) const
