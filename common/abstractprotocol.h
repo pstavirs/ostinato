@@ -102,6 +102,7 @@ public:
         CksumIp,        //!< Standard IP Checksum
         CksumIpPseudo,  //!< Standard checksum for Pseudo-IP header
         CksumTcpUdp,    //!< Standard TCP/UDP checksum including pseudo-IP
+        CksumIcmpIgmp,  //!< Standard ICMP/IGMP checksum
 
         CksumMax        //!< Marker for number of cksum types
     };

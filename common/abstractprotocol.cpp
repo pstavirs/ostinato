@@ -909,7 +909,26 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
             cksum = (~sum) & 0xFFFF;
             break;
         }    
+
+        case CksumIcmpIgmp:
+        {
+            quint16 cks;
+            quint32 sum = 0;
+
+            cks = protocolFrameCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+            cks = protocolFramePayloadCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+
+            while(sum>>16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+
+            cksum = (~sum) & 0xFFFF;
+            break;
+        }
+
         default:
+            qDebug("Unknown cksumType %d", cksumType);
             break;
     }
 
