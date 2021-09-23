@@ -480,7 +480,7 @@ int StreamBase::frameSizeVariableCount() const
         case e_fl_random:
             count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
             break;
-        case OstProto::StreamCore::e_fl_imix:
+        case e_fl_imix:
             count = 12; // 7:4:1 ratio, so 7+4+1
             break;
         default:
