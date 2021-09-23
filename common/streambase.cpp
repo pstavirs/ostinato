@@ -237,7 +237,7 @@ quint16    StreamBase::frameLen(int streamIndex) const
             pktLen = frameLenMin() + (pktLen %
                 (frameLenMax() - frameLenMin() + 1));
             break;
-        case OstProto::StreamCore::e_fl_imix: {
+        case e_fl_imix: {
             // 64, 594, 1518 in 7:4:1 ratio
             // sizes mixed up intentionally below
             static int imixPattern[12]
