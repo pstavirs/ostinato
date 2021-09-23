@@ -51,7 +51,8 @@ public:
         e_fl_fixed,
         e_fl_inc,
         e_fl_dec,
-        e_fl_random
+        e_fl_random,
+        e_fl_imix
     };
 
     enum SendUnit {

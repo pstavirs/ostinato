@@ -45,6 +45,7 @@ message StreamCore {
         e_fl_inc = 1;
         e_fl_dec = 2;
         e_fl_random = 3;
+        e_fl_imix = 4;
     }
     
     // Basics

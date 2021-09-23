@@ -237,6 +237,14 @@ quint16    StreamBase::frameLen(int streamIndex) const
             pktLen = frameLenMin() + (pktLen %
                 (frameLenMax() - frameLenMin() + 1));
             break;
+        case OstProto::StreamCore::e_fl_imix: {
+            // 64, 594, 1518 in 7:4:1 ratio
+            // sizes mixed up intentionally below
+            static int imixPattern[12]
+                = {64, 594, 64, 594, 64, 1518, 64, 64, 594, 64, 594, 64};
+            pktLen = imixPattern[streamIndex % 12];
+            break;
+        }
         default:
             qWarning("Unhandled len mode %d. Using default 64", 
                     lenMode());
@@ -282,6 +290,8 @@ quint16 StreamBase::frameLenAvg() const
 
     if (lenMode() == e_fl_fixed)
         avgFrameLen = frameLen();
+    else if (lenMode() == e_fl_imix)
+        avgFrameLen = (7*64 + 4*594 + 1*1518)/12; // 64,594,1518 in 7:4:1 ratio
     else
         avgFrameLen = (frameLenMin() + frameLenMax())/2;
 
@@ -469,6 +479,9 @@ int StreamBase::frameSizeVariableCount() const
         case e_fl_dec:
         case e_fl_random:
             count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
+            break;
+        case OstProto::StreamCore::e_fl_imix:
+            count = 12; // 7:4:1 ratio, so 7+4+1
             break;
         default:
             qWarning("%s: Unhandled len mode %d",  __FUNCTION__, lenMode());

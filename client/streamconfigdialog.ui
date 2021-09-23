@@ -108,6 +108,11 @@ QLineEdit:enabled[inputMask = &quot;HH HH HH HH HH HH; &quot;] { background-colo
               <string>Random</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>IMIX</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item row="0" column="1">

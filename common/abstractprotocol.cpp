@@ -26,6 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <qendian.h>
 
+#if 0
+#ifdef qDebug
+#undef qDebug
+#define qDebug(...)
+#endif
+#endif
+
 /*!
   \class AbstractProtocol
 
