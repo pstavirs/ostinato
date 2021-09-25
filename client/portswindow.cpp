@@ -1013,6 +1013,7 @@ void PortsWindow::on_actionOpen_Streams_triggered()
         msgBox.exec();
     }
     dirName = QFileInfo(fileName).absolutePath();
+    updateStreamViewActions();
 
 _exit:
     return;
