@@ -88,7 +88,10 @@ void Port::updatePortConfig(OstProto::Port *port)
         setAlias(QString("if%1").arg(id()));
 
     if (recalc)
+    {
         recalculateAverageRates();
+        emit streamListChanged(mPortGroupId, mPortId); // show/hide 'next' col
+    }
 }
 
 void Port::updateStreamOrdinalsFromIndex()
