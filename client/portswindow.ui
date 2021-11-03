@@ -213,114 +213,7 @@
            </attribute>
            <layout class="QVBoxLayout">
             <item>
-             <layout class="QHBoxLayout">
-              <item>
-               <widget class="QToolButton" name="startTx">
-                <property name="toolTip">
-                 <string>Start Transmit</string>
-                </property>
-                <property name="statusTip">
-                 <string>Start transmit on selected port</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="ostinato.qrc">
-                  <normaloff>:/icons/control_play.png</normaloff>:/icons/control_play.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QToolButton" name="stopTx">
-                <property name="toolTip">
-                 <string>Stop Transmit</string>
-                </property>
-                <property name="statusTip">
-                 <string>Stop transmit on selected port</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="ostinato.qrc">
-                  <normaloff>:/icons/control_stop.png</normaloff>:/icons/control_stop.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="radioButton">
-                <property name="text">
-                 <string>Avg pps</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="averagePacketsPerSec"/>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="radioButton_2">
-                <property name="text">
-                 <string>Avg bps</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="averageBitsPerSec">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="XTableView" name="tvStreamList">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>1</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::ActionsContextMenu</enum>
-              </property>
-              <property name="whatsThis">
-               <string>This is the stream list for the selected port
-
-A stream is a sequence of one or more packets
-
-Right-click to create a stream</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="lineWidth">
-               <number>1</number>
-              </property>
-              <property name="selectionMode">
-               <enum>QAbstractItemView::ExtendedSelection</enum>
-              </property>
-              <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectRows</enum>
-              </property>
-             </widget>
+             <widget class="QWidget" name="streamsWidget" native="true"/>
             </item>
            </layout>
           </widget>
@@ -378,33 +271,6 @@ Right-click to create a stream</string>
     <string>Disconnect Port Group</string>
    </property>
   </action>
-  <action name="actionNew_Stream">
-   <property name="icon">
-    <iconset resource="ostinato.qrc">
-     <normaloff>:/icons/stream_add.png</normaloff>:/icons/stream_add.png</iconset>
-   </property>
-   <property name="text">
-    <string>New Stream</string>
-   </property>
-  </action>
-  <action name="actionDelete_Stream">
-   <property name="icon">
-    <iconset resource="ostinato.qrc">
-     <normaloff>:/icons/stream_delete.png</normaloff>:/icons/stream_delete.png</iconset>
-   </property>
-   <property name="text">
-    <string>Delete Stream</string>
-   </property>
-  </action>
-  <action name="actionEdit_Stream">
-   <property name="icon">
-    <iconset resource="ostinato.qrc">
-     <normaloff>:/icons/stream_edit.png</normaloff>:/icons/stream_edit.png</iconset>
-   </property>
-   <property name="text">
-    <string>Edit Stream</string>
-   </property>
-  </action>
   <action name="actionExclusive_Control">
    <property name="checkable">
     <bool>true</bool>
@@ -413,28 +279,9 @@ Right-click to create a stream</string>
     <string>Exclusive Port Control (EXPERIMENTAL)</string>
    </property>
   </action>
-  <action name="actionOpen_Streams">
-   <property name="text">
-    <string>Open Streams ...</string>
-   </property>
-  </action>
-  <action name="actionSave_Streams">
-   <property name="text">
-    <string>Save Streams ...</string>
-   </property>
-  </action>
   <action name="actionPort_Configuration">
    <property name="text">
     <string>Port Configuration ...</string>
-   </property>
-  </action>
-  <action name="actionDuplicate_Stream">
-   <property name="icon">
-    <iconset resource="ostinato.qrc">
-     <normaloff>:/icons/stream_duplicate.png</normaloff>:/icons/stream_duplicate.png</iconset>
-   </property>
-   <property name="text">
-    <string>Duplicate Stream</string>
    </property>
   </action>
  </widget>
@@ -450,47 +297,9 @@ Right-click to create a stream</string>
    <extends>QTreeView</extends>
    <header>xtreeview.h</header>
   </customwidget>
-  <customwidget>
-   <class>XTableView</class>
-   <extends>QTableView</extends>
-   <header>xtableview.h</header>
-  </customwidget>
  </customwidgets>
  <resources>
   <include location="ostinato.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>radioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>averagePacketsPerSec</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>326</x>
-     <y>80</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>454</x>
-     <y>79</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>radioButton_2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>averageBitsPerSec</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>523</x>
-     <y>80</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>651</x>
-     <y>88</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

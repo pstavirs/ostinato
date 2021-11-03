@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QWidget>
 #include <QAbstractItemModel>
 #include "ui_portswindow.h"
+#include "ui_streamswidget.h"
 #include "portgrouplist.h"
 
 class ApplyMessage;
@@ -34,7 +35,7 @@ namespace OstProto {
     class SessionContent;
 }
 
-class PortsWindow : public QWidget, private Ui::PortsWindow
+class PortsWindow : public QWidget, private Ui::PortsWindow, private Ui::StreamsWidget
 {
     Q_OBJECT
 

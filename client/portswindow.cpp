@@ -54,7 +54,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     //plm = new PortGroupList();
     plm = pgl;
 
-    setupUi(this);
+    Ui::PortsWindow::setupUi(this);
+    Ui::StreamsWidget::setupUi(streamsWidget);
     applyMsg_ = new ApplyMessage();
     devicesWidget->setPortGroupList(plm);
 

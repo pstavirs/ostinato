@@ -81,6 +81,7 @@ FORMS += \
     preferences.ui \
     streamconfigdialog.ui \
     streamstatswindow.ui \
+    streamswidget.ui \
     variablefieldswidget.ui
 
 SOURCES += \
