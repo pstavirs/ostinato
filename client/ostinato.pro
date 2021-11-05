@@ -65,6 +65,7 @@ HEADERS += \
     streamstatsfiltermodel.h \
     streamstatsmodel.h \
     streamstatswindow.h \
+    streamswidget.h \
     variablefieldswidget.h \
     xtableview.h
 
@@ -116,6 +117,7 @@ SOURCES += \
     streammodel.cpp \
     streamstatsmodel.cpp \
     streamstatswindow.cpp \
+    streamswidget.cpp \
     variablefieldswidget.cpp
 
 

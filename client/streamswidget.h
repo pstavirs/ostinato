@@ -17,61 +17,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _PORTS_WINDOW_H
-#define _PORTS_WINDOW_H
+#ifndef _STREAMS_WIDGET_H
+#define _STREAMS_WIDGET_H
 
-#include <QWidget>
-#include <QAbstractItemModel>
-#include "ui_portswindow.h"
 #include "ui_streamswidget.h"
-#include "portgrouplist.h"
+#include <QWidget>
+//#include <QAbstractItemModel>
 
-class ApplyMessage;
+class PortGroupList;
 class QAbstractItemDelegate;
-class QProgressDialog;
-class QSortFilterProxyModel;
 
-namespace OstProto {
-    class SessionContent;
-}
-
-class PortsWindow : public QWidget, private Ui::PortsWindow, private Ui::StreamsWidget
+class StreamsWidget : public QWidget, private Ui::StreamsWidget
 {
     Q_OBJECT
 
-    //QAbstractItemModel    *slm; // stream list model
-    PortGroupList        *plm;
-
 public:
-    PortsWindow(PortGroupList *pgl, QWidget *parent = 0);
-    ~PortsWindow();
+    StreamsWidget(QWidget *parent = 0);
+    ~StreamsWidget();
 
-    int portGroupCount();
-    int reservedPortCount();
-
-    bool openSession(const OstProto::SessionContent *session,
-                     QString &error);
-    bool saveSession(OstProto::SessionContent *session,
-                     QString &error,
-                     QProgressDialog *progress = NULL);
-
-signals:
-    void currentPortChanged(const QModelIndex &current,
-                            const QModelIndex &previous);
-
-private:
-    QString        lastNewPortGroup;
-    QAbstractItemDelegate *delegate;
-    QSortFilterProxyModel *proxyPortModel;
-    ApplyMessage *applyMsg_;
+    void setPortGroupList(PortGroupList *portGroups);
 
 public slots:
-    void clearCurrentSelection();
-    void showMyReservedPortsOnly(bool enabled);
+    void setCurrentPortIndex(const QModelIndex &portIndex);
 
 private slots:
-    void updateApplyHint(int portGroupId, int portId, bool configChanged);
-    void updatePortViewActions(const QModelIndex& currentIndex);
     void updateStreamViewActions();
 
     void on_startTx_clicked();
@@ -80,21 +49,6 @@ private slots:
     void on_averageBitsPerSec_editingFinished();
     void updatePortRates();
     void on_tvStreamList_activated(const QModelIndex & index);
-    void when_portView_currentChanged(const QModelIndex& currentIndex,
-        const QModelIndex& previousIndex);
-    void when_portModel_dataChanged(const QModelIndex& topLeft,
-        const QModelIndex& bottomRight);
-    void when_portModel_reset();
-
-    void on_pbApply_clicked();    
-
-    void on_actionNew_Port_Group_triggered();
-    void on_actionDelete_Port_Group_triggered();
-    void on_actionConnect_Port_Group_triggered();
-    void on_actionDisconnect_Port_Group_triggered();
-
-    void on_actionExclusive_Control_triggered(bool checked);
-    void on_actionPort_Configuration_triggered();
 
     void on_actionNew_Stream_triggered();
     void on_actionEdit_Stream_triggered();
@@ -105,6 +59,12 @@ private slots:
     void on_actionSave_Streams_triggered();
 
     void streamModelDataChanged();
+
+private:
+    PortGroupList *plm{nullptr}; // FIXME: rename to portGroups_?
+    QModelIndex currentPortIndex_;
+
+    QAbstractItemDelegate *delegate;
 };
 
 #endif

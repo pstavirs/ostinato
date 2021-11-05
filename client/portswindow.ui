@@ -213,7 +213,7 @@
            </attribute>
            <layout class="QVBoxLayout">
             <item>
-             <widget class="QWidget" name="streamsWidget" native="true"/>
+             <widget class="StreamsWidget" name="streamsWidget" native="true"/>
             </item>
            </layout>
           </widget>
@@ -296,6 +296,12 @@
    <class>XTreeView</class>
    <extends>QTreeView</extends>
    <header>xtreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>StreamsWidget</class>
+   <extends>QWidget</extends>
+   <header>streamswidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
