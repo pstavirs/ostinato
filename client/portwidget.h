@@ -17,23 +17,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _STREAMS_WIDGET_H
-#define _STREAMS_WIDGET_H
+#ifndef _PORT_WIDGET_H
+#define _PORT_WIDGET_H
 
-#include "ui_streamswidget.h"
+#include "ui_portwidget.h"
 #include <QWidget>
-//#include <QAbstractItemModel>
 
 class PortGroupList;
-class QAbstractItemDelegate;
 
-class StreamsWidget : public QWidget, private Ui::StreamsWidget
+class PortWidget : public QWidget, private Ui::PortWidget
 {
     Q_OBJECT
 
 public:
-    StreamsWidget(QWidget *parent = 0);
-    ~StreamsWidget();
+    PortWidget(QWidget *parent = 0);
+    ~PortWidget();
 
     void setPortGroupList(PortGroupList *portGroups);
 
@@ -41,30 +39,19 @@ public slots:
     void setCurrentPortIndex(const QModelIndex &portIndex);
 
 private slots:
-    void updateStreamViewActions();
+
 
     void on_startTx_clicked();
     void on_stopTx_clicked();
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();
+
+    void updatePortActions();
     void updatePortRates();
-    void on_tvStreamList_activated(const QModelIndex & index);
-
-    void on_actionNew_Stream_triggered();
-    void on_actionEdit_Stream_triggered();
-    void on_actionDuplicate_Stream_triggered();
-    void on_actionDelete_Stream_triggered();
-
-    void on_actionOpen_Streams_triggered();
-    void on_actionSave_Streams_triggered();
-
-    void streamModelDataChanged();
-
+    
 private:
     PortGroupList *plm{nullptr}; // FIXME: rename to portGroups_?
     QModelIndex currentPortIndex_;
-
-    QAbstractItemDelegate *delegate;
 };
 
 #endif

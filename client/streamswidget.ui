@@ -14,84 +14,18 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout">
-     <item>
-      <widget class="QToolButton" name="startTx">
-       <property name="toolTip">
-        <string>Start Transmit</string>
-       </property>
-       <property name="statusTip">
-        <string>Start transmit on selected port</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="ostinato.qrc">
-         <normaloff>:/icons/control_play.png</normaloff>:/icons/control_play.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="stopTx">
-       <property name="toolTip">
-        <string>Stop Transmit</string>
-       </property>
-       <property name="statusTip">
-        <string>Stop transmit on selected port</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="ostinato.qrc">
-         <normaloff>:/icons/control_stop.png</normaloff>:/icons/control_stop.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="radioButton">
-       <property name="text">
-        <string>Avg pps</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="averagePacketsPerSec"/>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="radioButton_2">
-       <property name="text">
-        <string>Avg bps</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="averageBitsPerSec">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>9</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="XTableView" name="tvStreamList">
      <property name="sizePolicy">
@@ -182,38 +116,5 @@ Right-click to create a stream</string>
  <resources>
   <include location="ostinato.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>radioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>averagePacketsPerSec</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>326</x>
-     <y>80</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>454</x>
-     <y>79</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>radioButton_2</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>averageBitsPerSec</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>523</x>
-     <y>80</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>651</x>
-     <y>88</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

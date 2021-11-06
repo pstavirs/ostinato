@@ -213,6 +213,9 @@
            </attribute>
            <layout class="QVBoxLayout">
             <item>
+             <widget class="PortWidget" name="portWidget" native="true"/>
+            </item>
+            <item>
              <widget class="StreamsWidget" name="streamsWidget" native="true"/>
             </item>
            </layout>
@@ -301,6 +304,12 @@
    <class>StreamsWidget</class>
    <extends>QWidget</extends>
    <header>streamswidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PortWidget</class>
+   <extends>QWidget</extends>
+   <header>portwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

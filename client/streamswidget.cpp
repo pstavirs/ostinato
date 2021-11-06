@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamconfigdialog.h"
 #include "streamfileformat.h"
 #include "streamlistdelegate.h"
-#include "xqlocale.h"
 
 #include <QInputDialog>
 #include <QItemSelectionModel>
@@ -143,80 +142,10 @@ void StreamsWidget::setCurrentPortIndex(const QModelIndex &portIndex)
 
     qDebug("In %s", __FUNCTION__);
 
-    // Disconnect previous port
-    if (plm->isPort(currentPortIndex_))
-        disconnect(&(plm->port(currentPortIndex_)),
-                SIGNAL(portRateChanged(int, int)),
-                this, SLOT(updatePortRates()));
-
     currentPortIndex_ = portIndex;
     plm->getStreamModel()->setCurrentPortIndex(portIndex);
 
-    // Connect current port
-    if (plm->isPort(currentPortIndex_))
-        connect(&(plm->port(currentPortIndex_)),
-                SIGNAL(portRateChanged(int, int)),
-                this, SLOT(updatePortRates()));
-    updatePortRates();
     updateStreamViewActions();
-}
-
-void StreamsWidget::on_startTx_clicked()
-{
-    Q_ASSERT(plm->isPort(currentPortIndex_));
-
-    QModelIndex curPortGroup = plm->getPortModel()->parent(currentPortIndex_);
-    Q_ASSERT(curPortGroup.isValid());
-    Q_ASSERT(plm->isPortGroup(curPortGroup));
-
-    QList<uint> portList({plm->port(currentPortIndex_).id()});
-    plm->portGroup(curPortGroup).startTx(&portList);
-}
-
-void StreamsWidget::on_stopTx_clicked()
-{
-    Q_ASSERT(plm->isPort(currentPortIndex_));
-
-    QModelIndex curPortGroup = plm->getPortModel()->parent(currentPortIndex_);
-    Q_ASSERT(curPortGroup.isValid());
-    Q_ASSERT(plm->isPortGroup(curPortGroup));
-
-    QList<uint> portList({plm->port(currentPortIndex_).id()});
-    plm->portGroup(curPortGroup).stopTx(&portList);
-}
-
-void StreamsWidget::on_averagePacketsPerSec_editingFinished()
-{
-    Q_ASSERT(plm->isPort(currentPortIndex_));
-
-    bool isOk;
-    double pps = XLocale().toDouble(averagePacketsPerSec->text(), &isOk);
-
-    plm->port(currentPortIndex_).setAveragePacketRate(pps);
-}
-
-void StreamsWidget::on_averageBitsPerSec_editingFinished()
-{
-    Q_ASSERT(plm->isPort(currentPortIndex_));
-
-    bool isOk;
-    double bps = XLocale().toDouble(averageBitsPerSec->text(), &isOk);
-
-    plm->port(currentPortIndex_).setAverageBitRate(bps);
-}
-
-void StreamsWidget::updatePortRates()
-{
-    if (!currentPortIndex_.isValid())
-        return;
-
-    if (!plm->isPort(currentPortIndex_))
-        return;
-
-    averagePacketsPerSec->setText(QString("%L1")
-            .arg(plm->port(currentPortIndex_).averagePacketRate(), 0, 'f', 4));
-    averageBitsPerSec->setText(QString("%L1")
-            .arg(plm->port(currentPortIndex_).averageBitRate(), 0, 'f', 0));
 }
 
 void StreamsWidget::updateStreamViewActions()
@@ -259,9 +188,6 @@ void StreamsWidget::updateStreamViewActions()
     }
     actionOpen_Streams->setEnabled(plm->isPort(currentPortIndex_));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
-
-    startTx->setEnabled(tvStreamList->model()->rowCount() > 0);
-    stopTx->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
 
 void StreamsWidget::on_actionNew_Stream_triggered()
@@ -501,5 +427,4 @@ _retry:
 _exit:
     return;
 }
-
 

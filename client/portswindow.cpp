@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "fileformat.pb.h"
 #include "portconfigdialog.h"
 #include "portgrouplist.h"
+#include "portwidget.h"
 #include "settings.h"
 #include "streamswidget.h"
 
@@ -44,6 +45,7 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     setupUi(this);
     applyMsg_ = new ApplyMessage();
+    portWidget->setPortGroupList(plm);
     streamsWidget->setPortGroupList(plm);
     devicesWidget->setPortGroupList(plm);
 
@@ -99,6 +101,10 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
         SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
         this, SLOT(when_portView_currentChanged(const QModelIndex&, 
             const QModelIndex&)));
+
+    connect(this,
+            SIGNAL(currentPortChanged(const QModelIndex&, const QModelIndex&)),
+            portWidget, SLOT(setCurrentPortIndex(const QModelIndex&)));
     connect(this,
             SIGNAL(currentPortChanged(const QModelIndex&, const QModelIndex&)),
             streamsWidget, SLOT(setCurrentPortIndex(const QModelIndex&)));

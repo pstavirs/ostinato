@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "ui_streamswidget.h"
 #include <QWidget>
-//#include <QAbstractItemModel>
 
 class PortGroupList;
 class QAbstractItemDelegate;
@@ -43,11 +42,6 @@ public slots:
 private slots:
     void updateStreamViewActions();
 
-    void on_startTx_clicked();
-    void on_stopTx_clicked();
-    void on_averagePacketsPerSec_editingFinished();
-    void on_averageBitsPerSec_editingFinished();
-    void updatePortRates();
     void on_tvStreamList_activated(const QModelIndex & index);
 
     void on_actionNew_Stream_triggered();
