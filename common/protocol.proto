@@ -212,6 +212,9 @@ message Port {
     optional TransmitMode transmit_mode = 7 [default = kSequentialTransmit];
     optional string user_name = 8;
     optional bool is_tracking_stream_stats = 9;
+
+    optional double speed = 10; // in Mbps
+    optional uint32 mtu = 11;
 }
 
 message PortConfigList {

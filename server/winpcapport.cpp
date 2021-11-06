@@ -261,6 +261,11 @@ void WinPcapPort::populateInterfaceInfo()
     }
 
     interfaceInfo_ = new InterfaceInfo;
+
+    interfaceInfo_->speed = adapter->TransmitLinkSpeed != quint64(-1) ?
+        adapter->TransmitLinkSpeed/ulong(1e6) : 0;
+    interfaceInfo_->mtu = adapter->Mtu;
+
     if (adapter->PhysicalAddressLength == 6) {
         interfaceInfo_->mac = qFromBigEndian<quint64>(
                                     adapter->PhysicalAddress) >> 16;

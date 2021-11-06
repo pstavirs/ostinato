@@ -214,6 +214,7 @@ void BsdPort::populateInterfaceInfo()
     }
 
     interfaceInfo_ = new InterfaceInfo;
+    // FIXME: speed, mtu
     interfaceInfo_->mac = mac;
 
     //

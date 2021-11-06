@@ -247,6 +247,7 @@ void LinuxPort::populateInterfaceInfo()
     rtnl_link_put(link);
 
     interfaceInfo_ = new InterfaceInfo;
+    // FIXME: speed, mtu
     interfaceInfo_->mac = mac;
 
     //
