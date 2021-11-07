@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>532</width>
-    <height>42</height>
+    <width>806</width>
+    <height>73</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -76,6 +76,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="Line" name="rateSep">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QRadioButton" name="radioButton">
        <property name="text">
         <string>Avg pps</string>
@@ -102,6 +109,46 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QRadioButton" name="rbLoad">
+       <property name="text">
+        <string>Load</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="averageLoadPercent">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="suffix">
+        <string>%</string>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="speedSep">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="portSpeed">
+       <property name="toolTip">
+        <string>Port Speed</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="text">
+        <string>Max speed</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
@@ -117,12 +164,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>326</x>
-     <y>80</y>
+     <x>450</x>
+     <y>44</y>
     </hint>
     <hint type="destinationlabel">
-     <x>454</x>
-     <y>79</y>
+     <x>593</x>
+     <y>45</y>
     </hint>
    </hints>
   </connection>
@@ -133,12 +180,28 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>523</x>
-     <y>80</y>
+     <x>661</x>
+     <y>44</y>
     </hint>
     <hint type="destinationlabel">
-     <x>651</x>
-     <y>88</y>
+     <x>804</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rbLoad</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>averageLoadPercent</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>281</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>308</x>
+     <y>45</y>
     </hint>
    </hints>
   </connection>

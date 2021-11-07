@@ -22,10 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portgrouplist.h"
 #include "xqlocale.h"
 
+#include <cfloat>
+
 PortWidget::PortWidget(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
+    averageLoadPercent->setMaximum(DBL_MAX);
 }
 
 void PortWidget::setPortGroupList(PortGroupList *portGroups)
@@ -71,6 +74,14 @@ void PortWidget::setCurrentPortIndex(const QModelIndex &portIndex)
                 SIGNAL(portRateChanged(int, int)),
                 this, SLOT(updatePortRates()));
 
+    double speed = plm->port(currentPortIndex_).speed();
+    portSpeed->setText(QString("Max %L1 Mbps").arg(speed));
+
+    rbLoad->setVisible(speed > 0);
+    averageLoadPercent->setVisible(speed > 0);
+    speedSep->setVisible(speed > 0);
+    portSpeed->setVisible(speed > 0);
+
     updatePortRates();
     updatePortActions();
 }
@@ -98,6 +109,15 @@ void PortWidget::on_stopTx_clicked()
     QList<uint> portList({plm->port(currentPortIndex_).id()});
     plm->portGroup(curPortGroup).stopTx(&portList);
 }
+
+void PortWidget::on_averageLoadPercent_editingFinished()
+{
+    Q_ASSERT(plm->isPort(currentPortIndex_));
+
+    plm->port(currentPortIndex_).setAverageLoadRate(
+            averageLoadPercent->value()/100);
+}
+
 
 void PortWidget::on_averagePacketsPerSec_editingFinished()
 {
@@ -127,6 +147,8 @@ void PortWidget::updatePortRates()
     if (!plm->isPort(currentPortIndex_))
         return;
 
+    averageLoadPercent->setValue(
+            plm->port(currentPortIndex_).averageLoadRate()*100);
     averagePacketsPerSec->setText(QString("%L1")
             .arg(plm->port(currentPortIndex_).averagePacketRate(), 0, 'f', 4));
     averageBitsPerSec->setText(QString("%L1")

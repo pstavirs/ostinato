@@ -43,6 +43,7 @@ private slots:
 
     void on_startTx_clicked();
     void on_stopTx_clicked();
+    void on_averageLoadPercent_editingFinished();
     void on_averagePacketsPerSec_editingFinished();
     void on_averageBitsPerSec_editingFinished();
 
