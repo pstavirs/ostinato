@@ -121,11 +121,17 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::NoButtons</enum>
+       </property>
        <property name="suffix">
         <string>%</string>
        </property>
        <property name="decimals">
         <number>4</number>
+       </property>
+       <property name="maximum">
+        <double>999.999900000000025</double>
        </property>
       </widget>
      </item>

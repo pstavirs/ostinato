@@ -28,7 +28,6 @@ PortWidget::PortWidget(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
-    averageLoadPercent->setMaximum(DBL_MAX);
 }
 
 void PortWidget::setPortGroupList(PortGroupList *portGroups)
