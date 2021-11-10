@@ -117,7 +117,6 @@ void PortWidget::on_averageLoadPercent_editingFinished()
             averageLoadPercent->value()/100);
 }
 
-
 void PortWidget::on_averagePacketsPerSec_editingFinished()
 {
     Q_ASSERT(plm->isPort(currentPortIndex_));
@@ -146,12 +145,31 @@ void PortWidget::updatePortRates()
     if (!plm->isPort(currentPortIndex_))
         return;
 
+    // XXX: pps/bps input widget is a LineEdit and not a SpinBox
+    // because we want users to be able to enter values in various
+    // units e.g. 1.5 Mbps, 1000K, 50 etc.
+
+    // XXX: It's a considered decision NOT to show frame rate in
+    // higher units of Kpps and Mpps as most users may not be
+    // familiar with those and also we want frame rate to have a
+    // high resolution for input e.g. if user enters 1,488,095.2381
+    // it should NOT be shown as 1.4881 Mpps
+
+    averagePacketsPerSec->setText(QString("%L1 pps")
+            .arg(plm->port(currentPortIndex_).averagePacketRate(), 0, 'f', 4));
+
+    double bps = plm->port(currentPortIndex_).averageBitRate();
+    if (bps > 1e9)
+        averageBitsPerSec->setText(tr("%L1 Gbps").arg(bps/1e9, 0, 'f', 4));
+    else if (bps > 1e6)
+        averageBitsPerSec->setText(tr("%L1 Mbps").arg(bps/1e6, 0, 'f', 4));
+    else if (bps > 1e3)
+        averageBitsPerSec->setText(tr("%L1 Kbps").arg(bps/1e3, 0, 'f', 4));
+    else
+        averageBitsPerSec->setText(tr("%L1 bps").arg(bps, 0, 'f', 4));
+
     averageLoadPercent->setValue(
             plm->port(currentPortIndex_).averageLoadRate()*100);
-    averagePacketsPerSec->setText(QString("%L1")
-            .arg(plm->port(currentPortIndex_).averagePacketRate(), 0, 'f', 4));
-    averageBitsPerSec->setText(QString("%L1")
-            .arg(plm->port(currentPortIndex_).averageBitRate(), 0, 'f', 0));
 }
 
 void PortWidget::updatePortActions()

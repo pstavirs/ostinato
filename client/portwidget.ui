@@ -85,7 +85,7 @@
      <item>
       <widget class="QRadioButton" name="radioButton">
        <property name="text">
-        <string>Avg pps</string>
+        <string>Frame Rate</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -98,7 +98,7 @@
      <item>
       <widget class="QRadioButton" name="radioButton_2">
        <property name="text">
-        <string>Avg bps</string>
+        <string>Bit Rate</string>
        </property>
       </widget>
      </item>
@@ -106,6 +106,9 @@
       <widget class="QLineEdit" name="averageBitsPerSec">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Bit rate on the line including overhead such as Preamble, IPG, FCS etc.</string>
        </property>
       </widget>
      </item>
