@@ -122,9 +122,13 @@ void PortWidget::on_averagePacketsPerSec_editingFinished()
     Q_ASSERT(plm->isPort(currentPortIndex_));
 
     bool isOk;
-    double pps = XLocale().toDouble(averagePacketsPerSec->text(), &isOk);
+    double pps = XLocale().toPacketsPerSecond(averagePacketsPerSec->text(),
+                                              &isOk);
 
-    plm->port(currentPortIndex_).setAveragePacketRate(pps);
+    if (isOk)
+        plm->port(currentPortIndex_).setAveragePacketRate(pps);
+    else
+        updatePortRates();
 }
 
 void PortWidget::on_averageBitsPerSec_editingFinished()
@@ -132,9 +136,12 @@ void PortWidget::on_averageBitsPerSec_editingFinished()
     Q_ASSERT(plm->isPort(currentPortIndex_));
 
     bool isOk;
-    double bps = XLocale().toDouble(averageBitsPerSec->text(), &isOk);
+    double bps = XLocale().toBitsPerSecond(averageBitsPerSec->text(), &isOk);
 
-    plm->port(currentPortIndex_).setAverageBitRate(bps);
+    if (isOk)
+        plm->port(currentPortIndex_).setAverageBitRate(bps);
+    else
+        updatePortRates();
 }
 
 void PortWidget::updatePortRates()
@@ -147,7 +154,7 @@ void PortWidget::updatePortRates()
 
     // XXX: pps/bps input widget is a LineEdit and not a SpinBox
     // because we want users to be able to enter values in various
-    // units e.g. 1.5 Mbps, 1000K, 50 etc.
+    // units e.g. "1.5 Mbps", "1000K", "50" (bps) etc.
 
     // XXX: It's a considered decision NOT to show frame rate in
     // higher units of Kpps and Mpps as most users may not be
@@ -158,15 +165,8 @@ void PortWidget::updatePortRates()
     averagePacketsPerSec->setText(QString("%L1 pps")
             .arg(plm->port(currentPortIndex_).averagePacketRate(), 0, 'f', 4));
 
-    double bps = plm->port(currentPortIndex_).averageBitRate();
-    if (bps > 1e9)
-        averageBitsPerSec->setText(tr("%L1 Gbps").arg(bps/1e9, 0, 'f', 4));
-    else if (bps > 1e6)
-        averageBitsPerSec->setText(tr("%L1 Mbps").arg(bps/1e6, 0, 'f', 4));
-    else if (bps > 1e3)
-        averageBitsPerSec->setText(tr("%L1 Kbps").arg(bps/1e3, 0, 'f', 4));
-    else
-        averageBitsPerSec->setText(tr("%L1 bps").arg(bps, 0, 'f', 4));
+    averageBitsPerSec->setText(XLocale().toBitRateString(
+                plm->port(currentPortIndex_).averageBitRate()));
 
     averageLoadPercent->setValue(
             plm->port(currentPortIndex_).averageLoadRate()*100);

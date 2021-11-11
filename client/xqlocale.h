@@ -21,13 +21,84 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _X_LOCALE_H
 
 #include <QLocale>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 class XLocale: public QLocale
 {
 public:
-    double toDouble(const QString &s, bool *ok = Q_NULLPTR) const {
+    double toDouble(const QString &s, bool *ok = Q_NULLPTR) const
+    {
         QString s2 = s;
         return QLocale::toDouble(s2.remove(groupSeparator()), ok);
+    }
+
+    double toPacketsPerSecond(const QString &s, bool *ok = Q_NULLPTR) const
+    {
+        QString text = s;
+        double multiplier = 0;
+        QRegularExpression regex("[a-zA-Z/]+$");
+        QRegularExpressionMatch match = regex.match(text);
+        if (match.hasMatch()) {
+            QString unit = match.captured(0).toCaseFolded();
+            if ((unit == "mpps") || (unit == "m"))
+                multiplier = 1e6;
+            else if ((unit == "kpps") || (unit == "k"))
+                multiplier = 1e3;
+            else if (unit == "pps")
+                multiplier = 1;
+
+            if (multiplier)
+                text.remove(regex);
+        }
+
+        if (multiplier == 0)
+            multiplier = 1;
+
+        return toDouble(text, ok) * multiplier;
+    }
+
+    double toBitsPerSecond(const QString &s, bool *ok = Q_NULLPTR) const
+    {
+        QString text = s;
+        double multiplier = 0;
+        QRegularExpression regex("[a-zA-Z/]+$");
+        QRegularExpressionMatch match = regex.match(text);
+        if (match.hasMatch()) {
+            QString unit = match.captured(0).toCaseFolded();
+            if ((unit == "gbps") || (unit == "gb/s") || (unit == "g"))
+                multiplier = 1e9;
+            else if ((unit == "mbps") || (unit == "mb/s") || (unit == "m"))
+                multiplier = 1e6;
+            else if ((unit == "kbps") || (unit == "kb/s") || (unit == "k"))
+                multiplier = 1e3;
+            else if ((unit == "bps") || (unit == "b/s"))
+                multiplier = 1;
+
+            if (multiplier)
+                text.remove(regex);
+        }
+
+        if (multiplier == 0)
+            multiplier = 1;
+
+        return toDouble(text, ok) * multiplier;
+    }
+
+    QString toBitRateString(double bps) const
+    {
+        QString text;
+
+        if (bps >= 1e9)
+            return QObject::tr("%L1 Gbps").arg(bps/1e9, 0, 'f', 4);
+
+        if (bps >= 1e6)
+            return QObject::tr("%L1 Mbps").arg(bps/1e6, 0, 'f', 4);
+
+        if (bps >= 1e3)
+            return QObject::tr("%L1 Kbps").arg(bps/1e3, 0, 'f', 4);
+
+        return QObject::tr("%L1 bps").arg(bps, 0, 'f', 4);
     }
 };
 
