@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_WIDGET_H
 
 #include "ui_portwidget.h"
+#include <QModelIndex>
 #include <QWidget>
 
 class PortGroupList;
