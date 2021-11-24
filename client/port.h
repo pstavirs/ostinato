@@ -102,6 +102,10 @@ public:
         { return d.transmit_mode(); }
     bool trackStreamStats() const
         { return d.is_tracking_stream_stats(); }
+    double speed() const
+        { return d.speed(); }
+    double averageLoadRate() const
+        { return d.speed() ? avgBitsPerSec_/(d.speed()*1e6) : 0; }
     double averagePacketRate() const
         { return avgPacketsPerSec_; }
     double averageBitRate() const
@@ -183,6 +187,7 @@ public:
 
     void setAveragePacketRate(double packetsPerSec);
     void setAverageBitRate(double bitsPerSec);
+    void setAverageLoadRate(double loadPercent);
     // FIXME(MED): Bad Hack! port should not need an external trigger to
     // recalculate - refactor client side domain objects and model objects
     void recalculateAverageRates();

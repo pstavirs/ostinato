@@ -57,6 +57,7 @@ HEADERS += \
     portstatsproxymodel.h \
     portstatswindow.h \
     portswindow.h \
+    portwidget.h \
     preferences.h \
     settings.h \
     streamconfigdialog.h \
@@ -65,6 +66,7 @@ HEADERS += \
     streamstatsfiltermodel.h \
     streamstatsmodel.h \
     streamstatswindow.h \
+    streamswidget.h \
     variablefieldswidget.h \
     xtableview.h
 
@@ -78,9 +80,11 @@ FORMS += \
     portstatsfilter.ui \
     portstatswindow.ui \
     portswindow.ui \
+    portwidget.ui \
     preferences.ui \
     streamconfigdialog.ui \
     streamstatswindow.ui \
+    streamswidget.ui \
     variablefieldswidget.ui
 
 SOURCES += \
@@ -109,12 +113,14 @@ SOURCES += \
     portstatsfilterdialog.cpp \
     portstatswindow.cpp \
     portswindow.cpp \
+    portwidget.cpp \
     preferences.cpp \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp \
     streamstatsmodel.cpp \
     streamstatswindow.cpp \
+    streamswidget.cpp \
     variablefieldswidget.cpp
 
 

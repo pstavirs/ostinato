@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Srivats P.
+Copyright (C) 2021 Srivats P.
 
 This file is part of "Ostinato"
 
@@ -17,31 +17,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef _INTERFACE_INFO_H
-#define _INTERFACE_INFO_H
+#ifndef _LINUX_UTILS_H
+#define _LINUX_UTILS_H
 
-#include "../common/uint128.h"
-#include <QtGlobal>
+#include <QString>
 
-template <typename IpType>
-struct IpConfig
-{
-    IpType  address;
-    int     prefixLength;
-    IpType  gateway;
-};
-
-using Ip4Config = IpConfig<quint32>;
-using Ip6Config = IpConfig<UInt128>;
-
-struct InterfaceInfo
-{
-    quint64          mac;
-    QList<Ip4Config> ip4;
-    QList<Ip6Config> ip6;
-
-    double speed{0}; // in Mbps
-    quint32 mtu{0};
-};
+QString readTextFile(QString fileName);
+QString sysfsAttrib(const char *device, const char *attribPath);
+QString sysfsAttrib(QString device, const char *attribPath);
 
 #endif

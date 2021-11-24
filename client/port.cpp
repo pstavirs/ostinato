@@ -317,6 +317,12 @@ void Port::setAverageBitRate(double bitsPerSec)
     emit portRateChanged(mPortGroupId, mPortId);
 }
 
+void Port::setAverageLoadRate(double load)
+{
+    Q_ASSERT(d.speed() > 0);
+    setAverageBitRate(load*d.speed()*1e6);
+}
+
 bool Port::newStreamAt(int index, OstProto::Stream const *stream)
 {
     Stream    *s = new Stream;

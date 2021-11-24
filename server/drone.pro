@@ -59,6 +59,7 @@ SOURCES += \
     bsdport.cpp \
     linuxhostdevice.cpp \
     linuxport.cpp \
+    linuxutils.cpp \
     params.cpp \
     winhostdevice.cpp \
     winpcapport.cpp 

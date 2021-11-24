@@ -64,6 +64,11 @@ AbstractPort::~AbstractPort()
 
 void AbstractPort::init()
 {
+    if (interfaceInfo_) {
+        data_.set_speed(interfaceInfo_->speed);
+        data_.set_mtu(interfaceInfo_->mtu);
+    }
+
     if (deviceManager_)
         deviceManager_->createHostDevices();
 }    
