@@ -44,6 +44,7 @@ HEADERS += \
     hexlineedit.h \
     logsmodel.h \
     logswindow.h \
+    findreplace.h \
     mainwindow.h \
     ndpstatusmodel.h \
     packetmodel.h \
@@ -74,6 +75,7 @@ FORMS += \
     about.ui \
     devicegroupdialog.ui \
     deviceswidget.ui \
+    findreplace.ui \
     logswindow.ui \
     mainwindow.ui \
     portconfigdialog.ui \
@@ -99,6 +101,7 @@ SOURCES += \
     hexlineedit.cpp \
     logsmodel.cpp \
     logswindow.cpp \
+    findreplace.cpp \
     main.cpp \
     mainwindow.cpp \
     ndpstatusmodel.cpp \

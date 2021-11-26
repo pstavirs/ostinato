@@ -49,6 +49,8 @@ private slots:
     void on_actionDuplicate_Stream_triggered();
     void on_actionDelete_Stream_triggered();
 
+    void on_actionFind_Replace_triggered();
+
     void on_actionOpen_Streams_triggered();
     void on_actionSave_Streams_triggered();
 

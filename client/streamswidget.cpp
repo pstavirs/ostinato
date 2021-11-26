@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamswidget.h"
 
 #include "clipboardhelper.h"
+#include "findreplace.h"
 #include "portgrouplist.h"
 #include "streamconfigdialog.h"
 #include "streamfileformat.h"
@@ -52,6 +53,12 @@ StreamsWidget::StreamsWidget(QWidget *parent)
     sep2->setSeparator(true);
     tvStreamList->addAction(sep2);
 
+    tvStreamList->addAction(actionFind_Replace);
+
+    QAction *sep3 = new QAction(this);
+    sep3->setSeparator(true);
+    tvStreamList->addAction(sep3);
+
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
 
@@ -61,9 +68,9 @@ StreamsWidget::StreamsWidget(QWidget *parent)
     // Add the clipboard actions to the context menu of streamList
     // but not to StreamsWidget's actions since they are already available
     // in the global Edit Menu
-    QAction *sep3 = new QAction("Clipboard", this);
-    sep3->setSeparator(true);
-    tvStreamList->insertAction(sep2, sep3);
+    QAction *sep4 = new QAction("Clipboard", this);
+    sep4->setSeparator(true);
+    tvStreamList->insertAction(sep2, sep4);
     tvStreamList->insertActions(sep2, clipboardHelper->actions());
 }
 
@@ -186,6 +193,9 @@ void StreamsWidget::updateStreamViewActions()
         actionDuplicate_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }
+
+    actionFind_Replace->setEnabled(tvStreamList->model()->rowCount() > 0);
+
     actionOpen_Streams->setEnabled(plm->isPort(currentPortIndex_));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
@@ -288,6 +298,16 @@ void StreamsWidget::on_actionDelete_Stream_triggered()
     }
     else
         qDebug("No selection");
+}
+
+void StreamsWidget::on_actionFind_Replace_triggered()
+{
+    qDebug("Find & Replace Action");
+
+    FindReplaceDialog findReplace(this);
+    if (findReplace.exec() == QDialog::Accepted) {
+        // TODO
+    }
 }
 
 void StreamsWidget::on_actionOpen_Streams_triggered()
