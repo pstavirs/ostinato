@@ -19,12 +19,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "findreplace.h"
 
-FindReplaceDialog::FindReplaceDialog(QWidget *parent)
-    : QDialog(parent)
+#include "../common/protocolmanager.h"
+
+extern ProtocolManager *OstProtocolManager;
+
+FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
+    : QDialog(parent), action_(action)
 {
     setupUi(this);
 
     // Keep things simple and don't use mask(s) (default)
     useFindMask->setChecked(false);
     useReplaceMask->setChecked(false);
+
+    protocol->addItems(OstProtocolManager->protocolDatabase());
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    protocol->setPlaceholderText(tr("Select"));
+#endif
+    protocol->setCurrentIndex(-1);
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    field->setPlaceholderText(tr("Select"));
+#endif
+
+    // Enable this setting if we have streams selected on input
+    selectedStreamsOnly->setEnabled(action->selectedStreamsOnly);
+
+    // Reset for user input
+    action->selectedStreamsOnly = false;
+}
+
+void FindReplaceDialog::on_protocol_currentIndexChanged(const QString &/*name*/)
+{
 }

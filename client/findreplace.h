@@ -26,7 +26,27 @@ class FindReplaceDialog: public QDialog, public Ui::FindReplace
 {
     Q_OBJECT
 public:
-    FindReplaceDialog(QWidget *parent = 0);
+    struct Action;
+
+    FindReplaceDialog(Action *action, QWidget *parent = 0);
+
+private slots:
+    void on_protocol_currentIndexChanged(const QString &name);
+
+private:
+    Action *action_{nullptr};
+};
+
+struct FindReplaceDialog::Action
+{
+    quint32 protocolNumber;
+    quint32 fieldIndex;
+    QVariant findValue;
+    QVariant findMask;
+    QVariant replaceValue;
+    QVariant replaceMask;
+
+    bool selectedStreamsOnly; // in-out param
 };
 
 #endif

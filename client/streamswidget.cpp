@@ -304,9 +304,43 @@ void StreamsWidget::on_actionFind_Replace_triggered()
 {
     qDebug("Find & Replace Action");
 
-    FindReplaceDialog findReplace(this);
+    QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
+    FindReplaceDialog::Action action;
+
+    action.selectedStreamsOnly = selectionModel->selection().size() > 0 ?
+                                    true : false;
+
+    FindReplaceDialog findReplace(&action, this);
     if (findReplace.exec() == QDialog::Accepted) {
-        // TODO
+        int changed = 0;
+        Port &port = plm->port(currentPortIndex_);
+        if (action.selectedStreamsOnly) {
+            foreach(QModelIndex index, selectionModel->selectedRows()) {
+                Stream *stream = port.mutableStreamByIndex(index.row(), false);
+                if (stream->findReplace(action.protocolNumber,
+                                        action.fieldIndex,
+                                        action.findValue,
+                                        action.findMask,
+                                        action.replaceValue,
+                                        action.replaceMask))
+                    changed++;
+            }
+        } else {
+            int count = tvStreamList->model()->rowCount();
+            for (int i = 0; i < count; i++) {
+                Stream *stream = port.mutableStreamByIndex(i, false);
+                if (stream->findReplace(action.protocolNumber,
+                                        action.fieldIndex,
+                                        action.findValue,
+                                        action.findMask,
+                                        action.replaceValue,
+                                        action.replaceMask))
+                    changed++;
+            }
+        }
+
+        if (changed)
+            port.setLocalConfigChanged(true);
     }
 }
 

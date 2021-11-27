@@ -598,6 +598,14 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex,
     return len;
 }
 
+bool StreamBase::findReplace(quint32 /*protocolNumber*/, int /*fieldIndex*/,
+        QVariant /*findValue*/, QVariant /*findMask*/,
+        QVariant /*replaceValue*/, QVariant /*replaceMask*/)
+{
+    // TODO
+    return false;
+}
+
 quint64 StreamBase::deviceMacAddress(int frameIndex) const
 {
     return getDeviceMacAddress(portId_, int(mStreamId->id()), frameIndex);

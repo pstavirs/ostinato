@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QString>
 #include <QLinkedList>
+#include <QVariant>
 
 #include "protocol.pb.h"
 
@@ -140,6 +141,10 @@ public:
     int frameCount() const;
     int frameValue(uchar *buf, int bufMaxSize, int frameIndex,
                    FrameValueAttrib *attrib = nullptr) const;
+
+    bool findReplace(quint32 protocolNumber, int fieldIndex,
+                     QVariant findValue, QVariant findMask,
+                     QVariant replaceValue, QVariant replaceMask);
 
     quint64 deviceMacAddress(int frameIndex) const;
     quint64 neighborMacAddress(int frameIndex) const;
