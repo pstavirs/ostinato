@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
 
+#include <QDebug>
+
 extern ProtocolManager *OstProtocolManager;
 extern quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex);
 extern quint64 getNeighborMacAddress(int portId, int streamId, int frameIndex);
@@ -598,12 +600,56 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex,
     return len;
 }
 
-bool StreamBase::findReplace(quint32 /*protocolNumber*/, int /*fieldIndex*/,
-        QVariant /*findValue*/, QVariant /*findMask*/,
-        QVariant /*replaceValue*/, QVariant /*replaceMask*/)
+template <typename T>
+int StreamBase::findReplace(quint32 protocolNumber, int fieldIndex,
+        QVariant findValue, QVariant findMask,
+        QVariant replaceValue, QVariant replaceMask)
 {
-    // TODO
-    return false;
+    int replaceCount = 0;
+    ProtocolListIterator *iter = createProtocolListIterator();
+
+    // FIXME: Because protocol list iterator is unaware of combo protocols
+    // search for ip4.src will NOT succeed in a combo protocol containing ip4
+    while (iter->hasNext()) {
+        AbstractProtocol *proto = iter->next();
+        if (proto->protocolNumber() != protocolNumber)
+            continue;
+
+        T fieldValue = proto->fieldData(fieldIndex,
+                                    AbstractProtocol::FieldValue).value<T>();
+        qDebug() << "findReplace:"
+                 << "field" << fieldValue
+                 << "findMask" << hex << findMask.value<T>() << dec
+                 << "findValue" << findValue.value<T>();
+        if ((fieldValue & findMask.value<T>()) == findValue.value<T>()) {
+            T newValue = (fieldValue & ~replaceMask.value<T>())
+                        | (replaceValue.value<T>() & replaceMask.value<T>());
+            qDebug() << "findReplace:"
+                     << "replaceMask" << hex << replaceMask.value<T>() << dec
+                     << "replaceValue" << replaceValue.value<T>()
+                     << "newValue" << newValue;
+            if (proto->setFieldData(fieldIndex, newValue))
+                replaceCount++;
+        }
+    }
+    delete iter;
+
+    return replaceCount;
+}
+
+int StreamBase::protocolFieldReplace(quint32 protocolNumber,
+        int fieldIndex, int fieldBitSize,
+        QVariant findValue, QVariant findMask,
+        QVariant replaceValue, QVariant replaceMask)
+{
+    if (fieldBitSize <= 64)
+        return findReplace<qulonglong>(protocolNumber, fieldIndex,
+                findValue, findMask, replaceValue, replaceMask);
+
+    // TODO: > 64 (e.g. IPv6 128 bit)
+
+    qWarning("Unknown find/replace type %d", findValue.type());
+    return 0;
 }
 
 quint64 StreamBase::deviceMacAddress(int frameIndex) const

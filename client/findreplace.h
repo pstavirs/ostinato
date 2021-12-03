@@ -32,15 +32,21 @@ public:
 
 private slots:
     void on_protocol_currentIndexChanged(const QString &name);
+    void on_buttonBox_accepted();
 
 private:
+    struct FieldAttrib;
+
+    quint32 protocolId_{0};
     Action *action_{nullptr};
+    QList<FieldAttrib> fieldAttrib_;
 };
 
 struct FindReplaceDialog::Action
 {
     quint32 protocolNumber;
     quint32 fieldIndex;
+    int fieldBitSize;
     QVariant findValue;
     QVariant findMask;
     QVariant replaceValue;
@@ -49,5 +55,11 @@ struct FindReplaceDialog::Action
     bool selectedStreamsOnly; // in-out param
 };
 
+struct FindReplaceDialog::FieldAttrib
+{
+    quint32 index;
+    int bitSize;
+    quint64 max;
+};
 #endif
 

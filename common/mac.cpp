@@ -270,6 +270,7 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 bool MacProtocol::setFieldData(int index, const QVariant &value, 
         FieldAttrib attrib)
 {
+    // FIXME: make sure isOk is set correctly for all fields and protocols
     bool isOk = false;
 
     if (attrib != FieldValue)

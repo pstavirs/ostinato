@@ -314,33 +314,41 @@ void StreamsWidget::on_actionFind_Replace_triggered()
     if (findReplace.exec() == QDialog::Accepted) {
         int changed = 0;
         Port &port = plm->port(currentPortIndex_);
+        // TODO: progress bar
         if (action.selectedStreamsOnly) {
             foreach(QModelIndex index, selectionModel->selectedRows()) {
                 Stream *stream = port.mutableStreamByIndex(index.row(), false);
-                if (stream->findReplace(action.protocolNumber,
-                                        action.fieldIndex,
-                                        action.findValue,
-                                        action.findMask,
-                                        action.replaceValue,
-                                        action.replaceMask))
+                if (stream->protocolFieldReplace(action.protocolNumber,
+                                                 action.fieldIndex,
+                                                 action.fieldBitSize,
+                                                 action.findValue,
+                                                 action.findMask,
+                                                 action.replaceValue,
+                                                 action.replaceMask))
                     changed++;
             }
         } else {
             int count = tvStreamList->model()->rowCount();
             for (int i = 0; i < count; i++) {
                 Stream *stream = port.mutableStreamByIndex(i, false);
-                if (stream->findReplace(action.protocolNumber,
-                                        action.fieldIndex,
-                                        action.findValue,
-                                        action.findMask,
-                                        action.replaceValue,
-                                        action.replaceMask))
+                if (stream->protocolFieldReplace(action.protocolNumber,
+                                                 action.fieldIndex,
+                                                 action.fieldBitSize,
+                                                 action.findValue,
+                                                 action.findMask,
+                                                 action.replaceValue,
+                                                 action.replaceMask))
                     changed++;
             }
         }
 
         if (changed)
             port.setLocalConfigChanged(true);
+
+        // TODO: count # of fields and # of streams changed
+        QMessageBox::information(this, tr("Find & Replace"),
+                tr("%1 streams changed").arg(changed));
+
     }
 }
 
