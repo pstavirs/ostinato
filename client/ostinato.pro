@@ -41,6 +41,7 @@ HEADERS += \
     devicemodel.h \
     deviceswidget.h \
     dumpview.h \
+    fieldedit.h \
     hexlineedit.h \
     logsmodel.h \
     logswindow.h \
@@ -101,6 +102,7 @@ SOURCES += \
     hexlineedit.cpp \
     logsmodel.cpp \
     logswindow.cpp \
+    fieldedit.cpp \
     findreplace.cpp \
     main.cpp \
     mainwindow.cpp \

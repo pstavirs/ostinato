@@ -72,7 +72,8 @@ void FindReplaceDialog::on_protocol_currentIndexChanged(const QString &name)
         FieldAttrib fieldAttrib;
         fieldAttrib.index = i; // fieldIndex
         fieldAttrib.bitSize = bitSize;
-        fieldAttrib.max = (1 << bitSize) - 1; // min is always 0
+        // FIXME: do we need max, since we already have bitSize?
+        fieldAttrib.max = quint64(~0) >> (64-bitSize); // min is always 0
 
         // field and fieldAttrib_ have same count and order of fields
         fieldAttrib_.append(fieldAttrib);
@@ -82,6 +83,23 @@ void FindReplaceDialog::on_protocol_currentIndexChanged(const QString &name)
 
     protocolId_ = protocol->protocolNumber();
     delete protocol;
+}
+
+void FindReplaceDialog::on_field_currentIndexChanged(int index)
+{
+    if (index < 0)
+        return;
+
+    FieldAttrib fieldAttrib = fieldAttrib_.at(index);
+
+    qDebug("XXXXXX %s bitSize %d max %llx", qPrintable(field->currentText()),
+            fieldAttrib.bitSize, fieldAttrib.max);
+
+    findValue->setType(FieldEdit::kUInt64);
+    findValue->setRange(0, fieldAttrib.max);
+
+    replaceValue->setType(FieldEdit::kUInt64);
+    replaceValue->setRange(0, fieldAttrib.max);
 }
 
 void FindReplaceDialog::on_buttonBox_accepted()

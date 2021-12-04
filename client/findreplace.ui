@@ -68,7 +68,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="findValue"/>
+       <widget class="FieldEdit" name="findValue"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="fieldLabel">
@@ -107,7 +107,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="replaceValue"/>
+       <widget class="FieldEdit" name="replaceValue"/>
       </item>
       <item row="1" column="0">
        <widget class="QCheckBox" name="useReplaceMask">
@@ -154,6 +154,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FieldEdit</class>
+   <extends>QLineEdit</extends>
+   <header>fieldedit.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>protocol</tabstop>
   <tabstop>field</tabstop>
