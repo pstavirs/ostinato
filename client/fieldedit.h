@@ -42,6 +42,8 @@ public:
     void setType(FieldType type);
     void setRange(quint64 min, quint64 max);
 
+    QString text() const;
+
 private:
     FieldType type_{kUInt64};
 

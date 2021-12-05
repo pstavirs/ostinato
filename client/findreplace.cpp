@@ -92,14 +92,21 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
 
     FieldAttrib fieldAttrib = fieldAttrib_.at(index);
 
-    qDebug("XXXXXX %s bitSize %d max %llx", qPrintable(field->currentText()),
-            fieldAttrib.bitSize, fieldAttrib.max);
+    // Use heuristics to determine field type
+    if (fieldAttrib.bitSize == 48) {
+        findValue->setType(FieldEdit::kMacAddress);
+        replaceValue->setType(FieldEdit::kMacAddress);
+    } else {
+        qDebug("XXXXXX %s bitSize %d max %llx",
+                qPrintable(field->currentText()),
+                fieldAttrib.bitSize, fieldAttrib.max);
 
-    findValue->setType(FieldEdit::kUInt64);
-    findValue->setRange(0, fieldAttrib.max);
+        findValue->setType(FieldEdit::kUInt64);
+        findValue->setRange(0, fieldAttrib.max);
 
-    replaceValue->setType(FieldEdit::kUInt64);
-    replaceValue->setRange(0, fieldAttrib.max);
+        replaceValue->setType(FieldEdit::kUInt64);
+        replaceValue->setRange(0, fieldAttrib.max);
+    }
 }
 
 void FindReplaceDialog::on_buttonBox_accepted()

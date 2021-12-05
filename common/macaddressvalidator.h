@@ -20,18 +20,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _MAC_ADDRESS_VALIDATOR_H
 #define _MAC_ADDRESS_VALIDATOR_H
 
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 
-class MacAddressValidator : public QRegExpValidator
+// Allow : or - as separator
+class MacAddressValidator : public QRegularExpressionValidator
 {
 public:
     MacAddressValidator(QObject *parent = 0)
-        : QRegExpValidator(parent)
+        : QRegularExpressionValidator(
+                QRegularExpression(
+                    "([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}"),
+                    parent)
     {
-        // Allow : or - as separator
-        setRegExp(QRegExp("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}"));
     }
-    ~MacAddressValidator() {}
+
+    virtual void fixup(QString &input) const
+    {
+        QStringList bytes = input.split(QRegularExpression("[:-]"),
+                                         QString::SkipEmptyParts);
+
+        if (!bytes.isEmpty() && bytes.constLast().size() == 1)
+            bytes.last().prepend("0");
+
+        while (bytes.count() < 6)
+            bytes.append("00");
+
+        input = bytes.join(":");
+    }
 };
 
 #endif

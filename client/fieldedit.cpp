@@ -55,3 +55,19 @@ void FieldEdit::setRange(quint64 min, quint64 max)
 {
     uint64Validator_.setRange(min, max);
 }
+
+QString FieldEdit::text() const
+{
+    QString str = QLineEdit::text();
+
+    switch (type_) {
+        case kMacAddress:
+            str.remove(QRegularExpression("[:-]"));
+            str.prepend("0x");
+            break;
+        default:
+            break;
+    }
+
+    return str;
+}
