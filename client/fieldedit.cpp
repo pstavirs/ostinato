@@ -29,6 +29,7 @@ void FieldEdit::setType(FieldType type)
 {
     // clear existing contents before changing the validator
     clear();
+    setPlaceholderText("");
 
     type_ = type;
     switch (type_) {
@@ -40,6 +41,7 @@ void FieldEdit::setType(FieldType type)
             break;
         case kIp4Address:
             setValidator(&ip4Validator_);
+            setPlaceholderText("0.0.0.0");
             break;
         case kIp6Address:
             setValidator(&ip6Validator_);
@@ -64,6 +66,9 @@ QString FieldEdit::text() const
         case kMacAddress:
             str.remove(QRegularExpression("[:-]"));
             str.prepend("0x");
+            break;
+        case kIp4Address:
+            str = QString::number(QHostAddress(str).toIPv4Address());
             break;
         default:
             break;

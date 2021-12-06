@@ -90,12 +90,19 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
     if (index < 0)
         return;
 
+    QString fieldName = field->currentText();
     FieldAttrib fieldAttrib = fieldAttrib_.at(index);
 
     // Use heuristics to determine field type
     if (fieldAttrib.bitSize == 48) {
         findValue->setType(FieldEdit::kMacAddress);
         replaceValue->setType(FieldEdit::kMacAddress);
+    } else if ((fieldAttrib.bitSize == 32)
+            && (fieldName.contains(QRegularExpression(
+                        "address|source|destination",
+                        QRegularExpression::CaseInsensitiveOption)))) {
+        findValue->setType(FieldEdit::kIp4Address);
+        replaceValue->setType(FieldEdit::kIp4Address);
     } else {
         qDebug("XXXXXX %s bitSize %d max %llx",
                 qPrintable(field->currentText()),
