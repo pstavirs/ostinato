@@ -38,6 +38,7 @@ void FieldEdit::setType(FieldType type)
             break;
         case kMacAddress:
             setValidator(&macValidator_);
+            setPlaceholderText("00:00:00:00:00:00");
             break;
         case kIp4Address:
             setValidator(&ip4Validator_);
@@ -56,6 +57,8 @@ void FieldEdit::setType(FieldType type)
 void FieldEdit::setRange(quint64 min, quint64 max)
 {
     uint64Validator_.setRange(min, max);
+    if (type_ == kUInt64)
+        setPlaceholderText(QString("%1 - %2").arg(min).arg(max));
 }
 
 QString FieldEdit::text() const
