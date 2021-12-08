@@ -354,6 +354,11 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("Source");
                 case FieldValue:
+                {
+                    QVariant v;
+                    v.setValue(src);
+                    return v;
+                }
                 case FieldFrameValue:
                 case FieldTextValue:
                 {
@@ -412,6 +417,11 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                 case FieldName:            
                     return QString("Destination");
                 case FieldValue:
+                {
+                    QVariant v;
+                    v.setValue(dst);
+                    return v;
+                }
                 case FieldFrameValue:
                 case FieldTextValue:
                 {
@@ -594,6 +604,14 @@ bool Ip6Protocol::setFieldData(int index, const QVariant &value,
         }
         case ip6_srcAddress:
         {
+            if (value.typeName() == QString("UInt128")) {
+                UInt128 addr = value.value<UInt128>();
+                data.set_src_addr_hi(addr.hi64());
+                data.set_src_addr_lo(addr.lo64());
+                isOk = true;
+                break;
+            }
+
             Q_IPV6ADDR addr = QHostAddress(value.toString()).toIPv6Address();
             quint64 x;
 
@@ -620,6 +638,14 @@ bool Ip6Protocol::setFieldData(int index, const QVariant &value,
         }
         case ip6_dstAddress:
         {
+            if (value.typeName() == QString("UInt128")) {
+                UInt128 addr = value.value<UInt128>();
+                data.set_dst_addr_hi(addr.hi64());
+                data.set_dst_addr_lo(addr.lo64());
+                isOk = true;
+                break;
+            }
+
             Q_IPV6ADDR addr = QHostAddress(value.toString()).toIPv6Address();
             quint64 x;
 

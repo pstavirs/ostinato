@@ -54,6 +54,7 @@ private:
     quint64 lo_;
     quint8 array_[16]; 
 };
+Q_DECLARE_METATYPE(UInt128);
 
 inline UInt128::UInt128()
 {

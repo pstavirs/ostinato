@@ -46,6 +46,7 @@ void FieldEdit::setType(FieldType type)
             break;
         case kIp6Address:
             setValidator(&ip6Validator_);
+            setPlaceholderText("::");
             break;
         default:
             setValidator(nullptr);

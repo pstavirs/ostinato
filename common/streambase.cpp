@@ -18,11 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "streambase.h"
+
 #include "abstractprotocol.h"
 #include "framevalueattrib.h"
 #include "protocollist.h"
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
+#include "uint128.h"
 
 #include <QDebug>
 
@@ -628,7 +630,10 @@ int StreamBase::findReplace(quint32 protocolNumber, int fieldIndex,
                      << "replaceMask" << hex << replaceMask.value<T>() << dec
                      << "replaceValue" << replaceValue.value<T>()
                      << "newValue" << newValue;
-            if (proto->setFieldData(fieldIndex, newValue))
+
+            QVariant nv;
+            nv.setValue(newValue);
+            if (proto->setFieldData(fieldIndex, nv))
                 replaceCount++;
         }
     }
@@ -646,7 +651,9 @@ int StreamBase::protocolFieldReplace(quint32 protocolNumber,
         return findReplace<qulonglong>(protocolNumber, fieldIndex,
                 findValue, findMask, replaceValue, replaceMask);
 
-    // TODO: > 64 (e.g. IPv6 128 bit)
+    if (fieldBitSize == 128)
+        return findReplace<UInt128>(protocolNumber, fieldIndex,
+                findValue, findMask, replaceValue, replaceMask);
 
     qWarning("Unknown find/replace type %d", findValue.type());
     return 0;

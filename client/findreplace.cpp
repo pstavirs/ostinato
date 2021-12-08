@@ -19,9 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "findreplace.h"
 
-#include "../common/abstractprotocol.h"
-#include "../common/protocolmanager.h"
+#include "abstractprotocol.h"
+#include "iputils.h"
+#include "protocolmanager.h"
 #include "stream.h"
+#include "uint128.h"
 
 #include <QPushButton>
 
@@ -103,6 +105,12 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
                         QRegularExpression::CaseInsensitiveOption)))) {
         findValue->setType(FieldEdit::kIp4Address);
         replaceValue->setType(FieldEdit::kIp4Address);
+    } else if ((fieldAttrib.bitSize == 128)
+            && (fieldName.contains(QRegularExpression(
+                        "address|source|destination",
+                        QRegularExpression::CaseInsensitiveOption)))) {
+        findValue->setType(FieldEdit::kIp6Address);
+        replaceValue->setType(FieldEdit::kIp6Address);
     } else {
         qDebug("XXXXXX %s bitSize %d max %llx",
                 qPrintable(field->currentText()),
@@ -123,30 +131,52 @@ void FindReplaceDialog::on_buttonBox_accepted()
     action_->fieldIndex = fieldAttrib.index;
     action_->fieldBitSize = fieldAttrib.bitSize;
 
+    // TODO: Change <= 64 to uint64 instead of string
     // XXX: All find/replace value/mask QVariants are set to
     // 64-bit decimal number encoded as string
     //   - The action user is expected to convert to appropriate type
     //     (fieldBitSize is included as a hint)
     //   - QVariant can only do decimal conversions (not hex)
 
-    if (matchAny->isChecked()) {
-        action_->findMask.setValue(QString("0"));
-        action_->findValue.setValue(QString("0"));
-    } else {
-        action_->findMask.setValue(QString::number(
-                    useFindMask->isChecked() ?
-                        findMask->text().toULongLong(nullptr, BASE_HEX) :
-                        quint64(~0)));
-        action_->findValue.setValue(QString::number(
-                    findValue->text().toULongLong(nullptr, 0)));
-    }
+    if (fieldAttrib.bitSize == 128) { // IPv6 address
+        if (matchAny->isChecked()) {
+            action_->findMask.setValue(UInt128(0));
+            action_->findValue.setValue(UInt128(0));
+        } else {
+            action_->findMask.setValue(
+                        useFindMask->isChecked() ?
+                            ipUtils::ip6StringToUInt128(findMask->text()) :
+                            ~UInt128(0));
+            action_->findValue.setValue(
+                        ipUtils::ip6StringToUInt128(findValue->text()));
+        }
 
-    action_->replaceMask.setValue(QString::number(
-                    useReplaceMask->isChecked() ?
-                        replaceMask->text().toULongLong(nullptr, BASE_HEX) :
-                        quint64(~0)));
-    action_->replaceValue.setValue(QString::number(
-                replaceValue->text().toULongLong(nullptr, 0)));
+        action_->replaceMask.setValue(
+                        useReplaceMask->isChecked() ?
+                            ipUtils::ip6StringToUInt128(replaceMask->text()) :
+                            ~UInt128(0));
+        action_->replaceValue.setValue(
+                        ipUtils::ip6StringToUInt128(replaceValue->text()));
+    } else { // everything else
+        if (matchAny->isChecked()) {
+            action_->findMask.setValue(QString("0"));
+            action_->findValue.setValue(QString("0"));
+        } else {
+            action_->findMask.setValue(QString::number(
+                        useFindMask->isChecked() ?
+                            findMask->text().toULongLong(nullptr, BASE_HEX) :
+                            quint64(~0)));
+            action_->findValue.setValue(QString::number(
+                        findValue->text().toULongLong(nullptr, 0)));
+        }
+
+        action_->replaceMask.setValue(QString::number(
+                        useReplaceMask->isChecked() ?
+                            replaceMask->text().toULongLong(nullptr, BASE_HEX) :
+                            quint64(~0)));
+        action_->replaceValue.setValue(QString::number(
+                    replaceValue->text().toULongLong(nullptr, 0)));
+    }
 
     action_->selectedStreamsOnly = selectedStreamsOnly->isChecked();
 }
