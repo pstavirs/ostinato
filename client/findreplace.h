@@ -60,7 +60,6 @@ struct FindReplaceDialog::FieldAttrib
 {
     quint32 index;
     int bitSize;
-    quint64 max;
 };
 #endif
 

@@ -41,7 +41,7 @@ FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
     useFindMask->setChecked(false);
     useReplaceMask->setChecked(false);
 
-    // TODO: remove combo protocols, sample, userscript
+    // TODO: remove combo protocols - see note in StreamBase::findReplace
     QStringList protocolList = OstProtocolManager->protocolDatabase();
     protocolList.sort();
     protocol->addItems(protocolList);
@@ -77,8 +77,6 @@ void FindReplaceDialog::on_protocol_currentIndexChanged(const QString &name)
         FieldAttrib fieldAttrib;
         fieldAttrib.index = i; // fieldIndex
         fieldAttrib.bitSize = bitSize;
-        // FIXME: do we need max, since we already have bitSize?
-        fieldAttrib.max = quint64(~0) >> (64-bitSize); // min is always 0
 
         // field and fieldAttrib_ have same count and order of fields
         fieldAttrib_.append(fieldAttrib);
@@ -121,19 +119,20 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
         replaceMask->setType(FieldEdit::kIp6Address);
         replaceValue->setType(FieldEdit::kIp6Address);
     } else {
+        quint64 max = quint64(~0) >> (64-fieldAttrib.bitSize);
         qDebug("XXXXXX %s bitSize %d max %llx",
                 qPrintable(field->currentText()),
-                fieldAttrib.bitSize, fieldAttrib.max);
+                fieldAttrib.bitSize, max);
 
         findMask->setType(FieldEdit::kUInt64);
-        findMask->setRange(0, fieldAttrib.max);
+        findMask->setRange(0, max);
         findValue->setType(FieldEdit::kUInt64);
-        findValue->setRange(0, fieldAttrib.max);
+        findValue->setRange(0, max);
 
         replaceMask->setType(FieldEdit::kUInt64);
-        replaceMask->setRange(0, fieldAttrib.max);
+        replaceMask->setRange(0, max);
         replaceValue->setType(FieldEdit::kUInt64);
-        replaceValue->setRange(0, fieldAttrib.max);
+        replaceValue->setRange(0, max);
     }
 }
 
