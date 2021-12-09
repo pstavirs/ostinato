@@ -42,10 +42,13 @@ public:
     void setType(FieldType type);
     void setRange(quint64 min, quint64 max);
 
+    void setMask(bool isMask); // FIXME: rename
+
     QString text() const;
 
 private:
     FieldType type_{kUInt64};
+    bool isMask_{false};
 
     IPv4AddressValidator ip4Validator_;
     IPv6AddressValidator ip6Validator_;

@@ -34,6 +34,9 @@ FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
 {
     setupUi(this);
 
+    findMask->setMask(true);
+    replaceMask->setMask(true);
+
     // Keep things simple and don't use mask(s) (default)
     useFindMask->setChecked(false);
     useReplaceMask->setChecked(false);
@@ -97,28 +100,38 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
 
     // Use heuristics to determine field type
     if (fieldAttrib.bitSize == 48) {
+        findMask->setType(FieldEdit::kMacAddress);
         findValue->setType(FieldEdit::kMacAddress);
+        replaceMask->setType(FieldEdit::kMacAddress);
         replaceValue->setType(FieldEdit::kMacAddress);
     } else if ((fieldAttrib.bitSize == 32)
             && (fieldName.contains(QRegularExpression(
                         "address|source|destination",
                         QRegularExpression::CaseInsensitiveOption)))) {
+        findMask->setType(FieldEdit::kIp4Address);
         findValue->setType(FieldEdit::kIp4Address);
+        replaceMask->setType(FieldEdit::kIp4Address);
         replaceValue->setType(FieldEdit::kIp4Address);
     } else if ((fieldAttrib.bitSize == 128)
             && (fieldName.contains(QRegularExpression(
                         "address|source|destination",
                         QRegularExpression::CaseInsensitiveOption)))) {
+        findMask->setType(FieldEdit::kIp6Address);
         findValue->setType(FieldEdit::kIp6Address);
+        replaceMask->setType(FieldEdit::kIp6Address);
         replaceValue->setType(FieldEdit::kIp6Address);
     } else {
         qDebug("XXXXXX %s bitSize %d max %llx",
                 qPrintable(field->currentText()),
                 fieldAttrib.bitSize, fieldAttrib.max);
 
+        findMask->setType(FieldEdit::kUInt64);
+        findMask->setRange(0, fieldAttrib.max);
         findValue->setType(FieldEdit::kUInt64);
         findValue->setRange(0, fieldAttrib.max);
 
+        replaceMask->setType(FieldEdit::kUInt64);
+        replaceMask->setRange(0, fieldAttrib.max);
         replaceValue->setType(FieldEdit::kUInt64);
         replaceValue->setRange(0, fieldAttrib.max);
     }
@@ -164,7 +177,7 @@ void FindReplaceDialog::on_buttonBox_accepted()
         } else {
             action_->findMask.setValue(QString::number(
                         useFindMask->isChecked() ?
-                            findMask->text().toULongLong(nullptr, BASE_HEX) :
+                            findMask->text().toULongLong(nullptr, 0) :
                             quint64(~0)));
             action_->findValue.setValue(QString::number(
                         findValue->text().toULongLong(nullptr, 0)));
@@ -172,7 +185,7 @@ void FindReplaceDialog::on_buttonBox_accepted()
 
         action_->replaceMask.setValue(QString::number(
                         useReplaceMask->isChecked() ?
-                            replaceMask->text().toULongLong(nullptr, BASE_HEX) :
+                            replaceMask->text().toULongLong(nullptr, 0) :
                             quint64(~0)));
         action_->replaceValue.setValue(QString::number(
                     replaceValue->text().toULongLong(nullptr, 0)));

@@ -35,7 +35,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="findMask"/>
+       <widget class="FieldEdit" name="findMask"/>
       </item>
       <item row="4" column="0" colspan="2">
        <widget class="QCheckBox" name="matchAny">
@@ -120,7 +120,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="replaceMask"/>
+       <widget class="FieldEdit" name="replaceMask"/>
       </item>
       <item row="1" column="2">
        <widget class="QLabel" name="label">

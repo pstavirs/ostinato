@@ -620,6 +620,7 @@ int StreamBase::findReplace(quint32 protocolNumber, int fieldIndex,
         T fieldValue = proto->fieldData(fieldIndex,
                                     AbstractProtocol::FieldValue).value<T>();
         qDebug() << "findReplace:"
+                 << "stream" <<  mStreamId->id()
                  << "field" << fieldValue
                  << "findMask" << hex << findMask.value<T>() << dec
                  << "findValue" << findValue.value<T>();
