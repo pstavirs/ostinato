@@ -29,6 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 extern ProtocolManager *OstProtocolManager;
 
+// TODO: It might be useful for this dialog to support a "preview"
+// of the replacements
+
 FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
     : QDialog(parent), action_(action)
 {
