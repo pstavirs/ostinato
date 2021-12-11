@@ -44,6 +44,7 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
     : QDialog(NULL)
 {
     setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
     options_ = options;
 
     viaPdml->setChecked(options_->value("ViaPdml").toBool());
@@ -72,13 +73,10 @@ PcapFileFormat::PcapFileFormat()
     importOptions_.insert("ViaPdml", true);
     importOptions_.insert("RecalculateCksums", true);
     importOptions_.insert("DoDiff", true);
-
-    importDialog_ = NULL;
 }
 
 PcapFileFormat::~PcapFileFormat()
 {
-    delete importDialog_;
 }
 
 bool PcapFileFormat::open(const QString fileName,
@@ -709,10 +707,7 @@ _exit:
 
 QDialog* PcapFileFormat::openOptionsDialog()
 {
-    if (!importDialog_)
-        importDialog_ = new PcapImportOptionsDialog(&importOptions_);
-
-    return importDialog_;
+    return new PcapImportOptionsDialog(&importOptions_);
 }
 
 bool PcapFileFormat::isMyFileFormat(const QString /*fileName*/)

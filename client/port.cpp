@@ -609,7 +609,6 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
         int ret;
         optDialog->setParent(mainWindow, Qt::Dialog);
         ret = optDialog->exec();
-        optDialog->setParent(0, Qt::Dialog);
         if (ret == QDialog::Rejected)
             goto _user_opt_cancel;
     }
