@@ -134,6 +134,7 @@ QVariant IgmpProtocol::fieldData(int index, FieldAttrib attrib,
             case FieldName:            
                 return QString("Group Address");
             case FieldValue:
+                return grpIp;
             case FieldTextValue:
                 return QHostAddress(grpIp).toString();
             case FieldFrameValue:
@@ -289,8 +290,14 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
         }
         case kGroupAddress:
         {
+            quint32 ip = value.toUInt(&isOk);
+            if (isOk) {
+                data.mutable_group_address()->set_v4(ip);
+                break;
+            }
+
             QHostAddress addr(value.toString());
-            quint32 ip = addr.toIPv4Address();
+            ip = addr.toIPv4Address();
             isOk = (addr.protocol() == QAbstractSocket::IPv4Protocol);
             if (isOk)
                 data.mutable_group_address()->set_v4(ip);

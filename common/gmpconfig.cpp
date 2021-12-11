@@ -57,7 +57,7 @@ void GmpConfigForm::loadWidget(AbstractProtocol *proto)
     groupAddress->setText(
             proto->fieldData(
                 GmpProtocol::kGroupAddress,
-                AbstractProtocol::FieldValue
+                AbstractProtocol::FieldTextValue
             ).toString());
     groupMode->setCurrentIndex(
             proto->fieldData(
