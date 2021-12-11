@@ -317,7 +317,6 @@ void StreamsWidget::on_actionFind_Replace_triggered()
         progress.setWindowModality(Qt::WindowModal);
         int c, fc = 0, sc = 0; // replace counts
         Port &port = plm->port(currentPortIndex_);
-        // TODO: progress bar
         if (action.selectedStreamsOnly) {
             QModelIndexList selected = selectionModel->selectedRows();
             int count = selected.size();
