@@ -34,8 +34,8 @@ FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
 {
     setupUi(this);
 
-    findMask->setMask(true);
-    replaceMask->setMask(true);
+    findMask->setMaskMode(true);
+    replaceMask->setMaskMode(true);
 
     // Keep things simple and don't use mask(s) (default)
     useFindMask->setChecked(false);

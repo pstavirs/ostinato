@@ -35,25 +35,25 @@ void FieldEdit::setType(FieldType type)
     switch (type_) {
         case kUInt64:
             setValidator(&uint64Validator_);
-            if (isMask_)
+            if (isMaskMode_)
                 setText("0xFFFFFFFFFFFFFFFF");
             break;
         case kMacAddress:
             setValidator(&macValidator_);
             setPlaceholderText("00:00:00:00:00:00");
-            if (isMask_)
+            if (isMaskMode_)
                 setText("FF:FF:FF:FF:FF:FF");
             break;
         case kIp4Address:
             setValidator(&ip4Validator_);
             setPlaceholderText("0.0.0.0");
-            if (isMask_)
+            if (isMaskMode_)
                 setText("255.255.255.255");
             break;
         case kIp6Address:
             setValidator(&ip6Validator_);
             setPlaceholderText("::");
-            if (isMask_)
+            if (isMaskMode_)
                 setText("FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF");
             break;
         default:
@@ -68,14 +68,14 @@ void FieldEdit::setRange(quint64 min, quint64 max)
     uint64Validator_.setRange(min, max);
     if (type_ == kUInt64) {
         setPlaceholderText(QString("%1 - %2").arg(min).arg(max));
-        if (isMask_)
+        if (isMaskMode_)
             setText(QString::number(max, 16).toUpper().prepend("0x"));
     }
 }
 
-void FieldEdit::setMask(bool isMask)
+void FieldEdit::setMaskMode(bool maskMode)
 {
-    isMask_ = isMask;
+    isMaskMode_ = maskMode;
 }
 
 QString FieldEdit::text() const
