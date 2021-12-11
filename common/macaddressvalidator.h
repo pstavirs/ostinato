@@ -39,7 +39,7 @@ public:
         QStringList bytes = input.split(QRegularExpression("[:-]"),
                                          QString::SkipEmptyParts);
 
-        if (!bytes.isEmpty() && bytes.constLast().size() == 1)
+        if (!bytes.isEmpty() && bytes.last().size() == 1)
             bytes.last().prepend("0");
 
         while (bytes.count() < 6)
