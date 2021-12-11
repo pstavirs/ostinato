@@ -47,6 +47,8 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
     options_ = options;
 
     viaPdml->setChecked(options_->value("ViaPdml").toBool());
+    recalculateCksums->setChecked(
+                        options_->value("RecalculateCksums").toBool());
     doDiff->setChecked(options_->value("DoDiff").toBool());
 
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
@@ -59,6 +61,7 @@ PcapImportOptionsDialog::~PcapImportOptionsDialog()
 void PcapImportOptionsDialog::accept()
 {
     options_->insert("ViaPdml", viaPdml->isChecked());
+    options_->insert("RecalculateCksums", recalculateCksums->isChecked());
     options_->insert("DoDiff", doDiff->isChecked());
 
     QDialog::accept();
@@ -67,6 +70,7 @@ void PcapImportOptionsDialog::accept()
 PcapFileFormat::PcapFileFormat()
 {
     importOptions_.insert("ViaPdml", true);
+    importOptions_.insert("RecalculateCksums", true);
     importOptions_.insert("DoDiff", true);
 
     importDialog_ = NULL;
@@ -224,7 +228,7 @@ _retry:
     {
         QProcess tshark;
         QTemporaryFile pdmlFile;
-        PdmlReader reader(&streams);
+        PdmlReader reader(&streams, importOptions_);
 
         if (!pdmlFile.open())
         {

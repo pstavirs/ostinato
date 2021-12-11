@@ -56,7 +56,7 @@ void PdmlIcmpProtocol::preProtocolHandler(QString name,
     else if (name == "icmpv6")
         icmp->set_icmp_version(OstProto::Icmp::kIcmp6);
 
-    icmp->set_is_override_checksum(true);
+    icmp->set_is_override_checksum(overrideCksum_);
 
     icmp->set_type(kIcmpInvalidType);
 }

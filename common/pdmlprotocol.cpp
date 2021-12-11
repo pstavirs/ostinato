@@ -102,6 +102,11 @@ int PdmlProtocol::fieldId(QString name) const
     return fieldMap_.value(name);
 }
 
+void PdmlProtocol::setRecalculateCksum(bool recalculate)
+{
+    overrideCksum_ = !recalculate;
+}
+
 /*!
  This method is called by PdmlReader before any fields within the protocol
  are processed. All attributes associated with the 'proto' tag in the PDML

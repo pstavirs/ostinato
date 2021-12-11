@@ -53,7 +53,7 @@ void PdmlMldProtocol::preProtocolHandler(QString /*name*/,
     OstProto::Gmp *mld = pbProto->MutableExtension(OstProto::mld);
 
     mld->set_is_override_rsvd_code(true);
-    mld->set_is_override_checksum(true);
+    mld->set_is_override_checksum(overrideCksum_);
     mld->set_is_override_source_count(true);
     mld->set_is_override_group_record_count(true);
 
