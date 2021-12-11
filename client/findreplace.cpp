@@ -146,13 +146,6 @@ void FindReplaceDialog::on_buttonBox_accepted()
     action_->fieldIndex = fieldAttrib.index;
     action_->fieldBitSize = fieldAttrib.bitSize;
 
-    // TODO: Change <= 64 to uint64 instead of string
-    // XXX: All find/replace value/mask QVariants are set to
-    // 64-bit decimal number encoded as string
-    //   - The action user is expected to convert to appropriate type
-    //     (fieldBitSize is included as a hint)
-    //   - QVariant can only do decimal conversions (not hex)
-
     if (fieldAttrib.bitSize == 128) { // IPv6 address
         if (matchAny->isChecked()) {
             action_->findMask.setValue(UInt128(0));
@@ -174,21 +167,21 @@ void FindReplaceDialog::on_buttonBox_accepted()
                         ipUtils::ip6StringToUInt128(replaceValue->text()));
     } else { // everything else
         if (matchAny->isChecked()) {
-            action_->findMask.setValue(QString("0"));
-            action_->findValue.setValue(QString("0"));
+            action_->findMask.setValue(0);
+            action_->findValue.setValue(0);
         } else {
-            action_->findMask.setValue(QString::number(
+            action_->findMask.setValue(
                         useFindMask->isChecked() ?
                             findMask->text().toULongLong(nullptr, 0) :
-                            quint64(~0)));
-            action_->findValue.setValue(QString::number(
-                        findValue->text().toULongLong(nullptr, 0)));
+                            ~quint64(0));
+            action_->findValue.setValue(
+                        findValue->text().toULongLong(nullptr, 0));
         }
 
-        action_->replaceMask.setValue(QString::number(
+        action_->replaceMask.setValue(
                         useReplaceMask->isChecked() ?
                             replaceMask->text().toULongLong(nullptr, 0) :
-                            quint64(~0)));
+                            ~quint64(0));
         action_->replaceValue.setValue(QString::number(
                     replaceValue->text().toULongLong(nullptr, 0)));
     }
