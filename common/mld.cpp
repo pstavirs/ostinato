@@ -423,6 +423,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                 | (quint64(addr[14]) <<  8)
                 | (quint64(addr[15]) <<  0);
             data.mutable_group_address()->set_v6_lo(x);
+            isOk = true;
             break;
         }
 
@@ -457,6 +458,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                     | (quint64(addr[15]) <<  0);
                 src->set_v6_lo(x);
             }
+            isOk = true;
             break;
         }
 
@@ -524,7 +526,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                     src->set_v6_lo(x);
                 }
             }
-
+            isOk = true;
             break;
         }
 

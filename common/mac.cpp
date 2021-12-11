@@ -270,7 +270,6 @@ QVariant MacProtocol::fieldData(int index, FieldAttrib attrib,
 bool MacProtocol::setFieldData(int index, const QVariant &value, 
         FieldAttrib attrib)
 {
-    // FIXME: make sure isOk is set correctly for all fields and protocols
     bool isOk = false;
 
     if (attrib != FieldValue)
@@ -280,14 +279,16 @@ bool MacProtocol::setFieldData(int index, const QVariant &value,
     {
         case mac_dstAddr:
         {
-            quint64 mac = value.toULongLong();
-            data.set_dst_mac(mac);
+            quint64 mac = value.toULongLong(&isOk);
+            if (isOk)
+                data.set_dst_mac(mac);
             break;
         }
         case mac_srcAddr:
         {
-            quint64 mac = value.toULongLong();
-            data.set_src_mac(mac);
+            quint64 mac = value.toULongLong(&isOk);
+            if (isOk)
+                data.set_src_mac(mac);
             break;
         }
 

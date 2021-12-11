@@ -306,6 +306,7 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
                 quint32 ip = QHostAddress(str).toIPv4Address();
                 data.add_sources()->set_v4(ip);
             }
+            isOk = true;
             break;
         }
 
@@ -332,6 +333,7 @@ bool IgmpProtocol::setFieldData(int index, const QVariant &value,
                             QHostAddress(src).toIPv4Address());
                 }
             }
+            isOk = true;
 
             break;
         }

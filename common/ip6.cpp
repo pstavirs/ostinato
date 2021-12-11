@@ -634,6 +634,7 @@ bool Ip6Protocol::setFieldData(int index, const QVariant &value,
                 | (quint64(addr[14]) <<  8)
                 | (quint64(addr[15]) <<  0);
             data.set_src_addr_lo(x);
+            isOk = true;
             break;
         }
         case ip6_dstAddress:
@@ -668,6 +669,7 @@ bool Ip6Protocol::setFieldData(int index, const QVariant &value,
                 | (quint64(addr[14]) <<  8)
                 | (quint64(addr[15]) <<  0);
             data.set_dst_addr_lo(x);
+            isOk = true;
             break;
         }
 
