@@ -312,11 +312,18 @@ void StreamsWidget::on_actionFind_Replace_triggered()
 
     FindReplaceDialog findReplace(&action, this);
     if (findReplace.exec() == QDialog::Accepted) {
+        QProgressDialog progress(this);
+        progress.setLabelText(tr("Replacing %1 ...").arg(action.protocolField));
+        progress.setWindowModality(Qt::WindowModal);
         int c, fc = 0, sc = 0; // replace counts
         Port &port = plm->port(currentPortIndex_);
         // TODO: progress bar
         if (action.selectedStreamsOnly) {
-            foreach(QModelIndex index, selectionModel->selectedRows()) {
+            QModelIndexList selected = selectionModel->selectedRows();
+            int count = selected.size();
+            progress.setMaximum(count);
+            for (int i = 0; i < count; i++) {
+                QModelIndex index = selected.at(i);
                 Stream *stream = port.mutableStreamByIndex(index.row(), false);
                 c = stream->protocolFieldReplace(action.protocolNumber,
                                                  action.fieldIndex,
@@ -329,9 +336,13 @@ void StreamsWidget::on_actionFind_Replace_triggered()
                     fc += c;
                     sc++;
                 }
+                progress.setValue(i+1);
+                if (progress.wasCanceled())
+                    break;
             }
         } else {
             int count = tvStreamList->model()->rowCount();
+            progress.setMaximum(count);
             for (int i = 0; i < count; i++) {
                 Stream *stream = port.mutableStreamByIndex(i, false);
                 c = stream->protocolFieldReplace(action.protocolNumber,
@@ -345,6 +356,9 @@ void StreamsWidget::on_actionFind_Replace_triggered()
                     fc += c;
                     sc++;
                 }
+                progress.setValue(i+1);
+                if (progress.wasCanceled())
+                    break;
             }
         }
 

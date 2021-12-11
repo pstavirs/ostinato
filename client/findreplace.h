@@ -45,6 +45,7 @@ private:
 
 struct FindReplaceDialog::Action
 {
+    QString protocolField;
     quint32 protocolNumber;
     quint32 fieldIndex;
     int fieldBitSize;

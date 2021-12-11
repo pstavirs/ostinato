@@ -139,6 +139,9 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
 void FindReplaceDialog::on_buttonBox_accepted()
 {
     FieldAttrib fieldAttrib = fieldAttrib_.at(field->currentIndex());
+    action_->protocolField = QString("%1 %2")
+                                .arg(protocol->currentText())
+                                .arg(field->currentText());
     action_->protocolNumber = protocolId_;
     action_->fieldIndex = fieldAttrib.index;
     action_->fieldBitSize = fieldAttrib.bitSize;
