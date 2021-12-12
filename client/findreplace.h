@@ -33,6 +33,7 @@ public:
 private slots:
     void on_protocol_currentIndexChanged(const QString &name);
     void on_field_currentIndexChanged(int index);
+    void on_matchAny_toggled(bool checked);
     void on_buttonBox_accepted();
 
 private:

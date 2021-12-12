@@ -139,6 +139,25 @@ void FindReplaceDialog::on_field_currentIndexChanged(int index)
     }
 }
 
+void FindReplaceDialog::on_matchAny_toggled(bool checked)
+{
+    if (checked) {
+        findValueLabel->setHidden(true);
+        findValue->setHidden(true);
+        useFindMask->setHidden(true);
+        findMask->setHidden(true);
+        findMaskHint->setHidden(true);
+    } else {
+        findValueLabel->setVisible(true);
+        findValue->setVisible(true);
+        useFindMask->setVisible(true);
+        if (useFindMask->isChecked()) {
+            findMask->setVisible(true);
+            findMaskHint->setVisible(true);
+        }
+    }
+}
+
 void FindReplaceDialog::on_buttonBox_accepted()
 {
     FieldAttrib fieldAttrib = fieldAttrib_.at(field->currentIndex());

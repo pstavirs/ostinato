@@ -23,40 +23,7 @@
      <property name="title">
       <string>Find</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QComboBox" name="protocol"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="findValueLabel">
-        <property name="text">
-         <string>Value</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="FieldEdit" name="findMask"/>
-      </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QCheckBox" name="matchAny">
-        <property name="text">
-         <string>Match any value</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="useFindMask">
-        <property name="text">
-         <string>Mask</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="field"/>
-      </item>
+     <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
       <item row="0" column="0">
        <widget class="QLabel" name="protocolLabel">
         <property name="text">
@@ -67,8 +34,8 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="FieldEdit" name="findValue"/>
+      <item row="0" column="1" colspan="2">
+       <widget class="QComboBox" name="protocol"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="fieldLabel">
@@ -80,13 +47,46 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QComboBox" name="field"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="findValueLabel">
+        <property name="text">
+         <string>Value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="FieldEdit" name="findValue"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="useFindMask">
+        <property name="text">
+         <string>Mask</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="FieldEdit" name="findMask"/>
+      </item>
       <item row="3" column="2">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="findMaskHint">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Matches a field only if &lt;span style=&quot;white-space:nowrap&quot;&gt;(FieldValue &amp;amp; FindMask) = FindValue&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="pixmap">
          <pixmap resource="ostinato.qrc">:/icons/info.png</pixmap>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="3">
+       <widget class="QCheckBox" name="matchAny">
+        <property name="text">
+         <string>Match any value</string>
         </property>
        </widget>
       </item>
@@ -98,7 +98,7 @@
      <property name="title">
       <string>Replace with</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1,0">
       <item row="0" column="0">
        <widget class="QLabel" name="replaceValueLabel">
         <property name="text">
@@ -106,7 +106,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="0" column="1" colspan="2">
        <widget class="FieldEdit" name="replaceValue"/>
       </item>
       <item row="1" column="0">
@@ -123,7 +123,7 @@
        <widget class="FieldEdit" name="replaceMask"/>
       </item>
       <item row="1" column="2">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="replaceMaskHint">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;New field value = &lt;span style=&quot;white-space:nowrap&quot;&gt;(OldFieldValue &amp;amp; ~ReplaceMask) | (ReplaceValue &amp;amp; ReplaceMask)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -161,18 +161,6 @@
    <header>fieldedit.h</header>
   </customwidget>
  </customwidgets>
- <tabstops>
-  <tabstop>protocol</tabstop>
-  <tabstop>field</tabstop>
-  <tabstop>findValue</tabstop>
-  <tabstop>useFindMask</tabstop>
-  <tabstop>findMask</tabstop>
-  <tabstop>matchAny</tabstop>
-  <tabstop>replaceValue</tabstop>
-  <tabstop>useReplaceMask</tabstop>
-  <tabstop>replaceMask</tabstop>
-  <tabstop>selectedStreamsOnly</tabstop>
- </tabstops>
  <resources>
   <include location="ostinato.qrc"/>
  </resources>
@@ -242,73 +230,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>matchAny</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>findValue</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>319</x>
-     <y>152</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>316</x>
-     <y>96</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>matchAny</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>findValueLabel</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>45</x>
-     <y>140</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>44</x>
-     <y>99</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>matchAny</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>useFindMask</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>60</x>
-     <y>143</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>61</x>
-     <y>123</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>matchAny</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>findMask</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>136</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>92</x>
-     <y>126</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>useReplaceMask</sender>
    <signal>toggled(bool)</signal>
-   <receiver>label</receiver>
+   <receiver>replaceMaskHint</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -324,7 +248,7 @@
   <connection>
    <sender>useFindMask</sender>
    <signal>toggled(bool)</signal>
-   <receiver>label_2</receiver>
+   <receiver>findMaskHint</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
