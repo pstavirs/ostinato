@@ -52,6 +52,11 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
                         options_->value("RecalculateCksums").toBool());
     doDiff->setChecked(options_->value("DoDiff").toBool());
 
+    // XXX: By default this is false - for pcap import tests to show
+    // minimal diffs. However, for the user, this should be enabled
+    // by default
+    recalculateCksums->setChecked(true);
+
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
@@ -71,7 +76,7 @@ void PcapImportOptionsDialog::accept()
 PcapFileFormat::PcapFileFormat()
 {
     importOptions_.insert("ViaPdml", true);
-    importOptions_.insert("RecalculateCksums", true);
+    importOptions_.insert("RecalculateCksums", false);
     importOptions_.insert("DoDiff", true);
 }
 
