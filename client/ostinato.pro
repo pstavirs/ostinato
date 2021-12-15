@@ -47,6 +47,7 @@ HEADERS += \
     logswindow.h \
     findreplace.h \
     mainwindow.h \
+    mandatoryfieldsgroup.h \
     ndpstatusmodel.h \
     packetmodel.h \
     port.h \
@@ -106,6 +107,7 @@ SOURCES += \
     findreplace.cpp \
     main.cpp \
     mainwindow.cpp \
+    mandatoryfieldsgroup.cpp \
     ndpstatusmodel.cpp \
     packetmodel.cpp \
     params.cpp \

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "abstractprotocol.h"
 #include "iputils.h"
+#include "mandatoryfieldsgroup.h"
 #include "protocolmanager.h"
 #include "stream.h"
 #include "uint128.h"
@@ -55,7 +56,23 @@ FindReplaceDialog::FindReplaceDialog(Action *action, QWidget *parent)
     // Reset for user input
     action->selectedStreamsOnly = false;
 
-    buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Replace All"));
+    QPushButton *ok = buttonBox->button(QDialogButtonBox::Ok);
+    ok->setText(tr("Replace All"));
+    ok->setDisabled(true);
+
+    mandatoryFields_ = new MandatoryFieldsGroup(this);
+    mandatoryFields_->add(protocol);
+    mandatoryFields_->add(field);
+    mandatoryFields_->add(findValue);
+    mandatoryFields_->add(findMask);
+    mandatoryFields_->add(replaceValue);
+    mandatoryFields_->add(replaceMask);
+    mandatoryFields_->setSubmitButton(ok);
+}
+
+FindReplaceDialog::~FindReplaceDialog()
+{
+    delete mandatoryFields_;
 }
 
 void FindReplaceDialog::on_protocol_currentIndexChanged(const QString &name)

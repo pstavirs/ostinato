@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "ui_findreplace.h"
 
+class MandatoryFieldsGroup;
+
 class FindReplaceDialog: public QDialog, public Ui::FindReplace
 {
     Q_OBJECT
@@ -29,6 +31,7 @@ public:
     struct Action;
 
     FindReplaceDialog(Action *action, QWidget *parent = 0);
+    ~FindReplaceDialog();
 
 private slots:
     void on_protocol_currentIndexChanged(const QString &name);
@@ -42,6 +45,7 @@ private:
     quint32 protocolId_{0};
     Action *action_{nullptr};
     QList<FieldAttrib> fieldAttrib_;
+    MandatoryFieldsGroup *mandatoryFields_{nullptr};
 };
 
 struct FindReplaceDialog::Action
