@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _MANDATORY_FIELDS_GROUP_H
 #define _MANDATORY_FIELDS_GROUP_H
 
-#include <QObject.h>
-#include <QList.h>
+#include <QObject>
+#include <QList>
 
 class QPushButton;
 class QWidget;
