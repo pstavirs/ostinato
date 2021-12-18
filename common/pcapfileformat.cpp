@@ -44,10 +44,18 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
     : QDialog(NULL)
 {
     setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
     options_ = options;
 
     viaPdml->setChecked(options_->value("ViaPdml").toBool());
+    recalculateCksums->setChecked(
+                        options_->value("RecalculateCksums").toBool());
     doDiff->setChecked(options_->value("DoDiff").toBool());
+
+    // XXX: By default this is false - for pcap import tests to show
+    // minimal diffs. However, for the user, this should be enabled
+    // by default
+    recalculateCksums->setChecked(true);
 
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
@@ -59,6 +67,7 @@ PcapImportOptionsDialog::~PcapImportOptionsDialog()
 void PcapImportOptionsDialog::accept()
 {
     options_->insert("ViaPdml", viaPdml->isChecked());
+    options_->insert("RecalculateCksums", recalculateCksums->isChecked());
     options_->insert("DoDiff", doDiff->isChecked());
 
     QDialog::accept();
@@ -67,14 +76,12 @@ void PcapImportOptionsDialog::accept()
 PcapFileFormat::PcapFileFormat()
 {
     importOptions_.insert("ViaPdml", true);
+    importOptions_.insert("RecalculateCksums", false);
     importOptions_.insert("DoDiff", true);
-
-    importDialog_ = NULL;
 }
 
 PcapFileFormat::~PcapFileFormat()
 {
-    delete importDialog_;
 }
 
 bool PcapFileFormat::open(const QString fileName,
@@ -224,7 +231,7 @@ _retry:
     {
         QProcess tshark;
         QTemporaryFile pdmlFile;
-        PdmlReader reader(&streams);
+        PdmlReader reader(&streams, importOptions_);
 
         if (!pdmlFile.open())
         {
@@ -705,10 +712,7 @@ _exit:
 
 QDialog* PcapFileFormat::openOptionsDialog()
 {
-    if (!importDialog_)
-        importDialog_ = new PcapImportOptionsDialog(&importOptions_);
-
-    return importDialog_;
+    return new PcapImportOptionsDialog(&importOptions_);
 }
 
 bool PcapFileFormat::isMyFileFormat(const QString /*fileName*/)

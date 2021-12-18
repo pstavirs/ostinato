@@ -48,6 +48,6 @@ void PdmlUdpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
     udp->set_is_override_src_port(true);
     udp->set_is_override_dst_port(true);
     udp->set_is_override_totlen(true);
-    udp->set_is_override_cksum(true);
+    udp->set_is_override_cksum(overrideCksum_);
 }
 

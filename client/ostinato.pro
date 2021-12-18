@@ -41,10 +41,13 @@ HEADERS += \
     devicemodel.h \
     deviceswidget.h \
     dumpview.h \
+    fieldedit.h \
     hexlineedit.h \
     logsmodel.h \
     logswindow.h \
+    findreplace.h \
     mainwindow.h \
+    mandatoryfieldsgroup.h \
     ndpstatusmodel.h \
     packetmodel.h \
     port.h \
@@ -74,6 +77,7 @@ FORMS += \
     about.ui \
     devicegroupdialog.ui \
     deviceswidget.ui \
+    findreplace.ui \
     logswindow.ui \
     mainwindow.ui \
     portconfigdialog.ui \
@@ -99,8 +103,11 @@ SOURCES += \
     hexlineedit.cpp \
     logsmodel.cpp \
     logswindow.cpp \
+    fieldedit.cpp \
+    findreplace.cpp \
     main.cpp \
     mainwindow.cpp \
+    mandatoryfieldsgroup.cpp \
     ndpstatusmodel.cpp \
     packetmodel.cpp \
     params.cpp \

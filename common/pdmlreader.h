@@ -24,13 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QByteArray>
 #include <QXmlStreamReader>
+#include <QVariantMap>
 
 class PcapFileFormat;
 class PdmlReader : public QObject, public QXmlStreamReader
 {
     Q_OBJECT
 public:
-    PdmlReader(OstProto::StreamConfigList *streams);
+    PdmlReader(OstProto::StreamConfigList *streams,
+               const QVariantMap &options = QVariantMap());
     ~PdmlReader();
 
     bool read(QIODevice *device, PcapFileFormat *pcap = NULL, 
@@ -63,6 +65,8 @@ private:
     OstProto::StreamConfigList *streams_;
     PcapFileFormat *pcap_;
     QByteArray pktBuf_;
+
+    bool recalculateCksums_{false};
 
     bool isMldSupport_;
     int packetCount_;

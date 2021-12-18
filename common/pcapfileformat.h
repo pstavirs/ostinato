@@ -81,7 +81,6 @@ private:
 
     QDataStream fd_;
     QVariantMap importOptions_;
-    PcapImportOptionsDialog *importDialog_;
 };
 
 extern PcapFileFormat pcapFileFormat;

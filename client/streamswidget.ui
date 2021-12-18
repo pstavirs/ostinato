@@ -105,6 +105,18 @@ Right-click to create a stream</string>
     <string>Duplicate Stream</string>
    </property>
   </action>
+  <action name="actionFind_Replace">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/find.png</normaloff>:/icons/find.png</iconset>
+   </property>
+   <property name="text">
+    <string>Find &amp;&amp; Replace</string>
+   </property>
+   <property name="toolTip">
+    <string>Find &amp; Replace protocol field values</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

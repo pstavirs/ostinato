@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamswidget.h"
 
 #include "clipboardhelper.h"
+#include "findreplace.h"
 #include "portgrouplist.h"
 #include "streamconfigdialog.h"
 #include "streamfileformat.h"
@@ -52,6 +53,12 @@ StreamsWidget::StreamsWidget(QWidget *parent)
     sep2->setSeparator(true);
     tvStreamList->addAction(sep2);
 
+    tvStreamList->addAction(actionFind_Replace);
+
+    QAction *sep3 = new QAction(this);
+    sep3->setSeparator(true);
+    tvStreamList->addAction(sep3);
+
     tvStreamList->addAction(actionOpen_Streams);
     tvStreamList->addAction(actionSave_Streams);
 
@@ -61,9 +68,9 @@ StreamsWidget::StreamsWidget(QWidget *parent)
     // Add the clipboard actions to the context menu of streamList
     // but not to StreamsWidget's actions since they are already available
     // in the global Edit Menu
-    QAction *sep3 = new QAction("Clipboard", this);
-    sep3->setSeparator(true);
-    tvStreamList->insertAction(sep2, sep3);
+    QAction *sep4 = new QAction("Clipboard", this);
+    sep4->setSeparator(true);
+    tvStreamList->insertAction(sep2, sep4);
     tvStreamList->insertActions(sep2, clipboardHelper->actions());
 }
 
@@ -186,6 +193,9 @@ void StreamsWidget::updateStreamViewActions()
         actionDuplicate_Stream->setDisabled(true);
         actionDelete_Stream->setDisabled(true);
     }
+
+    actionFind_Replace->setEnabled(tvStreamList->model()->rowCount() > 0);
+
     actionOpen_Streams->setEnabled(plm->isPort(currentPortIndex_));
     actionSave_Streams->setEnabled(tvStreamList->model()->rowCount() > 0);
 }
@@ -288,6 +298,76 @@ void StreamsWidget::on_actionDelete_Stream_triggered()
     }
     else
         qDebug("No selection");
+}
+
+void StreamsWidget::on_actionFind_Replace_triggered()
+{
+    qDebug("Find & Replace Action");
+
+    QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
+    FindReplaceDialog::Action action;
+
+    action.selectedStreamsOnly = selectionModel->selection().size() > 0 ?
+                                    true : false;
+
+    FindReplaceDialog findReplace(&action, this);
+    if (findReplace.exec() == QDialog::Accepted) {
+        QProgressDialog progress(this);
+        progress.setLabelText(tr("Replacing %1 ...").arg(action.protocolField));
+        progress.setWindowModality(Qt::WindowModal);
+        int c, fc = 0, sc = 0; // replace counts
+        Port &port = plm->port(currentPortIndex_);
+        if (action.selectedStreamsOnly) {
+            QModelIndexList selected = selectionModel->selectedRows();
+            int count = selected.size();
+            progress.setMaximum(count);
+            for (int i = 0; i < count; i++) {
+                QModelIndex index = selected.at(i);
+                Stream *stream = port.mutableStreamByIndex(index.row(), false);
+                c = stream->protocolFieldReplace(action.protocolNumber,
+                                                 action.fieldIndex,
+                                                 action.fieldBitSize,
+                                                 action.findValue,
+                                                 action.findMask,
+                                                 action.replaceValue,
+                                                 action.replaceMask);
+                if (c) {
+                    fc += c;
+                    sc++;
+                }
+                progress.setValue(i+1);
+                if (progress.wasCanceled())
+                    break;
+            }
+        } else {
+            int count = tvStreamList->model()->rowCount();
+            progress.setMaximum(count);
+            for (int i = 0; i < count; i++) {
+                Stream *stream = port.mutableStreamByIndex(i, false);
+                c = stream->protocolFieldReplace(action.protocolNumber,
+                                                 action.fieldIndex,
+                                                 action.fieldBitSize,
+                                                 action.findValue,
+                                                 action.findMask,
+                                                 action.replaceValue,
+                                                 action.replaceMask);
+                if (c) {
+                    fc += c;
+                    sc++;
+                }
+                progress.setValue(i+1);
+                if (progress.wasCanceled())
+                    break;
+            }
+        }
+
+        if (fc)
+            port.setLocalConfigChanged(true);
+
+        QMessageBox::information(this, tr("Find & Replace"),
+                tr("%1 fields replaced in %2 streams").arg(fc).arg(sc));
+
+    }
 }
 
 void StreamsWidget::on_actionOpen_Streams_triggered()

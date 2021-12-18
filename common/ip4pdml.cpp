@@ -88,6 +88,6 @@ void PdmlIp4Protocol::postProtocolHandler(OstProto::Protocol *pbProto,
     ip4->set_is_override_hdrlen(true);
     ip4->set_is_override_totlen(true);
     ip4->set_is_override_proto(true);
-    ip4->set_is_override_cksum(true);
+    ip4->set_is_override_cksum(overrideCksum_);
 }
 

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QString>
 #include <QLinkedList>
+#include <QVariant>
 
 #include "protocol.pb.h"
 
@@ -141,6 +142,11 @@ public:
     int frameValue(uchar *buf, int bufMaxSize, int frameIndex,
                    FrameValueAttrib *attrib = nullptr) const;
 
+    int protocolFieldReplace(quint32 protocolNumber,
+                             int fieldIndex, int fieldBitSize,
+                             QVariant findValue, QVariant findMask,
+                             QVariant replaceValue, QVariant replaceMask);
+
     quint64 deviceMacAddress(int frameIndex) const;
     quint64 neighborMacAddress(int frameIndex) const;
 
@@ -149,6 +155,10 @@ public:
     static bool StreamLessThan(StreamBase* stream1, StreamBase* stream2);
 
 private:
+    template <typename T>
+    int findReplace(quint32 protocolNumber, int fieldIndex,
+                     QVariant findValue, QVariant findMask,
+                     QVariant replaceValue, QVariant replaceMask);
     int portId_;
 
     OstProto::StreamId      *mStreamId;
