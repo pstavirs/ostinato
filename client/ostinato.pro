@@ -128,6 +128,7 @@ SOURCES += \
     streamstatsmodel.cpp \
     streamstatswindow.cpp \
     streamswidget.cpp \
+    thememanager.cpp \
     variablefieldswidget.cpp
 
 
