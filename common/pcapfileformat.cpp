@@ -236,6 +236,9 @@ _retry:
 
     pktBuf.resize(fileHdr.snapLen);
 
+    // XXX: PDML also needs the PCAP file to cross check packet bytes
+    // with the PDML data, so we can't do PDML conversion any earlier
+    // than this
     qDebug("pdml check");
     if (importOptions_.value("ViaPdml").toBool())
     {
@@ -275,6 +278,8 @@ _retry:
 
         emit status("Reading PDML packets...");
         emit target(100); // in percentage
+
+        // pdml reader needs pcap, so pass self
         isOk = reader.read(&pdmlFile, this, &stop_);
         
         if (stop_)
