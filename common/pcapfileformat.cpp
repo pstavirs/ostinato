@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const quint32 kPcapFileMagic = 0xa1b2c3d4;
 const quint32 kPcapFileMagicSwapped = 0xd4c3b2a1;
+const quint32 kNanoSecondPcapFileMagic = 0xa1b23c4d;
+const quint32 kNanoSecondPcapFileMagicSwapped = 0x4d3cb2a1;
 const quint16 kPcapFileVersionMajor = 2;
 const quint16 kPcapFileVersionMinor = 4;
 const quint32 kMaxSnapLen = 65535;
@@ -92,11 +94,12 @@ bool PcapFileFormat::open(const QString fileName,
     QTemporaryFile file2;
     quint32 magic;
     uchar gzipMagic[2];
+    bool nsecResolution = false;
     int len;
     PcapFileHeader fileHdr;
     PcapPacketHeader pktHdr;
     OstProto::Stream *prevStream = NULL;
-    uint lastUsec = 0;
+    quint64 lastXsec = 0;
     int pktCount;
     qint64 byteCount = 0;
     qint64 byteTotal;
@@ -166,15 +169,22 @@ _retry:
     {
         // Do nothing
     }
-    else if (magic == kPcapFileMagicSwapped)
+    else if (magic == kNanoSecondPcapFileMagic)
+    {
+        nsecResolution = true;
+    }
+    else if ((magic == kPcapFileMagicSwapped)
+            || (magic == kNanoSecondPcapFileMagicSwapped))
     {
         // Toggle Byte order
         if (fd_.byteOrder() == QDataStream::BigEndian)
             fd_.setByteOrder(QDataStream::LittleEndian);
         else
             fd_.setByteOrder(QDataStream::BigEndian);
+
+        nsecResolution = (magic == kNanoSecondPcapFileMagicSwapped);
     }
-    else // Not a pcap file
+    else // Not a pcap file (could be pcapng or something else)
     {
         if (tryConvert)
         {
@@ -460,6 +470,7 @@ _retry:
     }
 
 _non_pdml:
+    qDebug("pcap resolution: %s", nsecResolution ? "nsec" : "usec");
     emit status("Reading Packets...");
     emit target(100);  // in percentage
     pktCount = 1;
@@ -487,17 +498,17 @@ _non_pdml:
         stream->mutable_control()->set_num_packets(1);
 
         // setup packet rate to the timing in pcap (as close as possible)
-        const double kUsecsInSec = 1e6;
-        uint usec = (pktHdr.tsSec*kUsecsInSec + pktHdr.tsUsec);
-        uint delta = usec - lastUsec;
+        const double kXsecsInSec = nsecResolution ? 1e9 : 1e6;
+        quint64 xsec = (pktHdr.tsSec*kXsecsInSec + pktHdr.tsUsec);
+        quint64 delta = xsec - lastXsec;
         
         if ((pktCount != 1) && delta)
-            stream->mutable_control()->set_packets_per_sec(kUsecsInSec/delta);
+            stream->mutable_control()->set_packets_per_sec(kXsecsInSec/delta);
 
         if (prevStream)
             prevStream->mutable_control()->CopyFrom(stream->control());
 
-        lastUsec = usec;
+        lastXsec = xsec;
         prevStream = stream;
         pktCount++;
         qDebug("pktCount = %d", pktCount);
