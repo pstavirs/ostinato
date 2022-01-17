@@ -655,7 +655,7 @@ bool PcapFileFormat::save(const OstProto::StreamConfigList streams,
 
     fd_.setDevice(&file);
 
-    fileHdr.magicNumber = kPcapFileMagic;
+    fileHdr.magicNumber = kNanoSecondPcapFileMagic;
     fileHdr.versionMajor = kPcapFileVersionMajor;
     fileHdr.versionMinor = kPcapFileVersionMinor;
     fileHdr.thisZone = 0;
@@ -703,11 +703,16 @@ bool PcapFileFormat::save(const OstProto::StreamConfigList streams,
         fd_.writeRawData(pktBuf.data(), pktHdr.inclLen);
 
         if (s.packetRate())
-            pktHdr.tsUsec += quint32(1e6/s.packetRate());
-        if (pktHdr.tsUsec >= 1000000)
+        {
+            quint64 delta = quint64(1e9/s.packetRate());
+            pktHdr.tsSec += delta/quint32(1e9);
+            pktHdr.tsUsec += delta % quint32(1e9);
+        }
+
+        if (pktHdr.tsUsec >= quint32(1e9))
         {
             pktHdr.tsSec++;
-            pktHdr.tsUsec -= 1000000;
+            pktHdr.tsUsec -= quint32(1e9);
         }
 
         emit progress(i);
