@@ -594,7 +594,7 @@ bool PcapFileFormat::convertToStandardPcap(
     tshark.start(OstProtoLib::tsharkPath(),
             QStringList()
             << QString("-r%1").arg(fileName)
-            << "-Fpcap"
+            << "-Fnsecpcap"
             << QString("-w%1").arg(outputFileName));
     if (!tshark.waitForStarted(-1))
     {
