@@ -503,12 +503,15 @@ _non_pdml:
         stream->mutable_control()->set_num_packets(1);
 
         // setup packet rate to the timing in pcap (as close as possible)
-        const double kXsecsInSec = nsecResolution ? 1e9 : 1e6;
+        // use quint64 rather than double to store micro/nano second as
+        // it has a larger range (~580 years) and therefore better accuracy
+        const quint64 kXsecsInSec = nsecResolution ? 1e9 : 1e6;
         quint64 xsec = (pktHdr.tsSec*kXsecsInSec + pktHdr.tsUsec);
         quint64 delta = xsec - lastXsec;
+        qDebug("pktCount = %d, delta = %llu", pktCount, delta);
         
         if ((pktCount != 1) && delta)
-            stream->mutable_control()->set_packets_per_sec(kXsecsInSec/delta);
+            stream->mutable_control()->set_packets_per_sec(double(kXsecsInSec)/delta);
 
         if (prevStream)
             prevStream->mutable_control()->CopyFrom(stream->control());
@@ -516,7 +519,6 @@ _non_pdml:
         lastXsec = xsec;
         prevStream = stream;
         pktCount++;
-        qDebug("pktCount = %d", pktCount);
         byteCount += pktHdr.inclLen + sizeof(pktHdr);
         emit progress(int(byteCount*100/byteTotal)); // in percentage
         if (stop_)
