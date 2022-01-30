@@ -59,6 +59,7 @@ ThemeManager::ThemeManager()
     else if (themeDir_.contains(QRegularExpression("^/opt/.*/bin/")))
         themeDir_.replace("/bin/", "/share/");
 #endif
+    qDebug("Themes directory: %s", qPrintable(themeDir_));
 }
 
 QStringList ThemeManager::themeList()
