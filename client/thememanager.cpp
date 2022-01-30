@@ -25,18 +25,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QRegularExpression>
 #include <QResource>
 
 ThemeManager *ThemeManager::instance_{nullptr};
 
 ThemeManager::ThemeManager()
 {
-#ifdef Q_OS_WIN32
     themeDir_ = QCoreApplication::applicationDirPath() + "/themes/";
-#elif Q_OS_MAC
-    // TODO
-#else
-    // TODO
+#if defined(Q_OS_MAC)
+    /*
+     * Executable and Theme directory location inside app bundle -
+     * Ostinato.app/Contents/MacOS/
+     * Ostinato.app/Contents/SharedSupport/themes/
+     */
+    themeDir_.replace("/MacOS/", "/SharedSupport/");
+#elif defined(Q_OS_UNIX)
+    /*
+     * Possible (but not comprehensive) locations for Ostinato executable
+     * and theme directory locations
+     *
+     * non-install-dir/
+     * non-install-dir/themes/
+     *
+     * /usr/[local]/bin/
+     * /usr/[local]/share/ostinato/themes/
+     *
+     * /opt/ostinato/bin/
+     * /opt/ostinato/share/themes/
+     */
+    if (themeDir_.contains(QRegularExpression("^/usr/.*/bin/")))
+        themeDir_.replace("/bin/", "/share/ostinato/");
+    else if (themeDir_.contains(QRegularExpression("^/opt/.*/bin/")))
+        themeDir_.replace("/bin/", "/share/");
 #endif
 }
 
