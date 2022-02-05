@@ -128,12 +128,23 @@ SOURCES += \
     streamstatsmodel.cpp \
     streamstatswindow.cpp \
     streamswidget.cpp \
+    thememanager.cpp \
     variablefieldswidget.cpp
 
+THEMES += \
+    themes/material-dark.qss \
+    themes/material-dark.rcc \
+    themes/material-light.qss \
+    themes/material-light.rcc \
+    themes/qds-dark.qss \
+    themes/qds-dark.rcc \
+    themes/qds-light.qss \
+    themes/qds-light.rcc \
 
 QMAKE_DISTCLEAN += object_script.*
 
 include(../install.pri)
+include(../shared.pri)
 include(../version.pri)
 include(../options.pri)
 

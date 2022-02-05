@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/ostprotolib.h"
 #include "settings.h"
+#include "thememanager.h"
 
 #include <QFileDialog>
 #include <QtGlobal>
@@ -40,6 +41,7 @@ Preferences::Preferences()
 
     setupUi(this);
 
+    // Program paths
     wiresharkPathEdit->setText(appSettings->value(kWiresharkPathKey, 
             kWiresharkPathDefaultValue).toString());
     tsharkPathEdit->setText(appSettings->value(kTsharkPathKey, 
@@ -50,6 +52,10 @@ Preferences::Preferences()
             kDiffPathDefaultValue).toString());
     awkPathEdit->setText(appSettings->value(kAwkPathKey, 
             kAwkPathDefaultValue).toString());
+
+    // Theme
+    theme->addItems(ThemeManager::instance()->themeList());
+    theme->setCurrentText(appSettings->value(kThemeKey).toString());
 
     // TODO(only if required): kUserKey
 }
@@ -78,6 +84,7 @@ void Preferences::initDefaults()
 
 void Preferences::accept()
 {
+    // Program paths
     appSettings->setValue(kWiresharkPathKey, wiresharkPathEdit->text());
     appSettings->setValue(kTsharkPathKey, tsharkPathEdit->text());
     appSettings->setValue(kGzipPathKey, gzipPathEdit->text());
@@ -89,6 +96,9 @@ void Preferences::accept()
         appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
+
+    // Theme
+    ThemeManager::instance()->setTheme(theme->currentText());
 
     QDialog::accept();
 }

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "params.h"
 #include "preferences.h"
 #include "settings.h"
+#include "thememanager.h"
 
 #include <QApplication>
 #include <QDateTime>
@@ -83,6 +84,8 @@ int main(int argc, char* argv[])
         appSettings->value(kGzipPathKey, kGzipPathDefaultValue).toString(),
         appSettings->value(kDiffPathKey, kDiffPathDefaultValue).toString(),
         appSettings->value(kAwkPathKey, kAwkPathDefaultValue).toString());
+
+    ThemeManager::instance()->setTheme(appSettings->value(kThemeKey).toString());
 
     qsrand(QDateTime::currentDateTime().toTime_t());
 
