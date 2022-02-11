@@ -25,6 +25,7 @@
     <addaction name="actionOpenSession" />
     <addaction name="actionSaveSession" />
     <addaction name="separator" />
+    <addaction name="separator" />
     <addaction name="actionPreferences" />
     <addaction name="actionFileExit" />
    </widget>
@@ -45,6 +46,17 @@
      <string>&amp;Edit</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuStreams" >
+    <property name="title" >
+     <string>&amp;Streams</string>
+    </property>
+    <addaction name="actionTest" />
+   </widget>
+   <widget class="QMenu" name="menuDevices" >
+    <property name="title" >
+     <string>&amp;Devices</string>
+    </property>
+   </widget>
    <widget class="QMenu" name="menuView" >
     <property name="title" >
      <string>&amp;View</string>
@@ -54,6 +66,8 @@
    </widget>
    <addaction name="menuFile" />
    <addaction name="menuEdit" />
+   <addaction name="menuStreams" />
+   <addaction name="menuDevices" />
    <addaction name="menuView" />
    <addaction name="menuHelp" />
   </widget>

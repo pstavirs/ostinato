@@ -50,6 +50,10 @@ public:
                      QString &error,
                      QProgressDialog *progress = NULL);
 
+    QList<QAction*> portActions();
+    QList<QAction*> streamActions();
+    QList<QAction*> deviceActions();
+
 signals:
     void currentPortChanged(const QModelIndex &current,
                             const QModelIndex &previous);

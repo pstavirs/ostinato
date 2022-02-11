@@ -119,8 +119,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupUi(this);
 
-    menuFile->insertActions(menuFile->actions().at(3), portsWindow->actions());
+    menuFile->insertActions(menuFile->actions().at(3),
+                            portsWindow->portActions());
     menuEdit->addActions(clipboardHelper->actions());
+    menuStreams->addActions(portsWindow->streamActions());
+    menuDevices->addActions(portsWindow->deviceActions());
 
     statsDock->setWidget(statsWindow);
     addDockWidget(Qt::BottomDockWidgetArea, statsDock);

@@ -233,6 +233,21 @@ bool PortsWindow::saveSession(
     return true;
 }
 
+QList<QAction*> PortsWindow::portActions()
+{
+    return tvPortList->actions();
+}
+
+QList<QAction*> PortsWindow::streamActions()
+{
+    return streamsWidget->actions();
+}
+
+QList<QAction*> PortsWindow::deviceActions()
+{
+    return devicesWidget->actions();
+}
+
 void PortsWindow::clearCurrentSelection()
 {
     tvPortList->selectionModel()->clearCurrentIndex();
