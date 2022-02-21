@@ -55,6 +55,7 @@ public:
     void start();
     void stop();
     bool isRunning();
+    double lastTxDuration();
 
 private:
     enum State
@@ -92,6 +93,8 @@ private:
     StatsTuple *stats_;
     StatsTuple lastStats_;
     StreamStats streamStats_;
+
+    double lastTxDuration_{0.0}; // in secs
 };
 
 #endif

@@ -705,6 +705,8 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
         s->mutable_stream_guid()->set_id(guid);
         s->mutable_port_id()->set_id(id());
 
+        s->set_tx_duration(lastTransmitDuration());
+
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
         s->set_rx_pkts(sst.rx_pkts);
@@ -716,6 +718,7 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 {
     // FIXME: change input param to a non-OstProto type and/or have
     // a getFirst/Next like API?
+    double txDur = lastTransmitDuration();
     StreamStatsIterator i(streamStats_);
     while (i.hasNext())
     {
@@ -725,6 +728,8 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 
         s->mutable_stream_guid()->set_id(i.key());
         s->mutable_port_id()->set_id(id());
+
+        s->set_tx_duration(txDur);
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);

@@ -49,6 +49,7 @@ public:
     void start();
     void stop();
     bool isRunning();
+    double lastTxDuration();
 private slots:
     void updateTxThreadStreamStats();
 private:
