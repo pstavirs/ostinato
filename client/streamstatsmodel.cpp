@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamstatsmodel.h"
 
 #include "protocol.pb.h"
+#include "xqlocale.h"
 
 #include <QApplication>
 #include <QBrush>
@@ -45,12 +46,22 @@ enum {
     kAggrTxPkts,
     kAggrRxPkts,
     kAggrPktLoss,
+    kTxDuration,
+    kAvgTxFrameRate,
+    kAvgRxFrameRate,
+    kAvgTxBitRate,
+    kAvgRxBitRate,
     kMaxAggrStreamStats
 };
 static QStringList aggrStatTitles = QStringList()
     << "Total\nTx Pkts"
     << "Total\nRx Pkts"
-    << "Total\nPkt Loss";
+    << "Total\nPkt Loss"
+    << "Duration\n(secs)"
+    << "Avg\nTx PktRate"
+    << "Avg\nRx PktRate"
+    << "Avg\nTx BitRate"
+    << "Avg\nRx BitRate";
 
 static const uint kAggrGuid = 0xffffffff;
 
@@ -149,6 +160,26 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
             return QString("%L1").arg(aggrGuidStats_.value(guid).txPkts);
         case kAggrPktLoss:
             return QString("%L1").arg(aggrGuidStats_.value(guid).pktLoss);
+        case kTxDuration:
+            return QString("%L1").arg(aggrGuidStats_.value(guid).txDuration);
+        case kAvgTxFrameRate:
+            return QString("%L1").arg(
+                    aggrGuidStats_.value(guid).txPkts
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgRxFrameRate:
+            return QString("%L1").arg(
+                    aggrGuidStats_.value(guid).rxPkts
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgTxBitRate:
+            return XLocale().toBitRateString(
+                    (aggrGuidStats_.value(guid).txBytes
+                            + 24 * aggrGuidStats_.value(guid).txPkts) * 8
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgRxBitRate:
+            return XLocale().toBitRateString(
+                    (aggrGuidStats_.value(guid).rxBytes
+                            + 24 * aggrGuidStats_.value(guid).rxPkts) * 8
+                        / aggrGuidStats_.value(guid).txDuration);
         default:
             break;
         };
@@ -232,10 +263,18 @@ void StreamStatsModel::appendStreamStatsList(
         aggrGuid.rxPkts += ss.rxPkts;
         aggrGuid.txPkts += ss.txPkts;
         aggrGuid.pktLoss += ss.txPkts - ss.rxPkts;
+        aggrGuid.rxBytes += ss.rxBytes;
+        aggrGuid.txBytes += ss.txBytes;
+        if (s.tx_duration() > aggrGuid.txDuration)
+            aggrGuid.txDuration = s.tx_duration(); // XXX: use largest or avg?
 
         aggrAggr.rxPkts += ss.rxPkts;
         aggrAggr.txPkts += ss.txPkts;
         aggrAggr.pktLoss += ss.txPkts - ss.rxPkts;
+        aggrAggr.rxBytes += ss.rxBytes;
+        aggrAggr.txBytes += ss.txBytes;
+        if (aggrGuid.txDuration > aggrAggr.txDuration)
+            aggrAggr.txDuration = aggrGuid.txDuration;
 
         if (!portList_.contains(pgp))
             portList_.append(pgp);
