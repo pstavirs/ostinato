@@ -165,7 +165,7 @@
          <string>Stop Capture</string>
         </property>
         <property name="statusTip">
-         <string>End capture on selecteed port(s)</string>
+         <string>End capture on selected port(s)</string>
         </property>
         <property name="text">
          <string>Stop</string>
