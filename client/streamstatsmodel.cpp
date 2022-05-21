@@ -21,7 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "protocol.pb.h"
 
+#include <QApplication>
 #include <QBrush>
+#include <QFont>
+#include <QPalette>
 
 // XXX: Keep the enum in sync with it's string
 enum {
@@ -103,20 +106,35 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         return Qt::AlignRight;
 
     int portColumn = index.column() - kMaxAggrStreamStats;
-    if (role == Qt::BackgroundRole) {
-        if (portColumn < 0)
-            return QBrush(QColor("lavender")); // Aggregate Column
-        if (index.row() == (guidList_.size() - 1))
-            return QBrush(QColor("burlywood")); // Aggregate Row
-        else if ((portColumn/kMaxStreamStats) & 1)
-            return QBrush(QColor("beige")); // Color alternate Ports
+
+    // Stylesheets typically don't use or set palette colors, so if
+    // using one, don't use palette colors
+    if ((role == Qt::BackgroundRole) && qApp->styleSheet().isEmpty()) {
+        QPalette palette = QApplication::palette();
+        if (index.row() == (guidList_.size() - 1)) // Aggregate Row
+            return palette.dark();
+        if (portColumn < 0)                        // Aggregate Column
+            return palette.alternateBase();
+        if ((portColumn/kMaxStreamStats) & 1)      // Color alternate Ports
+            return palette.alternateBase();
     }
 
     Guid guid = guidList_.at(index.row());
-    if (role == Qt::ForegroundRole) {
+    if ((role == Qt::ForegroundRole && qApp->styleSheet().isEmpty())) {
+        QPalette palette = QApplication::palette();
         if ((index.column() == kAggrPktLoss)
                 && aggrGuidStats_.value(guid).pktLoss)
-            return QBrush(QColor("firebrick"));
+            return palette.link();
+        if (index.row() == (guidList_.size() - 1)) // Aggregate Row
+            return palette.brightText();
+    }
+
+    if (role == Qt::FontRole ) {
+        if (index.row() == (guidList_.size() - 1)) { // Aggregate Row
+            QFont font;
+            font.setBold(true);
+            return font;
+        }
     }
 
     if (role != Qt::DisplayRole)

@@ -58,6 +58,13 @@ public:
         CksumTcpUdp = AbstractProtocol::CksumTcpUdp
     };
 
+    enum CksumFlag
+    {
+        IncludeCksumField = AbstractProtocol::IncludeCksumField
+    };
+    Q_DECLARE_FLAGS(CksumFlags, CksumFlag);
+    Q_FLAG(CksumFlags);
+
     UserProtocol(AbstractProtocol *parent);
 
 public slots:
@@ -131,7 +138,7 @@ public:
     virtual int protocolFrameVariableCount() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-            CksumType cksumType = CksumIp) const;
+            CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const;
 
     void evaluateUserScript() const;
     bool isScriptValid() const;

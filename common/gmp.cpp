@@ -671,6 +671,7 @@ bool GmpProtocol::setFieldData(int index, const QVariant &value,
                     ba.append(QByteArray(4 - (ba.size() % 4), char(0)));
                 rec->set_aux_data(std::string(ba.constData(), ba.size()));
             }
+            isOk = true;
 
             break;
         }

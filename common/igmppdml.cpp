@@ -49,7 +49,7 @@ void PdmlIgmpProtocol::preProtocolHandler(QString /*name*/,
     OstProto::Gmp *igmp = pbProto->MutableExtension(OstProto::igmp);
 
     igmp->set_is_override_rsvd_code(true);
-    igmp->set_is_override_checksum(true);
+    igmp->set_is_override_checksum(overrideCksum_);
     igmp->set_is_override_source_count(true);
     igmp->set_is_override_group_record_count(true);
 

@@ -89,7 +89,7 @@ public:
     virtual int protocolFrameVariableCount() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const;
+        CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const;
 
     virtual bool hasErrors(QStringList *errors = nullptr) const;
 private:

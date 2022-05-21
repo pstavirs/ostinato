@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FindReplace</class>
+ <widget class="QDialog" name="FindReplace">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>361</width>
+    <height>309</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Find &amp; Replace</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ostinato.qrc">
+    <normaloff>:/icons/find.png</normaloff>:/icons/find.png</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="find">
+     <property name="title">
+      <string>Find</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
+      <item row="0" column="0">
+       <widget class="QLabel" name="protocolLabel">
+        <property name="text">
+         <string>Protocol</string>
+        </property>
+        <property name="buddy">
+         <cstring>protocol</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QComboBox" name="protocol"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="fieldLabel">
+        <property name="text">
+         <string>Field</string>
+        </property>
+        <property name="buddy">
+         <cstring>field</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QComboBox" name="field"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="findValueLabel">
+        <property name="text">
+         <string>Value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="FieldEdit" name="findValue"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="useFindMask">
+        <property name="text">
+         <string>Mask</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="FieldEdit" name="findMask"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="findMaskHint">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Matches a field only if &lt;span style=&quot;white-space:nowrap&quot;&gt;(FieldValue &amp;amp; FindMask) = FindValue&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="ostinato.qrc">:/icons/info.png</pixmap>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="3">
+       <widget class="QCheckBox" name="matchAny">
+        <property name="text">
+         <string>Match any value</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="replace">
+     <property name="title">
+      <string>Replace with</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1,0">
+      <item row="0" column="0">
+       <widget class="QLabel" name="replaceValueLabel">
+        <property name="text">
+         <string>Value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="FieldEdit" name="replaceValue"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="useReplaceMask">
+        <property name="text">
+         <string>Mask</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="FieldEdit" name="replaceMask"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="replaceMaskHint">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;New field value = &lt;span style=&quot;white-space:nowrap&quot;&gt;(OldFieldValue &amp;amp; ~ReplaceMask) | (ReplaceValue &amp;amp; ReplaceMask)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="ostinato.qrc">:/icons/info.png</pixmap>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="selectedStreamsOnly">
+     <property name="text">
+      <string>Selected Streams Only</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FieldEdit</class>
+   <extends>QLineEdit</extends>
+   <header>fieldedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="ostinato.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>FindReplace</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>277</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>FindReplace</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>283</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>useFindMask</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>findMask</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>60</x>
+     <y>115</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>76</x>
+     <y>119</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>useReplaceMask</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>replaceMask</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>56</x>
+     <y>228</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>73</x>
+     <y>227</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>useReplaceMask</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>replaceMaskHint</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>50</x>
+     <y>230</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>333</x>
+     <y>233</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>useFindMask</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>findMaskHint</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>46</x>
+     <y>116</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>122</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

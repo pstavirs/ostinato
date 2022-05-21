@@ -432,6 +432,12 @@ void StreamConfigDialog::on_cmbPktLenMode_currentIndexChanged(QString mode)
         lePktLenMin->setEnabled(true);
         lePktLenMax->setEnabled(true);
     }
+    else if (mode == "IMIX")
+    {
+        lePktLen->setDisabled(true);
+        lePktLenMin->setDisabled(true);
+        lePktLenMax->setDisabled(true);
+    }
     else
     {
         qWarning("Unhandled/Unknown PktLenMode = %s", qPrintable(mode));
@@ -1165,12 +1171,7 @@ void StreamConfigDialog::on_lePacketsPerSec_textChanged(const QString &text)
 {
     bool isOk;
     Stream *pStream = mpStream;
-    uint frameLen;
-
-    if (pStream->lenMode() == Stream::e_fl_fixed)
-        frameLen = pStream->frameLen();
-    else
-        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
+    uint frameLen = pStream->frameLenAvg();
 
     if (rbSendPackets->isChecked())
     {
@@ -1189,13 +1190,9 @@ void StreamConfigDialog::on_leBurstsPerSec_textChanged(const QString &text)
     bool isOk;
     Stream *pStream = mpStream;
     uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
-    uint frameLen;
+    uint frameLen = pStream->frameLenAvg();
 
     qDebug("start of %s(%s)", __FUNCTION__, qPrintable(text));
-    if (pStream->lenMode() == Stream::e_fl_fixed)
-        frameLen = pStream->frameLen();
-    else
-        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
 
     if (rbSendBursts->isChecked())
     {
@@ -1215,12 +1212,7 @@ void StreamConfigDialog::on_leBitsPerSec_textEdited(const QString &text)
     bool isOk;
     Stream *pStream = mpStream;
     uint burstSize = lePacketsPerBurst->text().toULong(&isOk);
-    uint frameLen;
-
-    if (pStream->lenMode() == Stream::e_fl_fixed)
-        frameLen = pStream->frameLen();
-    else
-        frameLen = (pStream->frameLenMin() + pStream->frameLenMax())/2;
+    uint frameLen = pStream->frameLenAvg();
 
     if (rbSendPackets->isChecked())
     {

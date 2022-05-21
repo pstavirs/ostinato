@@ -197,24 +197,11 @@ QVariant IcmpProtocol::fieldData(int index, FieldAttrib attrib,
                     }
                     else
                     {
-                        quint16 cks;
-                        quint32 sum = 0;
-
-                        cks = protocolFrameCksum(streamIndex, CksumIp);
-                        sum += (quint16) ~cks;
-                        cks = protocolFramePayloadCksum(streamIndex, CksumIp);
-                        sum += (quint16) ~cks;
-                        if (icmpVersion() == OstProto::Icmp::kIcmp6)
-                        {
-                            cks = protocolFrameHeaderCksum(streamIndex, 
-                                    CksumIpPseudo);
-                            sum += (quint16) ~cks;
-                        }
-
-                        while(sum>>16)
-                            sum = (sum & 0xFFFF) + (sum >> 16);
-
-                        cksum = (~sum) & 0xFFFF;
+                        cksum = (icmpVersion() == OstProto::Icmp::kIcmp4) ?
+                            AbstractProtocol::protocolFrameCksum(
+                                                streamIndex, CksumIcmpIgmp) :
+                            AbstractProtocol::protocolFrameCksum(
+                                                streamIndex, CksumTcpUdp);
                     }
                     break;
                 default:

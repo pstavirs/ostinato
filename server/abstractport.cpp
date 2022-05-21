@@ -64,6 +64,11 @@ AbstractPort::~AbstractPort()
 
 void AbstractPort::init()
 {
+    if (interfaceInfo_) {
+        data_.set_speed(interfaceInfo_->speed);
+        data_.set_mtu(interfaceInfo_->mtu);
+    }
+
     if (deviceManager_)
         deviceManager_->createHostDevices();
 }    
@@ -256,7 +261,7 @@ int AbstractPort::updatePacketListSequential()
 
             switch (streamList_[i]->sendUnit())
             {
-            case OstProto::StreamControl::e_su_bursts:
+            case StreamBase::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
                 x = AbstractProtocol::lcm(frameVariableCount, burstSize);
                 n = ulong(burstSize * streamList_[i]->numBursts()) / x;
@@ -271,7 +276,7 @@ int AbstractPort::updatePacketListSequential()
                 }
                 loopDelay = ibg2;
                 break;
-            case OstProto::StreamControl::e_su_packets:
+            case StreamBase::e_su_packets:
                 x = frameVariableCount;
                 n = 2;
                 while (x < minPacketSetSize_) 
@@ -364,10 +369,10 @@ int AbstractPort::updatePacketListSequential()
 
             switch(streamList_[i]->nextWhat())
             {
-                case ::OstProto::StreamControl::e_nw_stop:
+                case StreamBase::e_nw_stop:
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_id:
+                case StreamBase::e_nw_goto_id:
                     /*! \todo (MED): define and use 
                     streamList_[i].d.control().goto_stream_id(); */
 
@@ -385,7 +390,7 @@ int AbstractPort::updatePacketListSequential()
                                 StreamBase::e_su_bursts ? ibg1 : ipg1);
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_next:
+                case StreamBase::e_nw_goto_next:
                     break;
 
                 default:
@@ -464,7 +469,7 @@ int AbstractPort::updatePacketListInterleaved()
 
         switch (streamList_[i]->sendUnit())
         {
-        case OstProto::StreamControl::e_su_bursts:
+        case StreamBase::e_su_bursts:
             numBursts = streamList_[i]->burstRate();
             if (streamList_[i]->burstRate() > 0)
             {
@@ -476,7 +481,7 @@ int AbstractPort::updatePacketListInterleaved()
                 _burstSize = streamList_[i]->burstSize();
             }
             break;
-        case OstProto::StreamControl::e_su_packets:
+        case StreamBase::e_su_packets:
             numPackets = streamList_[i]->packetRate();
             if (streamList_[i]->packetRate() > 0)
             {

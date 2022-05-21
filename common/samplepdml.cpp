@@ -87,7 +87,9 @@ void PdmlSampleProtocol::prematureEndHandler(int /*pos*/,
  fields such as length, checksum etc. may be correct or incorrect in the
  PCAP/PDML - to retain the same value as in the PCAP/PDML and not let
  Ostinato recalculate these, you can set the is_override_length,
- is_override_cksum meta-fields to true here
+ is_override_cksum meta-fields to true here; for cksum, use the base
+ class attribute overrideCksum_ to decide - this is set based on user
+ input
 */
 void PdmlSampleProtocol::postProtocolHandler(OstProto::Protocol* /*pbProto*/,
         OstProto::Stream* /*stream*/)

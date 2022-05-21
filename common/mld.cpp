@@ -195,6 +195,7 @@ QVariant MldProtocol::fieldData(int index, FieldAttrib attrib,
             case FieldName:            
                 return QString("Group Address");
             case FieldValue:
+                return QVariant::fromValue(UInt128(grpHi, grpLo));
             case FieldTextValue:
             case FieldFrameValue:
             {
@@ -401,6 +402,14 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
     {
         case kGroupAddress:
         {
+            if (value.typeName() == QString("UInt128")) {
+                UInt128 addr = value.value<UInt128>();
+                data.mutable_group_address()->set_v6_hi(addr.hi64());
+                data.mutable_group_address()->set_v6_lo(addr.lo64());
+                isOk = true;
+                break;
+            }
+
             Q_IPV6ADDR addr = QHostAddress(value.toString()).toIPv6Address();
             quint64 x;
 
@@ -423,6 +432,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                 | (quint64(addr[14]) <<  8)
                 | (quint64(addr[15]) <<  0);
             data.mutable_group_address()->set_v6_lo(x);
+            isOk = true;
             break;
         }
 
@@ -457,6 +467,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                     | (quint64(addr[15]) <<  0);
                 src->set_v6_lo(x);
             }
+            isOk = true;
             break;
         }
 
@@ -524,7 +535,7 @@ bool MldProtocol::setFieldData(int index, const QVariant &value,
                     src->set_v6_lo(x);
                 }
             }
-
+            isOk = true;
             break;
         }
 

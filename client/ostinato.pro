@@ -41,10 +41,13 @@ HEADERS += \
     devicemodel.h \
     deviceswidget.h \
     dumpview.h \
+    fieldedit.h \
     hexlineedit.h \
     logsmodel.h \
     logswindow.h \
+    findreplace.h \
     mainwindow.h \
+    mandatoryfieldsgroup.h \
     ndpstatusmodel.h \
     packetmodel.h \
     port.h \
@@ -57,6 +60,7 @@ HEADERS += \
     portstatsproxymodel.h \
     portstatswindow.h \
     portswindow.h \
+    portwidget.h \
     preferences.h \
     settings.h \
     streamconfigdialog.h \
@@ -65,6 +69,7 @@ HEADERS += \
     streamstatsfiltermodel.h \
     streamstatsmodel.h \
     streamstatswindow.h \
+    streamswidget.h \
     variablefieldswidget.h \
     xtableview.h
 
@@ -72,15 +77,18 @@ FORMS += \
     about.ui \
     devicegroupdialog.ui \
     deviceswidget.ui \
+    findreplace.ui \
     logswindow.ui \
     mainwindow.ui \
     portconfigdialog.ui \
     portstatsfilter.ui \
     portstatswindow.ui \
     portswindow.ui \
+    portwidget.ui \
     preferences.ui \
     streamconfigdialog.ui \
     streamstatswindow.ui \
+    streamswidget.ui \
     variablefieldswidget.ui
 
 SOURCES += \
@@ -95,8 +103,11 @@ SOURCES += \
     hexlineedit.cpp \
     logsmodel.cpp \
     logswindow.cpp \
+    fieldedit.cpp \
+    findreplace.cpp \
     main.cpp \
     mainwindow.cpp \
+    mandatoryfieldsgroup.cpp \
     ndpstatusmodel.cpp \
     packetmodel.cpp \
     params.cpp \
@@ -109,18 +120,31 @@ SOURCES += \
     portstatsfilterdialog.cpp \
     portstatswindow.cpp \
     portswindow.cpp \
+    portwidget.cpp \
     preferences.cpp \
     streamconfigdialog.cpp \
     streamlistdelegate.cpp \
     streammodel.cpp \
     streamstatsmodel.cpp \
     streamstatswindow.cpp \
+    streamswidget.cpp \
+    thememanager.cpp \
     variablefieldswidget.cpp
 
+THEMES += \
+    themes/material-dark.qss \
+    themes/material-dark.rcc \
+    themes/material-light.qss \
+    themes/material-light.rcc \
+    themes/qds-dark.qss \
+    themes/qds-dark.rcc \
+    themes/qds-light.qss \
+    themes/qds-light.rcc \
 
 QMAKE_DISTCLEAN += object_script.*
 
 include(../install.pri)
+include(../shared.pri)
 include(../version.pri)
 include(../options.pri)
 

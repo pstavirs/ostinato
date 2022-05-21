@@ -40,6 +40,8 @@ public:
     bool hasField(QString name) const;
     int fieldId(QString name) const;
 
+    void setRecalculateCksum(bool recalculate);
+
     virtual void preProtocolHandler(QString name, 
             const QXmlStreamAttributes &attributes, int expectedPos, 
             OstProto::Protocol *pbProto, OstProto::Stream *stream);
@@ -63,6 +65,8 @@ protected:
     int ostProtoId_;
     //!< Map of PDML field names to protobuf field numbers for 'known' fields
     QMap<QString, int> fieldMap_;
+
+    bool overrideCksum_{true};
 };
 
 #endif

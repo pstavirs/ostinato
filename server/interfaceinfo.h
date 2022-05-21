@@ -39,6 +39,9 @@ struct InterfaceInfo
     quint64          mac;
     QList<Ip4Config> ip4;
     QList<Ip6Config> ip6;
+
+    double speed{0}; // in Mbps
+    quint32 mtu{0};
 };
 
 #endif

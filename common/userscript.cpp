@@ -225,7 +225,7 @@ int UserScriptProtocol::protocolFrameVariableCount() const
 }
 
 quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
-        CksumType cksumType) const
+        CksumType cksumType, CksumFlags cksumFlags) const
 {
     QScriptValue userFunction;
     QScriptValue userValue;
@@ -243,9 +243,12 @@ quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
 
     Q_ASSERT(userFunction.isFunction());
 
-    userValue = userFunction.call(QScriptValue(),
-            QScriptValueList() << QScriptValue(&engine_, streamIndex)
-            << QScriptValue(&engine_, cksumType));
+    userValue = userFunction.call(
+                    QScriptValue(),
+                    QScriptValueList()
+                        << QScriptValue(&engine_, streamIndex)
+                        << QScriptValue(&engine_, cksumType)
+                        << QScriptValue(&engine_, cksumFlags));
 
     Q_ASSERT(userValue.isValid());
     Q_ASSERT(userValue.isNumber());
@@ -253,7 +256,8 @@ quint32 UserScriptProtocol::protocolFrameCksum(int streamIndex,
     return userValue.toUInt32();
 
 _do_default:
-    return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+    return AbstractProtocol::protocolFrameCksum(
+                                streamIndex, cksumType, cksumFlags);
 }
 
 void UserScriptProtocol::evaluateUserScript() const

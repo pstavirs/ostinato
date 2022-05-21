@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _MAC_EDIT_H
 
 #include <QLineEdit>
+#include <QRegExpValidator>
 
 class MacEdit: public QLineEdit
 {

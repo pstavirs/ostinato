@@ -43,11 +43,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "udppdml.h"
 #include "vlanpdml.h"
 
-PdmlReader::PdmlReader(OstProto::StreamConfigList *streams)
+PdmlReader::PdmlReader(OstProto::StreamConfigList *streams,
+                       const QVariantMap &options)
 {
     //gPdmlReader = this;
     pcap_ = NULL;
     streams_ = streams;
+
+    recalculateCksums_ = options.value("RecalculateCksums").toBool();
 
     currentStream_ = NULL;
     prevStream_ = NULL;
@@ -354,6 +357,8 @@ void PdmlReader::readProto()
     }
 
     pdmlProto = appendPdmlProto(protoName, &pbProto);
+
+    pdmlProto->setRecalculateCksum(recalculateCksums_);
 
     qDebug("%s: preProtocolHandler(expPos = %d)", 
             qPrintable(protoName), expPos_);

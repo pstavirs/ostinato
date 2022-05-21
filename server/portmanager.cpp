@@ -74,7 +74,7 @@ PortManager::PortManager()
     {
         AbstractPort *port;
       
-        qDebug("%d. %s", i, device->name);
+        qDebug("==========\n%d. %s", i, device->name);
         if (device->description)
             qDebug(" (%s)\n", device->description);
 
@@ -122,6 +122,8 @@ PortManager::PortManager()
                         qPrintable(QHostAddress(ip.address.toArray()).toString()),
                         ip.prefixLength,
                         qPrintable(QHostAddress(ip.gateway.toArray()).toString()));
+            qDebug("Speed: %g Mbps", intfInfo->speed);
+            qDebug("Mtu: %u", intfInfo->mtu);
         }
 
         if (!port->setRateAccuracy(txRateAccuracy))

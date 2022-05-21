@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/find.png</file>
+    <file>icons/info.png</file>
     <file>icons/about.png</file>
     <file>icons/add.png</file>
     <file>icons/anime_error.gif</file>

@@ -206,6 +206,7 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
         logError(id(), QString("checkVersion failed: %1")
                             .arg(QString::fromStdString(verCompat->notes())));
         compat = kIncompatible;
+        reconnect = false;
         emit portGroupDataChanged(mPortGroupId);
 
         QMessageBox msgBox;
@@ -289,8 +290,6 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
                               " - is it drone or some other process?")
                             .arg(rpcChannel->serverName())
                             .arg(rpcChannel->serverPort()));
-        // fall-through
-    case QAbstractSocket::RemoteHostClosedError:
         reconnect = false;
         break;
     default:

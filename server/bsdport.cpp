@@ -215,6 +215,10 @@ void BsdPort::populateInterfaceInfo()
 
     interfaceInfo_ = new InterfaceInfo;
     interfaceInfo_->mac = mac;
+    if (mac) {
+	interfaceInfo_->speed = ((struct if_data*)addr->ifa_data)->ifi_baudrate/1e6;
+	interfaceInfo_->mtu = ((struct if_data*)addr->ifa_data)->ifi_mtu;
+    }
 
     //
     // Find gateways

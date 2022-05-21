@@ -20,13 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PORTS_WINDOW_H
 #define _PORTS_WINDOW_H
 
-#include <QWidget>
-#include <QAbstractItemModel>
 #include "ui_portswindow.h"
-#include "portgrouplist.h"
+#include <QWidget>
 
 class ApplyMessage;
-class QAbstractItemDelegate;
+class PortGroupList;
+
 class QProgressDialog;
 class QSortFilterProxyModel;
 
@@ -37,9 +36,6 @@ namespace OstProto {
 class PortsWindow : public QWidget, private Ui::PortsWindow
 {
     Q_OBJECT
-
-    //QAbstractItemModel    *slm; // stream list model
-    PortGroupList        *plm;
 
 public:
     PortsWindow(PortGroupList *pgl, QWidget *parent = 0);
@@ -54,15 +50,13 @@ public:
                      QString &error,
                      QProgressDialog *progress = NULL);
 
+    QList<QAction*> portActions();
+    QList<QAction*> streamActions();
+    QList<QAction*> deviceActions();
+
 signals:
     void currentPortChanged(const QModelIndex &current,
                             const QModelIndex &previous);
-
-private:
-    QString        lastNewPortGroup;
-    QAbstractItemDelegate *delegate;
-    QSortFilterProxyModel *proxyPortModel;
-    ApplyMessage *applyMsg_;
 
 public slots:
     void clearCurrentSelection();
@@ -71,14 +65,7 @@ public slots:
 private slots:
     void updateApplyHint(int portGroupId, int portId, bool configChanged);
     void updatePortViewActions(const QModelIndex& currentIndex);
-    void updateStreamViewActions();
 
-    void on_startTx_clicked();
-    void on_stopTx_clicked();
-    void on_averagePacketsPerSec_editingFinished();
-    void on_averageBitsPerSec_editingFinished();
-    void updatePortRates();
-    void on_tvStreamList_activated(const QModelIndex & index);
     void when_portView_currentChanged(const QModelIndex& currentIndex,
         const QModelIndex& previousIndex);
     void when_portModel_dataChanged(const QModelIndex& topLeft,
@@ -95,15 +82,11 @@ private slots:
     void on_actionExclusive_Control_triggered(bool checked);
     void on_actionPort_Configuration_triggered();
 
-    void on_actionNew_Stream_triggered();
-    void on_actionEdit_Stream_triggered();
-    void on_actionDuplicate_Stream_triggered();
-    void on_actionDelete_Stream_triggered();
-
-    void on_actionOpen_Streams_triggered();
-    void on_actionSave_Streams_triggered();
-
-    void streamModelDataChanged();
+private:
+    PortGroupList *plm;
+    QString lastNewPortGroup;
+    QSortFilterProxyModel *proxyPortModel;
+    ApplyMessage *applyMsg_;
 };
 
 #endif

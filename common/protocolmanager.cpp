@@ -239,3 +239,33 @@ QStringList ProtocolManager::protocolDatabase()
 {
     return numberToNameMap.values();
 }
+
+#if 0
+void ProtocolManager::showFieldAttribs()
+{
+    QStringList protocolList = protocolDatabase();
+    Stream stream;
+    foreach(QString name, protocolList) {
+        if (name.contains("/")) // assume combo
+            continue;
+        AbstractProtocol *protocol = OstProtocolManager->createProtocol(name, &stream);
+        int count = protocol->fieldCount();
+        for (int i = 0; i < count; i++) {
+            if (!protocol->fieldFlags(i).testFlag(AbstractProtocol::FrameField))
+                continue;
+
+            uint bitSize = protocol->fieldData(i, AbstractProtocol::FieldBitSize)
+                                            .toInt();
+            qDebug("$$$$, %s, %d, %s, %u, %x, %llu",
+                    qPrintable(name),
+                    i,
+                    qPrintable(protocol->fieldData(i, AbstractProtocol::FieldName).toString()),
+                    bitSize,
+                    0, // min
+                    (1 << bitSize) - 1);
+        }
+
+        delete protocol;
+    }
+}
+#endif
