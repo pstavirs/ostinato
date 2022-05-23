@@ -376,6 +376,9 @@ void VariableFieldsWidget::loadProtocolFields(
         int byteOfs = bitOfs >> 3;
         uint bitSize = protocol->fieldData(i, AbstractProtocol::FieldBitSize)
                                         .toInt();
+        if (bitSize == 0)
+            continue;
+
         vm["offset"] = byteOfs;
         if (bitSize <= 8) {
             vm["type"] = int(OstProto::VariableField::kCounter8);
