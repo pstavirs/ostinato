@@ -78,7 +78,6 @@ public:
     virtual QString shortName() const;
 
     virtual int fieldCount() const;
-    virtual int frameFieldCount() const;
 
     virtual AbstractProtocol::FieldFlags fieldFlags(int index) const;
     virtual QVariant fieldData(int index, FieldAttrib attrib,

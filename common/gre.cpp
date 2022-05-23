@@ -83,29 +83,6 @@ int GreProtocol::fieldCount() const
     return gre_fieldCount;
 }
 
-/*!
-  TODO Return the number of frame fields for your protocol. A frame field
-  is a field which has the FrameField flag set \n
-
-  If your protocol has different sets of fields based on a OpCode/Type field
-  (e.g. icmp), you MUST re-implement this function; however, if your protocol
-  has a fixed set of frame fields always, you don't need to reimplement this
-  method - the base class implementation will do the right thing
-*/
-int GreProtocol::frameFieldCount() const
-{
-    int count = 4; // mandatory fields - flags, rsvd0, version, protocol
-
-    if (data.flags() & GRE_FLAG_CKSUM)
-        count += 2; // checksum, rsvd1
-    if (data.flags() & GRE_FLAG_KEY)
-        count++;
-    if (data.flags() & GRE_FLAG_SEQ)
-        count++;
-
-    return count;
-}
-
 AbstractProtocol::FieldFlags GreProtocol::fieldFlags(int index) const
 {
     AbstractProtocol::FieldFlags flags;
@@ -227,33 +204,32 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
         }
         case gre_checksum:
         {
+            if (attrib == FieldName)
+                return QString("Checksum");
+
             if ((data.flags() & GRE_FLAG_CKSUM) == 0)
-                return QVariant();
-
-            switch(attrib)
             {
-                case FieldName:
-                    return QString("Checksum");
-                case FieldBitSize:
-                    return 16;
-                default:
-                    break;
+                if (attrib == FieldTextValue)
+                    return QObject::tr("<not-included>");
+                else
+                    return QVariant();
             }
 
-            quint16 cksum = 0;
-            if (data.flags() & GRE_FLAG_CKSUM) {
-                quint32 sum = 0;
+            if (attrib == FieldBitSize)
+                return 16;
 
-                cksum = protocolFrameCksum(streamIndex, CksumIp);
-                sum += (quint16) ~cksum;
-                cksum = protocolFramePayloadCksum(streamIndex, CksumIp);
-                sum += (quint16) ~cksum;
+            quint32 sum = 0;
+            quint16 cksum;
 
-                while (sum >> 16)
-                    sum = (sum & 0xFFFF) + (sum >> 16);
+            cksum = protocolFrameCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cksum;
+            cksum = protocolFramePayloadCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cksum;
 
-                cksum = (~sum) & 0xFFFF;
-            }
+            while (sum >> 16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+
+            cksum = (~sum) & 0xFFFF;
 
             switch(attrib)
             {
@@ -277,13 +253,19 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
 
         case gre_rsvd1:
         {
+            if (attrib == FieldName)
+                return QString("Reserved1");
+
             if ((data.flags() & GRE_FLAG_CKSUM) == 0)
-                return QVariant();
+            {
+                if (attrib == FieldTextValue)
+                    return QObject::tr("<not-included>");
+                else
+                    return QVariant();
+            }
 
             switch(attrib)
             {
-                case FieldName:
-                    return QString("Reserved1");
                 case FieldValue:
                     return data.rsvd1();
                 case FieldTextValue:
@@ -303,13 +285,19 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
 
         case gre_key:
         {
+            if (attrib == FieldName)
+                return QString("Key");
+
             if ((data.flags() & GRE_FLAG_KEY) == 0)
-                return QVariant();
+            {
+                if (attrib == FieldTextValue)
+                    return QObject::tr("<not-included>");
+                else
+                    return QVariant();
+            }
 
             switch(attrib)
             {
-                case FieldName:
-                    return QString("Key");
                 case FieldValue:
                     return data.key();
                 case FieldTextValue:
@@ -326,15 +314,22 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
             }
             break;
         }
+
         case gre_sequence:
         {
+            if (attrib == FieldName)
+                return QString("Sequence Number");
+
             if ((data.flags() & GRE_FLAG_SEQ) == 0)
-                return QVariant();
+            {
+                if (attrib == FieldTextValue)
+                    return QObject::tr("<not-included>");
+                else
+                    return QVariant();
+            }
 
             switch(attrib)
             {
-                case FieldName:
-                    return QString("Sequence Number");
                 case FieldValue:
                     return data.sequence_num();
                 case FieldTextValue:
