@@ -36,6 +36,9 @@ public:
 
     virtual void loadWidget(AbstractProtocol *proto);
     virtual void storeWidget(AbstractProtocol *proto);
+
+private slots:
+    void setAutoChecksum(bool enabled);
 };
 
 #endif

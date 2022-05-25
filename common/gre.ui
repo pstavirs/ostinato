@@ -62,8 +62,14 @@
      <property name="prefix">
       <string>0x</string>
      </property>
+     <property name="minimum">
+      <number>-1</number>
+     </property>
      <property name="maximum">
       <number>65535</number>
+     </property>
+     <property name="value">
+      <number>-1</number>
      </property>
      <property name="displayIntegerBase">
       <number>16</number>
@@ -164,6 +170,22 @@
     <hint type="destinationlabel">
      <x>125</x>
      <y>97</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>hasChecksum</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>checksum</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>87</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>109</x>
+     <y>45</y>
     </hint>
    </hints>
   </connection>

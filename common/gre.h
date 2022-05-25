@@ -58,6 +58,9 @@ public:
         gre_key,
         gre_sequence,
 
+        // Meta Fields
+        gre_isOverrideChecksum,
+
         gre_fieldCount
     };
 

@@ -89,8 +89,16 @@ AbstractProtocol::FieldFlags GreProtocol::fieldFlags(int index) const
 
     flags = AbstractProtocol::fieldFlags(index);
 
-    if (index == gre_checksum)
+    switch (index) {
+    case gre_checksum:
         flags |= CksumField;
+        break;
+
+    case gre_isOverrideChecksum:
+        flags &= ~FrameField;
+        flags |= MetaField;
+        break;
+    }
 
     return flags;
 }
@@ -218,18 +226,21 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
             if (attrib == FieldBitSize)
                 return 16;
 
-            quint32 sum = 0;
             quint16 cksum;
+            if (data.is_override_checksum()) {
+                cksum = data.checksum();
+            } else {
+                quint32 sum = 0;
+                cksum = protocolFrameCksum(streamIndex, CksumIp);
+                sum += (quint16) ~cksum;
+                cksum = protocolFramePayloadCksum(streamIndex, CksumIp);
+                sum += (quint16) ~cksum;
 
-            cksum = protocolFrameCksum(streamIndex, CksumIp);
-            sum += (quint16) ~cksum;
-            cksum = protocolFramePayloadCksum(streamIndex, CksumIp);
-            sum += (quint16) ~cksum;
+                while (sum >> 16)
+                    sum = (sum & 0xFFFF) + (sum >> 16);
 
-            while (sum >> 16)
-                sum = (sum & 0xFFFF) + (sum >> 16);
-
-            cksum = (~sum) & 0xFFFF;
+                cksum = (~sum) & 0xFFFF;
+            }
 
             switch(attrib)
             {
@@ -347,6 +358,19 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
             break;
         }
 
+        // Meta fields
+        case gre_isOverrideChecksum:
+        {
+            switch(attrib)
+            {
+                case FieldValue:
+                    return data.is_override_checksum();
+                default:
+                    break;
+            }
+            break;
+        }
+
         default:
             qFatal("%s: unimplemented case %d in switch", __PRETTY_FUNCTION__,
                 index);
@@ -404,6 +428,11 @@ bool GreProtocol::setFieldData(int index, const QVariant &value,
             uint csum = value.toUInt(&isOk);
             if (isOk)
                 data.set_checksum(csum);
+            break;
+        }
+        case gre_isOverrideChecksum:
+        {
+            data.set_is_override_checksum(value.toBool());
             break;
         }
         case gre_rsvd1:

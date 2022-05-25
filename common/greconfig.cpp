@@ -24,6 +24,9 @@ GreConfigForm::GreConfigForm(QWidget *parent)
     : AbstractProtocolConfigForm(parent)
 {
     setupUi(this);
+
+    connect(hasChecksum, SIGNAL(clicked(bool)),
+            this, SLOT(setAutoChecksum(bool)));
 }
 
 GreConfigForm::~GreConfigForm()
@@ -51,9 +54,11 @@ void GreConfigForm::loadWidget(AbstractProtocol *proto)
     hasChecksum->setChecked(flags & GRE_FLAG_CKSUM);
     checksum->setValue(
         proto->fieldData(
-            GreProtocol::gre_checksum,
-            AbstractProtocol::FieldValue
-        ).toUInt());
+            GreProtocol::gre_isOverrideChecksum,
+            AbstractProtocol::FieldValue).toBool() ?
+            proto->fieldData(
+                GreProtocol::gre_checksum,
+                AbstractProtocol::FieldValue).toUInt() : -1);
 
     hasKey->setChecked(flags & GRE_FLAG_KEY);
     key->setValue(
@@ -93,6 +98,9 @@ void GreConfigForm::storeWidget(AbstractProtocol *proto)
     proto->setFieldData(
         GreProtocol::gre_checksum,
         checksum->value());
+    proto->setFieldData(
+        GreProtocol::gre_isOverrideChecksum,
+        checksum->value() > -1 ? true: false);
 
     proto->setFieldData(
         GreProtocol::gre_key,
@@ -103,3 +111,8 @@ void GreConfigForm::storeWidget(AbstractProtocol *proto)
         sequence->value());
 }
 
+void GreConfigForm::setAutoChecksum(bool enabled)
+{
+    if (enabled)
+        checksum->setValue(-1); // auto
+}

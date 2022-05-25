@@ -28,9 +28,10 @@ message Gre {
     optional uint32    version = 3;
     optional uint32    protocol_type = 4;
     optional uint32    checksum = 5;
-    optional uint32    rsvd1 = 6;
-    optional uint32    key = 7 [default = 0x2020bad7];
-    optional uint32    sequence_num = 8;
+    optional bool      is_override_checksum = 6;
+    optional uint32    rsvd1 = 7;
+    optional uint32    key = 8 [default = 0x2020bad7];
+    optional uint32    sequence_num = 9;
 }
 
 extend Protocol {

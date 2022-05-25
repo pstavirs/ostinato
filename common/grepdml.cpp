@@ -91,9 +91,14 @@ void PdmlGreProtocol::prematureEndHandler(int /*pos*/,
  Ostinato recalculate these, you can set the is_override_length,
  is_override_cksum meta-fields to true here
 */
-void PdmlGreProtocol::postProtocolHandler(OstProto::Protocol* /*pbProto*/,
+void PdmlGreProtocol::postProtocolHandler(OstProto::Protocol* pbProto,
         OstProto::Stream* /*stream*/)
 {
+    OstProto::Gre *gre = pbProto->MutableExtension(OstProto::gre);
+
+    qDebug("GRE: post");
+
+    gre->set_is_override_checksum(overrideCksum_);
     return;
 }
 
