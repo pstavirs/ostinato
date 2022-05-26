@@ -29,11 +29,6 @@ public:
 
     static PdmlProtocol* createInstance();
 
-    virtual void preProtocolHandler(QString name,
-            const QXmlStreamAttributes &attributes, int expectedPos,
-            OstProto::Protocol *pbProto, OstProto::Stream *stream);
-    virtual void prematureEndHandler(int pos, OstProto::Protocol *pbProto,
-            OstProto::Stream *stream);
     virtual void postProtocolHandler(OstProto::Protocol *pbProto,
             OstProto::Stream *stream);
 

@@ -103,11 +103,6 @@ AbstractProtocol::FieldFlags GreProtocol::fieldFlags(int index) const
     return flags;
 }
 
-/*!
-TODO: Edit this function to return the data for each field
-
-See AbstractProtocol::fieldData() for more info
-*/
 QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
         int streamIndex) const
 {
@@ -380,11 +375,6 @@ QVariant GreProtocol::fieldData(int index, FieldAttrib attrib,
     return AbstractProtocol::fieldData(index, attrib, streamIndex);
 }
 
-/*!
-TODO: Edit this function to set the data for each field
-
-See AbstractProtocol::setFieldData() for more info
-*/
 bool GreProtocol::setFieldData(int index, const QVariant &value,
         FieldAttrib attrib)
 {
@@ -466,12 +456,6 @@ _exit:
     return isOk;
 }
 
-/*!
-  TODO: Return the protocol frame size in bytes\n
-
-  If your protocol has a fixed size - you don't need to reimplement this; the
-  base class implementation is good enough
-*/
 int GreProtocol::protocolFrameSize(int /*streamIndex*/) const
 {
     int size = 4; // mandatory fields - flags, rsvd0, version, protocol
