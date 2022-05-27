@@ -29,6 +29,11 @@ public:
         : QValidator(parent)
     {
     }
+    ULongLongValidator(qulonglong min, qulonglong max, QObject *parent = 0)
+        : QValidator(parent)
+    {
+        setRange(min, max);
+    }
     ~ULongLongValidator() {}
 
     void setRange(qulonglong min, qulonglong max)

@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "arppdml.h"
 #include "eth2pdml.h"
+#include "grepdml.h"
 #include "llcpdml.h"
 #include "icmppdml.h"
 #include "icmp6pdml.h"
@@ -62,6 +63,7 @@ PdmlReader::PdmlReader(OstProto::StreamConfigList *streams,
 
     factory_.insert("arp", PdmlArpProtocol::createInstance);
     factory_.insert("eth", PdmlEthProtocol::createInstance);
+    factory_.insert("gre", PdmlGreProtocol::createInstance);
     factory_.insert("http", PdmlTextProtocol::createInstance);
     factory_.insert("icmp", PdmlIcmpProtocol::createInstance);
     factory_.insert("icmpv6", PdmlIcmp6Protocol::createInstance);
