@@ -39,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portmanager.h"
 
 #include <QStringList>
+#include <QThread>
 
 
 extern Drone *drone;
@@ -1168,8 +1169,12 @@ void MyService::resolveDeviceNeighbors(
         response->set_status(OstProto::Ack::kRpcError);
         response->set_notes(notes.toStdString());
     }
-    else
+    else {
+        // XXX: allow time for ARP/ND to finish; if more time is required,
+        // the client should wait/check before invoking build()
+        QThread::msleep(500);
         response->set_status(OstProto::Ack::kRpcSuccess);
+    }
     done->Run();
 }
 
