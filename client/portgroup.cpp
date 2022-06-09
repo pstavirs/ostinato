@@ -1111,8 +1111,11 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         //   * modify (new) deviceGroups
         //   * add (new) stream ids
         //   * modify (new) streams
+        //   * resolve neighbors
+        //   * build packets
         // XXX: This assumes getDeviceGroupIdList() was invoked before
         // getStreamIdList() - if the order changes this code will break!
+        // XXX: See resolve/build notes below
 
         // XXX: same name as input param, but shouldn't cause any problem
         PbRpcController *controller;
@@ -1153,6 +1156,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         }
 
         // add/modify deviceGroups
+        bool resolve = false;
         if (newPortContent->device_groups_size())
         {
             OstProto::DeviceGroupIdList *deviceGroupIdList
@@ -1184,6 +1188,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
                     deviceGroupConfigList, ack,
                     NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
                         portIndex, controller));
+            resolve = true;
         }
 
         // add/modify streams
@@ -1214,6 +1219,26 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             serviceStub->modifyStream(controller, streamConfigList, ack,
                     NewCallback(this, &PortGroup::processModifyStreamAck,
                         portIndex, controller));
+            resolve = true;
+        }
+
+        // XXX: Ideally resolve and build should be called after **all**
+        // ports and portgroups are configured. As of now, any resolve
+        // replied to by ports/portgroups configured later in the open
+        // session sequence will fail.
+        // However, to do that, we may need to rethink the open session
+        // implementation - so going with this for now
+        if (resolve)
+        {
+            OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+            portIdList->add_port_id()->set_id(portId);
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(portIdList, ack);
+            serviceStub->resolveDeviceNeighbors(controller, portIdList, ack,
+                    NewCallback(this,
+                        &PortGroup::processResolveDeviceNeighborsAck,
+                        controller));
+            resolve = false;
         }
 
         // build packets using the new config
