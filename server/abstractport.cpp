@@ -471,6 +471,7 @@ int AbstractPort::updatePacketListInterleaved()
         {
         case StreamBase::e_su_bursts:
             numBursts = streamList_[i]->burstRate();
+            _burstSize = streamList_[i]->burstSize();
             if (streamList_[i]->burstRate() > 0)
             {
                 ibg = 1e9/double(streamList_[i]->burstRate());
@@ -478,11 +479,11 @@ int AbstractPort::updatePacketListInterleaved()
                 _ibg2 = quint64(floor(ibg));
                 _nb1 = quint64((ibg - double(_ibg2)) * double(numBursts));
                 _nb2 = quint64(numBursts) - _nb1;
-                _burstSize = streamList_[i]->burstSize();
             }
             break;
         case StreamBase::e_su_packets:
             numPackets = streamList_[i]->packetRate();
+            _burstSize = 1;
             if (streamList_[i]->packetRate() > 0)
             {
                 ipg = 1e9/double(streamList_[i]->packetRate());
@@ -490,7 +491,6 @@ int AbstractPort::updatePacketListInterleaved()
                 _ipg2 = quint64(floor(ipg));
                 _np1 = quint64((ipg - double(_ipg2)) * double(numPackets));
                 _np2 = quint64(numPackets) - _np1;
-                _burstSize = 1;
             }
             break;
         default:
@@ -573,6 +573,15 @@ int AbstractPort::updatePacketListInterleaved()
 
         numStreams++;
     } // for i
+
+    // handle burst/packet rate = 0
+    // i.e. send all streams "simultaneously" as fast as possible
+    // as a result all streams will be at the same rate e.g. for 2 streams,
+    // it would 50% each; for 3 streams - all at 33.3% and so on
+    if ((minGap == ULLONG_MAX)) {
+        minGap = 1;
+        duration = 1;
+    }
 
     qDebug("minGap   = %llu", minGap);
     qDebug("duration = %llu", duration);
