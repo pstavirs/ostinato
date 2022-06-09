@@ -578,7 +578,7 @@ int AbstractPort::updatePacketListInterleaved()
     // i.e. send all streams "simultaneously" as fast as possible
     // as a result all streams will be at the same rate e.g. for 2 streams,
     // it would 50% each; for 3 streams - all at 33.3% and so on
-    if ((minGap == ULLONG_MAX)) {
+    if (minGap == ULLONG_MAX) {
         minGap = 1;
         duration = 1;
     }
