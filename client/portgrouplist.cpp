@@ -68,6 +68,7 @@ bool PortGroupList::isPort(const QModelIndex& index)
 
 PortGroup& PortGroupList::portGroup(const QModelIndex& index)
 {
+    Q_ASSERT(index.isValid());
     Q_ASSERT(mPortGroupListModel.isPortGroup(index));
 
     return *(mPortGroups[index.row()]);
@@ -75,6 +76,8 @@ PortGroup& PortGroupList::portGroup(const QModelIndex& index)
 
 Port& PortGroupList::port(const QModelIndex& index)
 {
+    Q_ASSERT(index.isValid());
+    Q_ASSERT(index.parent().isValid());
     Q_ASSERT(mPortGroupListModel.isPort(index));
     return (*mPortGroups.at(index.parent().row())->mPorts[index.row()]);
 }
