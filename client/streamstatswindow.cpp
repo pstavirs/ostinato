@@ -31,7 +31,7 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
-    streamStats->addAction(actionShowByteCounters);
+    streamStats->addAction(actionShowDetails);
 
     if (id)
         setWindowTitle(windowTitle() + QString("(%1)").arg(id));
@@ -39,7 +39,7 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     count++;
 
     filterModel_ = new StreamStatsFilterModel(this);
-    filterModel_->setFilterRegExp(QRegExp(".*Pkt.*"));
+    filterModel_->setFilterRegExp(QRegExp(kDefaultFilter_));
     filterModel_->setSourceModel(model);
     streamStats->setModel(filterModel_);
 
@@ -56,10 +56,10 @@ StreamStatsWindow::~StreamStatsWindow()
         id = 0;
 }
 
-void StreamStatsWindow::on_actionShowByteCounters_triggered(bool checked)
+void StreamStatsWindow::on_actionShowDetails_triggered(bool checked)
 {
     if (checked)
         filterModel_->setFilterRegExp(QRegExp(".*"));
     else
-        filterModel_->setFilterRegExp(QRegExp(".*Pkt.*"));
+        filterModel_->setFilterRegExp(QRegExp(kDefaultFilter_));
 }

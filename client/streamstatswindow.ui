@@ -27,12 +27,12 @@ Wait a little bit to see if they appear, otherwise verify your stream stats conf
     </widget>
    </item>
   </layout>
-  <action name="actionShowByteCounters">
+  <action name="actionShowDetails">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Byte Counters</string>
+    <string>Show Details</string>
    </property>
   </action>
  </widget>
