@@ -285,6 +285,8 @@ void StreamStatsModel::appendStreamStatsList(
     if (guidList_.size() && !guidList_.contains(kAggrGuid))
         guidList_.append(kAggrGuid);
 
+    std::sort(guidList_.begin(), guidList_.end());
+
 #if QT_VERSION >= 0x040600
     endResetModel();
 #else
