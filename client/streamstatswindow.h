@@ -33,9 +33,10 @@ public:
     ~StreamStatsWindow();
 
 private slots:
-    void on_actionShowByteCounters_triggered(bool checked);
+    void on_actionShowDetails_triggered(bool checked);
 
 private:
+    QString kDefaultFilter_{"^(?!Port).*"};
     QSortFilterProxyModel *filterModel_;
 };
 

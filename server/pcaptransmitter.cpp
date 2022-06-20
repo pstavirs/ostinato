@@ -107,6 +107,10 @@ bool PcapTransmitter::isRunning()
 {
     return txThread_.isRunning();
 }
+double PcapTransmitter::lastTxDuration()
+{
+    return txThread_.lastTxDuration();
+}
 
 void PcapTransmitter::updateTxThreadStreamStats()
 {
