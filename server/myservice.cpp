@@ -426,6 +426,10 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
+    // XXX: stream stats uses port tx duration to calculate per stream
+    // rates; tx duration is for the last tx run only - so stream stats
+    // should also correspond to the last run only.
+    // Hence clear stream stats before Tx
     for (int i = 0; i < request->port_id_size(); i++)
     {
         int portId;
@@ -442,6 +446,7 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
         portLock[portId]->lockForWrite();
         if (portInfo[portId]->isDirty())
             frameError = portInfo[portId]->updatePacketList();
+        portInfo[portId]->resetStreamStatsAll();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
         if (frameError) {
