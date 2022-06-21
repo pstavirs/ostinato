@@ -246,8 +246,10 @@ void PcapTxThread::run()
     TimeStamp startTime, endTime;
 
     qDebug("packetSequenceList_.size = %d", packetSequenceList_.size());
-    if (packetSequenceList_.size() <= 0)
-        goto _exit;
+    if (packetSequenceList_.size() <= 0) {
+        lastTxDuration_ = 0.0;
+        goto _exit2;
+    }
 
     for(i = 0; i < packetSequenceList_.size(); i++) {
         qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d, usecDelay = %ld", i,
@@ -352,7 +354,10 @@ _restart:
 _exit:
     getTimeStamp(&endTime);
     lastTxDuration_ = udiffTimeStamp(&startTime, &endTime)/1e6;
+
+_exit2:
     qDebug("Tx duration = %fs", lastTxDuration_);
+    //Q_ASSERT(lastTxDuration_ >= 0);
 
     if (trackStreamStats_)
         updateStreamStats();
