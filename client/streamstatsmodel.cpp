@@ -163,20 +163,24 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         case kTxDuration:
             return QString("%L1").arg(aggrGuidStats_.value(guid).txDuration);
         case kAvgTxFrameRate:
-            return QString("%L1").arg(
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                QString("%L1").arg(
                     aggrGuidStats_.value(guid).txPkts
                         / aggrGuidStats_.value(guid).txDuration);
         case kAvgRxFrameRate:
-            return QString("%L1").arg(
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 QString("%L1").arg(
                     aggrGuidStats_.value(guid).rxPkts
                         / aggrGuidStats_.value(guid).txDuration);
         case kAvgTxBitRate:
-            return XLocale().toBitRateString(
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 XLocale().toBitRateString(
                     (aggrGuidStats_.value(guid).txBytes
                             + 24 * aggrGuidStats_.value(guid).txPkts) * 8
                         / aggrGuidStats_.value(guid).txDuration);
         case kAvgRxBitRate:
-            return XLocale().toBitRateString(
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 XLocale().toBitRateString(
                     (aggrGuidStats_.value(guid).rxBytes
                             + 24 * aggrGuidStats_.value(guid).rxPkts) * 8
                         / aggrGuidStats_.value(guid).txDuration);
