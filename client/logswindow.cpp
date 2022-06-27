@@ -182,6 +182,8 @@ void LogsWindow::alert(State state)
     // start - center of main window
     QRect start;
     QWidget *view = mainWindow;
+    if (!view)
+        return;
     alert_->setParent(view);
     alert_->raise();
     start.setSize(QSize(256, 256).scaled(view->size()/2, Qt::KeepAspectRatio));

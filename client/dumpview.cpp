@@ -262,8 +262,10 @@ void DumpView::paintEvent(QPaintEvent* /*event*/)
     // FIXME(LOW): unable to set the self widget's font in constructor
     painter.setFont(QFont("Courier"));
 
-    // set a white background
-    painter.fillRect(rect(), QBrush(QColor(Qt::white))); 
+    // Qt automatically clears the background before we are called
+    // QWidget::paintEvent doc:
+    //   When the paint event occurs, the update region has normally
+    //   been erased, so you are painting on the widget's background.
 
     if (model())
     {

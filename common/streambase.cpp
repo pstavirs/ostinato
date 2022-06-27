@@ -18,11 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "streambase.h"
+
 #include "abstractprotocol.h"
 #include "framevalueattrib.h"
 #include "protocollist.h"
 #include "protocollistiterator.h"
 #include "protocolmanager.h"
+#include "uint128.h"
+
+#include <QDebug>
 
 extern ProtocolManager *OstProtocolManager;
 extern quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex);
@@ -217,18 +221,18 @@ quint16    StreamBase::frameLen(int streamIndex) const
     // Decide a frame length based on length mode
     switch(lenMode())
     {
-        case OstProto::StreamCore::e_fl_fixed:
+        case e_fl_fixed:
             pktLen = mCore->frame_len();
             break;
-        case OstProto::StreamCore::e_fl_inc:
+        case e_fl_inc:
             pktLen = frameLenMin() + (streamIndex %
                 (frameLenMax() - frameLenMin() + 1));
             break;
-        case OstProto::StreamCore::e_fl_dec:
+        case e_fl_dec:
             pktLen = frameLenMax() - (streamIndex %
                 (frameLenMax() - frameLenMin() + 1));
             break;
-        case OstProto::StreamCore::e_fl_random:
+        case e_fl_random:
             //! \todo (MED) This 'random' sequence is same across iterations
             pktLen = 64; // to avoid the 'maybe used uninitialized' warning
             qsrand(reinterpret_cast<ulong>(this));
@@ -237,6 +241,14 @@ quint16    StreamBase::frameLen(int streamIndex) const
             pktLen = frameLenMin() + (pktLen %
                 (frameLenMax() - frameLenMin() + 1));
             break;
+        case e_fl_imix: {
+            // 64, 594, 1518 in 7:4:1 ratio
+            // sizes mixed up intentionally below
+            static int imixPattern[12]
+                = {64, 594, 64, 594, 64, 1518, 64, 64, 594, 64, 594, 64};
+            pktLen = imixPattern[streamIndex % 12];
+            break;
+        }
         default:
             qWarning("Unhandled len mode %d. Using default 64", 
                     lenMode());
@@ -282,6 +294,8 @@ quint16 StreamBase::frameLenAvg() const
 
     if (lenMode() == e_fl_fixed)
         avgFrameLen = frameLen();
+    else if (lenMode() == e_fl_imix)
+        avgFrameLen = (7*64 + 4*594 + 1*1518)/12; // 64,594,1518 in 7:4:1 ratio
     else
         avgFrameLen = (frameLenMin() + frameLenMax())/2;
 
@@ -463,12 +477,15 @@ int StreamBase::frameSizeVariableCount() const
 
     switch(lenMode())
     {
-        case OstProto::StreamCore::e_fl_fixed:
+        case e_fl_fixed:
             break;
-        case OstProto::StreamCore::e_fl_inc:
-        case OstProto::StreamCore::e_fl_dec:
-        case OstProto::StreamCore::e_fl_random:
-            count = frameLenMax() - frameLenMin() + 1;
+        case e_fl_inc:
+        case e_fl_dec:
+        case e_fl_random:
+            count = qMin(frameLenMax() - frameLenMin() + 1, frameCount());
+            break;
+        case e_fl_imix:
+            count = 12; // 7:4:1 ratio, so 7+4+1
             break;
         default:
             qWarning("%s: Unhandled len mode %d",  __FUNCTION__, lenMode());
@@ -583,6 +600,64 @@ int StreamBase::frameValue(uchar *buf, int bufMaxSize, int frameIndex,
     }
 
     return len;
+}
+
+template <typename T>
+int StreamBase::findReplace(quint32 protocolNumber, int fieldIndex,
+        QVariant findValue, QVariant findMask,
+        QVariant replaceValue, QVariant replaceMask)
+{
+    int replaceCount = 0;
+    ProtocolListIterator *iter = createProtocolListIterator();
+
+    // FIXME: Because protocol list iterator is unaware of combo protocols
+    // search for ip4.src will NOT succeed in a combo protocol containing ip4
+    while (iter->hasNext()) {
+        AbstractProtocol *proto = iter->next();
+        if (proto->protocolNumber() != protocolNumber)
+            continue;
+
+        T fieldValue = proto->fieldData(fieldIndex,
+                                    AbstractProtocol::FieldValue).value<T>();
+        qDebug() << "findReplace:"
+                 << "stream" <<  mStreamId->id()
+                 << "field" << fieldValue
+                 << "findMask" << hex << findMask.value<T>() << dec
+                 << "findValue" << findValue.value<T>();
+        if ((fieldValue & findMask.value<T>()) == findValue.value<T>()) {
+            T newValue = (fieldValue & ~replaceMask.value<T>())
+                        | (replaceValue.value<T>() & replaceMask.value<T>());
+            qDebug() << "findReplace:"
+                     << "replaceMask" << hex << replaceMask.value<T>() << dec
+                     << "replaceValue" << replaceValue.value<T>()
+                     << "newValue" << newValue;
+
+            QVariant nv;
+            nv.setValue(newValue);
+            if (proto->setFieldData(fieldIndex, nv))
+                replaceCount++;
+        }
+    }
+    delete iter;
+
+    return replaceCount;
+}
+
+int StreamBase::protocolFieldReplace(quint32 protocolNumber,
+        int fieldIndex, int fieldBitSize,
+        QVariant findValue, QVariant findMask,
+        QVariant replaceValue, QVariant replaceMask)
+{
+    if (fieldBitSize <= 64)
+        return findReplace<qulonglong>(protocolNumber, fieldIndex,
+                findValue, findMask, replaceValue, replaceMask);
+
+    if (fieldBitSize == 128)
+        return findReplace<UInt128>(protocolNumber, fieldIndex,
+                findValue, findMask, replaceValue, replaceMask);
+
+    qWarning("Unknown find/replace type %d", findValue.type());
+    return 0;
 }
 
 quint64 StreamBase::deviceMacAddress(int frameIndex) const

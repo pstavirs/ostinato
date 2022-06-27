@@ -206,6 +206,7 @@ void PortGroup::processVersionCompatibility(PbRpcController *controller)
         logError(id(), QString("checkVersion failed: %1")
                             .arg(QString::fromStdString(verCompat->notes())));
         compat = kIncompatible;
+        reconnect = false;
         emit portGroupDataChanged(mPortGroupId);
 
         QMessageBox msgBox;
@@ -253,6 +254,16 @@ void PortGroup::on_rpcChannel_disconnected()
     emit portListChanged(mPortGroupId);
     emit portGroupDataChanged(mPortGroupId);
 
+    // Disconnected during apply? Restore UI.
+    if (applyTimer_.isValid()) {
+        applyTimer_.invalidate();
+
+        emit applyFinished();
+
+        mainWindow->setEnabled(true);
+        QApplication::restoreOverrideCursor();
+    }
+
     isGetStatsPending_ = false;
 
     if (reconnect)
@@ -279,8 +290,6 @@ void PortGroup::on_rpcChannel_error(QAbstractSocket::SocketError socketError)
                               " - is it drone or some other process?")
                             .arg(rpcChannel->serverName())
                             .arg(rpcChannel->serverPort()));
-        // fall-through
-    case QAbstractSocket::RemoteHostClosedError:
         reconnect = false;
         break;
     default:
@@ -817,6 +826,7 @@ void PortGroup::processApplyBuildAck(int portIndex, PbRpcController *controller)
     logInfo(id(), mPorts[portIndex]->id(),
             QString("All port changes applied - in %1s")
                 .arg(applyTimer_.elapsed()/1e3));
+    applyTimer_.invalidate();
 
     if (controller->Failed())
     {
@@ -1101,8 +1111,11 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         //   * modify (new) deviceGroups
         //   * add (new) stream ids
         //   * modify (new) streams
+        //   * resolve neighbors
+        //   * build packets
         // XXX: This assumes getDeviceGroupIdList() was invoked before
         // getStreamIdList() - if the order changes this code will break!
+        // XXX: See resolve/build notes below
 
         // XXX: same name as input param, but shouldn't cause any problem
         PbRpcController *controller;
@@ -1143,6 +1156,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
         }
 
         // add/modify deviceGroups
+        bool resolve = false;
         if (newPortContent->device_groups_size())
         {
             OstProto::DeviceGroupIdList *deviceGroupIdList
@@ -1174,6 +1188,7 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
                     deviceGroupConfigList, ack,
                     NewCallback(this, &PortGroup::processModifyDeviceGroupAck,
                         portIndex, controller));
+            resolve = true;
         }
 
         // add/modify streams
@@ -1204,6 +1219,26 @@ void PortGroup::processStreamIdList(int portIndex, PbRpcController *controller)
             serviceStub->modifyStream(controller, streamConfigList, ack,
                     NewCallback(this, &PortGroup::processModifyStreamAck,
                         portIndex, controller));
+            resolve = true;
+        }
+
+        // XXX: Ideally resolve and build should be called after **all**
+        // ports and portgroups are configured. As of now, any resolve
+        // replied to by ports/portgroups configured later in the open
+        // session sequence will fail.
+        // However, to do that, we may need to rethink the open session
+        // implementation - so going with this for now
+        if (resolve)
+        {
+            OstProto::PortIdList *portIdList = new OstProto::PortIdList;
+            portIdList->add_port_id()->set_id(portId);
+            OstProto::Ack *ack = new OstProto::Ack;
+            controller = new PbRpcController(portIdList, ack);
+            serviceStub->resolveDeviceNeighbors(controller, portIdList, ack,
+                    NewCallback(this,
+                        &PortGroup::processResolveDeviceNeighborsAck,
+                        controller));
+            resolve = false;
         }
 
         // build packets using the new config
@@ -2017,9 +2052,12 @@ bool PortGroup::getStreamStats(QList<uint> *portList)
     if (portList == NULL)
         guidList->mutable_port_id_list()->CopyFrom(*portIdList_);
     else
-        for (int i = 0; i < portList->size(); i++)
+        for (int i = 0; i < portList->size(); i++) {
             guidList->mutable_port_id_list()->add_port_id()
                 ->set_id(portList->at(i));
+            if (mPorts.at(i)->isTransmitting())
+                logWarn(id(), i, "Port is still transmitting - stream stats may be unavailable or incomplete");
+        }
 
     serviceStub->getStreamStats(controller, guidList, statsList,
             NewCallback(this, &PortGroup::processStreamStatsList, controller));

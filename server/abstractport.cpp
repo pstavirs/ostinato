@@ -64,6 +64,11 @@ AbstractPort::~AbstractPort()
 
 void AbstractPort::init()
 {
+    if (interfaceInfo_) {
+        data_.set_speed(interfaceInfo_->speed);
+        data_.set_mtu(interfaceInfo_->mtu);
+    }
+
     if (deviceManager_)
         deviceManager_->createHostDevices();
 }    
@@ -256,7 +261,7 @@ int AbstractPort::updatePacketListSequential()
 
             switch (streamList_[i]->sendUnit())
             {
-            case OstProto::StreamControl::e_su_bursts:
+            case StreamBase::e_su_bursts:
                 burstSize = streamList_[i]->burstSize();
                 x = AbstractProtocol::lcm(frameVariableCount, burstSize);
                 n = ulong(burstSize * streamList_[i]->numBursts()) / x;
@@ -271,7 +276,7 @@ int AbstractPort::updatePacketListSequential()
                 }
                 loopDelay = ibg2;
                 break;
-            case OstProto::StreamControl::e_su_packets:
+            case StreamBase::e_su_packets:
                 x = frameVariableCount;
                 n = 2;
                 while (x < minPacketSetSize_) 
@@ -376,10 +381,10 @@ int AbstractPort::updatePacketListSequential()
 
             switch(streamList_[i]->nextWhat())
             {
-                case ::OstProto::StreamControl::e_nw_stop:
+                case StreamBase::e_nw_stop:
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_id:
+                case StreamBase::e_nw_goto_id:
                     /*! \todo (MED): define and use 
                     streamList_[i].d.control().goto_stream_id(); */
 
@@ -397,7 +402,7 @@ int AbstractPort::updatePacketListSequential()
                                 StreamBase::e_su_bursts ? ibg1 : ipg1);
                     goto _stop_no_more_pkts;
 
-                case ::OstProto::StreamControl::e_nw_goto_next:
+                case StreamBase::e_nw_goto_next:
                     break;
 
                 default:
@@ -424,6 +429,7 @@ int AbstractPort::updatePacketListInterleaved()
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e3);
+    QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
     QList<quint64> ipg1, ipg2;
@@ -460,6 +466,8 @@ int AbstractPort::updatePacketListInterleaved()
         if (!streamList_[i]->isEnabled())
             continue;
 
+        streamId.append(i);
+
         double numBursts = 0;
         double numPackets = 0;
 
@@ -471,10 +479,12 @@ int AbstractPort::updatePacketListInterleaved()
         quint64 _ipg1 = 0, _ipg2 = 0;
         quint64 _np1 = 0, _np2 = 0;
 
+
         switch (streamList_[i]->sendUnit())
         {
-        case OstProto::StreamControl::e_su_bursts:
+        case StreamBase::e_su_bursts:
             numBursts = streamList_[i]->burstRate();
+            _burstSize = streamList_[i]->burstSize();
             if (streamList_[i]->burstRate() > 0)
             {
                 ibg = 1e9/double(streamList_[i]->burstRate());
@@ -482,11 +492,11 @@ int AbstractPort::updatePacketListInterleaved()
                 _ibg2 = quint64(floor(ibg));
                 _nb1 = quint64((ibg - double(_ibg2)) * double(numBursts));
                 _nb2 = quint64(numBursts) - _nb1;
-                _burstSize = streamList_[i]->burstSize();
             }
             break;
-        case OstProto::StreamControl::e_su_packets:
+        case StreamBase::e_su_packets:
             numPackets = streamList_[i]->packetRate();
+            _burstSize = 1;
             if (streamList_[i]->packetRate() > 0)
             {
                 ipg = 1e9/double(streamList_[i]->packetRate());
@@ -494,7 +504,6 @@ int AbstractPort::updatePacketListInterleaved()
                 _ipg2 = quint64(floor(ipg));
                 _np1 = quint64((ipg - double(_ipg2)) * double(numPackets));
                 _np2 = quint64(numPackets) - _np1;
-                _burstSize = 1;
             }
             break;
         default:
@@ -578,6 +587,15 @@ int AbstractPort::updatePacketListInterleaved()
         numStreams++;
     } // for i
 
+    // handle burst/packet rate = 0
+    // i.e. send all streams "simultaneously" as fast as possible
+    // as a result all streams will be at the same rate e.g. for 2 streams,
+    // it would 50% each; for 3 streams - all at 33.3% and so on
+    if (minGap == ULLONG_MAX) {
+        minGap = 1;
+        duration = 1;
+    }
+
     qDebug("minGap   = %llu", minGap);
     qDebug("duration = %llu", duration);
 
@@ -608,7 +626,7 @@ int AbstractPort::updatePacketListInterleaved()
                 {
                     FrameValueAttrib attrib;
                     buf = pktBuf_;
-                    len = streamList_[i]->frameValue(pktBuf_, sizeof(pktBuf_), 
+                    len = streamList_[streamId.at(i)]->frameValue(pktBuf_, sizeof(pktBuf_),
                             pktCount[i], &attrib);
                     packetListAttrib += attrib;
                 }
@@ -725,6 +743,8 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
         s->mutable_stream_guid()->set_id(guid);
         s->mutable_port_id()->set_id(id());
 
+        s->set_tx_duration(lastTransmitDuration());
+
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
         s->set_rx_pkts(sst.rx_pkts);
@@ -739,6 +759,7 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 
     // FIXME: change input param to a non-OstProto type and/or have
     // a getFirst/Next like API?
+    double txDur = lastTransmitDuration();
     StreamStatsIterator i(streamStats_);
     while (i.hasNext())
     {
@@ -748,6 +769,8 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 
         s->mutable_stream_guid()->set_id(i.key());
         s->mutable_port_id()->set_id(id());
+
+        s->set_tx_duration(txDur);
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);

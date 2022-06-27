@@ -25,20 +25,9 @@
     <addaction name="actionOpenSession" />
     <addaction name="actionSaveSession" />
     <addaction name="separator" />
+    <addaction name="separator" />
     <addaction name="actionPreferences" />
     <addaction name="actionFileExit" />
-   </widget>
-   <widget class="QMenu" name="menuHelp" >
-    <property name="title" >
-     <string>&amp;Help</string>
-    </property>
-    <addaction name="actionHelpOnline" />
-    <addaction name="separator" />
-    <addaction name="actionDonate" />
-    <addaction name="actionCheckForUpdates" />
-    <addaction name="separator" />
-    <addaction name="actionHelpAbout" />
-    <addaction name="actionAboutQt" />
    </widget>
    <widget class="QMenu" name="menuEdit" >
     <property name="title" >
@@ -52,9 +41,34 @@
     <addaction name="actionViewShowMyReservedPortsOnly" />
     <addaction name="actionViewRestoreDefaults" />
    </widget>
+   <widget class="QMenu" name="menuStreams" >
+    <property name="title" >
+     <string>&amp;Streams</string>
+    </property>
+    <addaction name="actionTest" />
+   </widget>
+   <widget class="QMenu" name="menuDevices" >
+    <property name="title" >
+     <string>&amp;Devices</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionHelpOnline" />
+    <addaction name="separator" />
+    <addaction name="actionDonate" />
+    <addaction name="actionCheckForUpdates" />
+    <addaction name="separator" />
+    <addaction name="actionHelpAbout" />
+    <addaction name="actionAboutQt" />
+   </widget>
    <addaction name="menuFile" />
    <addaction name="menuEdit" />
    <addaction name="menuView" />
+   <addaction name="menuStreams" />
+   <addaction name="menuDevices" />
    <addaction name="menuHelp" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />

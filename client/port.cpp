@@ -88,7 +88,10 @@ void Port::updatePortConfig(OstProto::Port *port)
         setAlias(QString("if%1").arg(id()));
 
     if (recalc)
+    {
         recalculateAverageRates();
+        emit streamListChanged(mPortGroupId, mPortId); // show/hide 'next' col
+    }
 }
 
 void Port::updateStreamOrdinalsFromIndex()
@@ -312,6 +315,12 @@ void Port::setAverageBitRate(double bitsPerSec)
     qDebug("%s: avgPps = %g avgBps = %g numActive = %d", __FUNCTION__,
             avgPacketsPerSec_, avgBitsPerSec_, numActiveStreams_);
     emit portRateChanged(mPortGroupId, mPortId);
+}
+
+void Port::setAverageLoadRate(double load)
+{
+    Q_ASSERT(d.speed() > 0);
+    setAverageBitRate(load*d.speed()*1e6);
 }
 
 bool Port::newStreamAt(int index, OstProto::Stream const *stream)
@@ -600,7 +609,6 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
         int ret;
         optDialog->setParent(mainWindow, Qt::Dialog);
         ret = optDialog->exec();
-        optDialog->setParent(0, Qt::Dialog);
         if (ret == QDialog::Rejected)
             goto _user_opt_cancel;
     }

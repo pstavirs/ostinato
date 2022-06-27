@@ -20,8 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamstatsmodel.h"
 
 #include "protocol.pb.h"
+#include "xqlocale.h"
 
+#include <QApplication>
 #include <QBrush>
+#include <QFont>
+#include <QPalette>
 
 // XXX: Keep the enum in sync with it's string
 enum {
@@ -42,12 +46,22 @@ enum {
     kAggrTxPkts,
     kAggrRxPkts,
     kAggrPktLoss,
+    kTxDuration,
+    kAvgTxFrameRate,
+    kAvgRxFrameRate,
+    kAvgTxBitRate,
+    kAvgRxBitRate,
     kMaxAggrStreamStats
 };
 static QStringList aggrStatTitles = QStringList()
     << "Total\nTx Pkts"
     << "Total\nRx Pkts"
-    << "Total\nPkt Loss";
+    << "Total\nPkt Loss"
+    << "Duration\n(secs)"
+    << "Avg\nTx PktRate"
+    << "Avg\nRx PktRate"
+    << "Avg\nTx BitRate"
+    << "Avg\nRx BitRate";
 
 static const uint kAggrGuid = 0xffffffff;
 
@@ -103,20 +117,35 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
         return Qt::AlignRight;
 
     int portColumn = index.column() - kMaxAggrStreamStats;
-    if (role == Qt::BackgroundRole) {
-        if (portColumn < 0)
-            return QBrush(QColor("lavender")); // Aggregate Column
-        if (index.row() == (guidList_.size() - 1))
-            return QBrush(QColor("burlywood")); // Aggregate Row
-        else if ((portColumn/kMaxStreamStats) & 1)
-            return QBrush(QColor("beige")); // Color alternate Ports
+
+    // Stylesheets typically don't use or set palette colors, so if
+    // using one, don't use palette colors
+    if ((role == Qt::BackgroundRole) && qApp->styleSheet().isEmpty()) {
+        QPalette palette = QApplication::palette();
+        if (index.row() == (guidList_.size() - 1)) // Aggregate Row
+            return palette.dark();
+        if (portColumn < 0)                        // Aggregate Column
+            return palette.alternateBase();
+        if ((portColumn/kMaxStreamStats) & 1)      // Color alternate Ports
+            return palette.alternateBase();
     }
 
     Guid guid = guidList_.at(index.row());
-    if (role == Qt::ForegroundRole) {
+    if ((role == Qt::ForegroundRole && qApp->styleSheet().isEmpty())) {
+        QPalette palette = QApplication::palette();
         if ((index.column() == kAggrPktLoss)
                 && aggrGuidStats_.value(guid).pktLoss)
-            return QBrush(QColor("firebrick"));
+            return palette.link();
+        if (index.row() == (guidList_.size() - 1)) // Aggregate Row
+            return palette.brightText();
+    }
+
+    if (role == Qt::FontRole ) {
+        if (index.row() == (guidList_.size() - 1)) { // Aggregate Row
+            QFont font;
+            font.setBold(true);
+            return font;
+        }
     }
 
     if (role != Qt::DisplayRole)
@@ -131,6 +160,30 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
             return QString("%L1").arg(aggrGuidStats_.value(guid).txPkts);
         case kAggrPktLoss:
             return QString("%L1").arg(aggrGuidStats_.value(guid).pktLoss);
+        case kTxDuration:
+            return QString("%L1").arg(aggrGuidStats_.value(guid).txDuration);
+        case kAvgTxFrameRate:
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                QString("%L1").arg(
+                    aggrGuidStats_.value(guid).txPkts
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgRxFrameRate:
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 QString("%L1").arg(
+                    aggrGuidStats_.value(guid).rxPkts
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgTxBitRate:
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 XLocale().toBitRateString(
+                    (aggrGuidStats_.value(guid).txBytes
+                            + 24 * aggrGuidStats_.value(guid).txPkts) * 8
+                        / aggrGuidStats_.value(guid).txDuration);
+        case kAvgRxBitRate:
+            return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
+                 XLocale().toBitRateString(
+                    (aggrGuidStats_.value(guid).rxBytes
+                            + 24 * aggrGuidStats_.value(guid).rxPkts) * 8
+                        / aggrGuidStats_.value(guid).txDuration);
         default:
             break;
         };
@@ -214,10 +267,18 @@ void StreamStatsModel::appendStreamStatsList(
         aggrGuid.rxPkts += ss.rxPkts;
         aggrGuid.txPkts += ss.txPkts;
         aggrGuid.pktLoss += ss.txPkts - ss.rxPkts;
+        aggrGuid.rxBytes += ss.rxBytes;
+        aggrGuid.txBytes += ss.txBytes;
+        if (s.tx_duration() > aggrGuid.txDuration)
+            aggrGuid.txDuration = s.tx_duration(); // XXX: use largest or avg?
 
         aggrAggr.rxPkts += ss.rxPkts;
         aggrAggr.txPkts += ss.txPkts;
         aggrAggr.pktLoss += ss.txPkts - ss.rxPkts;
+        aggrAggr.rxBytes += ss.rxBytes;
+        aggrAggr.txBytes += ss.txBytes;
+        if (aggrGuid.txDuration > aggrAggr.txDuration)
+            aggrAggr.txDuration = aggrGuid.txDuration;
 
         if (!portList_.contains(pgp))
             portList_.append(pgp);
@@ -225,8 +286,10 @@ void StreamStatsModel::appendStreamStatsList(
             guidList_.append(guid);
     }
 
-    if (guidList_.size())
+    if (guidList_.size() && !guidList_.contains(kAggrGuid))
         guidList_.append(kAggrGuid);
+
+    std::sort(guidList_.begin(), guidList_.end());
 
 #if QT_VERSION >= 0x040600
     endResetModel();

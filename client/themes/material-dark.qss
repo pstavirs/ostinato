@@ -1,0 +1,1307 @@
+/*  ------------------------------------------------------------------------  */
+/* QtMaterial - https://github.com/UN-GCPDS/qt-material
+/* By Yeison Cardona - GCPDS
+/*  ------------------------------------------------------------------------  */
+
+*{
+  color: #ffffff;
+
+  font-family: Roboto;
+
+  
+    font-size: 11px;
+  
+
+  
+    line-height: 0px;
+  
+
+  selection-background-color: #ffff74;
+  selection-color: #000000;
+}
+
+*:focus {
+   outline: none;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Custom colors  */
+
+.danger{
+  color: #dc3545;
+  background-color: transparent;
+}
+
+.warning{
+  color: #ffc107;
+  background-color: transparent;
+}
+
+.success{
+  color: #17a2b8;
+  background-color: transparent;
+}
+
+.danger:disabled{
+  color: rgba(220, 53, 69, 0.4);
+  border-color: rgba(220, 53, 69, 0.4);
+}
+
+.warning:disabled{
+  color: rgba(255, 193, 7, 0.4);
+  border-color: rgba(255, 193, 7, 0.4);
+}
+
+.success:disabled{
+  color: rgba(23, 162, 184, 0.4);
+  border-color: rgba(23, 162, 184, 0.4);
+}
+
+.danger:flat:disabled{
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.warning:flat:disabled{
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.success:flat:disabled{
+  background-color: rgba(23, 162, 184, 0.1);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Basic widgets  */
+
+QWidget {
+  background-color: #31363b;
+}
+
+QGroupBox,
+QFrame {
+  background-color: #31363b;
+  border: 2px solid #4f5b62;
+  border-radius: 4px;
+}
+
+QGroupBox.fill_background,
+QFrame.fill_background {
+  background-color: #232629;
+  border: 2px solid #232629;
+  border-radius: 4px;
+}
+
+QSplitter {
+  background-color: transparent;
+  border: none
+}
+
+QStatusBar {
+  color: #ffffff;
+  background-color: rgba(79, 91, 98, 0.2);
+  border-radius: 0px;
+}
+
+QScrollArea,
+QStackedWidget,
+QWidget > QToolBox,
+QToolBox > QWidget,
+QTabWidget > QWidget {
+  border: none;
+}
+
+QTabWidget::pane {
+  border: none;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Inputs  */
+
+QDateTimeEdit,
+QSpinBox,
+QDoubleSpinBox,
+QTextEdit,
+QLineEdit,
+QPushButton {
+  color: #ffd740;
+  background-color: #31363b;
+  border: 2px solid #ffd740;
+  border-radius: 4px;
+  height: 24px;
+}
+
+QDateTimeEdit,
+QSpinBox,
+QDoubleSpinBox,
+QTreeView,
+QListView,
+QLineEdit,
+QComboBox {
+  padding-left: 8px;
+  border-radius: 0px;
+  background-color: #232629;
+  border-width: 0 0 2px 0;
+  border-radius: 0px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  height: 24px;
+}
+
+QPlainTextEdit {
+  border-radius: 4px;
+  padding: 0px 8px;
+  background-color: #31363b;
+  border: 2px solid #4f5b62;
+}
+
+QTextEdit {
+  padding: 0px 8px;
+  border-radius: 4px;
+  background-color: #232629;
+}
+
+QDateTimeEdit:disabled,
+QSpinBox:disabled,
+QDoubleSpinBox:disabled,
+QTextEdit:disabled,
+QLineEdit:disabled {
+  color: rgba(255, 215, 64, 0.2);
+  background-color: rgba(35, 38, 41, 0.75);
+  border: 2px solid rgba(255, 215, 64, 0.2);
+  border-width: 0 0 2px 0;
+  padding: 0px 8px;
+  border-radius: 0px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  height: 24px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QComboBox  */
+
+QComboBox {
+  color: #ffd740;
+  border: 1px solid #ffd740;
+  border-width: 0 0 2px 0;
+  background-color: #232629;
+  border-radius: 0px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  height: 28px;
+}
+
+QComboBox:disabled {
+  color: rgba(255, 215, 64, 0.2);
+  background-color: rgba(35, 38, 41, 0.75);
+  border-bottom: 2px solid rgba(255, 215, 64, 0.2);
+}
+
+QComboBox::drop-down {
+  border: none;
+  color: #ffd740;
+  width: 20px;
+}
+
+QComboBox::down-arrow {
+  image: url(:/ostinato.org/themes/material-dark/primary/downarrow.svg);
+  margin-right: 4px;
+}
+
+QComboBox::down-arrow:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/downarrow.svg);
+  margin-right: 4px;
+}
+
+QComboBox QAbstractItemView {
+  background-color: #232629;
+  border: 2px solid #4f5b62;
+  border-radius: 4px;
+}
+
+QComboBox[frame='false'] {
+  color: #ffd740;
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+QComboBox[frame='false']:disabled {
+  color: rgba(255, 215, 64, 0.2);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Spin buttons  */
+
+QDateTimeEdit::up-button,
+QDoubleSpinBox::up-button,
+QSpinBox::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 20px;
+  image: url(:/ostinato.org/themes/material-dark/primary/uparrow.svg);
+  border-width: 0px;
+  margin-right: 5px;
+}
+
+QDateTimeEdit::up-button:disabled,
+QDoubleSpinBox::up-button:disabled,
+QSpinBox::up-button:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/uparrow.svg);
+}
+
+QDateTimeEdit::down-button,
+QDoubleSpinBox::down-button,
+QSpinBox::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 20px;
+  image: url(:/ostinato.org/themes/material-dark/primary/downarrow.svg);
+  border-width: 0px;
+  border-top-width: 0;
+  margin-right: 5px;
+}
+
+QDateTimeEdit::down-button:disabled,
+QDoubleSpinBox::down-button:disabled,
+QSpinBox::down-button:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/downarrow.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QPushButton  */
+
+QPushButton {
+  text-transform: uppercase;
+  margin: 0px;
+  padding: 0px 8px;
+  height: 24px;
+  font-weight: bold;
+
+  
+    border-radius: 4px;
+  
+
+
+}
+
+QPushButton:checked,
+QPushButton:pressed {
+  color: #31363b;
+  background-color: #ffd740;
+}
+
+QPushButton:flat {
+  margin: 0px;
+  color: #ffd740;
+  border: none;
+  background-color: transparent;
+}
+
+QPushButton:flat:hover {
+  background-color: rgba(255, 215, 64, 0.2);
+}
+
+QPushButton:flat:pressed,
+QPushButton:flat:checked {
+  background-color: rgba(255, 215, 64, 0.1);
+}
+
+QPushButton:disabled {
+  color: rgba(79, 91, 98, 0.75);
+  background-color: transparent;
+  border-color:  #4f5b62;
+}
+
+QPushButton:flat:disabled {
+  color: rgba(79, 91, 98, 0.75);
+  background-color: rgba(79, 91, 98, 0.25);
+  border: none;
+}
+
+QPushButton:disabled {
+  border: 2px solid rgba(79, 91, 98, 0.75);
+}
+
+QPushButton:checked:disabled {
+  color: #232629;
+  background-color: #4f5b62;
+  border-color:  #4f5b62;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QTabBar  */
+
+QTabBar{
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+QTabBar::tab {
+  color: #ffffff;
+  border: 0px;
+}
+
+QTabBar::tab:bottom,
+QTabBar::tab:top{
+  padding: 0 8px;
+  height: 20px;
+}
+
+QTabBar::tab:left,
+QTabBar::tab:right{
+  padding: 8px 0;
+  width: 20px;
+}
+
+QTabBar::tab:top:selected,
+QTabBar::tab:top:hover {
+  color: #ffd740;
+  border-bottom: 2px solid #ffd740;
+}
+
+QTabBar::tab:bottom:selected,
+QTabBar::tab:bottom:hover {
+  color: #ffd740;
+  border-top: 2px solid #ffd740;
+}
+
+QTabBar::tab:right:selected,
+QTabBar::tab:right:hover {
+  color: #ffd740;
+  border-left: 2px solid #ffd740;
+}
+
+QTabBar::tab:left:selected,
+QTabBar::tab:left:hover {
+  color: #ffd740;
+  border-right: 2px solid #ffd740;
+}
+
+QTabBar QToolButton:hover,
+QTabBar QToolButton {
+  border: 20px;
+  background-color: #31363b;
+}
+
+QTabBar QToolButton::up-arrow {
+  image: url(:/ostinato.org/themes/material-dark/disabled/uparrow2.svg);
+}
+
+QTabBar QToolButton::up-arrow:hover {
+  image: url(:/ostinato.org/themes/material-dark/primary/uparrow2.svg);
+}
+
+QTabBar QToolButton::down-arrow {
+  image: url(:/ostinato.org/themes/material-dark/disabled/downarrow2.svg);
+}
+
+QTabBar QToolButton::down-arrow:hover {
+  image: url(:/ostinato.org/themes/material-dark/primary/downarrow2.svg);
+}
+
+QTabBar QToolButton::right-arrow {
+  image: url(:/ostinato.org/themes/material-dark/primary/rightarrow2.svg);
+}
+
+QTabBar QToolButton::right-arrow:hover {
+  image: url(:/ostinato.org/themes/material-dark/disabled/rightarrow2.svg);
+}
+
+QTabBar QToolButton::left-arrow {
+  image: url(:/ostinato.org/themes/material-dark/primary/leftarrow2.svg);
+}
+
+QTabBar QToolButton::left-arrow:hover {
+  image: url(:/ostinato.org/themes/material-dark/disabled/leftarrow2.svg);
+}
+
+QTabBar::close-button {
+  image: url(:/ostinato.org/themes/material-dark/disabled/tab_close.svg);
+}
+
+QTabBar::close-button:hover {
+  image: url(:/ostinato.org/themes/material-dark/primary/tab_close.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QGroupBox  */
+
+QGroupBox {
+  padding: 8px;
+  padding-top: 28px;
+  line-height: ;
+  text-transform: uppercase;
+  font-size: ;
+}
+
+QGroupBox::title {
+  color: rgba(255, 255, 255, 0.4);
+  subcontrol-origin: margin;
+  subcontrol-position: top left;
+  padding: 8px;
+  background-color: #31363b;
+  background-color: transparent;
+  height: 28px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QRadioButton and QCheckBox labels  */
+
+QRadioButton,
+QCheckBox {
+  spacing: 4px;
+  color: #ffffff;
+  line-height: 14px;
+  height: 28px;
+  background-color: transparent;
+  spacing: 5px;
+}
+
+QRadioButton:disabled,
+QCheckBox:disabled {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  General Indicators  */
+
+QGroupBox::indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+QMenu::indicator,
+QListView::indicator,
+QTableWidget::indicator,
+QRadioButton::indicator,
+QCheckBox::indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+ }
+
+/*  ------------------------------------------------------------------------  */
+/*  QListView Indicator  */
+
+QListView::indicator:checked,
+QListView::indicator:checked:selected,
+QListView::indicator:checked:focus {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist.svg);
+}
+
+QListView::indicator:checked:selected:active {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist_invert.svg);
+}
+
+QListView::indicator:checked:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checklist.svg);
+}
+
+QListView::indicator:indeterminate,
+QListView::indicator:indeterminate:selected,
+QListView::indicator:indeterminate:focus {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist_indeterminate.svg);
+}
+
+QListView::indicator:indeterminate:selected:active {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist_indeterminate_invert.svg);
+}
+
+QListView::indicator:indeterminate:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checklist_indeterminate.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QTableView Indicator  */
+
+QTableView::indicator:enabled:checked,
+QTableView::indicator:enabled:checked:selected,
+QTableView::indicator:enabled:checked:focus {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_checked.svg);
+}
+
+QTableView::indicator:checked:selected:active {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_checked_invert.svg);
+}
+
+QTableView::indicator:disabled:checked,
+QTableView::indicator:disabled:checked:selected,
+QTableView::indicator:disabled:checked:focus {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_checked.svg);
+}
+
+QTableView::indicator:enabled:unchecked,
+QTableView::indicator:enabled:unchecked:selected,
+QTableView::indicator:enabled:unchecked:focus {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_unchecked.svg);
+}
+
+QTableView::indicator:unchecked:selected:active {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_unchecked_invert.svg);
+}
+
+QTableView::indicator:disabled:unchecked,
+QTableView::indicator:disabled:unchecked:selected,
+QTableView::indicator:disabled:unchecked:focus {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_unchecked.svg);
+}
+
+QTableView::indicator:enabled:indeterminate,
+QTableView::indicator:enabled:indeterminate:selected,
+QTableView::indicator:enabled:indeterminate:focus {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_indeterminate.svg);
+}
+
+QTableView::indicator:indeterminate:selected:active {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_indeterminate_invert.svg);
+}
+
+QTableView::indicator:disabled:indeterminate,
+QTableView::indicator:disabled:indeterminate:selected,
+QTableView::indicator:disabled:indeterminate:focus {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_indeterminate.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QCheckBox and QGroupBox Indicator  */
+
+QCheckBox::indicator:checked,
+QGroupBox::indicator:checked {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_checked.svg);
+}
+
+QCheckBox::indicator:unchecked,
+QGroupBox::indicator:unchecked {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_unchecked.svg);
+}
+
+QCheckBox::indicator:indeterminate,
+QGroupBox::indicator:indeterminate {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_indeterminate.svg);
+}
+
+QCheckBox::indicator:checked:disabled,
+QGroupBox::indicator:checked:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_checked.svg);
+}
+
+QCheckBox::indicator:unchecked:disabled,
+QGroupBox::indicator:unchecked:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_unchecked.svg);
+}
+
+QCheckBox::indicator:indeterminate:disabled,
+QGroupBox::indicator:indeterminate:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/checkbox_indeterminate.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QRadioButton Indicator  */
+
+QRadioButton::indicator:checked {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_checked.svg);
+}
+
+QRadioButton::indicator:unchecked {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_unchecked.svg);
+}
+
+QRadioButton::indicator:checked:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/radiobutton_checked.svg);
+}
+
+QRadioButton::indicator:unchecked:disabled {
+  image: url(:/ostinato.org/themes/material-dark/disabled/radiobutton_unchecked.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QDockWidget  */
+
+QDockWidget {
+  color: #ffffff;
+  text-transform: uppercase;
+  border: 2px solid #232629;
+  titlebar-close-icon: url(:/ostinato.org/themes/material-dark/primary/close.svg);
+  titlebar-normal-icon: url(:/ostinato.org/themes/material-dark/primary/float.svg);
+  border-radius: 4px;
+}
+
+QDockWidget::title {
+  text-align: left;
+  padding-left: 28px;
+  padding: 3px;
+  margin-top: 4px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QComboBox indicator  */
+
+QComboBox::indicator:checked {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist.svg);
+}
+
+QComboBox::indicator:checked:selected {
+  image: url(:/ostinato.org/themes/material-dark/primary/checklist_invert.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Menu Items  */
+
+QComboBox::item,
+QCalendarWidget QMenu::item,
+QMenu::item {
+  height: 20px;
+  border: 8px solid transparent;
+  color: #ffffff;
+}
+
+QCalendarWidget QMenu::item,
+QMenu::item {
+  
+    padding: 0px 16px 0px 8px;  /* pyqt5 */
+  
+}
+
+QComboBox::item:selected,
+QCalendarWidget QMenu::item:selected,
+QMenu::item:selected {
+  color: #000000;
+  background-color: #ffff74;
+  border-radius: 0px;
+}
+
+QComboBox::item:disabled,
+QCalendarWidget QMenu::item:disabled,
+QMenu::item:disabled {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QMenu  */
+
+QCalendarWidget QMenu,
+QMenu {
+  background-color: #232629;
+  border: 2px solid #4f5b62;
+  border-radius: 4px;
+}
+
+QMenu::separator {
+  height: 2px;
+  background-color: #4f5b62;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+QMenu::right-arrow{
+  image: url(:/ostinato.org/themes/material-dark/primary/rightarrow.svg);
+  width: 8px;
+  height: 8px;
+}
+
+QMenu::right-arrow:selected{
+  image: url(:/ostinato.org/themes/material-dark/disabled/rightarrow.svg);
+}
+
+QMenu::indicator:non-exclusive:unchecked {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_unchecked.svg);
+}
+
+QMenu::indicator:non-exclusive:unchecked:selected {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_unchecked_invert.svg);
+}
+
+QMenu::indicator:non-exclusive:checked {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_checked.svg);
+}
+
+QMenu::indicator:non-exclusive:checked:selected {
+  image: url(:/ostinato.org/themes/material-dark/primary/checkbox_checked_invert.svg);
+}
+
+QMenu::indicator:exclusive:unchecked {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_unchecked.svg);
+}
+
+QMenu::indicator:exclusive:unchecked:selected {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_unchecked_invert.svg);
+}
+
+QMenu::indicator:exclusive:checked {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_checked.svg);
+}
+
+QMenu::indicator:exclusive:checked:selected {
+  image: url(:/ostinato.org/themes/material-dark/primary/radiobutton_checked_invert.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QMenuBar  */
+
+QMenuBar {
+  background-color: #232629;
+  color: #ffffff;
+}
+
+QMenuBar::item {
+  height: 24px;
+  padding: 8px;
+  background-color: transparent;
+  color: #ffffff;
+}
+
+QMenuBar::item:selected,
+QMenuBar::item:pressed {
+  color: #000000;
+  background-color: #ffff74;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QToolBox  */
+
+QToolBox::tab {
+  background-color: #232629;
+  color: #ffffff;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding-left: 15px;
+}
+
+QToolBox::tab:selected,
+QToolBox::tab:hover {
+  background-color: rgba(255, 215, 64, 0.2);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QProgressBar  */
+
+QProgressBar {
+  border-radius: 0;
+  background-color: #4f5b62;
+  text-align: center;
+  color: transparent;
+}
+
+QProgressBar::chunk {
+  background-color: #ffd740;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QScrollBar  */
+
+QScrollBar:horizontal {
+  border: 0;
+  background: #232629;
+  height: 0px;
+}
+
+QScrollBar:vertical {
+  border: 0;
+  background: #232629;
+  width: 0px;
+}
+
+QScrollBar::handle {
+  background: rgba(255, 215, 64, 0.1);
+}
+
+QScrollBar::handle:horizontal {
+  min-width: 16px;
+}
+
+QScrollBar::handle:vertical {
+  min-height: 16px;
+}
+
+QScrollBar::handle:vertical:hover,
+QScrollBar::handle:horizontal:hover {
+  background: #ffd740;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+  border: 0;
+  background: transparent;
+  width: 0px;
+  height: 0px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QScrollBar-Big  */
+
+QScrollBar.big:horizontal {
+  border: 0;
+  background: #232629;
+  height: 28px;
+}
+
+QScrollBar.big:vertical {
+  border: 0;
+  background: #232629;
+  width: 28px;
+}
+
+QScrollBar.big::handle,
+QScrollBar.big::handle:vertical:hover,
+QScrollBar.big::handle:horizontal:hover {
+  background: #ffd740;
+}
+
+QScrollBar.big::handle:horizontal {
+  min-width: 16px;
+}
+
+QScrollBar.big::handle:vertical {
+  min-height: 16px;
+}
+
+QScrollBar.big::add-line:vertical,
+QScrollBar.big::sub-line:vertical,
+QScrollBar.big::add-line:horizontal,
+QScrollBar.big::sub-line:horizontal {
+  border: 0;
+  background: transparent;
+  width: 0px;
+  height: 0px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QSlider  */
+
+QSlider:horizontal {
+  min-height: 16px;
+  max-height: 16px;
+}
+
+QSlider:vertical {
+  min-width: 16px;
+  max-width: 16px;
+}
+
+QSlider::groove:horizontal {
+  height: 4px;
+  background: #393939;
+  margin: 0 4px;
+}
+
+QSlider::groove:vertical {
+  width: 4px;
+  background: #393939;
+  margin: 4px 0;
+  border-radius: 16px;
+}
+
+QSlider::handle:horizontal {
+  image: url(:/ostinato.org/themes/material-dark/primary/slider.svg);
+  width: 16px;
+  height: 16px;
+  margin: -16px -4px;
+}
+
+QSlider::handle:vertical {
+  image: url(:/ostinato.org/themes/material-dark/primary/slider.svg);
+  border-radius: 16px;
+  width: 16px;
+  height: 16px;
+  margin: -4px -16px;
+}
+
+QSlider::add-page {
+background: #232629;
+}
+
+QSlider::sub-page {
+background: #ffd740;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QLabel  */
+
+QLabel {
+  border: none;
+  background: transparent;
+  color: #ffffff
+}
+
+QLabel:disabled {
+  color: rgba(255, 255, 255, 0.2)
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  VLines and HLinex  */
+
+QFrame[frameShape="4"] {
+    border-width: 1px 0 0 0;
+    background: none;
+}
+
+QFrame[frameShape="5"] {
+    border-width: 0 1px 0 0;
+    background: none;
+}
+
+QFrame[frameShape="4"],
+QFrame[frameShape="5"] {
+  border-color: #4f5b62;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QToolBar  */
+
+QToolBar {
+  background: #31363b;
+  border: 0px solid;
+}
+
+QToolBar:horizontal {
+  border-bottom: 1px solid #4f5b62;
+}
+
+QToolBar:vertical {
+  border-right: 1px solid #4f5b62;
+}
+
+QToolBar::handle:horizontal {
+  image: url(:/ostinato.org/themes/material-dark/primary/toolbar-handle-horizontal.svg);
+}
+
+QToolBar::handle:vertical {
+  image: url(:/ostinato.org/themes/material-dark/primary/toolbar-handle-vertical.svg);
+}
+
+QToolBar::separator:horizontal {
+  border-right: 1px solid #4f5b62;
+  border-left: 1px solid #4f5b62;
+  width: 1px;
+}
+
+QToolBar::separator:vertical {
+  border-top: 1px solid #4f5b62;
+  border-bottom: 1px solid #4f5b62;
+  height: 1px;
+}
+
+
+/*  ------------------------------------------------------------------------  */
+/*  QToolButton  */
+
+QToolButton {
+  background: #31363b;
+  border: 0px;
+  height: 28px;
+  margin: 3px;
+  padding: 3px;
+  border-right: 12px solid #31363b;
+  border-left: 12px solid #31363b;
+}
+
+QToolButton:hover {
+  background: #4f5b62;
+  border-right: 12px solid #4f5b62;
+  border-left: 12px solid #4f5b62;
+}
+
+QToolButton:pressed {
+  background: #232629;
+  border-right: 12px solid #232629;
+  border-left: 12px solid #232629;
+}
+
+QToolButton:checked {
+  background: #4f5b62;
+  border-left: 12px solid #4f5b62;
+  border-right: 12px solid #ffd740;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  General viewers  */
+
+QTableView {
+  background-color: #31363b;
+  border: 1px solid #232629;
+  border-radius: 4px;
+}
+
+QTreeView,
+QListView {
+  border-radius: 4px;
+  padding: 4px;
+  margin: 0px;
+  border: 0px;
+}
+
+QTableView::item,
+QTreeView::item,
+QListView::item {
+  padding: 4px;
+  min-height: 24px;
+  color: #ffffff;
+  selection-color: #ffffff; /* For Windows */
+  border-color: transparent;  /* Fix #34 */
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Items Selection */
+
+QTableView::item:selected,
+QTreeView::item:selected,
+QListView::item:selected {
+  background-color: rgba(255, 215, 64, 0.2);
+  selection-background-color: rgba(255, 215, 64, 0.2);
+  color: #ffffff;
+  selection-color: #ffffff; /* For Windows */
+}
+
+QTableView::item:selected:focus,
+QTreeView::item:selected:focus,
+QListView::item:selected:focus {
+  background-color: #ffd740;
+  selection-background-color: #ffd740;
+  color: #000000;
+  selection-color: #000000; /* For Windows */
+}
+
+QTableView {
+  selection-background-color: rgba(255, 215, 64, 0.2);
+}
+
+QTableView:focus {
+  selection-background-color: #ffd740;
+}
+
+QTableView::item:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  selection-color: rgba(255, 255, 255, 0.3);
+  background-color: #232629;
+  selection-background-color: #232629;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QTreeView  */
+
+QTreeView::branch{
+  background-color: #232629;
+}
+
+QTreeView::branch:closed:has-children:has-siblings,
+QTreeView::branch:closed:has-children:!has-siblings {
+  image: url(:/ostinato.org/themes/material-dark/primary/branch-closed.svg);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+  image: url(:/ostinato.org/themes/material-dark/primary/branch-open.svg);
+}
+
+QTreeView::branch:has-siblings:!adjoins-item {
+  border-image: url(:/ostinato.org/themes/material-dark/disabled/vline.svg) 0;
+}
+
+QTreeView::branch:has-siblings:adjoins-item {
+    border-image: url(:/ostinato.org/themes/material-dark/disabled/branch-more.svg) 0;
+}
+
+QTreeView::branch:!has-children:!has-siblings:adjoins-item,
+QTreeView::branch:has-children:!has-siblings:adjoins-item {
+    border-image: url(:/ostinato.org/themes/material-dark/disabled/branch-end.svg) 0;
+}
+
+QTreeView QHeaderView::section {
+  border: none;
+}
+
+
+/*  ------------------------------------------------------------------------  */
+/*  Custom buttons  */
+
+QPushButton.danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+QPushButton.danger:checked,
+QPushButton.danger:pressed {
+  color: #31363b;
+  background-color: #dc3545;
+}
+
+QPushButton.warning{
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+QPushButton.warning:checked,
+QPushButton.warning:pressed {
+  color: #31363b;
+  background-color: #ffc107;
+}
+
+QPushButton.success {
+  border-color: #17a2b8;
+  color: #17a2b8;
+}
+
+QPushButton.success:checked,
+QPushButton.success:pressed {
+  color: #31363b;
+  background-color: #17a2b8;
+}
+
+QPushButton.danger:flat:hover {
+  background-color: rgba(220, 53, 69, 0.2);
+}
+
+QPushButton.danger:flat:pressed,
+QPushButton.danger:flat:checked {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+QPushButton.warning:flat:hover {
+  background-color: rgba(255, 193, 7, 0.2);
+}
+
+QPushButton.warning:flat:pressed,
+QPushButton.warning:flat:checked {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+QPushButton.success:flat:hover {
+  background-color: rgba(23, 162, 184, 0.2);
+}
+
+QPushButton.success:flat:pressed,
+QPushButton.success:flat:checked {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QTableView  */
+
+QTableCornerButton::section {
+  background-color: #232629;
+  border-radius: 0px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-color: #31363b;
+}
+
+QTableView {
+  alternate-background-color: rgba(35, 38, 41, 0.7);
+}
+
+QHeaderView {
+  border: none;
+}
+
+QHeaderView::section {
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  background-color: #232629;
+  padding: 0 16px;
+  height: 28px;
+  border-radius: 0px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-color: #31363b;
+}
+
+QHeaderView::section:vertical {
+
+}
+
+QHeaderView::section:horizontal {
+
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QLCDNumber  */
+
+QLCDNumber {
+  color: #ffd740;
+  background-color:rgba(255, 215, 64, 0.1);
+  border: 1px solid rgba(255, 215, 64, 0.3);
+  border-radius: 4px;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QCalendarWidget  */
+
+#qt_calendar_prevmonth {
+  qproperty-icon: url(:/ostinato.org/themes/material-dark/primary/leftarrow.svg);
+}
+
+#qt_calendar_nextmonth {
+  qproperty-icon: url(:/ostinato.org/themes/material-dark/primary/rightarrow.svg);
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Inline QLineEdit  */
+
+QTreeView QLineEdit,
+QTableView QLineEdit,
+QListView QLineEdit {
+  color: #ffffff;
+  background-color: #232629;
+  border: 1px solid unset;
+  border-radius: unset;
+  padding: unset;
+  padding-left: unset;
+  height: unset;
+  border-width: unset;
+  border-top-left-radius: unset;
+  border-top-right-radius: unset;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QToolTip  */
+
+QToolTip {
+  padding: 4px;
+  border: 1px solid #31363b;
+  border-radius: 4px;
+  color: #ffffff;
+  background-color: #4f5b62;
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  QDialog  */
+
+
+
+QDialog QToolButton:disabled {
+  background-color: #232629;
+  color: #ffffff
+}
+
+/*  ------------------------------------------------------------------------  */
+/*  Grips  */
+
+
+QMainWindow::separator:vertical,
+QSplitter::handle:horizontal {
+  image: url(:/ostinato.org/themes/material-dark/primary/splitter-horizontal.svg);
+}
+
+QMainWindow::separator:horizontal,
+QSplitter::handle:vertical {
+  image: url(:/ostinato.org/themes/material-dark/primary/splitter-vertical.svg);
+}
+
+QSizeGrip {
+  image: url(:/ostinato.org/themes/material-dark/primary/sizegrip.svg);
+  background-color: transparent;
+}
+
+QMenuBar QToolButton:hover,
+QMenuBar QToolButton:pressed,
+QMenuBar QToolButton {
+  border-width: 0;
+  border-left: 10px;
+  border-image: url(:/ostinato.org/themes/material-dark/primary/rightarrow2.svg);
+  background-color: transparent;
+}
+
+/* Generated by qt-material 2.8.18 */

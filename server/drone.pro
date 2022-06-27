@@ -60,6 +60,7 @@ SOURCES += \
     bsdport.cpp \
     linuxhostdevice.cpp \
     linuxport.cpp \
+    linuxutils.cpp \
     params.cpp \
     turbo.cpp \
     winhostdevice.cpp \

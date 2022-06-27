@@ -61,7 +61,10 @@ private:
     struct AggrGuidStats {
         quint64 rxPkts;
         quint64 txPkts;
+        quint64 rxBytes;
+        quint64 txBytes;
         qint64 pktLoss;
+        double txDuration;
     };
     QList<Guid> guidList_;
     QList<PortGroupPort> portList_;

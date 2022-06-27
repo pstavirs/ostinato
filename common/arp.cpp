@@ -430,7 +430,7 @@ QVariant ArpProtocol::fieldData(int index, FieldAttrib attrib,
 
             switch(data.target_proto_addr_mode())
             {
-                case OstProto::Arp::kFixed:
+                case OstProto::Arp::kFixedHost:
                     protoAddr = data.target_proto_addr();
                     break;
                 case OstProto::Arp::kIncrementHost:
@@ -786,7 +786,7 @@ int ArpProtocol::protocolFrameVariableCount() const
     }
 
     if (fieldData(arp_senderProtoAddrMode, FieldValue).toUInt() 
-            != uint(OstProto::Arp::kFixed))
+            != uint(OstProto::Arp::kFixedHost))
     {
         count = AbstractProtocol::lcm(count,
                 fieldData(arp_senderProtoAddrCount, FieldValue).toUInt());
@@ -800,7 +800,7 @@ int ArpProtocol::protocolFrameVariableCount() const
     }
 
     if (fieldData(arp_targetProtoAddrMode, FieldValue).toUInt() 
-            != uint(OstProto::Arp::kFixed))
+            != uint(OstProto::Arp::kFixedHost))
     {
         count = AbstractProtocol::lcm(count,
                 fieldData(arp_targetProtoAddrCount, FieldValue).toUInt());

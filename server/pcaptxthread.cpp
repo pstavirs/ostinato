@@ -248,10 +248,13 @@ void PcapTxThread::run()
     const int kSyncTransmit = 1;
     int i;
     long overHead = 0; // overHead should be negative or zero
+    TimeStamp startTime, endTime;
 
     qDebug("packetSequenceList_.size = %d", packetSequenceList_.size());
-    if (packetSequenceList_.size() <= 0)
-        goto _exit;
+    if (packetSequenceList_.size() <= 0) {
+        lastTxDuration_ = 0.0;
+        goto _exit2;
+    }
 
     for(i = 0; i < packetSequenceList_.size(); i++) {
         qDebug("sendQ[%d]: rptCnt = %d, rptSz = %d, usecDelay = %ld", i,
@@ -265,6 +268,7 @@ void PcapTxThread::run()
 
     lastStats_ = *stats_; // used for stream stats
 
+    getTimeStamp(&startTime);
     state_ = kRunning;
     i = 0;
     while (i < packetSequenceList_.size())
@@ -353,6 +357,13 @@ _restart:
     }
 
 _exit:
+    getTimeStamp(&endTime);
+    lastTxDuration_ = udiffTimeStamp(&startTime, &endTime)/1e6;
+
+_exit2:
+    qDebug("Tx duration = %fs", lastTxDuration_);
+    //Q_ASSERT(lastTxDuration_ >= 0);
+
     if (trackStreamStats_)
         updateStreamStats();
 
@@ -391,6 +402,11 @@ void PcapTxThread::stop()
 bool PcapTxThread::isRunning()
 {
     return (state_ == kRunning);
+}
+
+double PcapTxThread::lastTxDuration()
+{
+    return lastTxDuration_;
 }
 
 int PcapTxThread::sendQueueTransmit(pcap_t *p,

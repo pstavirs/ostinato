@@ -857,7 +857,7 @@ bool AbstractProtocol::protocolHasPayload() const
   to prevent infinite recursion
 */
 quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
-    CksumType cksumType) const
+    CksumType cksumType, CksumFlags cksumFlags) const
 {
     static int recursionCount = 0;
     quint32 cksum = 0xFFFFFFFF;
@@ -872,8 +872,10 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
             QByteArray fv;
             quint16 *ip;
             quint32 len, sum = 0;
+            bool forCksum = cksumFlags.testFlag(IncludeCksumField) ?
+                                false : true;
 
-            fv = protocolFrameValue(streamIndex, true);
+            fv = protocolFrameValue(streamIndex, forCksum);
             ip = (quint16*) fv.constData();
             len = fv.size();
 
@@ -914,7 +916,26 @@ quint32 AbstractProtocol::protocolFrameCksum(int streamIndex,
             cksum = (~sum) & 0xFFFF;
             break;
         }    
+
+        case CksumIcmpIgmp:
+        {
+            quint16 cks;
+            quint32 sum = 0;
+
+            cks = protocolFrameCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+            cks = protocolFramePayloadCksum(streamIndex, CksumIp);
+            sum += (quint16) ~cks;
+
+            while(sum>>16)
+                sum = (sum & 0xFFFF) + (sum >> 16);
+
+            cksum = (~sum) & 0xFFFF;
+            break;
+        }
+
         default:
+            qDebug("Unknown cksumType %d", cksumType);
             break;
     }
 
@@ -1001,7 +1022,7 @@ quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
     if (!p)
         return 0xFFFF;
 
-    cksum = p->protocolFrameCksum(streamIndex, cksumType);
+    cksum = p->protocolFrameCksum(streamIndex, cksumType, IncludeCksumField);
     sum = (quint16) ~cksum;
     if (cksumScope == CksumScopeAdjacentProtocol)
         goto out;
@@ -1009,9 +1030,9 @@ quint32 AbstractProtocol::protocolFramePayloadCksum(int streamIndex,
     p = p->next;
     while (p)
     {
+        cksum = p->protocolFrameCksum(streamIndex, cksumType, IncludeCksumField);
         // when combining cksums, a non-first protocol starting at odd offset
         // needs a byte swap (see RFC 1071 section(s) 2A, 2B)
-        cksum = p->protocolFrameCksum(streamIndex, cksumType);
         if (p->protocolFrameOffset(streamIndex) & 0x1)
             cksum = swap16(cksum);
         sum += (quint16) ~cksum;

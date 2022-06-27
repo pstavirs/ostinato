@@ -168,14 +168,16 @@ public:
     }
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp) const
+        CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const
     {
         // For a Pseudo IP cksum, we assume it is the succeeding protocol
         // that is requesting it and hence return protoB's cksum;
         if (cksumType == CksumIpPseudo)
-            return protoB->protocolFrameCksum(streamIndex, cksumType);
+            return protoB->protocolFrameCksum(
+                                streamIndex,cksumType, cksumFlags);
 
-        return AbstractProtocol::protocolFrameCksum(streamIndex, cksumType);
+        return AbstractProtocol::protocolFrameCksum(
+                                streamIndex, cksumType, cksumFlags);
     }
 #if 0
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,

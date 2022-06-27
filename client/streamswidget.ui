@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StreamsWidget</class>
+ <widget class="QWidget" name="StreamsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>602</width>
+    <height>364</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>9</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="XTableView" name="tvStreamList">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::ActionsContextMenu</enum>
+     </property>
+     <property name="whatsThis">
+      <string>This is the stream list for the selected port
+
+A stream is a sequence of one or more packets
+
+Right-click to create a stream</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionNew_Stream">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/stream_add.png</normaloff>:/icons/stream_add.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Stream</string>
+   </property>
+  </action>
+  <action name="actionDelete_Stream">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/stream_delete.png</normaloff>:/icons/stream_delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Stream</string>
+   </property>
+  </action>
+  <action name="actionEdit_Stream">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/stream_edit.png</normaloff>:/icons/stream_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Edit Stream</string>
+   </property>
+  </action>
+  <action name="actionOpen_Streams">
+   <property name="text">
+    <string>Open Streams ...</string>
+   </property>
+  </action>
+  <action name="actionSave_Streams">
+   <property name="text">
+    <string>Save Streams ...</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_Stream">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/stream_duplicate.png</normaloff>:/icons/stream_duplicate.png</iconset>
+   </property>
+   <property name="text">
+    <string>Duplicate Stream</string>
+   </property>
+  </action>
+  <action name="actionFind_Replace">
+   <property name="icon">
+    <iconset resource="ostinato.qrc">
+     <normaloff>:/icons/find.png</normaloff>:/icons/find.png</iconset>
+   </property>
+   <property name="text">
+    <string>Find &amp;&amp; Replace</string>
+   </property>
+   <property name="toolTip">
+    <string>Find &amp; Replace protocol field values</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XTableView</class>
+   <extends>QTableView</extends>
+   <header>xtableview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="ostinato.qrc"/>
+ </resources>
+ <connections/>
+</ui>

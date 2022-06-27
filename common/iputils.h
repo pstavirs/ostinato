@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _IP_UTILS_H
 #define _IP_UTILS_H
 
+#include "uint128.h"
+
+#include <QHostAddress>
+
 namespace ipUtils {
 enum AddrMode {
     kFixed = 0,
@@ -116,6 +120,32 @@ void inline ipAddress(quint64 baseIpHi, quint64 baseIpLo, int prefix,
         default:
             qWarning("Unhandled mode = %d", mode);
     }
+}
+
+UInt128 inline ip6StringToUInt128(QString ip6Str)
+{
+    Q_IPV6ADDR addr = QHostAddress(ip6Str).toIPv6Address();
+    quint64 hi, lo;
+
+    hi =  (quint64(addr[0]) << 56)
+        | (quint64(addr[1]) << 48)
+        | (quint64(addr[2]) << 40)
+        | (quint64(addr[3]) << 32)
+        | (quint64(addr[4]) << 24)
+        | (quint64(addr[5]) << 16)
+        | (quint64(addr[6]) <<  8)
+        | (quint64(addr[7]) <<  0);
+
+    lo =  (quint64(addr[ 8]) << 56)
+        | (quint64(addr[ 9]) << 48)
+        | (quint64(addr[10]) << 40)
+        | (quint64(addr[11]) << 32)
+        | (quint64(addr[12]) << 24)
+        | (quint64(addr[13]) << 16)
+        | (quint64(addr[14]) <<  8)
+        | (quint64(addr[15]) <<  0);
+
+    return UInt128(hi, lo);
 }
 
 } // namespace ipUtils

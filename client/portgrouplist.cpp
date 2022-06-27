@@ -68,6 +68,7 @@ bool PortGroupList::isPort(const QModelIndex& index)
 
 PortGroup& PortGroupList::portGroup(const QModelIndex& index)
 {
+    Q_ASSERT(index.isValid());
     Q_ASSERT(mPortGroupListModel.isPortGroup(index));
 
     return *(mPortGroups[index.row()]);
@@ -75,6 +76,8 @@ PortGroup& PortGroupList::portGroup(const QModelIndex& index)
 
 Port& PortGroupList::port(const QModelIndex& index)
 {
+    Q_ASSERT(index.isValid());
+    Q_ASSERT(index.parent().isValid());
     Q_ASSERT(mPortGroupListModel.isPort(index));
     return (*mPortGroups.at(index.parent().row())->mPorts[index.row()]);
 }
@@ -110,8 +113,10 @@ void PortGroupList::addPortGroup(PortGroup &portGroup)
 
 void PortGroupList::removePortGroup(PortGroup &portGroup)
 {
-    mPortGroupListModel.portGroupAboutToBeRemoved(&portGroup);
+    // Disconnect before removing from list
+    portGroup.disconnectFromHost();
 
+    mPortGroupListModel.portGroupAboutToBeRemoved(&portGroup);
     PortGroup* pg = mPortGroups.takeAt(mPortGroups.indexOf(&portGroup));
     qDebug("after takeAt()");
     mPortGroupListModel.portGroupRemoved();
@@ -128,11 +133,12 @@ void PortGroupList::removeAllPortGroups()
 
     do {
         PortGroup *pg = mPortGroups.at(0);
+        pg->disconnectFromHost();
         mPortGroupListModel.portGroupAboutToBeRemoved(pg);
         mPortGroups.removeFirst();
         delete pg;
+        mPortGroupListModel.portGroupRemoved();
     } while (!mPortGroups.isEmpty());
-    mPortGroupListModel.portGroupRemoved();
 
     mPortGroupListModel.when_portListChanged();
     mPortStatsModel.when_portListChanged();

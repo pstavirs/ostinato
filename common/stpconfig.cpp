@@ -136,8 +136,7 @@ void StpConfigForm::loadWidget(AbstractProtocol *proto)
         AbstractProtocol::FieldValue
         ).toULongLong(&isOk);
 
-    ui_root_id->setText(
-        QString::number(rootId & 0x0000FFFFFFFFFFFFULL, BASE_HEX));
+    ui_root_id->setValue(rootId & 0x0000FFFFFFFFFFFFULL);
     ui_root_id_priority->setText(QString::number(rootId >> 48));
 
     ui_root_path_cost->setText(
@@ -153,8 +152,7 @@ void StpConfigForm::loadWidget(AbstractProtocol *proto)
         AbstractProtocol::FieldValue
         ).toULongLong(&isOk);
 
-    ui_bridge_id->setText(
-        QString::number(bridgeId & 0x0000FFFFFFFFFFFFULL, BASE_HEX));
+    ui_bridge_id->setValue(bridgeId & 0x0000FFFFFFFFFFFFULL);
     ui_bridge_id_priority->setText(QString::number(bridgeId >> 48));
 
     // port priority is a first byte of stp_port_id field
@@ -214,8 +212,7 @@ void StpConfigForm::storeWidget(AbstractProtocol *proto)
     // and the last 6 bytes are root MAC address (IEEE802.1D-2008)
     quint64 rootIdPrio = ui_root_id_priority->text()
         .toULongLong(&isOk) & TWO_BYTE_MAX;
-    quint64 rootId = hexStrToUInt64(
-        ui_root_id->text()) | rootIdPrio << 48;
+    quint64 rootId = ui_root_id->value() | (rootIdPrio << 48);
     proto->setFieldData(StpProtocol::stp_root_id, rootId);
 
     proto->setFieldData(
@@ -226,8 +223,7 @@ void StpConfigForm::storeWidget(AbstractProtocol *proto)
     // and the last 6 bytes are bridge MAC address (IEEE802.1D-2008)
     quint64 bridgeIdPrio =
         ui_bridge_id_priority->text().toULongLong(&isOk) & TWO_BYTE_MAX;
-    quint64 bridgeId =
-        hexStrToUInt64(ui_bridge_id->text()) | bridgeIdPrio << 48;
+    quint64 bridgeId = ui_bridge_id->value() | (bridgeIdPrio << 48);
     proto->setFieldData(StpProtocol::stp_bridge_id, bridgeId);
 
     // port priority is a first byte of stp_port_id field

@@ -78,7 +78,7 @@ void PdmlTcpProtocol::postProtocolHandler(OstProto::Protocol *pbProto,
     tcp->set_is_override_src_port(true);
     tcp->set_is_override_dst_port(true);
     tcp->set_is_override_hdrlen(true);
-    tcp->set_is_override_cksum(true);
+    tcp->set_is_override_cksum(overrideCksum_);
 
     if (options_.size())
     {

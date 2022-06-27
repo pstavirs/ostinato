@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "linuxport.h"
 
 #include "interfaceinfo.h"
+#include "linuxutils.h"
 
 #ifdef Q_OS_LINUX
 
@@ -243,10 +244,13 @@ void LinuxPort::populateInterfaceInfo()
         return;
     }
 
+    interfaceInfo_ = new InterfaceInfo;
+    interfaceInfo_->speed = sysfsAttrib(name(), "speed").toDouble();
+    interfaceInfo_->mtu = rtnl_link_get_mtu(link);
+
     int ifIndex = rtnl_link_get_ifindex(link);
     rtnl_link_put(link);
 
-    interfaceInfo_ = new InterfaceInfo;
     interfaceInfo_->mac = mac;
 
     //

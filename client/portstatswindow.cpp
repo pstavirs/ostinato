@@ -331,9 +331,24 @@ void PortStatsWindow::on_tbGetStreamStats_clicked()
         QDockWidget *statsDock = mainWindow->findChild<QDockWidget*>(
                                                             "statsDock");
         mainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+
+        // Add stream stats tab to the immediate right of port-stats ...
         mainWindow->tabifyDockWidget(statsDock, dock);
+        mainWindow->splitDockWidget(statsDock, dock, Qt::Horizontal);
+
+        // ... make it the currently visible tab  ...
         dock->show();
         dock->raise();
+
+        // ... and set tab remove behaviour
+        // XXX: unfortunately, there's no direct way to get the TabBar
+        QList<QTabBar*> tabBars = mainWindow->findChildren<QTabBar*>();
+        foreach(QTabBar* tabBar, tabBars) {
+            if (tabBar->tabText(tabBar->currentIndex())
+                            == dock->widget()->windowTitle())
+                tabBar->setSelectionBehaviorOnRemove(
+                        QTabBar::SelectPreviousTab);
+        }
     }
 
     // Get stream stats for selected ports, portgroup by portgroup

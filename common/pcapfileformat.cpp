@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 const quint32 kPcapFileMagic = 0xa1b2c3d4;
 const quint32 kPcapFileMagicSwapped = 0xd4c3b2a1;
+const quint32 kNanoSecondPcapFileMagic = 0xa1b23c4d;
+const quint32 kNanoSecondPcapFileMagicSwapped = 0x4d3cb2a1;
 const quint16 kPcapFileVersionMajor = 2;
 const quint16 kPcapFileVersionMinor = 4;
 const quint32 kMaxSnapLen = 65535;
@@ -44,9 +46,16 @@ PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
     : QDialog(NULL)
 {
     setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
     options_ = options;
 
     viaPdml->setChecked(options_->value("ViaPdml").toBool());
+    // XXX: By default this key is absent - so that pcap import tests
+    // evaluate to false and hence show minimal diffs.
+    // However, for the GUI user, this should be enabled by default.
+    recalculateCksums->setChecked(
+                        options_->value("RecalculateCksums", QVariant(true))
+                                    .toBool());
     doDiff->setChecked(options_->value("DoDiff").toBool());
 
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
@@ -59,6 +68,7 @@ PcapImportOptionsDialog::~PcapImportOptionsDialog()
 void PcapImportOptionsDialog::accept()
 {
     options_->insert("ViaPdml", viaPdml->isChecked());
+    options_->insert("RecalculateCksums", recalculateCksums->isChecked());
     options_->insert("DoDiff", doDiff->isChecked());
 
     QDialog::accept();
@@ -68,13 +78,10 @@ PcapFileFormat::PcapFileFormat()
 {
     importOptions_.insert("ViaPdml", true);
     importOptions_.insert("DoDiff", true);
-
-    importDialog_ = NULL;
 }
 
 PcapFileFormat::~PcapFileFormat()
 {
-    delete importDialog_;
 }
 
 bool PcapFileFormat::open(const QString fileName,
@@ -85,11 +92,12 @@ bool PcapFileFormat::open(const QString fileName,
     QTemporaryFile file2;
     quint32 magic;
     uchar gzipMagic[2];
+    bool nsecResolution = false;
     int len;
     PcapFileHeader fileHdr;
     PcapPacketHeader pktHdr;
     OstProto::Stream *prevStream = NULL;
-    uint lastUsec = 0;
+    quint64 lastXsec = 0;
     int pktCount;
     qint64 byteCount = 0;
     qint64 byteTotal;
@@ -159,15 +167,22 @@ _retry:
     {
         // Do nothing
     }
-    else if (magic == kPcapFileMagicSwapped)
+    else if (magic == kNanoSecondPcapFileMagic)
+    {
+        nsecResolution = true;
+    }
+    else if ((magic == kPcapFileMagicSwapped)
+            || (magic == kNanoSecondPcapFileMagicSwapped))
     {
         // Toggle Byte order
         if (fd_.byteOrder() == QDataStream::BigEndian)
             fd_.setByteOrder(QDataStream::LittleEndian);
         else
             fd_.setByteOrder(QDataStream::BigEndian);
+
+        nsecResolution = (magic == kNanoSecondPcapFileMagicSwapped);
     }
-    else // Not a pcap file
+    else // Not a pcap file (could be pcapng or something else)
     {
         if (tryConvert)
         {
@@ -219,12 +234,15 @@ _retry:
 
     pktBuf.resize(fileHdr.snapLen);
 
+    // XXX: PDML also needs the PCAP file to cross check packet bytes
+    // with the PDML data, so we can't do PDML conversion any earlier
+    // than this
     qDebug("pdml check");
     if (importOptions_.value("ViaPdml").toBool())
     {
         QProcess tshark;
         QTemporaryFile pdmlFile;
-        PdmlReader reader(&streams);
+        PdmlReader reader(&streams, importOptions_);
 
         if (!pdmlFile.open())
         {
@@ -258,6 +276,8 @@ _retry:
 
         emit status("Reading PDML packets...");
         emit target(100); // in percentage
+
+        // pdml reader needs pcap, so pass self
         isOk = reader.read(&pdmlFile, this, &stop_);
         
         if (stop_)
@@ -453,6 +473,7 @@ _retry:
     }
 
 _non_pdml:
+    qDebug("pcap resolution: %s", nsecResolution ? "nsec" : "usec");
     emit status("Reading Packets...");
     emit target(100);  // in percentage
     pktCount = 1;
@@ -480,20 +501,22 @@ _non_pdml:
         stream->mutable_control()->set_num_packets(1);
 
         // setup packet rate to the timing in pcap (as close as possible)
-        const double kUsecsInSec = 1e6;
-        uint usec = (pktHdr.tsSec*kUsecsInSec + pktHdr.tsUsec);
-        uint delta = usec - lastUsec;
+        // use quint64 rather than double to store micro/nano second as
+        // it has a larger range (~580 years) and therefore better accuracy
+        const quint64 kXsecsInSec = nsecResolution ? 1e9 : 1e6;
+        quint64 xsec = (pktHdr.tsSec*kXsecsInSec + pktHdr.tsUsec);
+        quint64 delta = xsec - lastXsec;
+        qDebug("pktCount = %d, delta = %llu", pktCount, delta);
         
         if ((pktCount != 1) && delta)
-            stream->mutable_control()->set_packets_per_sec(kUsecsInSec/delta);
+            stream->mutable_control()->set_packets_per_sec(double(kXsecsInSec)/delta);
 
         if (prevStream)
             prevStream->mutable_control()->CopyFrom(stream->control());
 
-        lastUsec = usec;
+        lastXsec = xsec;
         prevStream = stream;
         pktCount++;
-        qDebug("pktCount = %d", pktCount);
         byteCount += pktHdr.inclLen + sizeof(pktHdr);
         emit progress(int(byteCount*100/byteTotal)); // in percentage
         if (stop_)
@@ -569,7 +592,7 @@ bool PcapFileFormat::convertToStandardPcap(
     tshark.start(OstProtoLib::tsharkPath(),
             QStringList()
             << QString("-r%1").arg(fileName)
-            << "-Fpcap"
+            << "-Fnsecpcap"
             << QString("-w%1").arg(outputFileName));
     if (!tshark.waitForStarted(-1))
     {
@@ -632,7 +655,7 @@ bool PcapFileFormat::save(const OstProto::StreamConfigList streams,
 
     fd_.setDevice(&file);
 
-    fileHdr.magicNumber = kPcapFileMagic;
+    fileHdr.magicNumber = kNanoSecondPcapFileMagic;
     fileHdr.versionMajor = kPcapFileVersionMajor;
     fileHdr.versionMinor = kPcapFileVersionMinor;
     fileHdr.thisZone = 0;
@@ -680,11 +703,16 @@ bool PcapFileFormat::save(const OstProto::StreamConfigList streams,
         fd_.writeRawData(pktBuf.data(), pktHdr.inclLen);
 
         if (s.packetRate())
-            pktHdr.tsUsec += quint32(1e6/s.packetRate());
-        if (pktHdr.tsUsec >= 1000000)
+        {
+            quint64 delta = quint64(1e9/s.packetRate());
+            pktHdr.tsSec += delta/quint32(1e9);
+            pktHdr.tsUsec += delta % quint32(1e9);
+        }
+
+        if (pktHdr.tsUsec >= quint32(1e9))
         {
             pktHdr.tsSec++;
-            pktHdr.tsUsec -= 1000000;
+            pktHdr.tsUsec -= quint32(1e9);
         }
 
         emit progress(i);
@@ -705,10 +733,7 @@ _exit:
 
 QDialog* PcapFileFormat::openOptionsDialog()
 {
-    if (!importDialog_)
-        importDialog_ = new PcapImportOptionsDialog(&importOptions_);
-
-    return importDialog_;
+    return new PcapImportOptionsDialog(&importOptions_);
 }
 
 bool PcapFileFormat::isMyFileFormat(const QString /*fileName*/)

@@ -110,6 +110,7 @@ public:
     virtual void startTransmit() = 0;
     virtual void stopTransmit() = 0;
     virtual bool isTransmitOn() = 0;
+    virtual double lastTransmitDuration() = 0;
 
     virtual void startCapture() = 0;
     virtual void stopCapture() = 0;

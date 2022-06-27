@@ -68,6 +68,9 @@ public:
     }
     virtual void stopTransmit()  { transmitter_->stop();  }
     virtual bool isTransmitOn() { return transmitter_->isRunning(); }
+    virtual double lastTransmitDuration() {
+        return transmitter_->lastTxDuration();
+    }
 
     virtual void startCapture() { capturer_->start(); }
     virtual void stopCapture()  { capturer_->stop(); }
