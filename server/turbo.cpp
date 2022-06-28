@@ -24,12 +24,12 @@ bool initTurbo()
     return true;
 }
 
-bool isTurboPort(const char* device)
+bool isTurboPort(const char* /*device*/)
 {
     return false;
 }
 
-AbstractPort* createTurboPort(int id, const char* device)
+AbstractPort* createTurboPort(int /*id*/, const char* /*device*/)
 {
     return nullptr;
 }
@@ -38,5 +38,3 @@ bool processTurboOption(int /*opt*/)
 {
     return false;
 }
-#endif
-
