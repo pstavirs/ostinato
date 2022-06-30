@@ -145,7 +145,7 @@ void StreamBase::setFrameProtocol(ProtocolList protocolList)
 }
 #endif
 
-bool StreamBase::hasProtocol(quint32 protocolNumber)
+bool StreamBase::hasProtocol(quint32 protocolNumber) const
 {
     foreach(const AbstractProtocol *proto, *currentFrameProtocols)
         if (proto->protocolNumber() == protocolNumber)
@@ -681,6 +681,7 @@ quint64 StreamBase::neighborMacAddress(int frameIndex) const
 bool StreamBase::preflightCheck(QStringList &result) const
 {
     bool pass = true;
+    bool chkShort = true;
     bool chkTrunc = true;
     bool chkJumbo = true;
     int count = isFrameSizeVariable() ? frameSizeVariableCount() : 1;
@@ -688,6 +689,17 @@ bool StreamBase::preflightCheck(QStringList &result) const
     for (int i = 0; i < count; i++)
     {
         int pktLen = frameLen(i);
+
+        if (chkShort && hasProtocol(OstProto::Protocol::kSignFieldNumber)
+                && (pktLen > (frameProtocolLength(i) + kFcsSize)))
+        {
+            result << QObject::tr("Stream statistics may not work since "
+                    "frame content &lt; 64 bytes and hence will get padded - "
+                    "make sure special signature is at the end of the "
+                    "frame and frame content &ge; 64 bytes");
+            chkShort = false;
+            pass = false;
+        }
 
         if (chkTrunc && (pktLen < (frameProtocolLength(i) + kFcsSize)))
         {
