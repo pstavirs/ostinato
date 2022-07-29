@@ -14,7 +14,7 @@
 macx {
     shared.path = $${PREFIX}/Ostinato/Ostinato.app/Contents/SharedSupport/
 } else: unix {
-    shared.path = $${PREFIX}/share/ostinato/
+    shared.path = $${PREFIX}/share/ostinato-controller/
 } else {
     shared.path = $${PREFIX}/bin
 }

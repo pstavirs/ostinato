@@ -49,13 +49,13 @@ ThemeManager::ThemeManager()
      * non-install-dir/themes/
      *
      * /usr/[local]/bin/
-     * /usr/[local]/share/ostinato/themes/
+     * /usr/[local]/share/ostinato-controller/themes/
      *
      * /opt/ostinato/bin/
      * /opt/ostinato/share/themes/
      */
     if (themeDir_.contains(QRegularExpression("^/usr/.*/bin/")))
-        themeDir_.replace("/bin/", "/share/ostinato/");
+        themeDir_.replace("/bin/", "/share/ostinato-controller/");
     else if (themeDir_.contains(QRegularExpression("^/opt/.*/bin/")))
         themeDir_.replace("/bin/", "/share/");
 #endif
