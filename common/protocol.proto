@@ -216,6 +216,7 @@ message Port {
 
     optional double speed = 10; // in Mbps
     optional uint32 mtu = 11;
+    optional string user_description = 12;
 }
 
 message PortConfigList {

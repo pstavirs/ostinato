@@ -103,6 +103,10 @@ bool AbstractPort::modify(const OstProto::Port &port)
     bool ret = true;
 
     //! \todo Use reflection to find out which fields are set
+    if (port.has_user_description()) {
+        data_.set_user_description(port.user_description());
+    }
+
     if (port.has_is_exclusive_control())
     {
         bool val = port.is_exclusive_control();

@@ -32,6 +32,8 @@ PortConfigDialog::PortConfigDialog(
 
     setupUi(this);
 
+    description->setPlaceholderText(portConfig_.description().c_str());
+    description->setText(portConfig_.user_description().c_str());
     switch(portConfig_.transmit_mode())
     {
     case OstProto::kSequentialTransmit:
@@ -80,6 +82,8 @@ void PortConfigDialog::accept()
 {
     OstProto::Port pc;
 
+    pc.set_user_description(description->text().toStdString());
+
     if (sequentialStreamsButton->isChecked())
         pc.set_transmit_mode(OstProto::kSequentialTransmit);
     else if (interleavedStreamsButton->isChecked())
@@ -109,6 +113,11 @@ void PortConfigDialog::accept()
     pc.set_is_tracking_stream_stats(streamStatsButton->isChecked());
 
     // Update fields that have changed, clear the rest
+    if (pc.user_description() != portConfig_.user_description())
+        portConfig_.set_user_description(pc.user_description());
+    else
+        portConfig_.clear_user_description();
+
     if (pc.transmit_mode() != portConfig_.transmit_mode())
         portConfig_.set_transmit_mode(pc.transmit_mode());
     else

@@ -614,6 +614,8 @@ void PortsWindow::on_actionPort_Configuration_triggered()
     // TODO: extend Port::protoDataCopyInto() to accept an optional param
     // which says copy only modifiable fields
     //plm->port(current).protoDataCopyInto(&config);
+    config.set_description(port.systemDescription().toStdString());
+    config.set_user_description(port.userDescription().toStdString());
     config.set_transmit_mode(port.transmitMode());
     config.set_is_tracking_stream_stats(port.trackStreamStats());
     config.set_is_exclusive_control(port.hasExclusiveControl());

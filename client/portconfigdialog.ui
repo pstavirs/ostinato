@@ -6,14 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>244</width>
-    <height>257</height>
+    <width>248</width>
+    <height>292</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Port Config</string>
   </property>
   <layout class="QVBoxLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Description</string>
+     </property>
+     <property name="buddy">
+      <cstring>description</cstring>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="description"/>
+   </item>
    <item>
     <widget class="QGroupBox" name="transmitModeBox">
      <property name="title">
@@ -102,6 +115,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>description</tabstop>
+  <tabstop>sequentialStreamsButton</tabstop>
+  <tabstop>interleavedStreamsButton</tabstop>
+  <tabstop>reserveButton</tabstop>
+  <tabstop>exclusiveControlButton</tabstop>
+  <tabstop>streamStatsButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

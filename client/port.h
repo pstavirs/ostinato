@@ -88,8 +88,15 @@ public:
         { return d.port_id().id(); }
     const QString name() const 
         { return QString().fromStdString(d.name()); }
-    const QString description() const 
+    const QString systemDescription() const
         { return QString().fromStdString(d.description()); }
+    const QString userDescription() const
+        { return QString().fromStdString(d.user_description()); }
+    const QString description() const
+    {
+        return userDescription().isEmpty() ?
+            systemDescription() : userDescription();
+    }
     const QString notes() const 
         { return QString().fromStdString(d.notes()); }
     const QString userName() const 
