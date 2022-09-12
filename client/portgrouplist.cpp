@@ -100,6 +100,9 @@ void PortGroupList::addPortGroup(PortGroup &portGroup)
     connect(&portGroup, SIGNAL(portListChanged(quint32)),
         &mPortStatsModel, SLOT(when_portListChanged()));
 
+    connect(&portGroup, SIGNAL(portGroupDataChanged(int, int)),
+        &mPortStatsModel, SLOT(when_portGroupDataChanged(int, int)));
+
     connect(&portGroup, SIGNAL(statsChanged(quint32)),
         &mPortStatsModel, SLOT(when_portGroup_stats_update(quint32)));
 

@@ -49,7 +49,8 @@ QList<uint> PortStatsFilterDialog::getItemList(bool* ok,
     {
         QStandardItem    *item;
         
-        item = new QStandardItem(model->headerData(i, orientation).toString());
+        item = new QStandardItem(model->headerData(i, orientation)
+                                        .toString().replace('\n', ' '));
         item->setData(i, kLogicalIndex);
         item->setData(initial.indexOf(i), kVisualIndex);
         item->setFlags(Qt::ItemIsSelectable

@@ -136,6 +136,7 @@ class PortStatsModel : public QAbstractTableModel
     public slots:
         void when_portListChanged();
         //void on_portStatsUpdate(int port, void*stats);
+        void when_portGroupDataChanged(int portGroupId, int portId);
         void when_portGroup_stats_update(quint32 portGroupId);
 
     private slots:

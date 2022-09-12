@@ -280,16 +280,23 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
 
         if (numPorts.isEmpty() || section >= numPorts.last())
             return QVariant();
+
         getDomainIndexes(index(0, section), portGroupIdx, portIdx);    
+
+        PortGroup *portGroup = pgl->mPortGroups.at(portGroupIdx);
+        Port *port = portGroup->mPorts.at(portIdx);
+
         portName = QString("Port %1-%2")
-            .arg(pgl->mPortGroups.at(portGroupIdx)->id())
-            .arg(pgl->mPortGroups.at(portGroupIdx)->mPorts.at(portIdx)->id());
+            .arg(portGroup->id())
+            .arg(port->id());
         if (portGroupIdx < (uint) pgl->mPortGroups.size() 
-            && portIdx < (uint) pgl->mPortGroups.at(portGroupIdx)->mPorts.size())
+            && portIdx < (uint) portGroup->mPorts.size())
         {
-            if (!pgl->mPortGroups.at(portGroupIdx)->mPorts[portIdx]->notes()
-                    .isEmpty())
+            if (!port->notes().isEmpty())
                 portName += " *";
+            portName += "\n";
+            portName += port->userDescription().isEmpty() ?
+                port->userAlias() : port->userDescription();
         }
         return portName;
     }
@@ -361,6 +368,16 @@ void PortStatsModel::when_portListChanged()
     }
 
     endResetModel();
+}
+
+void PortStatsModel::when_portGroupDataChanged(int /*portGroupId*/, int /*portId*/)
+{
+    if (!columnCount())
+        return;
+
+    // Port (user) description may have changed - update column headers
+    // TODO: update only the changed ports, not all
+    emit headerDataChanged(Qt::Horizontal, 0, columnCount()-1);
 }
 
 // FIXME: unused? if used, the index calculation row/column needs to be swapped
