@@ -85,8 +85,14 @@ MainWindow::MainWindow(QWidget *parent)
         localServer_ = new QProcess(this);
         connect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
                 SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
+
+#if QT_VERSION >= 0x050600
+        connect(localServer_, SIGNAL(errorOccurred(QProcess::ProcessError)),
+                SLOT(onLocalServerError(QProcess::ProcessError)));
+#else
         connect(localServer_, SIGNAL(error(QProcess::ProcessError)),
                 SLOT(onLocalServerError(QProcess::ProcessError)));
+#endif
         localServer_->setProcessChannelMode(QProcess::ForwardedChannels);
         localServer_->start(serverApp, QStringList());
         QTimer::singleShot(5000, this, SLOT(stopLocalServerMonitor()));
@@ -454,8 +460,8 @@ void MainWindow::reportLocalServerError()
     if (localServer_->exitCode() == STATUS_DLL_NOT_FOUND)
         errorStr.append(tr("<p>This is most likely because Packet.dll "
                            "was not found - make sure you have "
-                           "<a href='%1'>WinPcap"
-                           "</a> installed.</p>")
+                           "<a href='%1'>npcap installed and accessible</a>."
+                           "</p>")
                                 .arg(jumpUrl("winpcap")));
 #endif
     msgBox.setText(errorStr);
