@@ -97,8 +97,10 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
     connect(plm->getPortModel(), SIGNAL(modelReset()), 
         SLOT(when_portModel_reset()));
 
+    connect(actionPort_Configuration, SIGNAL(triggered()),
+        SLOT(when_actionPort_Configuration_triggered()));
     connect(tvPortList, SIGNAL(activated(const QModelIndex&)),
-        SLOT(on_actionPort_Configuration_triggered(const QModelIndex&)));
+        SLOT(when_actionPort_Configuration_triggered(const QModelIndex&)));
     connect(tvPortList->selectionModel(),
         SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), 
         this, SLOT(when_portView_currentChanged(const QModelIndex&, 
@@ -599,7 +601,7 @@ void PortsWindow::on_actionExclusive_Control_triggered(bool checked)
     }
 }
 
-void PortsWindow::on_actionPort_Configuration_triggered(
+void PortsWindow::when_actionPort_Configuration_triggered(
         const QModelIndex &portIndex)
 {
     QModelIndex current = portIndex.isValid() ?

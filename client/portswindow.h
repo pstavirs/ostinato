@@ -80,7 +80,7 @@ private slots:
     void on_actionDisconnect_Port_Group_triggered();
 
     void on_actionExclusive_Control_triggered(bool checked);
-    void on_actionPort_Configuration_triggered(
+    void when_actionPort_Configuration_triggered(
             const QModelIndex &portIndex = QModelIndex());
 
 private:
