@@ -418,8 +418,13 @@ void MainWindow::on_actionHelpAbout_triggered()
 void MainWindow::stopLocalServerMonitor()
 {
     // We are only interested in startup errors
+#if QT_VERSION >= 0x050600
+    disconnect(localServer_, SIGNAL(errorOccurred(QProcess::ProcessError)),
+            this, SLOT(onLocalServerError(QProcess::ProcessError)));
+#else
     disconnect(localServer_, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(onLocalServerError(QProcess::ProcessError)));
+#endif
     disconnect(localServer_, SIGNAL(finished(int, QProcess::ExitStatus)),
             this, SLOT(onLocalServerFinished(int, QProcess::ExitStatus)));
 }
