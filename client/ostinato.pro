@@ -8,24 +8,27 @@ INCLUDEPATH += "../rpc/" "../common/"
 win32 {
     QMAKE_LFLAGS += -static
     CONFIG(debug, debug|release) {
-        LIBS += -L"../common/debug" -lostprotogui -lostproto
+        LIBS += -L"../common/debug" -lostfile -lostprotogui -lostproto
         LIBS += -L"../rpc/debug" -lpbrpc
         POST_TARGETDEPS += \
+            "../common/debug/libostfile.a" \
             "../common/debug/libostprotogui.a" \
             "../common/debug/libostproto.a" \
             "../rpc/debug/libpbrpc.a"
     } else {
-        LIBS += -L"../common/release" -lostprotogui -lostproto
+        LIBS += -L"../common/release" -lostfile -lostprotogui -lostproto
         LIBS += -L"../rpc/release" -lpbrpc
         POST_TARGETDEPS += \
+            "../common/release/libostfile.a" \
             "../common/release/libostprotogui.a" \
             "../common/release/libostproto.a" \
             "../rpc/release/libpbrpc.a"
     }
 } else {
-    LIBS += -L"../common" -lostprotogui -lostproto
+    LIBS += -L"../common" -lostfile -lostprotogui -lostproto
     LIBS += -L"../rpc" -lpbrpc
     POST_TARGETDEPS += \
+        "../common/libostfile.a" \
         "../common/libostprotogui.a" \
         "../common/libostproto.a" \
         "../rpc/libpbrpc.a"
