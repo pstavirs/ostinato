@@ -20,23 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PCAP_FILE_FORMAT_H
 
 #include "streamfileformat.h"
-#include "ui_pcapfileimport.h"
 
 #include <QDataStream>
 #include <QVariantMap>
-
-class PcapImportOptionsDialog: public QDialog, public Ui::PcapFileImport
-{
-public: 
-    PcapImportOptionsDialog(QVariantMap *options);
-    ~PcapImportOptionsDialog();
-
-private slots:
-    void accept();
-
-private:
-    QVariantMap *options_;
-};
 
 class PdmlReader;
 class PcapFileFormat : public StreamFileFormat

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapfileformat.h"
 
+#include "pcapfileformatoptions.h"
+
 #include "pdmlreader.h"
 #include "ostprotolib.h"
 #include "streambase.h"
@@ -41,38 +43,6 @@ const quint32 kMaxSnapLen = 65535;
 const quint32 kDltEthernet = 1;
 
 PcapFileFormat pcapFileFormat;
-
-PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
-    : QDialog(NULL)
-{
-    setupUi(this);
-    setAttribute(Qt::WA_DeleteOnClose);
-    options_ = options;
-
-    viaPdml->setChecked(options_->value("ViaPdml").toBool());
-    // XXX: By default this key is absent - so that pcap import tests
-    // evaluate to false and hence show minimal diffs.
-    // However, for the GUI user, this should be enabled by default.
-    recalculateCksums->setChecked(
-                        options_->value("RecalculateCksums", QVariant(true))
-                                    .toBool());
-    doDiff->setChecked(options_->value("DoDiff").toBool());
-
-    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-}
-
-PcapImportOptionsDialog::~PcapImportOptionsDialog()
-{
-}
-
-void PcapImportOptionsDialog::accept()
-{
-    options_->insert("ViaPdml", viaPdml->isChecked());
-    options_->insert("RecalculateCksums", recalculateCksums->isChecked());
-    options_->insert("DoDiff", doDiff->isChecked());
-
-    QDialog::accept();
-}
 
 PcapFileFormat::PcapFileFormat()
 {
