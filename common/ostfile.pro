@@ -24,6 +24,9 @@ HEADERS = \
     sessionfileformat.h \
     streamfileformat.h
 
+HEADERS += \
+    pcapfileformatoptions.h
+
 SOURCES += \
     ostprotolib.cpp \
     nativefileformat.cpp \
@@ -38,6 +41,9 @@ SOURCES += \
     sessionfileformat.cpp \
     streamfileformat.cpp \
     spinboxdelegate.cpp
+
+SOURCES += \
+    pcapfileformatoptions.cpp
 
 SOURCES += \
     vlanpdml.cpp \
