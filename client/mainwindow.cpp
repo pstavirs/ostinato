@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #endif
 
 #include "clipboardhelper.h"
+#include "fileformatoptions.h"
 #include "jumpurl.h"
 #include "logsmodel.h"
 #include "logswindow.h"
@@ -541,7 +542,7 @@ bool MainWindow::openSession(QString fileName, QString &error)
         goto _fail;
     }
 
-    if ((optDialog = fmt->openOptionsDialog()))
+    if ((optDialog = FileFormatOptions::openOptionsDialog(fmt)))
     {
         int ret;
         optDialog->setParent(this, Qt::Dialog);

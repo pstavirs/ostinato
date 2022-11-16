@@ -23,10 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "fileformat.pb.h"
 #include "protocol.pb.h"
 
-#include <QThread>
 #include <QString>
-
-class QDialog;
+#include <QThread>
+#include <QVariantMap>
 
 class SessionFileFormat : public QThread
 {
@@ -42,8 +41,7 @@ public:
     virtual bool save(const OstProto::SessionContent &session,
             const QString fileName, QString &error) = 0;
 
-    virtual QDialog* openOptionsDialog();
-    virtual QDialog* saveOptionsDialog();
+    virtual QVariantMap* options();
 
     void openAsync(const QString fileName,
             OstProto::SessionContent &session, QString &error);

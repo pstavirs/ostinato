@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PcapImportOptionsDialog::PcapImportOptionsDialog(QVariantMap *options)
     : QDialog(NULL)
 {
+    Q_ASSERT(options != NULL);
+
     setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     options_ = options;

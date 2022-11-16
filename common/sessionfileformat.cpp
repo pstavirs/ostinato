@@ -32,12 +32,7 @@ SessionFileFormat::~SessionFileFormat()
 {
 }
 
-QDialog* SessionFileFormat::openOptionsDialog()
-{
-    return NULL;
-}
-
-QDialog* SessionFileFormat::saveOptionsDialog()
+QVariantMap* SessionFileFormat::options()
 {
     return NULL;
 }

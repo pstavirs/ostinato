@@ -38,7 +38,7 @@ public:
     bool save(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error);
 
-    virtual QDialog* openOptionsDialog();
+    virtual QVariantMap* options();
 
     bool isMyFileFormat(const QString fileName);
     bool isMyFileType(const QString fileType);

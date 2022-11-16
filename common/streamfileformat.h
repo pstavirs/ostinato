@@ -41,8 +41,7 @@ public:
     virtual bool save(const OstProto::StreamConfigList streams,
             const QString fileName, QString &error) = 0;
 
-    virtual QDialog* openOptionsDialog();
-    virtual QDialog* saveOptionsDialog();
+    virtual QVariantMap* options();
 
     void openAsync(const QString fileName,
             OstProto::StreamConfigList &streams, QString &error);

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "port.h"
 
 #include "emulation.h"
+#include "fileformatoptions.h"
 #include "streamfileformat.h"
 
 #include <QApplication>
@@ -604,7 +605,7 @@ bool Port::openStreams(QString fileName, bool append, QString &error)
         goto _fail;
     }
 
-    if ((optDialog = fmt->openOptionsDialog()))
+    if ((optDialog = FileFormatOptions::openOptionsDialog(fmt)))
     {
         int ret;
         optDialog->setParent(mainWindow, Qt::Dialog);

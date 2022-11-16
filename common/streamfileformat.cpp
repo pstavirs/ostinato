@@ -35,12 +35,7 @@ StreamFileFormat::~StreamFileFormat()
 {
 }
 
-QDialog* StreamFileFormat::openOptionsDialog()
-{
-    return NULL;
-}
-
-QDialog* StreamFileFormat::saveOptionsDialog()
+QVariantMap* StreamFileFormat::options()
 {
     return NULL;
 }
