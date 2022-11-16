@@ -67,6 +67,7 @@ HEADERS += \
     userscriptconfig.h
 
 SOURCES += \
+    spinboxdelegate.cpp \
     tosdscp.cpp
 
 SOURCES += \
