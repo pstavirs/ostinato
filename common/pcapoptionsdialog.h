@@ -16,8 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef _PCAP_FILE_FORMAT_OPTIONS_H
-#define _PCAP_FILE_FORMAT_OPTIONS_H
+#ifndef _PCAP_OPTIONS_DIALOG_H
+#define _PCAP_OPTIONS_DIALOG_H
 
 #include "ui_pcapfileimport.h"
 
