@@ -25,7 +25,7 @@ HEADERS = \
     streamfileformat.h
 
 HEADERS += \
-    pcapfileformatoptions.h
+    pcapoptionsdialog.h
 
 SOURCES += \
     ostprotolib.cpp \
@@ -43,7 +43,7 @@ SOURCES += \
     spinboxdelegate.cpp
 
 SOURCES += \
-    pcapfileformatoptions.cpp
+    pcapoptionsdialog.cpp
 
 SOURCES += \
     vlanpdml.cpp \
