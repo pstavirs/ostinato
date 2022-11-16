@@ -701,9 +701,9 @@ _exit:
     return isOk;
 }
 
-QDialog* PcapFileFormat::openOptionsDialog()
+QVariantMap* PcapFileFormat::options()
 {
-    return new PcapImportOptionsDialog(&importOptions_);
+    return &importOptions_;
 }
 
 bool PcapFileFormat::isMyFileFormat(const QString /*fileName*/)

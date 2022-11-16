@@ -25,6 +25,7 @@ HEADERS = \
     streamfileformat.h
 
 HEADERS += \
+    fileformatoptions.h \
     pcapoptionsdialog.h
 
 SOURCES += \
@@ -43,6 +44,7 @@ SOURCES += \
     spinboxdelegate.cpp
 
 SOURCES += \
+    fileformatoptions.cpp \
     pcapoptionsdialog.cpp
 
 SOURCES += \
