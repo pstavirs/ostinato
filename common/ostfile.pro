@@ -41,7 +41,6 @@ SOURCES += \
     pdmlreader.cpp \
     sessionfileformat.cpp \
     streamfileformat.cpp \
-    spinboxdelegate.cpp
 
 SOURCES += \
     fileformatoptions.cpp \
