@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapfileformat.h"
 
-#include "pcapoptionsdialog.h"
-
 #include "pdmlreader.h"
 #include "ostprotolib.h"
 #include "streambase.h"
