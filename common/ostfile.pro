@@ -1,11 +1,8 @@
 TEMPLATE = lib
 CONFIG += qt staticlib
-QT += widgets network xml script
+QT += network xml script
 LIBS += \
     -lprotobuf
-
-FORMS = \
-    pcapfileimport.ui \
 
 PROTOS = \
     fileformat.proto 
@@ -24,10 +21,6 @@ HEADERS = \
     sessionfileformat.h \
     streamfileformat.h
 
-HEADERS += \
-    fileformatoptions.h \
-    pcapoptionsdialog.h
-
 SOURCES += \
     ostprotolib.cpp \
     nativefileformat.cpp \
@@ -41,10 +34,6 @@ SOURCES += \
     pdmlreader.cpp \
     sessionfileformat.cpp \
     streamfileformat.cpp \
-
-SOURCES += \
-    fileformatoptions.cpp \
-    pcapoptionsdialog.cpp
 
 SOURCES += \
     vlanpdml.cpp \

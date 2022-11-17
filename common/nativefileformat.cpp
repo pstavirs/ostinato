@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "crc32c.h"
 
-#include <QApplication>
+#include <QCoreApplication>
 #include <QFile>
 #include <QVariant>
 
@@ -437,17 +437,19 @@ _exit:
 
 void NativeFileFormat::initFileMetaData(OstProto::FileMetaData &metaData)
 {
+    QCoreApplication *app = QCoreApplication::instance();
+
     // Fill in the "native" file format version
     metaData.set_format_version_major(kFileFormatVersionMajor);
     metaData.set_format_version_minor(kFileFormatVersionMinor);
     metaData.set_format_version_revision(kFileFormatVersionRevision);
 
     metaData.set_generator_name(
-        qApp->applicationName().toUtf8().constData());
+        app->applicationName().toUtf8().constData());
     metaData.set_generator_version(
-        qApp->property("version").toString().toUtf8().constData());
+        app->property("version").toString().toUtf8().constData());
     metaData.set_generator_revision(
-        qApp->property("revision").toString().toUtf8().constData());
+        app->property("revision").toString().toUtf8().constData());
 }
 
 int NativeFileFormat::fileMetaSize(const quint8* file, int size)
