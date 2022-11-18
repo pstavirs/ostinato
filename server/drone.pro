@@ -7,6 +7,8 @@ linux*:system(grep -q IFLA_STATS64 /usr/include/linux/if_link.h): \
     DEFINES += HAVE_IFLA_STATS64
 INCLUDEPATH += "../common"
 INCLUDEPATH += "../rpc"
+
+OBJDIR = .
 win32 {
     # Support Windows Vista and above only
     DEFINES += WIN32_LEAN_AND_MEAN NTDDI_VERSION=0x06000000 _WIN32_WINNT=0x0600
@@ -15,24 +17,19 @@ win32 {
     QMAKE_LFLAGS += -static
     LIBS += -lwpcap -lpacket -liphlpapi
     CONFIG(debug, debug|release) {
-        LIBS += -L"../common/debug" -lostproto
-        LIBS += -L"../rpc/debug" -lpbrpc
-        POST_TARGETDEPS += \
-            "../common/debug/libostproto.a" \
-            "../rpc/debug/libpbrpc.a"
+        OBJDIR = debug
     } else {
-        LIBS += -L"../common/release" -lostproto
-        LIBS += -L"../rpc/release" -lpbrpc
-        POST_TARGETDEPS += \
-            "../common/release/libostproto.a" \
-            "../rpc/release/libpbrpc.a"
+        OBJDIR = release
     }
 } else {
     LIBS += -lpcap
-    LIBS += -L"../common" -lostproto
-    LIBS += -L"../rpc" -lpbrpc
-    POST_TARGETDEPS += "../common/libostproto.a" "../rpc/libpbrpc.a"
 }
+LIBS += -L"../common/$$OBJDIR" -lostproto
+LIBS += -L"../rpc/$$OBJDIR" -lpbrpc
+POST_TARGETDEPS += \
+    "../common/$$OBJDIR//libostproto.a" \
+    "../rpc/$$OBJDIR/libpbrpc.a"
+
 linux {
     INCLUDEPATH += "/usr/include/libnl3"
     LIBS += -lnl-3 -lnl-route-3

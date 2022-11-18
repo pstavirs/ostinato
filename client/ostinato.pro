@@ -5,40 +5,26 @@ win32:RC_FILE = ostinato.rc
 macx:ICON = icons/logo.icns
 QT += widgets network script xml svg
 INCLUDEPATH += "../rpc/" "../common/"
+
+OBJDIR = .
 win32 {
     QMAKE_LFLAGS += -static
     CONFIG(debug, debug|release) {
-        LIBS += -L"../common/debug" -lostfilegui -lostfile
-        LIBS += -L"../common/debug" -lostprotogui -lostproto
-        LIBS += -L"../rpc/debug" -lpbrpc
-        POST_TARGETDEPS += \
-            "../common/debug/libostfilegui.a" \
-            "../common/debug/libostfile.a" \
-            "../common/debug/libostprotogui.a" \
-            "../common/debug/libostproto.a" \
-            "../rpc/debug/libpbrpc.a"
+        OBJDIR = debug
     } else {
-        LIBS += -L"../common/release" -lostfilegui -lostfile
-        LIBS += -L"../common/release" -lostprotogui -lostproto
-        LIBS += -L"../rpc/release" -lpbrpc
-        POST_TARGETDEPS += \
-            "../common/release/libostfilegui.a" \
-            "../common/release/libostfile.a" \
-            "../common/release/libostprotogui.a" \
-            "../common/release/libostproto.a" \
-            "../rpc/release/libpbrpc.a"
+        OBJDIR = release
     }
-} else {
-    LIBS += -L"../common" -lostfile -lostfilegui
-    LIBS += -L"../common" -lostprotogui -lostproto
-    LIBS += -L"../rpc" -lpbrpc
-    POST_TARGETDEPS += \
-        "../common/libostfilegui.a" \
-        "../common/libostfile.a" \
-        "../common/libostprotogui.a" \
-        "../common/libostproto.a" \
-        "../rpc/libpbrpc.a"
 }
+LIBS += -L"../common/$$OBJDIR" -lostfile -lostfilegui
+LIBS += -L"../common/$$OBJDIR" -lostprotogui -lostproto
+LIBS += -L"../rpc/$$OBJDIR" -lpbrpc
+POST_TARGETDEPS += \
+    "../common/$$OBJDIR/libostfilegui.a" \
+    "../common/$$OBJDIR/libostfile.a" \
+    "../common/$$OBJDIR/libostprotogui.a" \
+    "../common/$$OBJDIR/libostproto.a" \
+    "../rpc/$$OBJDIR/libpbrpc.a"
+
 LIBS += -lprotobuf
 LIBS += -L"../extra/qhexedit2/$(OBJECTS_DIR)/" -lqhexedit2
 RESOURCES += ostinato.qrc 
