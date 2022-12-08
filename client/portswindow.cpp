@@ -108,7 +108,8 @@ PortsWindow::PortsWindow(PortGroupList *pgl, QWidget *parent)
 
     connect(this,
             SIGNAL(currentPortChanged(const QModelIndex&, const QModelIndex&)),
-            portWidget, SLOT(setCurrentPortIndex(const QModelIndex&)));
+            portWidget,
+            SLOT(setCurrentPortIndex(const QModelIndex&, const QModelIndex&)));
     connect(this,
             SIGNAL(currentPortChanged(const QModelIndex&, const QModelIndex&)),
             streamsWidget, SLOT(setCurrentPortIndex(const QModelIndex&)));

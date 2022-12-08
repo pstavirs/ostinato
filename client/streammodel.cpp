@@ -361,15 +361,13 @@ void StreamModel::setCurrentPortIndex(const QModelIndex &current)
     else
     {
         qDebug("change to valid port");
-        // Disconnect any existing connection to avoid duplication 
-        // Qt 4.6 has Qt::UniqueConnection, but we want to remain compatible
-        // with earlier Qt versions
         if (mCurrentPort)
         {
             disconnect(mCurrentPort, SIGNAL(streamListChanged(int, int)),
                     this, SLOT(when_mCurrentPort_streamListChanged(int, int)));
         }
         quint16 pg = current.internalId() >> 16;
+        // TODO: make mCurrentPort a smart weak pointer
         mCurrentPort = pgl->mPortGroups[pgl->indexOfPortGroup(pg)]->mPorts[current.row()];
         connect(mCurrentPort, SIGNAL(streamListChanged(int, int)),
                 this, SLOT(when_mCurrentPort_streamListChanged(int, int)));

@@ -37,7 +37,8 @@ public:
     void setPortGroupList(PortGroupList *portGroups);
 
 public slots:
-    void setCurrentPortIndex(const QModelIndex &portIndex);
+    void setCurrentPortIndex(const QModelIndex &currentIndex,
+                             const QModelIndex &previousIndex);
 
 private slots:
 

@@ -48,30 +48,34 @@ PortWidget::~PortWidget()
 {
 }
 
-void PortWidget::setCurrentPortIndex(const QModelIndex &portIndex)
+void PortWidget::setCurrentPortIndex(const QModelIndex &currentIndex,
+                                     const QModelIndex &previousIndex)
 {
     if (!plm)
         return;
 
-    // XXX: We assume portIndex corresponds to sourceModel, not proxyModel
-    if (!plm->isPort(portIndex))
-        return;
+    qDebug("In %s", __PRETTY_FUNCTION__);
 
-    qDebug("In %s", __FUNCTION__);
+    // XXX: We assume indices corresponds to sourceModel, not proxyModel
+    // - caller/sender should ensure this
 
     // Disconnect previous port
-    if (plm->isPort(currentPortIndex_))
-        disconnect(&(plm->port(currentPortIndex_)),
+    if (plm->isPort(previousIndex))
+        disconnect(&(plm->port(previousIndex)),
                 SIGNAL(portRateChanged(int, int)),
                 this, SLOT(updatePortRates()));
 
-    currentPortIndex_ = portIndex;
+    if (!plm->isPort(currentIndex)) {
+        currentPortIndex_ = QModelIndex(); // set to invalid
+        return;
+    }
+
+    currentPortIndex_ = currentIndex;
 
     // Connect current port
-    if (plm->isPort(currentPortIndex_))
-        connect(&(plm->port(currentPortIndex_)),
-                SIGNAL(portRateChanged(int, int)),
-                this, SLOT(updatePortRates()));
+    connect(&(plm->port(currentPortIndex_)),
+            SIGNAL(portRateChanged(int, int)),
+            this, SLOT(updatePortRates()));
 
     double speed = plm->port(currentPortIndex_).speed();
     portSpeed->setText(QString("Max %L1 Mbps").arg(speed));

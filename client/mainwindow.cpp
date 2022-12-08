@@ -174,6 +174,7 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(onNewVersion(QString)));
     updater->checkForNewVersion();
 
+    // TODO: If session file specified (and valid?), don't add local drone PG
     // Add the "Local" Port Group
     if (appParams.optLocalDrone()) {
         PortGroup *pg = new PortGroup;

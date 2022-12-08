@@ -126,6 +126,8 @@ void StreamsWidget::on_tvStreamList_activated(const QModelIndex & index)
 
     qDebug("stream list activated\n");
 
+    Q_ASSERT(plm->isPort(currentPortIndex_));
+
     Port &curPort = plm->port(currentPortIndex_);
 
     QList<Stream*> streams;
@@ -143,11 +145,10 @@ void StreamsWidget::setCurrentPortIndex(const QModelIndex &portIndex)
     if (!plm)
         return;
 
-    // XXX: We assume portIndex corresponds to sourceModel, not proxyModel
-    if (!plm->isPort(portIndex))
-        return;
+    // XXX: We assume portIndex corresponds to sourceModel, not proxyModel;
+    // caller should ensure this
 
-    qDebug("In %s", __FUNCTION__);
+    qDebug("In %s", __PRETTY_FUNCTION__);
 
     currentPortIndex_ = portIndex;
     plm->getStreamModel()->setCurrentPortIndex(portIndex);
@@ -223,6 +224,8 @@ void StreamsWidget::on_actionNew_Stream_triggered()
         count = selectionModel->selection().at(0).height();
     }
 
+    Q_ASSERT(plm->isPort(currentPortIndex_));
+
     Port &curPort = plm->port(currentPortIndex_);
 
     QList<Stream*> streams;
@@ -243,6 +246,8 @@ void StreamsWidget::on_actionEdit_Stream_triggered()
     if (!streamModel->hasSelection())
         return;
 
+    Q_ASSERT(plm->isPort(currentPortIndex_));
+
     Port &curPort = plm->port(currentPortIndex_);
 
     QList<Stream*> streams;
@@ -261,6 +266,8 @@ void StreamsWidget::on_actionDuplicate_Stream_triggered()
     QItemSelectionModel* model = tvStreamList->selectionModel();
 
     qDebug("Duplicate Stream Action");
+
+    Q_ASSERT(plm->isPort(currentPortIndex_));
 
     if (model->hasSelection())
     {
@@ -303,6 +310,8 @@ void StreamsWidget::on_actionDelete_Stream_triggered()
 void StreamsWidget::on_actionFind_Replace_triggered()
 {
     qDebug("Find & Replace Action");
+
+    Q_ASSERT(plm->isPort(currentPortIndex_));
 
     QItemSelectionModel* selectionModel = tvStreamList->selectionModel();
     FindReplaceDialog::Action action;
