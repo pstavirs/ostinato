@@ -25,10 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 template <int protoNumber, class ProtoA, class ProtoB>
 class ComboProtocol : public AbstractProtocol
 {
-protected:
-    ProtoA    *protoA;
-    ProtoB    *protoB;
-
 public:
     ComboProtocol(StreamBase *stream, AbstractProtocol *parent = 0)
         : AbstractProtocol(stream, parent)
@@ -40,6 +36,12 @@ public:
 
         qDebug("%s: protoNumber = %d, %p <--> %p", __FUNCTION__,
             protoNumber, protoA, protoB);
+
+        if (protoA->protocolNumber() == protoB->protocolNumber())
+            fieldPrefix = OuterInnerPrefix;
+        else if (similarProto())
+            fieldPrefix = ProtoNamePrefix;
+
     }
 
     virtual ~ComboProtocol()
@@ -125,11 +127,29 @@ public:
         int streamIndex = 0) const
     {
         int cnt = protoA->fieldCount();
+        QVariant value = index < cnt ?
+            protoA->fieldData(index, attrib, streamIndex) :
+            protoB->fieldData(index - cnt, attrib, streamIndex);
 
-        if (index < cnt)
-            return protoA->fieldData(index, attrib, streamIndex);
-        else
-            return protoB->fieldData(index - cnt, attrib, streamIndex);
+        if (attrib == FieldName) {
+            switch (fieldPrefix) {
+            case OuterInnerPrefix:
+                value = QString("%1 %2")
+                    .arg(index < cnt ? QString("Outer") : QString("Inner"))
+                    .arg(value.toString());
+                break;
+            case ProtoNamePrefix:
+                value = QString("%1 %2")
+                    .arg(index < cnt ? protoA->shortName() : protoB->shortName())
+                    .arg(value.toString());
+                break;
+            case NoPrefix:
+                // Fall-through
+                break;
+            }
+        }
+
+        return value;
     }
     virtual bool setFieldData(int index, const QVariant &value, 
         FieldAttrib attrib = FieldValue)
@@ -186,6 +206,32 @@ public:
         CksumType cksumType = CksumIp) const;
 #endif
     template <int protocolNumber, class FormA, class FormB, class ProtocolA, class ProtocolB> friend class ComboProtocolConfigForm;
+
+protected:
+    ProtoA    *protoA;
+    ProtoB    *protoB;
+
+private:
+    bool similarProto()
+    {
+        // TODO: Use Levenshtein distance or something similar with > 70% match
+        // For now we use an ugly hack!
+        if (protoA->shortName().contains("IPv")
+            && protoB->shortName().contains("IPv"))
+            return true;
+        if (protoA->shortName().contains("Vlan")
+            && protoB->shortName().contains("Vlan"))
+            return true;
+        return false;
+    }
+
+    enum FieldNamePrefix {
+        NoPrefix,
+        ProtoNamePrefix,
+        OuterInnerPrefix
+    };
+
+    FieldNamePrefix fieldPrefix{NoPrefix};
 };
 
 #endif
