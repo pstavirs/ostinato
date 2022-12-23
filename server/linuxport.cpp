@@ -276,12 +276,14 @@ void LinuxPort::populateInterfaceInfo()
             continue;
 
         if (!gw4 && rtnl_route_get_family(rt) == AF_INET) {
-            gw4 = qFromBigEndian<quint32>(
-                    nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
+            nl_addr *gwa = rtnl_route_nh_get_gateway(nh);
+            if (gwa)
+                gw4 = qFromBigEndian<quint32>(nl_addr_get_binary_addr(gwa));
         }
         else if (!gw6 && rtnl_route_get_family(rt) == AF_INET6) {
-            gw6 = UInt128((quint8*)
-                    nl_addr_get_binary_addr(rtnl_route_nh_get_gateway(nh)));
+            nl_addr *gwa = rtnl_route_nh_get_gateway(nh);
+            if (gwa)
+                gw6 = UInt128((quint8*) nl_addr_get_binary_addr(gwa));
         }
     }
 
