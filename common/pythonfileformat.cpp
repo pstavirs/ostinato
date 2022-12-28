@@ -63,6 +63,8 @@ bool PythonFileFormat::save(const OstProto::StreamConfigList streams,
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         goto _open_fail;
 
+    out.setCodec("UTF-8");
+
     // import standard modules
     emit status("Writing imports ...");
     emit target(0);
@@ -450,9 +452,16 @@ void PythonFileFormat::writeFieldAssignment(
             std::string val = fieldDesc->is_repeated() ?
                 refl->GetRepeatedStringReference(msg, fieldDesc, index, &val) :
                 refl->GetStringReference(msg, fieldDesc, &val);
-            QString escVal = escapeString(QString::fromStdString(val));
-            if (val != fieldDesc->default_value_string())
-                out << fieldName << " = '" << escVal << "'\n";
+            if (val == fieldDesc->default_value_string())
+                break;
+            if (fieldDesc->type() == FieldDescriptor::TYPE_BYTES) {
+                QString strVal = byteString(QByteArray(val.c_str(),
+                                                       val.size()));
+                out << fieldName << " = b'" << strVal << "'\n";
+            } else {
+                QString strVal = QString::fromStdString(val);
+                out << fieldName << " = u'" << strVal << "'\n";
+            }
             break;
         }
         case FieldDescriptor::CPPTYPE_ENUM:
@@ -533,21 +542,31 @@ QString PythonFileFormat::singularize(QString plural)
     return singular;
 }
 
-QString PythonFileFormat::escapeString(QString str)
+QString PythonFileFormat::escapeString(QByteArray str)
 {
     QString escStr = "";
     for (int i=0; i < str.length(); i++) {
-        uchar c = str[i].cell();
+        uchar c = uchar(str.at(i));
         if ((c < 128) && isprint(c)) {
             if (c == '\'')
                 escStr.append("\\'");
             else
-                escStr.append(str[i]);
+                escStr.append(QChar(c));
         }
         else
             escStr.append(QString("\\x%1").arg(int(c), 2, 16, QChar('0')));
     }
     return escStr;
+}
+
+QString PythonFileFormat::byteString(QByteArray str)
+{
+    QString byteStr = "";
+    for (int i=0; i < str.length(); i++) {
+        uchar c = uchar(str.at(i));
+        byteStr.append(QString("\\x%1").arg(int(c), 2, 16, QChar('0')));
+    }
+    return byteStr;
 }
 
 bool PythonFileFormat::useDecimalBase(QString fieldName)

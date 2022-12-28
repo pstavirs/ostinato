@@ -49,7 +49,8 @@ private:
             const google::protobuf::FieldDescriptor *fieldDesc,
             int index = -1);
     QString singularize(QString plural);
-    QString escapeString(QString str);
+    QString escapeString(QByteArray str);
+    QString byteString(QByteArray str);
     bool useDecimalBase(QString fieldName);
 };
 
