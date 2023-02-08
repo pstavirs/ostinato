@@ -68,7 +68,7 @@ private:
     static void udelay(unsigned long usec);
     int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
                 int sync);
-    void updateStreamStats();
+    void updateTxStreamStats();
 
     // Intermediate state variables used while building the packet list
     PacketSequence *currentPacketSequence_;

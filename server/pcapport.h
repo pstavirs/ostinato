@@ -77,6 +77,8 @@ public:
     virtual bool isCaptureOn()  { return capturer_->isRunning(); }
     virtual QIODevice* captureData() { return capturer_->captureFile(); }
 
+    virtual void updateStreamStats();
+
     virtual void startDeviceEmulation();
     virtual void stopDeviceEmulation();
     virtual int sendEmulationPacket(PacketBuffer *pktBuf);

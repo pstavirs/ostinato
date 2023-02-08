@@ -429,13 +429,12 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
     // XXX: stream stats uses port tx duration to calculate per stream
     // rates; tx duration is for the last tx run only - so stream stats
     // should also correspond to the last run only.
-    // Hence clear stream stats before Tx
+    // Hence clear stream stats before Tx.
+    // XXX: clear stream stats on ALL ports in user provided list before
+    // starting Tx on any of them
     for (int i = 0; i < request->port_id_size(); i++)
     {
-        int portId;
-        int frameError = 0;
-
-        portId = request->port_id(i).id();
+        int portId = request->port_id(i).id();
         if ((portId < 0) || (portId >= portInfo.size())) {
             error = true;
             notes += QString("Port %1 start transmit: invalid port\n")
@@ -444,9 +443,22 @@ void MyService::startTransmit(::google::protobuf::RpcController* /*controller*/,
         }
 
         portLock[portId]->lockForWrite();
+        portInfo[portId]->resetStreamStatsAll();
+        portLock[portId]->unlock();
+    }
+
+    for (int i = 0; i < request->port_id_size(); i++)
+    {
+        int frameError = 0;
+        int portId = request->port_id(i).id();
+
+        if ((portId < 0) || (portId >= portInfo.size())) {
+            continue;
+        }
+
+        portLock[portId]->lockForWrite();
         if (portInfo[portId]->isDirty())
             frameError = portInfo[portId]->updatePacketList();
-        portInfo[portId]->resetStreamStatsAll();
         portInfo[portId]->startTransmit();
         portLock[portId]->unlock();
         if (frameError) {

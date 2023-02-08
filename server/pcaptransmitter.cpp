@@ -127,6 +127,9 @@ void PcapTransmitter::updateTxThreadStreamStats()
         streamStats_[guid].tx_pkts += sst.tx_pkts;
         streamStats_[guid].tx_bytes += sst.tx_bytes;
         if (adjustRxStreamStats_) {
+            // XXX: rx_pkts counting may lag behind tx_pkts, so stream stats
+            // may become negative after adjustment transiently. But this
+            // should fix itself once all the rx pkts come in
             streamStats_[guid].rx_pkts -= sst.tx_pkts;
             streamStats_[guid].rx_bytes -= sst.tx_bytes;
         }

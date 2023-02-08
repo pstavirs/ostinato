@@ -34,7 +34,7 @@ PcapPort::PcapPort(int id, const char *device)
     transmitter_ = new PcapTransmitter(device, streamStats_);
     capturer_ = new PortCapturer(device);
     emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
-    rxStatsPoller_ = new PcapRxStats(device, streamStats_);
+    rxStatsPoller_ = new PcapRxStats(device, streamStats_, id);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
         isUsable_ = false;
@@ -140,6 +140,15 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
         return true;
     }
     return false;
+}
+
+void PcapPort::updateStreamStats()
+{
+    // XXX: PcapTxThread already does this at the end of transmit; we
+    // just dump rx stats poller debug stats here
+
+    qDebug("port %d rxStatsPoller: %s",
+            id(), qUtf8Printable(rxStatsPoller_->debugStats()));
 }
 
 void PcapPort::startDeviceEmulation()

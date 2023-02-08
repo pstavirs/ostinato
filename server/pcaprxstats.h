@@ -27,13 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class PcapRxStats: public PcapSession
 {
 public:
-    PcapRxStats(const char *device, StreamStats &portStreamStats);
+    PcapRxStats(const char *device, StreamStats &portStreamStats, int id);
     pcap_t* handle();
     void run();
     bool start();
     bool stop();
     bool isRunning();
     bool isDirectional();
+
+    QString debugStats();
 
 private:
     enum State {
@@ -48,6 +50,9 @@ private:
     pcap_t *handle_;
     volatile State state_;
     bool isDirectional_;
+
+    int id_;
+    struct pcap_stat lastPcapStats_;
 };
 
 #endif

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #define Xnotify qWarning // FIXME
 
-PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats)
+PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats, int id)
     : streamStats_(portStreamStats)
 {
     device_ = QString::fromLatin1(device);
@@ -33,6 +33,8 @@ PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats)
     isDirectional_ = true;
 
     handle_ = NULL;
+
+    id_ = id;
 }
 
 pcap_t* PcapRxStats::handle()
@@ -104,6 +106,7 @@ void PcapRxStats::run()
     }
 
 _skip_filter:
+    memset(&lastPcapStats_, 0, sizeof(lastPcapStats_));
     PcapSession::preRun();
     state_ = kRunning;
     while (1) {
@@ -143,7 +146,6 @@ _skip_filter:
         }
     }
     PcapSession::postRun();
-
     pcap_close(handle_);
     handle_ = NULL;
     stop_ = false;
@@ -190,4 +192,58 @@ bool PcapRxStats::isRunning()
 bool PcapRxStats::isDirectional()
 {
     return isDirectional_;
+}
+
+// XXX: Implemented as reset on read
+QString PcapRxStats::debugStats()
+{
+    QString dbgStats;
+
+#ifdef Q_OS_WIN32
+    static_assert(sizeof(struct pcap_stat) == 6*sizeof(uint),
+                "pcap_stat has less or more than 6 values");
+    int size;
+    struct pcap_stat incPcapStats;
+    struct pcap_stat *pcapStats = pcap_stats_ex(handle_, &size);
+    if (pcapStats && (uint(size) >= 6*sizeof(uint))) {
+        incPcapStats.ps_recv = pcapStats->ps_recv - lastPcapStats_.ps_recv;
+        incPcapStats.ps_drop = pcapStats->ps_drop - lastPcapStats_.ps_drop;
+        incPcapStats.ps_ifdrop = pcapStats->ps_ifdrop - lastPcapStats_.ps_ifdrop;
+        incPcapStats.ps_capt = pcapStats->ps_capt - lastPcapStats_.ps_capt;
+        incPcapStats.ps_sent = pcapStats->ps_sent - lastPcapStats_.ps_sent;
+        incPcapStats.ps_netdrop = pcapStats->ps_netdrop - lastPcapStats_.ps_netdrop;
+        dbgStats = QString("recv: %1 drop: %2 ifdrop: %3 "
+                           "capt: %4 sent: %5 netdrop: %6")
+                        .arg(incPcapStats.ps_recv)
+                        .arg(incPcapStats.ps_drop)
+                        .arg(incPcapStats.ps_ifdrop)
+                        .arg(incPcapStats.ps_capt)
+                        .arg(incPcapStats.ps_sent)
+                        .arg(incPcapStats.ps_netdrop);
+        lastPcapStats_ = *pcapStats;
+    } else {
+        dbgStats = QString("error reading pcap stats: %1")
+                        .arg(pcap_geterr(handle_));
+    }
+#else
+    struct pcap_stat pcapStats;
+    struct pcap_stat incPcapStats;
+
+    int ret = pcap_stats(handle_, &pcapStats);
+    if (ret == 0) {
+        incPcapStats.ps_recv = pcapStats.ps_recv - lastPcapStats_.ps_recv;
+        incPcapStats.ps_drop = pcapStats.ps_drop - lastPcapStats_.ps_drop;
+        incPcapStats.ps_ifdrop = pcapStats.ps_ifdrop - lastPcapStats_.ps_ifdrop;
+        dbgStats = QString("recv: %1 drop: %2 ifdrop: %3")
+                        .arg(incPcapStats.ps_recv)
+                        .arg(incPcapStats.ps_drop)
+                        .arg(incPcapStats.ps_ifdrop);
+        lastPcapStats_ = *pcapStats;
+    } else {
+        dbgStats = QString("error reading pcap stats: %1")
+                        .arg(pcap_geterr(handle_));
+    }
+#endif
+
+    return dbgStats;
 }

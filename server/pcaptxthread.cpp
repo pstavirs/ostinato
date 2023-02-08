@@ -365,7 +365,7 @@ _exit2:
     //Q_ASSERT(lastTxDuration_ >= 0);
 
     if (trackStreamStats_)
-        updateStreamStats();
+        updateTxStreamStats();
 
     state_ = kFinished;
 }
@@ -466,7 +466,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
     return 0;
 }
 
-void PcapTxThread::updateStreamStats()
+void PcapTxThread::updateTxStreamStats()
 {
     // If no packets in list, nothing to be done
     if (!packetListSize_)
