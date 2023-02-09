@@ -238,7 +238,7 @@ QString PcapRxStats::debugStats()
                         .arg(incPcapStats.ps_recv)
                         .arg(incPcapStats.ps_drop)
                         .arg(incPcapStats.ps_ifdrop);
-        lastPcapStats_ = *pcapStats;
+        lastPcapStats_ = pcapStats;
     } else {
         dbgStats = QString("error reading pcap stats: %1")
                         .arg(pcap_geterr(handle_));
