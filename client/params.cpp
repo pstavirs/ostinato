@@ -45,11 +45,11 @@ int Params::parseCommandLine(int argc, char* argv[])
             logsDisabled_ = false;
             break;
         case 'v':
-            qDebug("Ostinato %s rev %s\n", version, revision);
+            printf("Ostinato %s rev %s\n", version, revision);
             exit(0);
         case 'h':
         default:
-            qDebug("usage: %s [-cdhv]\n", argv[0]);
+            printf("usage: %s [-cdhv]\n", argv[0]);
             exit(1);
         }
         n++;
