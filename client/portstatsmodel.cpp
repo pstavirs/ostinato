@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsmodel.h"
 #include "portgrouplist.h"
 
+#include <QApplication>
 #include <QPainter>
+#include <QPalette>
 #include <QPixmapCache>
 #include <QTimer>
 
@@ -270,6 +272,14 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
         }
         else
             return QVariant();
+    }
+
+    if ((role == Qt::BackgroundRole) && (orientation == Qt::Vertical)
+        && qApp->styleSheet().isEmpty())
+    {
+        QPalette palette = QApplication::palette();
+        return section & 0x1 ?
+                    palette.base() : palette.alternateBase();
     }
 
     if (role != Qt::DisplayRole)
