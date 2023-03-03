@@ -43,14 +43,16 @@ typedef enum {
     // Statistics
     e_STATISTICS_START,
 
-    e_STAT_FRAMES_RCVD = e_STATISTICS_START,
-    e_STAT_FRAMES_SENT,
+    e_STAT_FRAMES_SENT = e_STATISTICS_START,
+    e_STAT_FRAMES_RCVD,
+    e_STAT_BYTES_SENT,
+    e_STAT_BYTES_RCVD,
     e_STAT_FRAME_SEND_RATE,
     e_STAT_FRAME_RECV_RATE,
-    e_STAT_BYTES_RCVD,
-    e_STAT_BYTES_SENT,
+#if 0
     e_STAT_BYTE_SEND_RATE,
     e_STAT_BYTE_RECV_RATE,
+#endif
     e_STAT_BIT_SEND_RATE,
     e_STAT_BIT_RECV_RATE,
 #if 0
@@ -72,19 +74,21 @@ typedef enum {
     e_STAT_MAX
 } PortStat;
 
-static QStringList PortStatName = (QStringList()
+static const QStringList PortStatName = (QStringList()
     << "User"
 
     << "Status"
 
-    << "Frames Received"
     << "Frames Sent"
+    << "Frames Received"
+    << "Bytes Sent"
+    << "Bytes Received"
     << "Frame Send Rate (fps)"
     << "Frame Receive Rate (fps)"
-    << "Bytes Received"
-    << "Bytes Sent"
+#if 0
     << "Byte Send Rate (Bps)"
     << "Byte Receive Rate (Bps)"
+#endif
     << "Bit Send Rate (bps)"
     << "Bit Receive Rate (bps)"
 #if 0

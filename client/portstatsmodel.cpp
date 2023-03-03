@@ -156,11 +156,13 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
             case e_STAT_BYTES_SENT:
                 return QString("%L1").arg(quint64(stats.tx_bytes()));
 
+#if 0
             case e_STAT_BYTE_SEND_RATE:
                 return QString("%L1").arg(quint64(stats.tx_bps()));
 
             case e_STAT_BYTE_RECV_RATE:
                 return QString("%L1").arg(quint64(stats.rx_bps()));
+#endif
 
             case e_STAT_BIT_SEND_RATE:
                 return QString("%L1").arg(quint64(
