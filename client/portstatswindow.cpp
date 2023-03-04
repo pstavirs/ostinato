@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "portstatsfilterdialog.h"
 #include "portstatsmodel.h"
 #include "portstatsproxymodel.h"
+#include "rowborderdelegate.h"
 #include "streamstatsmodel.h"
 #include "streamstatswindow.h"
 #include "settings.h"
@@ -55,6 +56,18 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     tvPortStats->verticalHeader()->setDefaultSectionSize(
         tvPortStats->verticalHeader()->minimumSectionSize());
     
+    // XXX: Set Delegates for port stats view
+    //   RowBorderDelegate: Group related stats by drawing a horizontal line
+    //   IconOnlyDelegate : For status, show only icons not icons+text
+    int offset = proxyStatsModel ? -1 : 0; // adjust for hidden 'user' row
+    tvPortStats->setItemDelegate(
+                    new RowBorderDelegate(
+                            QSet<int>({
+                                e_STAT_FRAMES_SENT + offset,
+                                e_STAT_FRAME_SEND_RATE + offset,
+                                e_STAT_RX_DROPS + offset}),
+                            this));
+
     statusDelegate = new IconOnlyDelegate(this);
 #if 0
     // XXX: Ideally we should use this, but it doesn't work because in
@@ -68,9 +81,7 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
             statusDelegate);
 #else
     // ... so we use this hard-coded hack
-    tvPortStats->setItemDelegateForRow(
-            proxyStatsModel ?  e_COMBO_STATE-1 : e_COMBO_STATE,
-            statusDelegate);
+    tvPortStats->setItemDelegateForRow(e_COMBO_STATE + offset, statusDelegate);
 #endif
 
     connect(tvPortStats->selectionModel(),
