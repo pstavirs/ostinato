@@ -79,18 +79,19 @@ typedef enum {
 static const QStringList PortStatName = (QStringList()
     << "Status"
 
-    << "Frames Sent"
-    << "Frames Received"
-    << "Bytes Sent"
-    << "Bytes Received"
-    << "Frame Send Rate (fps)"
-    << "Frame Receive Rate (fps)"
+    << "Sent Frames"
+    << "Received Frames"
+    << "Sent Bytes"
+    << "Received Bytes"
+
+    << "Send Frame Rate (fps)"
+    << "Receive Frame Rate (fps)"
 #if 0
-    << "Byte Send Rate (Bps)"
-    << "Byte Receive Rate (Bps)"
+    << "Send Byte Rate (Bps)"
+    << "Receive Byte Rate (Bps)"
 #endif
-    << "Bit Send Rate (bps)"
-    << "Bit Receive Rate (bps)"
+    << "Send Bit Rate (bps)"
+    << "Receive Bit Rate (bps)"
 #if 0
     << "Frames Received (NIC)"
     << "Frames Sent (NIC)"
