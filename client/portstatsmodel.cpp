@@ -279,7 +279,7 @@ QVariant PortStatsModel::headerData(int section, Qt::Orientation orientation, in
     {
         QPalette palette = QApplication::palette();
         return section & 0x1 ?
-                    palette.base() : palette.alternateBase();
+                    palette.alternateBase() : palette.base();
     }
 
     if (role != Qt::DisplayRole)

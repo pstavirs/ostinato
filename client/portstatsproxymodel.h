@@ -22,12 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QSortFilterProxyModel>
 
+#include <QSet>
+
 class PortStatsProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    PortStatsProxyModel(QObject *parent = 0)
-        : QSortFilterProxyModel(parent)
+    PortStatsProxyModel(QSet<int> hiddenRows = QSet<int>(),
+                        QObject *parent = 0)
+        : QSortFilterProxyModel(parent), hiddenRows_(hiddenRows)
     {
         setFilterRegExp(QRegExp(".*"));
     }
@@ -44,9 +47,10 @@ protected:
     bool filterAcceptsRow(int sourceRow, 
                           const QModelIndex &/*sourceParent*/) const
     {
-        // Hide row 0 - username (needed only by this filter class)
-        return (sourceRow > 0) ? true : false;
+        return hiddenRows_.contains(sourceRow) ? false : true;
     }
+private:
+    QSet<int> hiddenRows_;
 };
 
 #endif

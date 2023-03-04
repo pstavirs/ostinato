@@ -26,15 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 class QTimer;
 
 typedef enum {
-    // Info
-    e_INFO_START = 0,
-
-    e_INFO_USER = e_INFO_START,
-
-    e_INFO_END = e_INFO_USER,
-
     // State
-    e_STATE_START,
+    e_STATE_START = 0,
 
     e_COMBO_STATE = e_STATE_START,
 
@@ -71,12 +64,19 @@ typedef enum {
 
     e_STATISTICS_END = e_STAT_RX_FRAME_ERRORS,
 
+    // Info
+    e_INFO_START,
+
+    // XXX: keep hidden rows at end to avoid having to recalculate rows
+    e_INFO_USER = e_INFO_START,
+
+    e_INFO_END = e_INFO_USER,
+
+
     e_STAT_MAX
 } PortStat;
 
 static const QStringList PortStatName = (QStringList()
-    << "User"
-
     << "Status"
 
     << "Frames Sent"
@@ -102,6 +102,8 @@ static const QStringList PortStatName = (QStringList()
     << "Receive Errors"
     << "Receive Fifo Errors"
     << "Receive Frame Errors"
+
+    << "User"
 );
 
 static QStringList LinkStateName = (QStringList()

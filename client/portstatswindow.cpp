@@ -43,7 +43,9 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     this->pgl = pgl;
     model = pgl->getPortStatsModel();
 
-    proxyStatsModel = new PortStatsProxyModel(this);
+    // Hide 'user' row
+    proxyStatsModel = new PortStatsProxyModel(
+                            QSet<int>({e_INFO_USER}), this);
     if (proxyStatsModel) {
         proxyStatsModel->setSourceModel(model);
         tvPortStats->setModel(proxyStatsModel);
@@ -57,15 +59,14 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
         tvPortStats->verticalHeader()->minimumSectionSize());
     
     // XXX: Set Delegates for port stats view
-    //   RowBorderDelegate: Group related stats by drawing a horizontal line
+    //   RowBorderDelegate: Group related stats using a horizontal line
     //   IconOnlyDelegate : For status, show only icons not icons+text
-    int offset = proxyStatsModel ? -1 : 0; // adjust for hidden 'user' row
     tvPortStats->setItemDelegate(
                     new RowBorderDelegate(
                             QSet<int>({
-                                e_STAT_FRAMES_SENT + offset,
-                                e_STAT_FRAME_SEND_RATE + offset,
-                                e_STAT_RX_DROPS + offset}),
+                                e_STAT_FRAMES_SENT,
+                                e_STAT_FRAME_SEND_RATE,
+                                e_STAT_RX_DROPS}),
                             this));
 
     statusDelegate = new IconOnlyDelegate(this);
@@ -81,7 +82,7 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
             statusDelegate);
 #else
     // ... so we use this hard-coded hack
-    tvPortStats->setItemDelegateForRow(e_COMBO_STATE + offset, statusDelegate);
+    tvPortStats->setItemDelegateForRow(e_COMBO_STATE, statusDelegate);
 #endif
 
     connect(tvPortStats->selectionModel(),
