@@ -109,8 +109,20 @@ void PcapTxThread::clearPacketList()
 void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
         long repeatDelaySec, long repeatDelayNsec)
 {
-    // Since we create implicit packetset for this case, skip
-    // This case => Packet set for y when x = 0 or n==1 in n*x+y
+    // XXX: The below change was done as part of Turbo code
+    // implementation alongwith calls to this function from
+    // AbstractPort::updatePacketListSequential(). Turbo to
+    // have clean code requires explicit packet sets for all
+    // cases (except interleaved streams). The below change
+    // was done so that the base code should not be affected
+    // after the explict packet set creation calls.
+    // XXX: Since we create implicit packetset for this case, skip
+    // This case =>
+    //   1. Packet set for y when x = 0
+    //   2. n==1 in n*x+y
+    // These two cases were the result of the changes in
+    // updatePacketListSequential() as part of Turbo changes
+    // mentioned above
     if (repeats == 1)
         return;
 
