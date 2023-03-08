@@ -209,7 +209,7 @@ void DeviceGroupDialog::updateTotalDeviceCount()
 
 void DeviceGroupDialog::updateIp4Gateway()
 {
-    quint32 net = ip4Address->value() & (~0 << (32 - ip4PrefixLength->value()));
+    quint32 net = ip4Address->value() & (~0UL << (32 - ip4PrefixLength->value()));
     ip4Gateway->setValue(net | 0x01);
 }
 
