@@ -283,29 +283,23 @@ void PcapTxThread::run()
     getTimeStamp(&startTime);
     state_ = kRunning;
     i = 0;
-    while (i < packetSequenceList_.size())
-    {
-
+    while (i < packetSequenceList_.size()) {
 _restart:
         int rptSz  = packetSequenceList_.at(i)->repeatSize_;
         int rptCnt = packetSequenceList_.at(i)->repeatCount_;
 
-        for (int j = 0; j < rptCnt; j++)
-        {
-            for (int k = 0; k < rptSz; k++)
-            {
+        for (int j = 0; j < rptCnt; j++) {
+            for (int k = 0; k < rptSz; k++) {
                 int ret;
                 PacketSequence *seq = packetSequenceList_.at(i+k);
 #ifdef Q_OS_WIN32
                 TimeStamp ovrStart, ovrEnd;
 
-                if (seq->usecDuration_ <= long(1e6)) // 1s
-                {
+                if (seq->usecDuration_ <= long(1e6)) { // 1s
                     getTimeStamp(&ovrStart);
                     ret = pcap_sendqueue_transmit(handle_,
                             seq->sendQueue_, kSyncTransmit);
-                    if (ret >= 0)
-                    {
+                    if (ret >= 0) {
                         stats_->pkts += seq->packets_;
                         stats_->bytes += seq->bytes_;
 
@@ -316,9 +310,7 @@ _restart:
                     }
                     if (stop_)
                         ret = -2;
-                }
-                else
-                {
+                } else {
                     ret = sendQueueTransmit(handle_, seq->sendQueue_,
                             overHead, kSyncTransmit);
                 }
@@ -327,41 +319,33 @@ _restart:
                             overHead, kSyncTransmit);
 #endif
 
-                if (ret >= 0)
-                {
+                if (ret >= 0) {
                     long usecs = seq->usecDelay_ + overHead;
-                    if (usecs > 0)
-                    {
+                    if (usecs > 0) {
                         (*udelayFn_)(usecs);
                         overHead = 0;
-                    }
-                    else
+                    } else
                         overHead = usecs;
-                }
-                else
-                {
+                } else {
                     qDebug("error %d in sendQueueTransmit()", ret);
                     qDebug("overHead = %ld", overHead);
                     stop_ = false;
                     goto _exit;
                 }
-            }
-        }
+            } // rptSz
+        } // rptCnt
 
         // Move to the next Packet Set
         i += rptSz;
     }
 
-    if (returnToQIdx_ >= 0)
-    {
+    if (returnToQIdx_ >= 0) {
         long usecs = loopDelay_ + overHead;
 
-        if (usecs > 0)
-        {
+        if (usecs > 0) {
             (*udelayFn_)(usecs);
             overHead = 0;
-        }
-        else
+        } else
             overHead = usecs;
 
         i = returnToQIdx_;
