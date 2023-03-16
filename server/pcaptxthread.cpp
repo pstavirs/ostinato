@@ -414,29 +414,23 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
     char *end = queue->buffer + queue->len;
 
     ts = hdr->ts;
-
     getTimeStamp(&ovrStart);
-    while((char*) hdr < end)
-    {
+    while((char*) hdr < end) {
         uchar *pkt = (uchar*)hdr + sizeof(*hdr);
         int pktLen = hdr->caplen;
 
-        if (sync)
-        {
+        if (sync) {
             long usec = (hdr->ts.tv_sec - ts.tv_sec) * 1000000 +
                 (hdr->ts.tv_usec - ts.tv_usec);
 
             getTimeStamp(&ovrEnd);
-
             overHead -= udiffTimeStamp(&ovrStart, &ovrEnd);
             Q_ASSERT(overHead <= 0);
             usec += overHead;
-            if (usec > 0)
-            {
+            if (usec > 0) {
                 (*udelayFn_)(usec);
                 overHead = 0;
-            }
-            else
+            } else
                 overHead = usec;
 
             ts = hdr->ts;
@@ -453,12 +447,10 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p,
         hdr = (struct pcap_pkthdr*) (pkt + pktLen);
         pkt = (uchar*) ((uchar*)hdr + sizeof(*hdr)); // FIXME: superfluous?
 
-        if (stop_)
-        {
+        if (stop_) {
             return -2;
         }
     }
-
     return 0;
 }
 
