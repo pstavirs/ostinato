@@ -109,6 +109,7 @@ void PcapTxThread::clearPacketList()
 void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
         long repeatDelaySec, long repeatDelayNsec)
 {
+#if 0 // Don't let implicit packet sets be created
     // XXX: The below change was done as part of Turbo code
     // implementation alongwith calls to this function from
     // AbstractPort::updatePacketListSequential(). Turbo to
@@ -125,6 +126,7 @@ void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
     // mentioned above
     if (repeats == 1)
         return;
+#endif
 
     currentPacketSequence_ = new PacketSequence(trackStreamStats_);
     currentPacketSequence_->repeatCount_ = repeats;
@@ -148,24 +150,17 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
     pktHdr.ts.tv_sec = sec;
     pktHdr.ts.tv_usec = nsec/1000;
 
-    if (currentPacketSequence_ == NULL ||
-            !currentPacketSequence_->hasFreeSpace(2*sizeof(pcap_pkthdr)+length))
-    {
-        if (currentPacketSequence_ != NULL)
-        {
-            long usecs;
+    // loopNextPacketSet should have created a seq
+    Q_ASSERT(currentPacketSequence_ != NULL);
 
-            usecs = (pktHdr.ts.tv_sec
-                        - currentPacketSequence_->lastPacket_->ts.tv_sec)
-                            * long(1e6);
-            usecs += (pktHdr.ts.tv_usec
-                        - currentPacketSequence_->lastPacket_->ts.tv_usec);
-            currentPacketSequence_->usecDelay_ = usecs;
-        }
+    // If not enough space, update usecDelay and alloc a new seq
+    if (!currentPacketSequence_->hasFreeSpace(2*sizeof(pcap_pkthdr)+length))
+    {
+        currentPacketSequence_->usecDelay_ = udiffTimeStamp(
+            &currentPacketSequence_->lastPacket_->ts, &pktHdr.ts);
 
         //! \todo (LOW): calculate sendqueue size
         currentPacketSequence_ = new PacketSequence(trackStreamStats_);
-
         packetSequenceList_.append(currentPacketSequence_);
 
         // Validate that the pkt will fit inside the new currentSendQueue_
@@ -181,6 +176,8 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
     packetCount_++;
     packetListSize_ += repeatSize_ ?
                                 currentPacketSequence_->repeatCount_ : 1;
+
+    // Last packet of packet-set?
     if (repeatSize_ > 0 && packetCount_ == repeatSize_)
     {
         qDebug("repeatSequenceStart_=%d, repeatSize_ = %llu",
@@ -202,7 +199,7 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
 
         repeatSize_ = 0;
 
-        // End current pktSeq and trigger a new pktSeq allocation for next pkt
+        // End current pktSeq
         currentPacketSequence_ = NULL;
     }
 
