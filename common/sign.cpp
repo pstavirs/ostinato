@@ -77,6 +77,7 @@ AbstractProtocol::FieldFlags SignProtocol::fieldFlags(int index) const
     {
         case sign_magic:
         case sign_tlv_guid:
+        case sign_tlv_ttag:
         case sign_tlv_end:
             break;
 
@@ -109,6 +110,29 @@ QVariant SignProtocol::fieldData(int index, FieldAttrib attrib,
                     QByteArray fv;
                     fv.resize(4);
                     qToBigEndian(kSignMagic, (uchar*) fv.data());
+                    return fv;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        case sign_tlv_ttag:
+        {
+            switch(attrib)
+            {
+                case FieldName:
+                    return QString("T-Tag");
+                case FieldValue:
+                    return 0;
+                case FieldTextValue:
+                    return QString("%1").arg(0);
+                case FieldFrameValue:
+                {
+                    QByteArray fv;
+                    fv.resize(2);
+                    fv[0] = 0;
+                    fv[1] = kTypeLenTtagPlaceholder;
                     return fv;
                 }
                 default:

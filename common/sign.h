@@ -42,6 +42,8 @@ TLVs are encoded as
  Defined TLVs
  Type = 0, Len = 0 (0x00): End of TLVs
  Type = 1, Len = 3 (0x61): Stream GUID
+ Type = 2, Len = 1 (0x22): T-Tag Placeholder (0 value)
+ Type = 3, Len = 1 (0x23): T-Tag with actual value
 */
 
 class SignProtocol : public AbstractProtocol
@@ -52,6 +54,7 @@ public:
         // Frame Fields
         sign_tlv_end = 0,
         sign_tlv_guid,
+        sign_tlv_ttag,
         sign_magic,
 
         // Meta Fields
@@ -88,6 +91,8 @@ private:
     static const quint32 kSignMagic = 0x1d10c0da; // coda! (unicode - 0x1d10c)
     static const quint8 kTypeLenEnd = 0x00;
     static const quint8 kTypeLenGuid = 0x61;
+    static const quint8 kTypeLenTtagPlaceholder = 0x22;
+    static const quint8 kTypeLenTtag = 0x23;
     OstProto::Sign data;
 };
 
