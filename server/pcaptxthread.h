@@ -66,8 +66,8 @@ private:
     };
 
     static void udelay(unsigned long usec);
-    int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue, long &overHead,
-                int sync);
+    int sendQueueTransmit(pcap_t *p, pcap_send_queue *queue,
+            quint64 ttagPktInterval, long &overHead, int sync);
     void updateTxStreamStats();
 
     // Intermediate state variables used while building the packet list
@@ -95,6 +95,8 @@ private:
     StreamStats streamStats_;
 
     double lastTxDuration_{0.0}; // in secs
+
+    const ulong kTtagPktInterval{5}; // T-Tag pkt once every X sec
 };
 
 #endif

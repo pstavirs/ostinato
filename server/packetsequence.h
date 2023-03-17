@@ -79,6 +79,7 @@ public:
     int repeatCount_;
     int repeatSize_;
     long usecDelay_;
+    qulonglong ttagPktInterval_{0}; // ttag pkt once every X packets
     StreamStats streamStatsMeta_;
 
 private:
