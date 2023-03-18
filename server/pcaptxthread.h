@@ -93,6 +93,7 @@ private:
     StatsTuple *stats_;
     StatsTuple lastStats_;
     StreamStats streamStats_;
+    quint8 ttagId_{0};
 
     double lastTxDuration_{0.0}; // in secs
 
