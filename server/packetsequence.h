@@ -37,6 +37,8 @@ public:
         repeatCount_ = 1;
         repeatSize_ = 1;
         usecDelay_ = 0;
+        ttagL4CksumOffset_ = 0;
+        ttagPktInterval_ = 0;
     }
     ~PacketSequence() {
         pcap_sendqueue_destroy(sendQueue_);
@@ -69,6 +71,8 @@ public:
                 streamStatsMeta_[guid].tx_bytes += pktHeader->caplen;
             }
         }
+        if (trackGuidStats_ && (packets_ == 1)) // first packet of seq
+            ttagL4CksumOffset_ = 40; // FIXME
         return ret;
     }
     pcap_send_queue *sendQueue_;
@@ -79,7 +83,8 @@ public:
     int repeatCount_;
     int repeatSize_;
     long usecDelay_;
-    qulonglong ttagPktInterval_{0}; // ttag pkt once every X packets
+    quint16 ttagL4CksumOffset_;  // For ttag packets
+    qulonglong ttagPktInterval_; // ttag pkt once every X packets
     StreamStats streamStatsMeta_;
 
 private:
