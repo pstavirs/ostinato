@@ -432,6 +432,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
                 && ((stats_->pkts % seq->ttagPktInterval_) == 0)) {
             ttagPkt = true;
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtag;
+            *(pkt+pktLen-6) = ttagId_++;
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                         pkt + seq->ttagL4CksumOffset_);
@@ -467,6 +468,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         // Revert T-Tag packet changes
         if (ttagPkt) {
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtagPlaceholder;
+            *(pkt+pktLen-6) = 0;
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                          pkt + seq->ttagL4CksumOffset_);
