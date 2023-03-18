@@ -275,9 +275,10 @@ void PcapTxThread::run()
                 packetSequenceList_.at(i)->repeatCount_,
                 packetSequenceList_.at(i)->repeatSize_,
                 packetSequenceList_.at(i)->usecDelay_);
-        qDebug("sendQ[%d]: pkts = %ld, usecDuration = %ld, ttagPktIntvl = %llu", i,
+        qDebug("sendQ[%d]: pkts = %ld, usecDuration = %ld, ttagL4CksumOfs = %hu ttagPktIntvl = %llu", i,
                 packetSequenceList_.at(i)->packets_,
                 packetSequenceList_.at(i)->usecDuration_,
+                packetSequenceList_.at(i)->ttagL4CksumOffset_,
                 packetSequenceList_.at(i)->ttagPktInterval_);
     }
 
@@ -314,12 +315,12 @@ _restart:
                     if (stop_)
                         ret = -2;
                 } else {
-                    ret = sendQueueTransmit(handle_, seq->sendQueue_,
-                            seq->ttagPktInterval_, overHead, kSyncTransmit);
+                    ret = sendQueueTransmit(handle_, seq,
+                            overHead, kSyncTransmit);
                 }
 #else
-                ret = sendQueueTransmit(handle_, seq->sendQueue_,
-                            seq->ttagPktInterval_, overHead, kSyncTransmit);
+                ret = sendQueueTransmit(handle_, seq,
+                            overHead, kSyncTransmit);
 #endif
 
                 if (ret >= 0) {
@@ -408,11 +409,12 @@ double PcapTxThread::lastTxDuration()
     return lastTxDuration_;
 }
 
-int PcapTxThread::sendQueueTransmit(pcap_t *p, pcap_send_queue *queue,
-        quint64 ttagPktInterval, long &overHead, int sync)
+int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
+        long &overHead, int sync)
 {
     TimeStamp ovrStart, ovrEnd;
     struct timeval ts;
+    pcap_send_queue *queue = seq->sendQueue_;
     struct pcap_pkthdr *hdr = (struct pcap_pkthdr*) queue->buffer;
     char *end = queue->buffer + queue->len;
 
@@ -422,12 +424,20 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, pcap_send_queue *queue,
         uchar *pkt = (uchar*)hdr + sizeof(*hdr);
         int pktLen = hdr->caplen;
         bool ttagPkt = false;
+        quint16 origCksum = 0;
 
         // Time for a T-Tag packet?
-        if (ttagPktInterval && ((stats_->pkts % ttagPktInterval) == 0)) {
+        // FIXME: optimize per packet costly modulo operation
+        if (seq->ttagPktInterval_
+                && ((stats_->pkts % seq->ttagPktInterval_) == 0)) {
             ttagPkt = true;
-            // FIXME: fixup cksum(s)
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtag;
+            if (seq->ttagL4CksumOffset_) {
+                quint16 *cksum = reinterpret_cast<quint16*>(
+                                        pkt + seq->ttagL4CksumOffset_);
+                origCksum = *cksum;
+                *cksum = 0x0000; // FIXME: recalc cksum
+            }
         }
 
         if (sync) {
@@ -457,6 +467,11 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, pcap_send_queue *queue,
         // Revert T-Tag packet changes
         if (ttagPkt) {
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtagPlaceholder;
+            if (seq->ttagL4CksumOffset_) {
+                quint16 *cksum = reinterpret_cast<quint16*>(
+                                         pkt + seq->ttagL4CksumOffset_);
+                *cksum = origCksum;
+            }
         }
 
         // Step to the next packet in the buffer
@@ -617,4 +632,3 @@ void PcapTxThread::udelay(unsigned long usec)
     QThread::usleep(usec);
 #endif
 }
-
