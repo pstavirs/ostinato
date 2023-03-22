@@ -56,6 +56,7 @@ SOURCES += \
     pcaprxstats.cpp \
     pcaptxstats.cpp \
     pcaptxthread.cpp \
+    pcaptxttagstats.cpp \
     bsdhostdevice.cpp \
     bsdport.cpp \
     linuxhostdevice.cpp \
