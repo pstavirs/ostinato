@@ -199,23 +199,24 @@ _tx_fail:
     return false;
 }
 
-// FIXME: stop everything possible, don't revert in case of error
 bool PcapPort::stopStreamStatsTracking()
 {
-    if (!transmitter_->setStreamStatsTracking(false))
-        goto _tx_fail;
-    if (!txTtagStatsPoller_->stop())
-        goto _tx_ttag_fail;
-    if (!rxStatsPoller_->stop())
-        goto _rx_fail;
-    return true;
+    bool ret = true;
 
-_rx_fail:
-_tx_ttag_fail:
-    transmitter_->setStreamStatsTracking(true); // FIXME: needed?
-_tx_fail:
-    qWarning("failed to stop stream stats tracking");
-    return false;
+    if (!transmitter_->setStreamStatsTracking(false)) {
+        qWarning("failed to stop Transmitter stream stats tracking");
+        ret = false;
+    }
+    if (!txTtagStatsPoller_->stop()) {
+        qWarning("failed to stop TxTtag stream stats thread");
+        ret = false;
+    }
+    if (!rxStatsPoller_->stop()) {
+        qWarning("failed to stop Rx stream stats thread");
+        ret = false;
+    }
+
+    return ret;
 }
 
 /*
