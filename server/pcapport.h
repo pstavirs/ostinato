@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractport.h"
 #include "pcapextra.h"
 #include "pcaprxstats.h"
+#include "pcaptxttagstats.h"
 #include "pcapsession.h"
 #include "pcaptransmitter.h"
 
@@ -177,6 +178,7 @@ private:
     PcapTransmitter *transmitter_;
     PortCapturer    *capturer_;
     EmulationTransceiver *emulXcvr_;
+    PcapTxTtagStats *txTtagStatsPoller_;
     PcapRxStats *rxStatsPoller_;
 
     static pcap_if_t *deviceList_;

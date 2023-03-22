@@ -86,6 +86,7 @@ public:
 
     static quint32 magic();
     static bool packetGuid(const uchar *pkt, int pktLen, uint *guid);
+    static bool packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint *guid);
 
     static const quint32 kMaxGuid = 0x00ffffff;
     static const quint8 kTypeLenTtagPlaceholder = 0x22;

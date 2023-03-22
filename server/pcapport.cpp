@@ -34,6 +34,7 @@ PcapPort::PcapPort(int id, const char *device)
     transmitter_ = new PcapTransmitter(device, streamStats_);
     capturer_ = new PortCapturer(device);
     emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
+    txTtagStatsPoller_ = new PcapTxTtagStats(device, id);
     rxStatsPoller_ = new PcapRxStats(device, streamStats_, id);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
@@ -84,6 +85,9 @@ PcapPort::~PcapPort()
         monitorRx_->stop();
     if (monitorTx_)
         monitorTx_->stop();
+
+    txTtagStatsPoller_->stop();
+    delete txTtagStatsPoller_;
 
     rxStatsPoller_->stop();
     delete rxStatsPoller_;
@@ -145,8 +149,10 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
 void PcapPort::updateStreamStats()
 {
     // XXX: PcapTxThread already does this at the end of transmit; we
-    // just dump rx stats poller debug stats here
+    // just dump tx/rx stats poller debug stats here
 
+    qDebug("port %d txTtagStatsPoller: %s",
+            id(), qUtf8Printable(txTtagStatsPoller_->debugStats()));
     qDebug("port %d rxStatsPoller: %s",
             id(), qUtf8Printable(rxStatsPoller_->debugStats()));
 }
@@ -170,6 +176,8 @@ bool PcapPort::startStreamStatsTracking()
 {
     if (!transmitter_->setStreamStatsTracking(true))
         goto _tx_fail;
+    if (!txTtagStatsPoller_->start())
+        goto _tx_ttag_fail;
     if (!rxStatsPoller_->start())
         goto _rx_fail;
     /*
@@ -183,22 +191,28 @@ bool PcapPort::startStreamStatsTracking()
     return true;
 
 _rx_fail:
+    txTtagStatsPoller_->stop();
+_tx_ttag_fail:
     transmitter_->setStreamStatsTracking(false);
 _tx_fail:
     qWarning("failed to start stream stats tracking");
     return false;
 }
 
+// FIXME: stop everything possible, don't revert in case of error
 bool PcapPort::stopStreamStatsTracking()
 {
     if (!transmitter_->setStreamStatsTracking(false))
         goto _tx_fail;
+    if (!txTtagStatsPoller_->stop())
+        goto _tx_ttag_fail;
     if (!rxStatsPoller_->stop())
         goto _rx_fail;
     return true;
 
 _rx_fail:
-    transmitter_->setStreamStatsTracking(true);
+_tx_ttag_fail:
+    transmitter_->setStreamStatsTracking(true); // FIXME: needed?
 _tx_fail:
     qWarning("failed to stop stream stats tracking");
     return false;

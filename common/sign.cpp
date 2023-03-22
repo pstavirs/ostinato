@@ -241,3 +241,25 @@ bool SignProtocol::packetGuid(const uchar *pkt, int pktLen, uint *guid)
     }
     return false;
 }
+
+bool SignProtocol::packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint *guid)
+{
+    bool ret = false;
+    const uchar *p = pkt + pktLen - sizeof(kSignMagic);
+    quint32 magic = qFromBigEndian<quint32>(p);
+    if (magic != kSignMagic)
+        return ret;
+
+    *guid = 0xffffffff; // invalid GUID
+    p--;
+    while (*p != kTypeLenEnd) {
+        if (*p == kTypeLenTtag) {
+            *ttagId = *(p - 1);
+            ret = true;
+        } else if (*p == kTypeLenGuid) {
+            *guid = qFromBigEndian<quint32>(p - 3) >> 8;
+        }
+        p -= 1 + (*p >> 5); // move to next TLV
+    }
+    return ret;
+}
