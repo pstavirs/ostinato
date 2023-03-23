@@ -103,8 +103,8 @@ _skip_filter:
                 if (SignProtocol::packetTtagId(data, hdr->caplen,
                         &ttagId, &guid)) {
                     // TODO: store packet timestamp with ttag/guid
-                    qDebug("XXXXX %ld:%ld ttag %u guid %u",
-                        hdr->ts.tv_sec, hdr->ts.tv_usec, ttagId, guid);
+                    qDebug("XXXXX [%d] %ld:%ld ttag %u guid %u", id_,
+                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
                 break;
             }
