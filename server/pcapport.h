@@ -135,7 +135,6 @@ protected:
         QString         device_;
         volatile bool   stop_;
         QTemporaryFile  capFile_;
-        pcap_t          *handle_;
         pcap_dumper_t   *dumpHandle_;
         volatile State  state_;
     };
@@ -162,7 +161,6 @@ protected:
         QString         device_;
         DeviceManager   *deviceManager_;
         volatile bool   stop_;
-        pcap_t          *handle_;
         volatile State  state_;
     };
 

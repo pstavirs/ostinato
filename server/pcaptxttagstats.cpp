@@ -87,6 +87,7 @@ void PcapTxTtagStats::run()
     }
 
 _skip_filter:
+    clearDebugStats();
     PcapSession::preRun();
     state_ = kRunning;
     while (1) {
@@ -158,7 +159,7 @@ bool PcapTxTtagStats::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
-        PcapSession::stop(handle_);
+        PcapSession::stop();
         while (state_ == kRunning)
             QThread::msleep(10);
     }

@@ -504,7 +504,7 @@ void PcapPort::PortCapturer::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
-        PcapSession::stop(handle_);
+        PcapSession::stop();
         while (state_ == kRunning)
             QThread::msleep(10);
     }
@@ -728,7 +728,7 @@ void PcapPort::EmulationTransceiver::stop()
 {
     if (state_ == kRunning) {
         stop_ = true;
-        PcapSession::stop(handle_);
+        PcapSession::stop();
         while (state_ == kRunning)
             QThread::msleep(10);
     }
