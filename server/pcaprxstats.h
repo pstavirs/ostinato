@@ -35,8 +35,6 @@ public:
     bool isRunning();
     bool isDirectional();
 
-    QString debugStats();
-
 private:
     enum State {
         kNotStarted,
@@ -47,12 +45,10 @@ private:
     QString device_;
     StreamStats &streamStats_;
     volatile bool stop_;
-    pcap_t *handle_;
     volatile State state_;
     bool isDirectional_;
 
     int id_;
-    struct pcap_stat lastPcapStats_;
 };
 
 #endif

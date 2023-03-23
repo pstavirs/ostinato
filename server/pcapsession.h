@@ -55,27 +55,46 @@ inline uint qHash(const ThreadId &key)
 
 class PcapSession: public QThread
 {
+public:
+    QString debugStats();
+
 protected:
+    bool clearDebugStats();
+
     void preRun();
     void postRun();
-    void stop(pcap_t *handle);
+    void stop();
+
+    pcap_t *handle_{nullptr};
 
 private:
     static void signalBreakHandler(int /*signum*/);
 
     ThreadId thread_;
     static QHash<ThreadId, bool> signalSeen_;
+
+    struct pcap_stat lastPcapStats_;
 };
 #else
 class PcapSession: public QThread
 {
+public:
+    QString debugStats();
+
 protected:
+    bool clearDebugStats();
+
     void preRun() {};
     void postRun() {};
-    void stop(pcap_t *handle) {
-        qDebug("calling breakloop with handle %p", handle);
-        pcap_breakloop(handle);
+    void stop() {
+        qDebug("calling breakloop with handle %p", handle_);
+        pcap_breakloop(handle_);
     }
+
+    pcap_t *handle_{nullptr};
+
+private:
+    struct pcap_stat lastPcapStats_;
 };
 #endif
 
