@@ -30,6 +30,7 @@ struct StreamStatsTuple
     quint64 tx_bytes;
 };
 
+// Key(uint) is GUID
 typedef QHash<uint, StreamStatsTuple> StreamStats;
 typedef QHashIterator<uint, StreamStatsTuple> StreamStatsIterator;
 
