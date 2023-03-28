@@ -41,7 +41,8 @@ LIBS += -lm
 LIBS += -lprotobuf
 HEADERS += drone.h \
     pcaptransmitter.h \
-    myservice.h
+    myservice.h \
+    streamtiming.h
 SOURCES += \
     devicemanager.cpp \
     device.cpp \
@@ -63,6 +64,7 @@ SOURCES += \
     linuxport.cpp \
     linuxutils.cpp \
     params.cpp \
+    streamtiming.cpp \
     turbo.cpp \
     winhostdevice.cpp \
     winpcapport.cpp 
