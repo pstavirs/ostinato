@@ -21,12 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "timestamp.h"
 
-StreamTiming::StreamTiming(int portCount)
+StreamTiming::StreamTiming()
     : QObject(nullptr) // FIXME: parent
 {
-    for (int i = 0; i < portCount; i++)
-        timing_.append(new QHash<Key, Timing>);
-
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &StreamTiming::processRecords);
     timer_->setInterval(3000);
@@ -152,7 +149,7 @@ StreamTiming* StreamTiming::instance()
     static StreamTiming *instance{nullptr};
 
     if (!instance)
-        instance = new StreamTiming(10); // FIXME: WRONG param
+        instance = new StreamTiming();
 
     return instance;
 }

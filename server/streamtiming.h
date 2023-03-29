@@ -30,7 +30,7 @@ class StreamTiming : public QObject
 {
     Q_OBJECT
 public:
-    StreamTiming(int portCount);
+    StreamTiming();
 
     bool recordTxTime(uint portId, uint guid, uint ttagId,
                       struct timespec timestamp);
@@ -73,7 +73,7 @@ private:
     typedef quint32 Key;
     QHash<Key, TtagData> txHash_;
     QHash<Key, TtagData> rxHash_;
-    QList<QHash<Key, Timing>*> timing_; // list index => portId
+    QHash<uint, QHash<Key, Timing>*> timing_; // outer key => portId
     QMutex txHashLock_;
     QMutex rxHashLock_;
     QMutex timingLock_; // FIXME: change to RW lock?
