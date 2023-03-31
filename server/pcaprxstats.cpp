@@ -35,7 +35,7 @@ PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats, int i
 
     handle_ = NULL;
 
-    id_ = id;
+    portId_ = id;
 
     timing_ = StreamTiming::instance();
 }
@@ -122,8 +122,8 @@ _skip_filter:
             case 1: {
                 uint ttagId, guid;
                 if (SignProtocol::packetTtagId(data, hdr->caplen, &ttagId, &guid)) {
-                    timing_->recordRxTime(id_, guid, ttagId, hdr->ts);
-                    qDebug("XXXXX [%d RX] %ld:%ld ttag %u guid %u", id_,
+                    timing_->recordRxTime(portId_, guid, ttagId, hdr->ts);
+                    qDebug("XXXXX [%d RX] %ld:%ld ttag %u guid %u", portId_,
                         hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
                 if (guid != SignProtocol::kInvalidGuid) {
