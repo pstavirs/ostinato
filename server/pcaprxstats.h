@@ -50,7 +50,7 @@ private:
     volatile State state_;
     bool isDirectional_;
 
-    int id_; // FIXME: rename to portId_
+    int portId_;
 
     StreamTiming *timing_{nullptr};
 };
