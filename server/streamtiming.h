@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _STREAM_TIMING
 #define _STREAM_TIMING
 
+#include "../common/sign.h"
+
 #include <QHash>
 #include <QMutex>
 #include <QTimer>
@@ -33,14 +35,17 @@ public:
     StreamTiming();
 
     bool recordTxTime(uint portId, uint guid, uint ttagId,
-                      struct timespec timestamp);
+                      const struct timespec &timestamp);
     bool recordRxTime(uint portId, uint guid, uint ttagId,
-                      struct timespec timestamp);
+                      const struct timespec &timestamp);
 
     bool recordTxTime(uint portId, uint guid, uint ttagId,
-                      struct timeval timestamp);
+                      const struct timeval &timestamp);
     bool recordRxTime(uint portId, uint guid, uint ttagId,
-                      struct timeval timestamp);
+                      const struct timeval &timestamp);
+
+    quint64 delay(uint portId, uint guid);
+    void clear(uint portId, uint guid = SignProtocol::kInvalidGuid);
 
     static StreamTiming* instance();
 
@@ -68,14 +73,18 @@ private:
     };
 
 
-    // XXX: Key = guid (24 bit MSG), ttagid (8 bit LSB)
+    // XXX: TxRxKey = guid (24 bit MSG) + ttagid (8 bit LSB)
     // TODO: encode tx port in in packet and use as part of key
-    typedef quint32 Key;
-    QHash<Key, TtagData> txHash_;
-    QHash<Key, TtagData> rxHash_;
-    QHash<uint, QHash<Key, Timing>*> timing_; // outer key => portId
+    typedef quint32 TxRxKey;
+    QHash<TxRxKey, TtagData> txHash_;
+    QHash<TxRxKey, TtagData> rxHash_;
     QMutex txHashLock_;
     QMutex rxHashLock_;
+
+    typedef uint PortIdKey;
+    typedef uint GuidKey;
+    typedef QHash<GuidKey, Timing> PortTiming;
+    QHash<PortIdKey, PortTiming*> timing_;
     QMutex timingLock_; // FIXME: change to RW lock?
 
     QTimer *timer_;     // Periodic timer to process tx/rx records

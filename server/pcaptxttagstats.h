@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapsession.h"
 
+class StreamTiming;
+
 class PcapTxTtagStats: public PcapSession
 {
 public:
@@ -48,8 +50,10 @@ private:
     volatile State state_{kNotStarted};
     volatile bool stop_{false};
 
-    int id_; // FIXME: needed?
+    int portId_;
     struct pcap_stat lastPcapStats_;
+
+    StreamTiming *timing_{nullptr};
 };
 
 #endif

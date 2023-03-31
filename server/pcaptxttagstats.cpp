@@ -21,14 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapextra.h"
 #include "../common/sign.h"
+#include "streamtiming.h"
 
 #define Xnotify qWarning // FIXME
 
 PcapTxTtagStats::PcapTxTtagStats(const char *device, int id)
-    : id_(id)
+    : portId_(id)
 {
     setObjectName(QString("TxTtagStats:%1").arg(device));
     device_ = QString::fromLatin1(device);
+
+    timing_ = StreamTiming::instance();
 }
 
 void PcapTxTtagStats::run()
@@ -37,9 +40,10 @@ void PcapTxTtagStats::run()
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     struct bpf_program bpf;
     const int optimize = 1;
-    QString capture_filter = QString("(ether[len - 5:5] == 0x%1%2)")
-            .arg(SignProtocol::kTypeLenTtag, 0, BASE_HEX)
-            .arg(SignProtocol::magic(), 0, BASE_HEX);
+    QString capture_filter = QString(
+            "(ether[len-4:4] == 0x%1) and (ether[len-5:1] == 0x%2")
+            .arg(SignProtocol::magic(), 0, BASE_HEX)
+            .arg(SignProtocol::kTypeLenTtag, 0, BASE_HEX);
 
     qDebug("In %s", __PRETTY_FUNCTION__);
     qDebug("pcap-filter: %s", qPrintable(capture_filter));
@@ -102,8 +106,8 @@ _skip_filter:
                 uint guid;
                 if (SignProtocol::packetTtagId(data, hdr->caplen,
                         &ttagId, &guid)) {
-                    // TODO: store packet timestamp with ttag/guid
-                    qDebug("XXXXX [%d] %ld:%ld ttag %u guid %u", id_,
+                    timing_->recordTxTime(portId_, guid, ttagId, hdr->ts);
+                    qDebug("XXXXX [%d TX] %ld:%ld ttag %u guid %u", portId_,
                         hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
                 break;
@@ -179,11 +183,14 @@ bool PcapTxTtagStats::isDirectional()
     return isDirectional_;
 }
 
-// FIXME: move to PcapSession
+// FIXME: moved to PcapSession, remove from here
 // XXX: Implemented as reset on read
 QString PcapTxTtagStats::debugStats()
 {
     QString dbgStats;
+
+    if (!handle_)
+        return QString();
 
 #ifdef Q_OS_WIN32
     static_assert(sizeof(struct pcap_stat) == 6*sizeof(uint),
