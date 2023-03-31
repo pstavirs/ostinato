@@ -250,7 +250,7 @@ bool SignProtocol::packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint
     if (magic != kSignMagic)
         return ret;
 
-    *guid = 0xffffffff; // invalid GUID
+    *guid = kInvalidGuid;
     p--;
     while (*p != kTypeLenEnd) {
         if (*p == kTypeLenTtag) {

@@ -20,18 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _SERVER_ABSTRACT_PORT_H
 #define _SERVER_ABSTRACT_PORT_H
 
+#include "../common/protocol.pb.h"
 #include "streamstats.h"
 
 #include <QList>
 #include <QtGlobal>
 
-#include "../common/protocol.pb.h"
+#include <limits.h>
 
 class DeviceManager;
 struct InterfaceInfo;
-class StreamBase;
 class PacketBuffer;
 class QIODevice;
+class StreamBase;
+class StreamTiming;
 
 // TODO: send notification back to client(s)
 #define Xnotify qWarning
@@ -120,6 +122,9 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
+    quint64 streamTimingDelay(uint guid);
+    void clearStreamTiming(uint guid = UINT_MAX);
+
     // FIXME: combine single and All calls?
     void streamStats(uint guid, OstProto::StreamStatsList *stats);
     void streamStatsAll(OstProto::StreamStatsList *stats);
@@ -177,6 +182,8 @@ private:
     QList<StreamBase*>  streamList_;
 
     struct PortStats    epochStats_;
+
+    StreamTiming *streamTiming_{nullptr};
 };
 
 #endif

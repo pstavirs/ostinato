@@ -24,6 +24,9 @@ QString PcapSession::debugStats()
 {
     QString dbgStats;
 
+    if (!handle_)
+        return QString();
+
 #ifdef Q_OS_WIN32
     static_assert(sizeof(struct pcap_stat) == 6*sizeof(uint),
                 "pcap_stat has less or more than 6 values");

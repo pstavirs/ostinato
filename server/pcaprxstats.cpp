@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapextra.h"
 #include "../common/sign.h"
+#include "streamtiming.h"
 
 #define Xnotify qWarning // FIXME
 
@@ -35,6 +36,8 @@ PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats, int i
     handle_ = NULL;
 
     id_ = id;
+
+    timing_ = StreamTiming::instance();
 }
 
 pcap_t* PcapRxStats::handle()
@@ -117,8 +120,13 @@ _skip_filter:
         ret = pcap_next_ex(handle_, &hdr, &data);
         switch (ret) {
             case 1: {
-                uint guid;
-                if (SignProtocol::packetGuid(data, hdr->caplen, &guid)) {
+                uint ttagId, guid;
+                if (SignProtocol::packetTtagId(data, hdr->caplen, &ttagId, &guid)) {
+                    timing_->recordRxTime(id_, guid, ttagId, hdr->ts);
+                    qDebug("XXXXX [%d RX] %ld:%ld ttag %u guid %u", id_,
+                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
+                }
+                if (guid != SignProtocol::kInvalidGuid) {
                     streamStats_[guid].rx_pkts++;
                     streamStats_[guid].rx_bytes += hdr->caplen;
                 }

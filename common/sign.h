@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "abstractprotocol.h"
 #include "sign.pb.h"
 
+#include <limits.h>
+
 /*
 Sign Protocol is expected at the end of the frame (just before the Eth FCS)
    ---+--------+-------+
@@ -89,6 +91,7 @@ public:
     static bool packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint *guid);
 
     static const quint32 kMaxGuid = 0x00ffffff;
+    static const quint32 kInvalidGuid = UINT_MAX;
     static const quint8 kTypeLenTtagPlaceholder = 0x22;
     static const quint8 kTypeLenTtag = 0x23;
 private:

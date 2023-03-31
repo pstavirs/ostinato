@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemanager.h"
 #include "interfaceinfo.h"
 #include "packetbuffer.h"
+#include "streamtiming.h"
 
 #include <QString>
 #include <QIODevice>
@@ -54,6 +55,8 @@ AbstractPort::AbstractPort(int id, const char *device)
     maxStatsValue_ = ULLONG_MAX; // assume 64-bit stats
     memset((void*) &stats_, 0, sizeof(stats_));
     resetStats();
+
+    streamTiming_ = StreamTiming::instance();
 }
 
 AbstractPort::~AbstractPort()
@@ -734,6 +737,16 @@ void AbstractPort::stats(PortStats *stats)
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
 }
 
+quint64 AbstractPort::streamTimingDelay(uint guid)
+{
+    return streamTiming_->delay(id(), guid);
+}
+
+void AbstractPort::clearStreamTiming(uint guid)
+{
+    streamTiming_->clear(id(), guid);
+}
+
 void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
 {
     // In case stats are being maintained elsewhere
@@ -748,6 +761,7 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(lastTransmitDuration());
+        s->set_delay(streamTimingDelay(guid));
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
@@ -775,6 +789,7 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(txDur);
+        s->set_delay(streamTimingDelay(i.key()));
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
@@ -786,11 +801,13 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 void AbstractPort::resetStreamStats(uint guid)
 {
     streamStats_.remove(guid);
+    clearStreamTiming(guid);
 }
 
 void AbstractPort::resetStreamStatsAll()
 {
     streamStats_.clear();
+    clearStreamTiming();
 }
 
 void AbstractPort::clearDeviceNeighbors()

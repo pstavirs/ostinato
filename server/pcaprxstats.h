@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapsession.h"
 
+class StreamTiming;
+
 class PcapRxStats: public PcapSession
 {
 public:
@@ -48,7 +50,9 @@ private:
     volatile State state_;
     bool isDirectional_;
 
-    int id_;
+    int id_; // FIXME: rename to portId_
+
+    StreamTiming *timing_{nullptr};
 };
 
 #endif
