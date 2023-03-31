@@ -35,8 +35,6 @@ public:
     bool isRunning();
     bool isDirectional();
 
-    QString debugStats();
-
 private:
     enum State {
         kNotStarted,
