@@ -37,7 +37,7 @@ StreamTiming::StreamTiming()
     gcTimer_ = new QTimer(this);
     connect(gcTimer_, &QTimer::timeout, this, &StreamTiming::deleteStaleRecords);
     gcTimer_->setInterval(30000);
-    //FIXME:gcTimer_->start();
+    gcTimer_->start();
 }
 
 bool StreamTiming::recordTxTime(uint portId, uint guid, uint ttagId,
@@ -192,11 +192,15 @@ int StreamTiming::deleteStaleRecords()
         struct timespec txTime = i.value().timeStamp;
         struct timespec diff;
         timespecsub(&now, &txTime, &diff);
+        qDebug("XXXX gc diff %ld", diff.tv_sec);
         if (diff.tv_sec > 30) {
             i = txHash_.erase(i);
             count++;
             qDebug("XXXX -%d", count);
+        } else {
+            i++;
         }
+
     }
 
     // FIXME: when to stop gc timer?
