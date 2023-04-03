@@ -88,6 +88,9 @@ quint64 StreamTiming::delay(uint portId, uint guid)
 {
     Q_ASSERT(guid <= SignProtocol::kMaxGuid);
 
+    // Process anything pending first
+    processRecords();
+
     QMutexLocker locker(&timingLock_);
 
     if (!timing_.contains(portId))
