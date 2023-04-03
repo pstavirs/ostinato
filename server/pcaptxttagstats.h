@@ -49,7 +49,6 @@ private:
     volatile bool stop_{false};
 
     int portId_;
-    struct pcap_stat lastPcapStats_;
 
     StreamTiming *timing_{nullptr};
 };
