@@ -761,7 +761,7 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(lastTransmitDuration());
-        s->set_delay(streamTimingDelay(guid));
+        s->set_latency(streamTimingDelay(guid));
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
@@ -789,7 +789,7 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(txDur);
-        s->set_delay(streamTimingDelay(i.key()));
+        s->set_latency(streamTimingDelay(i.key()));
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
