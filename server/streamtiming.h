@@ -54,7 +54,7 @@ private:
     int deleteStaleRecords();
 
     quint32 makeKey(uint guid, uint ttagId) {
-        return guid << 24 | (ttagId & 0xFF);
+        return guid << 8 | (ttagId & 0xFF);
     }
 
     // XXX: use only time intervals, not absolute time
@@ -73,7 +73,7 @@ private:
     };
 
 
-    // XXX: TxRxKey = guid (24 bit MSG) + ttagid (8 bit LSB)
+    // XXX: TxRxKey = guid (24 bit MSB) + ttagid (8 bit LSB)
     // TODO: encode tx port in in packet and use as part of key
     typedef quint32 TxRxKey;
     QHash<TxRxKey, TtagData> txHash_;

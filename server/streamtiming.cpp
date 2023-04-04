@@ -155,8 +155,8 @@ int StreamTiming::processRecords()
 
             count++;
 
-            qDebug("XXXXX [%u/%u] diff %ld.%ld (%ld.%ld - %ld.%ld)",
-                i.value().portId, i.key(),
+            qDebug("XXXXX [%u/%u/%u] diff %ld.%ld (%ld.%ld - %ld.%ld)",
+                i.value().portId, guid, i.key() & 0xFF,
                 diff.tv_sec, diff.tv_nsec,
                 rxTime.tv_sec, rxTime.tv_nsec,
                 txTime.tv_sec, txTime.tv_nsec);
