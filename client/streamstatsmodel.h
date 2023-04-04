@@ -57,6 +57,7 @@ private:
         quint64 txPkts;
         quint64 rxBytes;
         quint64 txBytes;
+        quint64 rxLatency;
     };
     struct AggrGuidStats {
         quint64 rxPkts;
@@ -65,6 +66,8 @@ private:
         quint64 txBytes;
         qint64 pktLoss;
         double txDuration;
+        quint64 latencySum;
+        uint latencyCount;
     };
     QList<Guid> guidList_;
     QList<PortGroupPort> portList_;

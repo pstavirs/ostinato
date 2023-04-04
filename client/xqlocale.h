@@ -100,6 +100,22 @@ public:
 
         return QObject::tr("%L1 bps").arg(bps, 0, 'f', 4);
     }
+
+    QString toTimeIntervalString(qint64 nanosecs) const
+    {
+        QString text;
+
+        if (nanosecs >= 1e9)
+            return QObject::tr("%L1 s").arg(nanosecs/1e9, 0, 'f', 3);
+
+        if (nanosecs >= 1e6)
+            return QObject::tr("%L1 ms").arg(nanosecs/1e6, 0, 'f', 3);
+
+        if (nanosecs >= 1e3)
+            return QObject::tr("%L1 us").arg(nanosecs/1e3, 0, 'f', 3);
+
+        return QObject::tr("%L1 ns").arg(nanosecs);
+    }
 };
 
 #endif
