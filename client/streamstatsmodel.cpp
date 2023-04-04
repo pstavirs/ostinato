@@ -266,7 +266,7 @@ void StreamStatsModel::appendStreamStatsList(
         ss.txPkts = s.tx_pkts();
         ss.rxBytes = s.rx_bytes();
         ss.txBytes = s.tx_bytes();
-        ss.rxLatency = s.delay();
+        ss.rxLatency = s.latency();
 
         aggrPort.rxPkts += ss.rxPkts;
         aggrPort.txPkts += ss.txPkts;
