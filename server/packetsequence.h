@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _PACKET_SEQUENCE_H
 #define _PACKET_SEQUENCE_H
 
-#include "pcapextra.h"
+#include "../common/packet.h"
 #include "../common/sign.h"
+#include "pcapextra.h"
 #include "streamstats.h"
 
 class PacketSequence
@@ -72,7 +73,7 @@ public:
             }
         }
         if (trackGuidStats_ && (packets_ == 1)) // first packet of seq
-            ttagL4CksumOffset_ = 40; // FIXME
+            ttagL4CksumOffset_ = Packet::l4ChecksumOffset(pktData, pktHeader->caplen);
         return ret;
     }
     pcap_send_queue *sendQueue_;

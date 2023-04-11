@@ -113,6 +113,7 @@ SOURCES += \
     udp.cpp \
     textproto.cpp \
     hexdump.cpp \
+    packet.cpp \
     payload.cpp \
     sample.cpp \
     sign.cpp \
