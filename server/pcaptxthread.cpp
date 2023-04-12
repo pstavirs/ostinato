@@ -438,14 +438,35 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         if (seq->ttagPktInterval_
                 && ((stats_->pkts % seq->ttagPktInterval_) == 0)) {
             ttagPkt = true;
+            // XXX: write 2xBytes instead of 1xHalf-word to avoid
+            // potential alignment problem
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtag;
-            *(pkt+pktLen-6) = ttagId_++;
+            *(pkt+pktLen-6) = ttagId_;
+
+            // Recalc L4 checksum; use incremental checksum as per RFC 1624
+            // HC' = ~(~HC + ~m + m')
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                         pkt + seq->ttagL4CksumOffset_);
-                origCksum = *cksum;
-                *cksum = 0x0000; // FIXME: recalc cksum
+                origCksum = ntohs(*cksum);
+                // XXX: SignProtocol trailer
+                //      ... | <guid> | 0x61 |     0x00 | 0x22 | 0x1d10c0da
+                //      ... | <guid> | 0x61 | <TtagId> | 0x23 | 0x1d10c0da
+                // For odd pkt Length, Ttag spans across 2 half-words
+                // XXX: Hardcoded values instead of sign protocol constants
+                // used below for readability
+                quint32 newCksum = pktLen & 1 ?
+                    quint16(~origCksum) + quint16(~0x221d) + 0x231d
+                                        + quint16(~0x6100) + (0x6100 | ttagId_) :
+                    quint16(~origCksum) + quint16(~0x0022) + (ttagId_ << 8 | 0x23);
+                while (newCksum > 0xffff)
+                    newCksum = (newCksum & 0xffff) + (newCksum >> 16);
+                // XXX: For IPv4/UDP, if ~newcksum is 0x0000 we are supposed to
+                // set the checksum as 0xffff since 0x0000 indicates no cksum
+                // is present - we choose not to do this to avoid extra cost
+                *cksum = htons(~newCksum);
             }
+            ttagId_++;
         }
 
         if (sync) {
@@ -479,7 +500,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                          pkt + seq->ttagL4CksumOffset_);
-                *cksum = origCksum;
+                *cksum = htons(origCksum);
             }
         }
 
