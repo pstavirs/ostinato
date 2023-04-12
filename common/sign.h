@@ -90,6 +90,8 @@ public:
     static bool packetGuid(const uchar *pkt, int pktLen, uint *guid);
     static bool packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint *guid);
 
+    // XXX: Any change in kTypeLenXXX or magic value should also be done in
+    // TxThread/Ttag code as well where hardcoded values are used
     static const quint32 kMaxGuid = 0x00ffffff;
     static const quint32 kInvalidGuid = UINT_MAX;
     static const quint8 kTypeLenTtagPlaceholder = 0x22;
