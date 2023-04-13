@@ -448,7 +448,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                         pkt + seq->ttagL4CksumOffset_);
-                origCksum = ntohs(*cksum);
+                origCksum = qFromBigEndian<quint16>(*cksum);
                 // XXX: SignProtocol trailer
                 //      ... | <guid> | 0x61 |     0x00 | 0x22 | 0x1d10c0da
                 //      ... | <guid> | 0x61 | <TtagId> | 0x23 | 0x1d10c0da
@@ -464,7 +464,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
                 // XXX: For IPv4/UDP, if ~newcksum is 0x0000 we are supposed to
                 // set the checksum as 0xffff since 0x0000 indicates no cksum
                 // is present - we choose not to do this to avoid extra cost
-                *cksum = htons(~newCksum);
+                *cksum = qToBigEndian(quint16(~newCksum));
             }
             ttagId_++;
         }
@@ -500,7 +500,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                          pkt + seq->ttagL4CksumOffset_);
-                *cksum = htons(origCksum);
+                *cksum = qToBigEndian(origCksum);
             }
         }
 
