@@ -435,7 +435,7 @@ int AbstractPort::updatePacketListInterleaved()
     FrameValueAttrib packetListAttrib;
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
-    quint64 duration = quint64(1e3);
+    quint64 duration = quint64(1e3); // 1000ns (1us)
     QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
@@ -468,6 +468,9 @@ int AbstractPort::updatePacketListInterleaved()
     // First sort the streams by ordinalValue
     std::sort(streamList_.begin(), streamList_.end(), StreamBase::StreamLessThan);
 
+    // FIXME: we are calculating n[bp][12], i[bp]g[12] for a duration of 1sec;
+    // this was fine when the actual packet list duration was also 1sec. But
+    // in the current code (post Turbo changes), the latter can be different!
     for (int i = 0; i < streamList_.size(); i++)
     {
         if (!streamList_[i]->isEnabled())
@@ -613,12 +616,85 @@ int AbstractPort::updatePacketListInterleaved()
 
     uchar* buf;
     int len;
-    quint64 durSec = duration/ulong(1e9);
-    quint64 durNsec = duration % ulong(1e9);
+    const quint64 durSec = duration/ulong(1e9);
+    const quint64 durNsec = duration % ulong(1e9);
     quint64 sec = 0; 
     quint64 nsec = 0;
     quint64 lastPktTxSec = 0;
     quint64 lastPktTxNsec = 0;
+
+    // Count total packets we are going to add, so that we can create
+    // an explicit packet set first
+    // TODO: Find less expensive way to do this counting
+    // FIXME: Turbo still thinks it has to create implicit packet set for
+    // interleaved mode - Turbo code should be changed once this is validated
+    qint64 totalPkts = 0;
+    do
+    {
+        for (int i = 0; i < numStreams; i++)
+        {
+            // If a packet is not scheduled yet, look at the next stream
+            if ((schedSec.at(i) > sec) || (schedNsec.at(i) > nsec))
+                continue;
+
+            for (uint j = 0; j < burstSize[i]; j++)
+            {
+                pktCount[i]++;
+                schedNsec[i] += (pktCount.at(i) < np1.at(i)) ?
+                    ipg1.at(i) : ipg2.at(i);
+                while (schedNsec.at(i) >= 1e9)
+                {
+                    schedSec[i]++;
+                    schedNsec[i] -= long(1e9);
+                }
+                lastPktTxSec = sec;
+                lastPktTxNsec = nsec;
+                totalPkts++;
+            }
+
+            burstCount[i]++;
+            schedNsec[i] += (burstCount.at(i) < nb1.at(i)) ?
+                    ibg1.at(i) : ibg2.at(i);
+            while (schedNsec.at(i) >= 1e9)
+            {
+                schedSec[i]++;
+                schedNsec[i] -= long(1e9);
+            }
+        }
+
+        nsec += minGap;
+        while (nsec >= 1e9)
+        {
+            sec++;
+            nsec -= long(1e9);
+        }
+    } while ((sec < durSec) || (nsec < durNsec));
+
+    // XXX: Ideally, for interleaved mode, we have a single packet set and
+    // the set's delay should be 0.
+    // However, Ttag and Turbo both use the set delay field to derive
+    // the set's avg pps (needed for their own functionality), so we set the
+    // avgDelay here instead of 0.
+    long avgDelay = (lastPktTxSec*long(1e9) + lastPktTxNsec
+                            + (durSec - lastPktTxSec)*long(1e9)
+                            + (durNsec - lastPktTxNsec))
+                       /totalPkts;
+    loopNextPacketSet(totalPkts, 1, 0, avgDelay);
+    qDebug("Interleaved Packet Set of size %lld, repeat 1 and delay %ldns",
+            totalPkts, avgDelay);
+
+    // Reset working sched/counts before building the packet list
+    sec = nsec = 0;
+    lastPktTxSec = lastPktTxNsec = 0;
+    for (int i = 0; i < numStreams; i++)
+    {
+        schedSec[i] = 0;
+        schedNsec[i] = 0;
+        pktCount[i] = 0;
+        burstCount[i] = 0;
+    }
+
+    // Now build the packet list
     do
     {
         for (int i = 0; i < numStreams; i++)
