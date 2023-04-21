@@ -668,7 +668,7 @@ int AbstractPort::updatePacketListInterleaved()
             sec++;
             nsec -= long(1e9);
         }
-    } while ((sec < durSec) || (nsec < durNsec));
+    } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
     // XXX: Ideally, for interleaved mode, we have a single packet set and
     // the set's delay should be 0.
@@ -757,7 +757,7 @@ int AbstractPort::updatePacketListInterleaved()
             sec++;
             nsec -= long(1e9);
         }
-    } while ((sec < durSec) || (nsec < durNsec));
+    } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
     {
         qint64 delaySec = durSec - lastPktTxSec;
