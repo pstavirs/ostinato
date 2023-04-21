@@ -436,6 +436,8 @@ int AbstractPort::updatePacketListInterleaved()
     int numStreams = 0;
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e3); // 1000ns (1us)
+
+    // TODO: convert the below to a QList of struct aggregating all list vars
     QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
@@ -445,6 +447,7 @@ int AbstractPort::updatePacketListInterleaved()
     QList<ulong> pktCount, burstCount;
     QList<ulong> burstSize;
     QList<bool> isVariable;
+    QList<bool> hasTtag;
     QList<QByteArray> pktBuf;
     QList<ulong> pktLen;
     int activeStreamCount = 0;
@@ -594,6 +597,8 @@ int AbstractPort::updatePacketListInterleaved()
             packetListAttrib += attrib;
         }
 
+        hasTtag.append(streamList_[i]->hasProtocol(
+                            OstProto::Protocol::kSignFieldNumber));
         numStreams++;
     } // for i
 
@@ -629,6 +634,8 @@ int AbstractPort::updatePacketListInterleaved()
     // FIXME: Turbo still thinks it has to create implicit packet set for
     // interleaved mode - Turbo code should be changed once this is validated
     qint64 totalPkts = 0;
+    QSet<int> ttagMarkerStreams;
+    QList<uint> ttagMarkers;
     do
     {
         for (int i = 0; i < numStreams; i++)
@@ -636,6 +643,12 @@ int AbstractPort::updatePacketListInterleaved()
             // If a packet is not scheduled yet, look at the next stream
             if ((schedSec.at(i) > sec) || (schedNsec.at(i) > nsec))
                 continue;
+
+            // One marker per stream
+            if (hasTtag.at(i) && !ttagMarkerStreams.contains(i)) {
+                ttagMarkerStreams.insert(i);
+                ttagMarkers.append(totalPkts);
+            }
 
             for (uint j = 0; j < burstSize[i]; j++)
             {
@@ -680,8 +693,9 @@ int AbstractPort::updatePacketListInterleaved()
                             + (durNsec - lastPktTxNsec))
                        /totalPkts;
     loopNextPacketSet(totalPkts, 1, 0, avgDelay);
-    qDebug("Interleaved Packet Set of size %lld, repeat 1 and delay %ldns",
-            totalPkts, avgDelay);
+    qDebug("Interleaved PacketSet of size %lld, duration %llu.%09llu "
+           "repeat 1 and avg delay %ldns",
+            totalPkts, durSec, durNsec, avgDelay);
 
     // Reset working sched/counts before building the packet list
     sec = nsec = 0;
@@ -722,7 +736,7 @@ int AbstractPort::updatePacketListInterleaved()
                 if (len <= 0)
                     continue;
 
-                qDebug("q(%d) sec = %llu nsec = %llu", i, sec, nsec);
+                qDebug("q(%d) TS = %llu.%09llu", i, sec, nsec);
                 if (!appendToPacketList(sec, nsec, buf, len)) {
                     clearPacketList(); // don't leave it half baked/inconsitent
                     packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
@@ -767,9 +781,21 @@ int AbstractPort::updatePacketListInterleaved()
             delayNsec += long(1e9);
             delaySec--;
         }
-        qDebug("loop Delay = %lld/%lld", delaySec, delayNsec);
+        qDebug("loop Delay = %lld.%09lld", delaySec, delayNsec);
         setPacketListLoopMode(true, delaySec, delayNsec);
     }
+
+    // XXX: TTag repeat interval calculation:
+    // CASE 1. pktListDuration < kTtagTimeInterval:
+    //      e.g. if pktListDuration is 1sec and TtagTimerInterval is 5s, we
+    //      skip 5 times total packets before we repeat the markers 
+    // CASE 2. pktListDuration > kTtagTimeInterval:
+    //      e.g. if pktListDuration is 7sec and TtagTimerInterval is 5s, we
+    //      skip repeat markers every pktList iteration
+    setPacketListTtagMarkers(ttagMarkers, ttagMarkers.isEmpty() ? 0 :
+                             qMax(uint(kTtagTimeInterval_*1e9
+                                     /(durSec*1e9+durNsec)),
+                                  1U) * totalPkts);
 
 _out_of_memory:
     isSendQueueDirty_ = false;

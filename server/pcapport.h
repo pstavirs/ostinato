@@ -48,6 +48,7 @@ public:
     virtual void clearPacketList() { 
         transmitter_->clearPacketList();
         setPacketListLoopMode(false, 0, 0);
+        setPacketListTtagMarkers(QList<uint>(), 0);
     }
     virtual void loopNextPacketSet(qint64 size, qint64 repeats,
             long repeatDelaySec, long repeatDelayNsec) {
@@ -61,6 +62,11 @@ public:
     virtual void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay)
     {
         transmitter_->setPacketListLoopMode(loop, secDelay, nsecDelay);
+    }
+    virtual void setPacketListTtagMarkers(QList<uint> markers,
+            uint repeatInterval)
+    {
+        transmitter_->setPacketListTtagMarkers(markers, repeatInterval);
     }
 
     virtual void startTransmit() { 

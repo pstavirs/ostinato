@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "statstuple.h"
 #include "timestamp.h"
 
+#include <QtDebug>
+
 PcapTxThread::PcapTxThread(const char *device)
 {
     char errbuf[PCAP_ERRBUF_SIZE] = "";
@@ -133,8 +135,6 @@ void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
     currentPacketSequence_->repeatCount_ = repeats;
     currentPacketSequence_->usecDelay_ = repeatDelaySec * long(1e6)
                                             + repeatDelayNsec/1000;
-    currentPacketSequence_->ttagPktInterval_ =
-            kTtagPktInterval*1e6/currentPacketSequence_->usecDelay_;
 
     repeatSequenceStart_ = packetSequenceList_.size();
     repeatSize_ = size;
@@ -205,8 +205,6 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
             start->usecDelay_ = 0;
             start->repeatSize_ =
                     packetSequenceList_.size() - repeatSequenceStart_;
-            start->ttagPktInterval_ = kTtagPktInterval*1e6
-                                        /currentPacketSequence_->usecDelay_;
         }
 
         repeatSize_ = 0;
@@ -225,6 +223,27 @@ void PcapTxThread::setPacketListLoopMode(
 {
     returnToQIdx_ = loop ? 0 : -1;
     loopDelay_ = secDelay*long(1e6) + nsecDelay/1000;
+}
+
+void PcapTxThread::setPacketListTtagMarkers(
+    QList<uint> markers,
+    uint repeatInterval)
+{
+    // XXX: Empty markers => no streams have Ttag
+    firstTtagPkt_ = markers.isEmpty() ? -1 : int(markers.first());
+
+    // Calculate delta markers
+    ttagDeltaMarkers_.clear();
+    for (int i = 1; i < markers.size(); i++)
+        ttagDeltaMarkers_.append(markers.at(i) - markers.at(i-1));
+    if (!markers.isEmpty()) {
+        ttagDeltaMarkers_.append(repeatInterval - markers.last()
+                                    + markers.first());
+        qDebug() << "TtagRepeatInterval:" << repeatInterval;
+        qDebug() << "FirstTtagPkt:" << firstTtagPkt_;
+        qDebug() << "TtagMarkers:" << ttagDeltaMarkers_;
+    }
+
 }
 
 void PcapTxThread::setHandle(pcap_t *handle)
@@ -282,14 +301,22 @@ void PcapTxThread::run()
                 packetSequenceList_.at(i)->repeatCount_,
                 packetSequenceList_.at(i)->repeatSize_,
                 packetSequenceList_.at(i)->usecDelay_);
-        qDebug("sendQ[%d]: pkts = %ld, usecDuration = %ld, ttagL4CksumOfs = %hu ttagPktIntvl = %llu", i,
+        qDebug("sendQ[%d]: pkts = %ld, usecDuration = %ld, ttagL4CksumOfs = %hu", i,
                 packetSequenceList_.at(i)->packets_,
                 packetSequenceList_.at(i)->usecDuration_,
-                packetSequenceList_.at(i)->ttagL4CksumOffset_,
-                packetSequenceList_.at(i)->ttagPktInterval_);
+                packetSequenceList_.at(i)->ttagL4CksumOffset_);
     }
 
+    qDebug() << "First Ttag: " << firstTtagPkt_ 
+             << "Ttag Markers:" << ttagDeltaMarkers_;
+
     lastStats_ = *stats_; // used for stream stats
+
+    // Init Ttag related vars. If no packets need ttag, firstTtagPkt_ is -1,
+    // so nextTagPkt_ is set to practically unreachable value (due to
+    // 64 bit counter wraparound time!)
+    ttagMarkerIndex_ = 0;
+    nextTtagPkt_ = stats_->pkts + firstTtagPkt_;
 
     getTimeStamp(&startTime);
     state_ = kRunning;
@@ -416,6 +443,7 @@ double PcapTxThread::lastTxDuration()
     return lastTxDuration_;
 }
 
+// FIXME: do we need 'seq' as func param?
 int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         long &overHead, int sync)
 {
@@ -434,9 +462,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         quint16 origCksum = 0;
 
         // Time for a T-Tag packet?
-        // FIXME: optimize per packet costly modulo operation
-        if (seq->ttagPktInterval_
-                && ((stats_->pkts % seq->ttagPktInterval_) == 0)) {
+        if (stats_->pkts == nextTtagPkt_) {
             ttagPkt = true;
             // XXX: write 2xBytes instead of 1xHalf-word to avoid
             // potential alignment problem
@@ -467,6 +493,10 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
                 *cksum = qToBigEndian(quint16(~newCksum));
             }
             ttagId_++;
+            nextTtagPkt_ += ttagDeltaMarkers_.at(ttagMarkerIndex_);
+            ttagMarkerIndex_++;
+            if (ttagMarkerIndex_ >= ttagDeltaMarkers_.size())
+                ttagMarkerIndex_ = 0;
         }
 
         if (sync) {
