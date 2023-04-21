@@ -39,7 +39,6 @@ public:
         repeatSize_ = 1;
         usecDelay_ = 0;
         ttagL4CksumOffset_ = 0;
-        ttagPktInterval_ = 0;
     }
     ~PacketSequence() {
         pcap_sendqueue_destroy(sendQueue_);
@@ -85,7 +84,6 @@ public:
     int repeatSize_;
     long usecDelay_;
     quint16 ttagL4CksumOffset_;  // For ttag packets
-    qulonglong ttagPktInterval_; // ttag pkt once every X packets
     StreamStats streamStatsMeta_;
 
 private:

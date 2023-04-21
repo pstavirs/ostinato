@@ -42,6 +42,7 @@ public:
     bool appendToPacketList(long sec, long usec, const uchar *packet,
                             int length);
     void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay);
+    void setPacketListTtagMarkers(QList<uint> markers, uint repeatInterval);
 
     void setHandle(pcap_t *handle);
 
@@ -80,7 +81,7 @@ private:
     quint64 packetListSize_; // count of pkts in packet List including repeats
 
     int returnToQIdx_;
-    quint64 loopDelay_;
+    quint64 loopDelay_; // in nanosecs
 
     void (*udelayFn_)(unsigned long);
 
@@ -97,7 +98,13 @@ private:
 
     double lastTxDuration_{0.0}; // in secs
 
-    const ulong kTtagPktInterval{5}; // T-Tag pkt once every X sec
+    // XXX: Ttag Marker config derived; not updated during Tx
+    int firstTtagPkt_;
+    QList<uint> ttagDeltaMarkers_;
+
+    // XXX: Ttag related; updated during Tx
+    int ttagMarkerIndex_;
+    quint64 nextTtagPkt_{0};
 };
 
 #endif

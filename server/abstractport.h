@@ -107,6 +107,8 @@ public:
             int length) = 0;
     virtual void setPacketListLoopMode(bool loop, 
             quint64 secDelay, quint64 nsecDelay) = 0;
+    virtual void setPacketListTtagMarkers(QList<uint> markers,
+            uint repeatInterval) = 0;
     int updatePacketList();
 
     virtual void startTransmit() = 0;
@@ -162,6 +164,8 @@ protected:
     struct PortStats    stats_;
     StreamStats streamStats_;
     //! \todo Need lock for stats access/update
+
+    const uint kTtagTimeInterval_{5}; // in seconds
 
     struct InterfaceInfo *interfaceInfo_;
     DeviceManager *deviceManager_;

@@ -42,6 +42,7 @@ public:
     bool appendToPacketList(long sec, long usec, const uchar *packet,
                             int length);
     void setPacketListLoopMode(bool loop, quint64 secDelay, quint64 nsecDelay);
+    void setPacketListTtagMarkers(QList<uint> markers, uint repeatInterval);
 
     void setHandle(pcap_t *handle);
     void useExternalStats(AbstractPort::PortStats *stats);
