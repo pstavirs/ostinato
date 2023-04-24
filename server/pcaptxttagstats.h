@@ -44,7 +44,6 @@ private:
 
     QString device_;
     bool isDirectional_{true};
-    pcap_t *handle_{nullptr};
     volatile State state_{kNotStarted};
     volatile bool stop_{false};
 
