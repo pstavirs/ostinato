@@ -155,13 +155,13 @@ int StreamTiming::processRecords()
 
             count++;
 
-            qDebug("XXXXX [%u/%u/%u] diff %ld.%ld (%ld.%ld - %ld.%ld)",
+            qDebug("XXXXX [%u/%u/%u] diff %ld.%09ld (%ld.%09ld - %ld.%09ld)",
                 i.value().portId, guid, i.key() & 0xFF,
                 diff.tv_sec, diff.tv_nsec,
                 rxTime.tv_sec, rxTime.tv_nsec,
                 txTime.tv_sec, txTime.tv_nsec);
-            qDebug("XXXXX %d:[%u/%u] total %ld.%ld count %u",
-                count, i.value().portId, i.key(),
+            qDebug("XXXXX %d:[%u/%u] total %ld.%09ld count %u",
+                count, i.value().portId, guid,
                 guidTiming.sumDelays.tv_sec, guidTiming.sumDelays.tv_nsec,
                 guidTiming.countDelays);
         }

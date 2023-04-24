@@ -235,6 +235,9 @@ int AbstractPort::updatePacketList()
 
 int AbstractPort::updatePacketListSequential()
 {
+    quint64 duration = 0;  // in nanosec
+    quint64 totalPkts = 0;
+    QList<uint> ttagMarkers;
     FrameValueAttrib packetListAttrib;
     long    sec = 0; 
     long    nsec = 0;
@@ -262,6 +265,8 @@ int AbstractPort::updatePacketListSequential()
             quint64 npy1 = 0, npy2 = 0;
             quint64 loopDelay;
             ulong frameVariableCount = streamList_[i]->frameVariableCount();
+            bool hasTtag = streamList_[i]->hasProtocol(
+                                OstProto::Protocol::kSignFieldNumber);
 
             // We derive n, x, y such that
             // n * x + y = total number of packets to be sent
@@ -334,6 +339,7 @@ int AbstractPort::updatePacketListSequential()
             else if (n == 0)
                 x = 0;
 
+            quint64 pktCount = n*x + y;
             for (uint j = 0; j < (x+y); j++)
             {
                 
@@ -386,6 +392,15 @@ int AbstractPort::updatePacketListSequential()
                 }
             }
 
+            // Add a Ttag marker after every kTtagTimeInterval_ worth of pkts
+            if (hasTtag) {
+                uint ttagPktInterval = kTtagTimeInterval_*1e9/loopDelay;
+                for (uint k = 0; k < pktCount; k += ttagPktInterval)
+                    ttagMarkers.append(totalPkts + k);
+            }
+            totalPkts += pktCount;
+            duration += pktCount*loopDelay; // in nanosecs
+
             switch(streamList_[i]->nextWhat())
             {
                 case StreamBase::e_nw_stop:
@@ -423,6 +438,10 @@ int AbstractPort::updatePacketListSequential()
 
 _out_of_memory:
 _stop_no_more_pkts:
+    // See comments in updatePacketListInterleaved() for calc explanation
+    setPacketListTtagMarkers(ttagMarkers, ttagMarkers.isEmpty() ? 0 :
+                             qMax(uint(kTtagTimeInterval_*1e9/(duration)),
+                                  1U) * totalPkts);
     isSendQueueDirty_ = false;
 
     qDebug("PacketListAttrib = %x",
@@ -633,7 +652,7 @@ int AbstractPort::updatePacketListInterleaved()
     // TODO: Find less expensive way to do this counting
     // FIXME: Turbo still thinks it has to create implicit packet set for
     // interleaved mode - Turbo code should be changed once this is validated
-    qint64 totalPkts = 0;
+    quint64 totalPkts = 0;
     QSet<int> ttagMarkerStreams;
     QList<uint> ttagMarkers;
     do
@@ -645,6 +664,8 @@ int AbstractPort::updatePacketListInterleaved()
                 continue;
 
             // One marker per stream
+            // TODO: We should have a marker every 5s per stream if
+            // the pktList is > 5s
             if (hasTtag.at(i) && !ttagMarkerStreams.contains(i)) {
                 ttagMarkerStreams.insert(i);
                 ttagMarkers.append(totalPkts);
