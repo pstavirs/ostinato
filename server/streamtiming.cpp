@@ -179,11 +179,13 @@ int StreamTiming::deleteStaleRecords()
 {
     // FIXME: yield after a certain count of records or time?
 
-    // FIXME: Can we compare 'now' below with libpcap provided timestamp?
-    // Are their sources same or synced?
+    // XXX: We assume the Tx packet timestamps are based on CLOCK_REALTIME
+    // (or a similar and comparable source). Since garbage collection timer
+    // is not a short interval, it need not be the exact same source as long
+    // as the values are comparable
     int count = 0;
     struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
+    clock_gettime(CLOCK_REALTIME, &now);
 
     // XXX: processRecords() iterates and deletes all rx records irrespective
     // of whether it found a matching tx record. So for garbage collection we
