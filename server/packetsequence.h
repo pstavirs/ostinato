@@ -71,8 +71,16 @@ public:
                 streamStatsMeta_[guid].tx_bytes += pktHeader->caplen;
             }
         }
+        // TODO: A PacketSequence belongs to a unique stream only in case of
+        // sequential streams; for interleaved streams, we have only a single
+        // packet set (with one or more sequences) containing packets from
+        // multiple streams. To support this, we need to make l4cksum a packet
+        // property not a sequence property
+        // Till the above is fixed, Ttag packets will have wrong checksum
+#if 0
         if (trackGuidStats_ && (packets_ == 1)) // first packet of seq
             ttagL4CksumOffset_ = Packet::l4ChecksumOffset(pktData, pktHeader->caplen);
+#endif
         return ret;
     }
     pcap_send_queue *sendQueue_;
