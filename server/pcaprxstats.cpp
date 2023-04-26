@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats, int id)
     : streamStats_(portStreamStats)
 {
+    setObjectName(QString("Rx$:%1").arg(device));
     device_ = QString::fromLatin1(device);
     stop_ = false;
     state_ = kNotStarted;

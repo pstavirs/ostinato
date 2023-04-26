@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 PcapTxTtagStats::PcapTxTtagStats(const char *device, int id)
     : portId_(id)
 {
-    setObjectName(QString("TxTtagStats:%1").arg(device));
+    setObjectName(QString("TxT$:%1").arg(device));
     device_ = QString::fromLatin1(device);
 
     timing_ = StreamTiming::instance();
