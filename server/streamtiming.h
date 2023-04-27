@@ -32,7 +32,6 @@ class StreamTiming : public QObject
 {
     Q_OBJECT
 public:
-    StreamTiming();
 
     bool recordTxTime(uint portId, uint guid, uint ttagId,
                       const struct timespec &timestamp);
@@ -50,6 +49,8 @@ public:
     static StreamTiming* instance();
 
 private:
+    StreamTiming(QObject *parent=nullptr);
+
     int processRecords();
     int deleteStaleRecords();
 
