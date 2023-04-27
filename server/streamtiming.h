@@ -86,7 +86,7 @@ private:
     typedef uint GuidKey;
     typedef QHash<GuidKey, Timing> PortTiming;
     QHash<PortIdKey, PortTiming*> timing_;
-    QMutex timingLock_; // FIXME: change to RW lock?
+    QMutex timingLock_;
 
     QTimer *timer_;     // Periodic timer to process tx/rx records
     QTimer *gcTimer_;   // Garbage collection for stale tx records
