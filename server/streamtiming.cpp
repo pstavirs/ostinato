@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QCoreApplication>
 
-StreamTiming::StreamTiming()
-    : QObject(nullptr) // FIXME: parent
+StreamTiming::StreamTiming(QObject *parent)
+    : QObject(parent)
 {
     // This class must be part of the main thread so that timers can work
     Q_ASSERT(this->thread() == QCoreApplication::instance()->thread());
@@ -219,7 +219,7 @@ StreamTiming* StreamTiming::instance()
     static StreamTiming *instance{nullptr};
 
     if (!instance)
-        instance = new StreamTiming();
+        instance = new StreamTiming(QCoreApplication::instance());
 
     return instance;
 }
