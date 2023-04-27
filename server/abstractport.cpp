@@ -200,6 +200,11 @@ void AbstractPort::addNote(QString note)
 
 bool AbstractPort::setTrackStreamStats(bool enable)
 {
+    if (enable)
+        streamTiming_->start(id());
+    else
+        streamTiming_->stop(id());
+
     data_.set_is_tracking_stream_stats(enable);
 
     return true;

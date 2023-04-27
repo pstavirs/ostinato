@@ -26,18 +26,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 StreamTiming::StreamTiming(QObject *parent)
     : QObject(parent)
 {
-    // This class must be part of the main thread so that timers can work
+    // This class MUST be part of the main thread so that timers can work
     Q_ASSERT(this->thread() == QCoreApplication::instance()->thread());
 
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &StreamTiming::processRecords);
     timer_->setInterval(3000);
-    timer_->start();
 
     gcTimer_ = new QTimer(this);
     connect(gcTimer_, &QTimer::timeout, this, &StreamTiming::deleteStaleRecords);
     gcTimer_->setInterval(30000);
-    gcTimer_->start();
+}
+
+void StreamTiming::start(uint portId)
+{
+    if (activePortSet_.isEmpty()) { // First port?
+        timer_->start();
+        gcTimer_->start();
+        qDebug("Stream Latency tracking started");
+    }
+    activePortSet_.insert(portId);
+    qDebug("Stream Latency tracking started for port %u", portId);
+}
+
+void StreamTiming::stop(uint portId)
+{
+    activePortSet_.remove(portId);
+    qDebug("Stream Latency tracking stopped for port %u", portId);
+    if (activePortSet_.isEmpty()) { // Last port?
+        processRecords();
+        deleteStaleRecords();
+        timer_->stop();
+        gcTimer_->stop();
+        qDebug("Stream Latency tracking stopped");
+    }
 }
 
 bool StreamTiming::recordTxTime(uint portId, uint guid, uint ttagId,
@@ -128,7 +150,8 @@ void StreamTiming::clear(uint portId, uint guid)
 
 int StreamTiming::processRecords()
 {
-    // FIXME: yield after a certain count of records or time?
+    // TODO: yield after a certain count of records or time when called in
+    // timer context; when called from delay(), process ALL
 
     int count = 0;
     QMutexLocker txLocker(&txHashLock_);
@@ -170,14 +193,13 @@ int StreamTiming::processRecords()
 
     Q_ASSERT(rxHash_.isEmpty());
 
-    // FIXME: when to stop timer?
-
     return count;
 }
 
 int StreamTiming::deleteStaleRecords()
 {
-    // FIXME: yield after a certain count of records or time?
+    // TODO: yield after a certain count of records or time unless we are
+    // idle when we process all; how do we determine we are "idle"?
 
     // XXX: We assume the Tx packet timestamps are based on CLOCK_REALTIME
     // (or a similar and comparable source). Since garbage collection timer
@@ -208,8 +230,6 @@ int StreamTiming::deleteStaleRecords()
 
     }
 
-    // FIXME: when to stop gc timer?
-
     qDebug("XXXX garbage collected %d stale tx timing records", count);
     return count;
 }
@@ -218,6 +238,9 @@ StreamTiming* StreamTiming::instance()
 {
     static StreamTiming *instance{nullptr};
 
+    // XXX: As of this writing, AbstractPort constructor is the first one
+    // to call this - hence this singleton is created when the first port
+    // is created
     if (!instance)
         instance = new StreamTiming(QCoreApplication::instance());
 
