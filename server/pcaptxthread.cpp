@@ -159,16 +159,12 @@ bool PcapTxThread::appendToPacketList(long sec, long nsec,
     // If not enough space, update usecDelay and alloc a new seq
     if (!currentPacketSequence_->hasFreeSpace(2*sizeof(pcap_pkthdr)+length))
     {
-#if 0 // FIXME: temporary MacOS build fix
-        currentPacketSequence_->usecDelay_ = udiffTimeStamp(
-            &currentPacketSequence_->lastPacket_->ts, &pktHdr.ts);
-#else
         struct timeval diff;
         timersub(&pktHdr.ts, &currentPacketSequence_->lastPacket_->ts, &diff);
         currentPacketSequence_->usecDelay_ = diff.tv_usec;
         if (diff.tv_sec)
             currentPacketSequence_->usecDelay_ += diff.tv_sec*1e6;
-#endif
+
         //! \todo (LOW): calculate sendqueue size
         currentPacketSequence_ = new PacketSequence(trackStreamStats_);
         packetSequenceList_.append(currentPacketSequence_);
