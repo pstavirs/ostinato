@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QHash>
 #include <QMutex>
+#include <QSet>
 #include <QTimer>
 
 #include <time.h>
@@ -32,6 +33,9 @@ class StreamTiming : public QObject
 {
     Q_OBJECT
 public:
+
+    void start(uint portId);
+    void stop(uint portId);
 
     bool recordTxTime(uint portId, uint guid, uint ttagId,
                       const struct timespec &timestamp);
@@ -73,6 +77,7 @@ private:
         uint countDelays;
     };
 
+    QSet<uint> activePortSet_;
 
     // XXX: TxRxKey = guid (24 bit MSB) + ttagid (8 bit LSB)
     // TODO: encode tx port in in packet and use as part of key
