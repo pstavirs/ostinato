@@ -443,7 +443,6 @@ double PcapTxThread::lastTxDuration()
     return lastTxDuration_;
 }
 
-// FIXME: do we need 'seq' as func param?
 int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         long &overHead, int sync)
 {
