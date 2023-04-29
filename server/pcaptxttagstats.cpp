@@ -41,7 +41,7 @@ void PcapTxTtagStats::run()
     struct bpf_program bpf;
     const int optimize = 1;
     QString capture_filter = QString(
-            "(ether[len-4:4] == 0x%1) and (ether[len-5:1] == 0x%2")
+            "(ether[len - 4:4] == 0x%1) and (ether[len - 5:1] == 0x%2)")
             .arg(SignProtocol::magic(), 0, BASE_HEX)
             .arg(SignProtocol::kTypeLenTtag, 0, BASE_HEX);
 
