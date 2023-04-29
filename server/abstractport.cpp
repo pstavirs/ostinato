@@ -461,7 +461,7 @@ int AbstractPort::updatePacketListInterleaved()
     quint64 minGap = ULLONG_MAX;
     quint64 duration = quint64(1e3); // 1000ns (1us)
 
-    // TODO: convert the below to a QList of struct aggregating all list vars
+    // TODO: convert the below to a QVector of struct aggregating all list vars
     QList<int> streamId;
     QList<quint64> ibg1, ibg2;
     QList<quint64> nb1, nb2;
@@ -658,8 +658,10 @@ int AbstractPort::updatePacketListInterleaved()
     // FIXME: Turbo still thinks it has to create implicit packet set for
     // interleaved mode - Turbo code should be changed once this is validated
     quint64 totalPkts = 0;
-    QSet<int> ttagMarkerStreams;
+    QVector<ulong> ttagSchedSec(numStreams, 0);
+    QVector<ulong> ttagSchedNsec(numStreams, 0);
     QList<uint> ttagMarkers;
+
     do
     {
         for (int i = 0; i < numStreams; i++)
@@ -668,12 +670,14 @@ int AbstractPort::updatePacketListInterleaved()
             if ((schedSec.at(i) > sec) || (schedNsec.at(i) > nsec))
                 continue;
 
-            // One marker per stream
-            // TODO: We should have a marker every 5s per stream if
-            // the pktList is > 5s
-            if (hasTtag.at(i) && !ttagMarkerStreams.contains(i)) {
-                ttagMarkerStreams.insert(i);
+            // Ttag marker every TtagTimeInterval for each stream
+            if (hasTtag.at(i)
+                    && ((schedSec.at(i) > ttagSchedSec.at(i))
+                            || ((schedSec.at(i) == ttagSchedSec.at(i))
+                                && (schedNsec.at(i) >= ttagSchedNsec.at(i))))) {
                 ttagMarkers.append(totalPkts);
+                ttagSchedSec[i] = schedSec.at(i) + kTtagTimeInterval_;
+                ttagSchedNsec[i] = schedNsec.at(i);
             }
 
             for (uint j = 0; j < burstSize[i]; j++)
