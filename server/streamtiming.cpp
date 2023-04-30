@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streamtiming.h"
 
+#include "../common/debugdefs.h"
 #include "timestamp.h"
 
 #include <QCoreApplication>
@@ -122,9 +123,6 @@ quint64 StreamTiming::delay(uint portId, uint guid)
     if (t.countDelays == 0)
         return 0;
 
-    qDebug("XXXX [%u/%u] %lldns", portId, guid,
-        timespecToNsecs(t.sumDelays)/t.countDelays);
-
     return timespecToNsecs(t.sumDelays)/t.countDelays;
 }
 
@@ -178,12 +176,12 @@ int StreamTiming::processRecords()
 
             count++;
 
-            qDebug("XXXXX [%u/%u/%u] diff %ld.%09ld (%ld.%09ld - %ld.%09ld)",
+            timingDebug("[%u/%u/%u] diff %ld.%09ld (%ld.%09ld - %ld.%09ld)",
                 i.value().portId, guid, i.key() & 0xFF,
                 diff.tv_sec, diff.tv_nsec,
                 rxTime.tv_sec, rxTime.tv_nsec,
                 txTime.tv_sec, txTime.tv_nsec);
-            qDebug("XXXXX %d:[%u/%u] total %ld.%09ld count %u",
+            timingDebug("%d:[%u/%u] total %ld.%09ld count %u",
                 count, i.value().portId, guid,
                 guidTiming.sumDelays.tv_sec, guidTiming.sumDelays.tv_nsec,
                 guidTiming.countDelays);
@@ -219,18 +217,18 @@ int StreamTiming::deleteStaleRecords()
         struct timespec txTime = i.value().timeStamp;
         struct timespec diff;
         timespecsub(&now, &txTime, &diff);
-        qDebug("XXXX gc diff %ld", diff.tv_sec);
+        timingDebug("gc diff %ld", diff.tv_sec);
         if (diff.tv_sec > 30) {
             i = txHash_.erase(i);
             count++;
-            qDebug("XXXX -%d", count);
         } else {
             i++;
         }
 
     }
 
-    qDebug("XXXX garbage collected %d stale tx timing records", count);
+    if (count)
+        qDebug("Latency garbage collected %d stale tx timing records", count);
     return count;
 }
 
