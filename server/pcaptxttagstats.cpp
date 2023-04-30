@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcaptxttagstats.h"
 
 #include "pcapextra.h"
+#include "../common/debugdefs.h"
 #include "../common/sign.h"
 #include "streamtiming.h"
 
@@ -107,7 +108,7 @@ _skip_filter:
                 if (SignProtocol::packetTtagId(data, hdr->caplen,
                         &ttagId, &guid)) {
                     timing_->recordTxTime(portId_, guid, ttagId, hdr->ts);
-                    qDebug("XXXXX [%d TX] %ld:%ld ttag %u guid %u", portId_,
+                    timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId_,
                         hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
                 break;
