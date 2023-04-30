@@ -33,10 +33,6 @@ class StreamTiming : public QObject
 {
     Q_OBJECT
 public:
-
-    void start(uint portId);
-    void stop(uint portId);
-
     bool recordTxTime(uint portId, uint guid, uint ttagId,
                       const struct timespec &timestamp);
     bool recordRxTime(uint portId, uint guid, uint ttagId,
@@ -51,6 +47,10 @@ public:
     void clear(uint portId, uint guid = SignProtocol::kInvalidGuid);
 
     static StreamTiming* instance();
+
+public slots:
+    void start(uint portId);
+    void stop(uint portId);
 
 private:
     StreamTiming(QObject *parent=nullptr);

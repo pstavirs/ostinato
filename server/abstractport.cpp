@@ -200,11 +200,13 @@ void AbstractPort::addNote(QString note)
 
 bool AbstractPort::setTrackStreamStats(bool enable)
 {
-    if (enable)
-        streamTiming_->start(id());
-    else
-        streamTiming_->stop(id());
-
+    // XXX: This function is called by modify() in context of the RPC
+    // thread (1 thread per connected client), but the StreamTiming
+    // singleton resides in the main thread and its' start/stop methods
+    // start/stop timers which cannot be done across Qt Threads. Hence
+    // this slightly hacky way of invoking those methods
+    QMetaObject::invokeMethod(streamTiming_, enable ? "start" : "stop",
+        Qt::QueuedConnection, Q_ARG(uint, id()));
     data_.set_is_tracking_stream_stats(enable);
 
     return true;
