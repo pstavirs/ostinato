@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _TIMESTAMP_H
 
 #include "timespecops.h"
+#include "timevalops.h"
 
 #include <QtGlobal>
 
@@ -69,6 +70,7 @@ static long inline udiffTimeStamp(const TimeStamp *start, const TimeStamp *end)
 #endif
 
 #elif defined(Q_OS_WIN32)
+#include <windows.h>
 static quint64 gTicksFreq;
 typedef LARGE_INTEGER TimeStamp;
 static void inline getTimeStamp(TimeStamp* stamp)
