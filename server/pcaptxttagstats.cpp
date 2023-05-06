@@ -107,6 +107,13 @@ _skip_filter:
                 uint guid;
                 if (SignProtocol::packetTtagId(data, hdr->caplen,
                         &ttagId, &guid)) {
+#ifdef Q_OS_WIN32
+                    // TxPort is NOT us ==> Rx Packet, so skip
+                    // See similar check in PcapRxStats for details
+                    if (ttagId >> 8 != uint(portId_))
+                        break;
+                    ttagId &= 0xFF;
+#endif
                     timing_->recordTxTime(portId_, guid, ttagId, hdr->ts);
                     timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId_,
                         hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);

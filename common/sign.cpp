@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "sign.h"
 
+#include "../common/streambase.h"
+
 SignProtocol::SignProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
@@ -76,6 +78,7 @@ AbstractProtocol::FieldFlags SignProtocol::fieldFlags(int index) const
     switch (index)
     {
         case sign_magic:
+        case sign_tlv_tx_port:
         case sign_tlv_guid:
         case sign_tlv_ttag:
         case sign_tlv_end:
@@ -133,6 +136,29 @@ QVariant SignProtocol::fieldData(int index, FieldAttrib attrib,
                     fv.resize(2);
                     fv[0] = 0;
                     fv[1] = kTypeLenTtagPlaceholder;
+                    return fv;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        case sign_tlv_tx_port:
+        {
+            switch(attrib)
+            {
+                case FieldName:
+                    return QString("TxPort");
+                case FieldValue:
+                    return mpStream->portId();
+                case FieldTextValue:
+                    return QString("%1").arg(mpStream->portId());
+                case FieldFrameValue:
+                {
+                    QByteArray fv;
+                    fv.resize(2);
+                    fv[0] = mpStream->portId() & 0xFF;
+                    fv[1] = kTypeLenTxPort;
                     return fv;
                 }
                 default:
@@ -258,6 +284,8 @@ bool SignProtocol::packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint
             ret = true;
         } else if (*p == kTypeLenGuid) {
             *guid = qFromBigEndian<quint32>(p - 3) >> 8;
+        } else if (*p == kTypeLenTxPort) {
+            *ttagId |= uint(*(p - 1)) << 8;
         }
         p -= 1 + (*p >> 5); // move to next TLV
     }

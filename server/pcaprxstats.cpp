@@ -123,11 +123,27 @@ _skip_filter:
         switch (ret) {
             case 1: {
                 uint ttagId, guid;
+#ifdef Q_OS_WIN32
+                // Npcap (Windows) doesn't support direction, so packets
+                // Tx by PcapTxThread are received back by us here - use
+                // TxPort to filter out. TxPort is returned as byte 1 of
+                // ttagId (byte 0 is ttagId).
+                // If TxPort is us ==> Tx Packet, so skip
+                // FIXME: remove once npcap supports pcap direction
+                if (SignProtocol::packetTtagId(data, hdr->caplen, &ttagId, &guid)
+                        && (ttagId >> 8 != uint(portId_))) {
+                    ttagId &= 0xFF;
+                    timing_->recordRxTime(portId_, guid, ttagId, hdr->ts);
+                    timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId_,
+                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
+                }
+#else
                 if (SignProtocol::packetTtagId(data, hdr->caplen, &ttagId, &guid)) {
                     timing_->recordRxTime(portId_, guid, ttagId, hdr->ts);
                     timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId_,
                         hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
+#endif
                 if (guid != SignProtocol::kInvalidGuid) {
                     streamStats_[guid].rx_pkts++;
                     streamStats_[guid].rx_bytes += hdr->caplen;
