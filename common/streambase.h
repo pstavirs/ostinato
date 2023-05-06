@@ -75,9 +75,8 @@ public:
     quint32    id() const;
     bool setId(quint32 id);
 
+    quint32 portId() { return portId_;}
 #if 0 // FIXME(HI): needed?
-    quint32    portId()
-        { return mCore->port_id();}
     bool setPortId(quint32 id)
         { mCore->set_port_id(id); return true;}
 #endif

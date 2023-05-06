@@ -329,7 +329,9 @@ _restart:
 #ifdef Q_OS_WIN32
                 TimeStamp ovrStart, ovrEnd;
 
-                if (seq->usecDuration_ <= long(1e6)) { // 1s
+                // Use Windows-only pcap_sendqueue_transmit() if duration < 1s
+                // and no stream timing is configured
+                if (seq->usecDuration_ <= long(1e6) && firstTtagPkt_ < 0) {
                     getTimeStamp(&ovrStart);
                     ret = pcap_sendqueue_transmit(handle_,
                             seq->sendQueue_, kSyncTransmit);
