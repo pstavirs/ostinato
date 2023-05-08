@@ -456,7 +456,9 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         uchar *pkt = (uchar*)hdr + sizeof(*hdr);
         int pktLen = hdr->caplen;
         bool ttagPkt = false;
+#if 0
         quint16 origCksum = 0;
+#endif
 
         // Time for a T-Tag packet?
         if (stats_->pkts == nextTtagPkt_) {
@@ -466,6 +468,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtag;
             *(pkt+pktLen-6) = ttagId_;
 
+#if 0
             // Recalc L4 checksum; use incremental checksum as per RFC 1624
             // HC' = ~(~HC + ~m + m')
             if (seq->ttagL4CksumOffset_) {
@@ -489,6 +492,7 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
                 // is present - we choose not to do this to avoid extra cost
                 *cksum = qToBigEndian(quint16(~newCksum));
             }
+#endif
             ttagId_++;
             nextTtagPkt_ += ttagDeltaMarkers_.at(ttagMarkerIndex_);
             ttagMarkerIndex_++;
@@ -524,11 +528,13 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
         if (ttagPkt) {
             *(pkt+pktLen-5) = SignProtocol::kTypeLenTtagPlaceholder;
             *(pkt+pktLen-6) = 0;
+#if 0
             if (seq->ttagL4CksumOffset_) {
                 quint16 *cksum = reinterpret_cast<quint16*>(
                                          pkt + seq->ttagL4CksumOffset_);
                 *cksum = qToBigEndian(origCksum);
             }
+#endif
         }
 
         // Step to the next packet in the buffer
