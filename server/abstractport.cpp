@@ -715,19 +715,12 @@ int AbstractPort::updatePacketListInterleaved()
         }
     } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
-    // XXX: Ideally, for interleaved mode, we have a single packet set and
-    // the set's delay should be 0.
-    // However, Ttag and Turbo both use the set delay field to derive
-    // the set's avg pps (needed for their own functionality), so we set the
-    // avgDelay here instead of 0.
-    long avgDelay = (lastPktTxSec*long(1e9) + lastPktTxNsec
-                            + (durSec - lastPktTxSec)*long(1e9)
-                            + (durNsec - lastPktTxNsec))
-                       /totalPkts;
-    loopNextPacketSet(totalPkts, 1, 0, avgDelay);
-    qDebug("Interleaved PacketSet of size %lld, duration %llu.%09llu "
-           "repeat 1 and avg delay %ldns",
-            totalPkts, durSec, durNsec, avgDelay);
+    // XXX: For interleaved mode, we ALWAYS have a single packet set with
+    // one repeat and 0n set loop delay
+    loopNextPacketSet(totalPkts, 1, 0, 0);
+    qDebug("Interleaved single PacketSet of size %lld, duration %llu.%09llu "
+           "repeat 1 and delay 0",
+            totalPkts, durSec, durNsec);
 
     // Reset working sched/counts before building the packet list
     sec = nsec = 0;
