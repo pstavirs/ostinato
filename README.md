@@ -13,11 +13,11 @@ I have been developing and maintaining Ostinato [single-handedly](https://github
 
 I sell binary licenses on [ostinato.org](https://ostinato.org/downloads) to try and cover the costs of development. Please consider buying those - they are priced low enough that you can afford it or you could just as easily expense them to your organisation.
 
-If you build Ostinato from source and find it useful, please donate to keep the lights on and sustain the project.
+If you build Ostinato from source and find it useful, please sponsor to keep the lights on and sustain the project.
+
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86&style=for-the-badge)](https://github.com/sponsors/pstavirs)
 
 Read the Ostinato [origin story](https://ostinato.org/about).
-
-[![Donate](https://ostinato.org/images/donate.png)](https://gum.co/ostdonate)
 
 Srivats P<br/>
 Author, Ostinato
