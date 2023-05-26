@@ -103,7 +103,7 @@ bool StreamTiming::recordRxTime(uint portId, uint guid, uint ttagId,
     struct timespec ts;
     ts.tv_sec = timestamp.tv_sec;
     ts.tv_nsec = timestamp.tv_usec*1000;
-    
+
     return recordRxTime(portId, guid, ttagId, ts);
 }
 
