@@ -813,7 +813,7 @@ int AbstractPort::updatePacketListInterleaved()
     // XXX: TTag repeat interval calculation:
     // CASE 1. pktListDuration < kTtagTimeInterval:
     //      e.g. if pktListDuration is 1sec and TtagTimerInterval is 5s, we
-    //      skip 5 times total packets before we repeat the markers 
+    //      skip 5 times total packets before we repeat the markers
     // CASE 2. pktListDuration > kTtagTimeInterval:
     //      e.g. if pktListDuration is 7sec and TtagTimerInterval is 5s, we
     //      skip repeat markers every pktList iteration

@@ -303,7 +303,7 @@ void PcapTxThread::run()
                 packetSequenceList_.at(i)->ttagL4CksumOffset_);
     }
 
-    qDebug() << "First Ttag: " << firstTtagPkt_ 
+    qDebug() << "First Ttag: " << firstTtagPkt_
              << "Ttag Markers:" << ttagDeltaMarkers_;
 
     lastStats_ = *stats_; // used for stream stats
