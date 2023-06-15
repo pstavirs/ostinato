@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "streamtiming.h"
 
-#include "../common/debugdefs.h"
 #include "timestamp.h"
 
 #include <QCoreApplication>
@@ -61,78 +60,6 @@ void StreamTiming::stop(uint portId)
         gcTimer_->stop();
         qDebug("Stream Latency tracking stopped");
     }
-}
-
-bool StreamTiming::recordTxTime(uint portId, uint guid, uint ttagId,
-        const struct timespec &timestamp)
-{
-    TxRxKey key = makeKey(guid, ttagId);
-    TtagData value = { .timeStamp = timestamp, .portId = portId};
-
-    timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId,
-            timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
-
-    QMutexLocker locker(&txHashLock_);
-    txHash_.insert(key, value);
-
-    return true;
-}
-
-bool StreamTiming::recordRxTime(uint portId, uint guid, uint ttagId,
-        const struct timespec &timestamp)
-{
-    TxRxKey key = makeKey(guid, ttagId);
-    TtagData value = { .timeStamp = timestamp, .portId = portId};
-
-    timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId,
-            timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
-
-    QMutexLocker locker(&rxHashLock_);
-    rxHash_.insert(key, value);
-
-    return true;
-}
-
-bool StreamTiming::recordTxTime(uint portId, uint guid, uint ttagId,
-        const struct timeval &timestamp)
-{
-    struct timespec ts;
-    ts.tv_sec = timestamp.tv_sec;
-    ts.tv_nsec = timestamp.tv_usec*1000;
-
-    return recordTxTime(portId, guid, ttagId, ts);
-}
-
-bool StreamTiming::recordRxTime(uint portId, uint guid, uint ttagId,
-        const struct timeval &timestamp)
-{
-    struct timespec ts;
-    ts.tv_sec = timestamp.tv_sec;
-    ts.tv_nsec = timestamp.tv_usec*1000;
-
-    return recordRxTime(portId, guid, ttagId, ts);
-}
-
-// TTagList contains 32-bit ttags formatted as ttagId (8msb) + guid (24lsb)
-bool StreamTiming::recordTxTime(uint portId, uint *ttagList, int count,
-        const struct timespec &timestamp)
-{
-    TtagData value = { .timeStamp = timestamp, .portId = portId};
-    QMutexLocker locker(&txHashLock_);
-
-    // FIXME: Change TxRxKey to match the format passed to this function
-    for (int i = 0; i < count; i++) {
-        uint guid = ttagList[i] & 0x00FFFFFF;
-        uint ttagId = ttagList[i] >> 24;
-        TxRxKey key = makeKey(guid, ttagId);
-
-        timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId,
-                timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
-
-        txHash_.insert(key, value);
-    }
-
-    return true;
 }
 
 quint64 StreamTiming::delay(uint portId, uint guid)
