@@ -115,8 +115,6 @@ _skip_filter:
                     ttagId &= 0xFF;
 #endif
                     timing_->recordTxTime(portId_, guid, ttagId, hdr->ts);
-                    timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId_,
-                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
                 break;
             }

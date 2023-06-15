@@ -134,14 +134,10 @@ _skip_filter:
                         && (ttagId >> 8 != uint(portId_))) {
                     ttagId &= 0xFF;
                     timing_->recordRxTime(portId_, guid, ttagId, hdr->ts);
-                    timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId_,
-                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
 #else
                 if (SignProtocol::packetTtagId(data, hdr->caplen, &ttagId, &guid)) {
                     timing_->recordRxTime(portId_, guid, ttagId, hdr->ts);
-                    timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId_,
-                        hdr->ts.tv_sec, long(hdr->ts.tv_usec), ttagId, guid);
                 }
 #endif
                 if (guid != SignProtocol::kInvalidGuid) {

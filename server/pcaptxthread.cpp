@@ -112,25 +112,6 @@ void PcapTxThread::clearPacketList()
 void PcapTxThread::loopNextPacketSet(qint64 size, qint64 repeats,
         long repeatDelaySec, long repeatDelayNsec)
 {
-#if 0 // Don't let implicit packet sets be created
-    // XXX: The below change was done as part of Turbo code
-    // implementation alongwith calls to this function from
-    // AbstractPort::updatePacketListSequential(). Turbo to
-    // have clean code requires explicit packet sets for all
-    // cases (except interleaved streams). The below change
-    // was done so that the base code should not be affected
-    // after the explict packet set creation calls.
-    // XXX: Since we create implicit packetset for this case, skip
-    // This case =>
-    //   1. Packet set for y when x = 0
-    //   2. n==1 in n*x+y
-    // These two cases were the result of the changes in
-    // updatePacketListSequential() as part of Turbo changes
-    // mentioned above
-    if (repeats == 1)
-        return;
-#endif
-
     currentPacketSequence_ = new PacketSequence(trackStreamStats_);
     currentPacketSequence_->repeatCount_ = repeats;
     currentPacketSequence_->usecDelay_ = repeatDelaySec * long(1e6)
@@ -221,7 +202,7 @@ void PcapTxThread::setPacketListLoopMode(
     loopDelay_ = secDelay*long(1e6) + nsecDelay/1000;
 }
 
-void PcapTxThread::setPacketListTtagMarkers(
+bool PcapTxThread::setPacketListTtagMarkers(
     QList<uint> markers,
     uint repeatInterval)
 {
@@ -239,7 +220,7 @@ void PcapTxThread::setPacketListTtagMarkers(
         qDebug() << "FirstTtagPkt:" << firstTtagPkt_;
         qDebug() << "TtagMarkers:" << ttagDeltaMarkers_;
     }
-
+    return true;
 }
 
 void PcapTxThread::setHandle(pcap_t *handle)

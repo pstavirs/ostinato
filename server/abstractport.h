@@ -107,7 +107,7 @@ public:
             int length) = 0;
     virtual void setPacketListLoopMode(bool loop, 
             quint64 secDelay, quint64 nsecDelay) = 0;
-    virtual void setPacketListTtagMarkers(QList<uint> markers,
+    virtual bool setPacketListTtagMarkers(QList<uint> markers,
             uint repeatInterval) = 0;
     int updatePacketList();
 

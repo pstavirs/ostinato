@@ -285,7 +285,9 @@ bool SignProtocol::packetTtagId(const uchar *pkt, int pktLen, uint *ttagId, uint
         } else if (*p == kTypeLenGuid) {
             *guid = qFromBigEndian<quint32>(p - 3) >> 8;
         } else if (*p == kTypeLenTxPort) {
+#ifdef Q_OS_WIN32
             *ttagId |= uint(*(p - 1)) << 8;
+#endif
         }
         p -= 1 + (*p >> 5); // move to next TLV
     }

@@ -43,6 +43,9 @@ public:
     bool recordRxTime(uint portId, uint guid, uint ttagId,
                       const struct timeval &timestamp);
 
+    bool recordTxTime(uint portId, uint *ttagList, int count,
+                      const struct timespec &timestamp);
+
     quint64 delay(uint portId, uint guid);
     void clear(uint portId, uint guid = SignProtocol::kInvalidGuid);
 

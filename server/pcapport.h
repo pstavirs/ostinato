@@ -63,10 +63,10 @@ public:
     {
         transmitter_->setPacketListLoopMode(loop, secDelay, nsecDelay);
     }
-    virtual void setPacketListTtagMarkers(QList<uint> markers,
+    virtual bool setPacketListTtagMarkers(QList<uint> markers,
             uint repeatInterval)
     {
-        transmitter_->setPacketListTtagMarkers(markers, repeatInterval);
+        return transmitter_->setPacketListTtagMarkers(markers, repeatInterval);
     }
 
     virtual void startTransmit() { 
@@ -173,6 +173,8 @@ protected:
     PortMonitor     *monitorRx_;
     PortMonitor     *monitorTx_;
 
+    PcapRxStats *rxStatsPoller_;
+
     void updateNotes();
 
 private:
@@ -183,7 +185,6 @@ private:
     PortCapturer    *capturer_;
     EmulationTransceiver *emulXcvr_;
     PcapTxTtagStats *txTtagStatsPoller_;
-    PcapRxStats *rxStatsPoller_;
 
     static pcap_if_t *deviceList_;
 };

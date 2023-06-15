@@ -69,6 +69,9 @@ bool StreamTiming::recordTxTime(uint portId, uint guid, uint ttagId,
     TxRxKey key = makeKey(guid, ttagId);
     TtagData value = { .timeStamp = timestamp, .portId = portId};
 
+    timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId,
+            timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
+
     QMutexLocker locker(&txHashLock_);
     txHash_.insert(key, value);
 
@@ -80,6 +83,9 @@ bool StreamTiming::recordRxTime(uint portId, uint guid, uint ttagId,
 {
     TxRxKey key = makeKey(guid, ttagId);
     TtagData value = { .timeStamp = timestamp, .portId = portId};
+
+    timingDebug("[%d RX] %ld:%ld ttag %u guid %u", portId,
+            timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
 
     QMutexLocker locker(&rxHashLock_);
     rxHash_.insert(key, value);
@@ -105,6 +111,28 @@ bool StreamTiming::recordRxTime(uint portId, uint guid, uint ttagId,
     ts.tv_nsec = timestamp.tv_usec*1000;
 
     return recordRxTime(portId, guid, ttagId, ts);
+}
+
+// TTagList contains 32-bit ttags formatted as ttagId (8msb) + guid (24lsb)
+bool StreamTiming::recordTxTime(uint portId, uint *ttagList, int count,
+        const struct timespec &timestamp)
+{
+    TtagData value = { .timeStamp = timestamp, .portId = portId};
+    QMutexLocker locker(&txHashLock_);
+
+    // FIXME: Change TxRxKey to match the format passed to this function
+    for (int i = 0; i < count; i++) {
+        uint guid = ttagList[i] & 0x00FFFFFF;
+        uint ttagId = ttagList[i] >> 24;
+        TxRxKey key = makeKey(guid, ttagId);
+
+        timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId,
+                timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
+
+        txHash_.insert(key, value);
+    }
+
+    return true;
 }
 
 quint64 StreamTiming::delay(uint portId, uint guid)
@@ -181,8 +209,8 @@ int StreamTiming::processRecords()
                 diff.tv_sec, diff.tv_nsec,
                 rxTime.tv_sec, rxTime.tv_nsec,
                 txTime.tv_sec, txTime.tv_nsec);
-            timingDebug("%d:[%u/%u] total %ld.%09ld count %u",
-                count, i.value().portId, guid,
+            timingDebug("[%u/%u](%d) total %ld.%09ld count %u",
+                i.value().portId, guid, count,
                 guidTiming.sumDelays.tv_sec, guidTiming.sumDelays.tv_nsec,
                 guidTiming.countDelays);
         }

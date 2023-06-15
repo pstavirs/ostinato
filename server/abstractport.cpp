@@ -245,6 +245,7 @@ int AbstractPort::updatePacketListSequential()
     quint64 duration = 0;  // in nanosec
     quint64 totalPkts = 0;
     QList<uint> ttagMarkers;
+    uint ttagRepeatInterval;
     FrameValueAttrib packetListAttrib;
     long    sec = 0; 
     long    nsec = 0;
@@ -443,12 +444,17 @@ int AbstractPort::updatePacketListSequential()
         } // if (stream is enabled)
     } // for (numStreams)
 
-_out_of_memory:
 _stop_no_more_pkts:
     // See comments in updatePacketListInterleaved() for calc explanation
-    setPacketListTtagMarkers(ttagMarkers, ttagMarkers.isEmpty() ? 0 :
-                             qMax(uint(kTtagTimeInterval_*1e9/(duration)),
-                                  1U) * totalPkts);
+    ttagRepeatInterval = ttagMarkers.isEmpty() ? 0 :
+             qMax(uint(kTtagTimeInterval_*1e9/(duration)), 1U)
+                * totalPkts;
+    if (!setPacketListTtagMarkers(ttagMarkers, ttagRepeatInterval)) {
+        clearPacketList(); // don't leave it half baked/inconsitent
+        packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
+    }
+
+_out_of_memory:
     isSendQueueDirty_ = false;
 
     qDebug("PacketListAttrib = %x",
@@ -657,12 +663,11 @@ int AbstractPort::updatePacketListInterleaved()
     // Count total packets we are going to add, so that we can create
     // an explicit packet set first
     // TODO: Find less expensive way to do this counting
-    // FIXME: Turbo still thinks it has to create implicit packet set for
-    // interleaved mode - Turbo code should be changed once this is validated
     quint64 totalPkts = 0;
     QVector<ulong> ttagSchedSec(numStreams, 0);
     QVector<ulong> ttagSchedNsec(numStreams, 0);
     QList<uint> ttagMarkers;
+    uint ttagRepeatInterval;
 
     do
     {
@@ -817,10 +822,13 @@ int AbstractPort::updatePacketListInterleaved()
     // CASE 2. pktListDuration > kTtagTimeInterval:
     //      e.g. if pktListDuration is 7sec and TtagTimerInterval is 5s, we
     //      skip repeat markers every pktList iteration
-    setPacketListTtagMarkers(ttagMarkers, ttagMarkers.isEmpty() ? 0 :
-                             qMax(uint(kTtagTimeInterval_*1e9
-                                     /(durSec*1e9+durNsec)),
-                                  1U) * totalPkts);
+    ttagRepeatInterval = ttagMarkers.isEmpty() ? 0 :
+                 qMax(uint(kTtagTimeInterval_*1e9/(durSec*1e9+durNsec)), 1U)
+                     * totalPkts;
+    if (!setPacketListTtagMarkers(ttagMarkers, ttagRepeatInterval)) {
+        clearPacketList(); // don't leave it half baked/inconsitent
+        packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
+    }
 
 _out_of_memory:
     isSendQueueDirty_ = false;

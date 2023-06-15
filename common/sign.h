@@ -41,12 +41,19 @@ TLVs are encoded as
  Len does NOT include the one byte of TypeLen
  Size of the value field varies between 0 to 7 bytes
 
- Defined TLVs
+Defined TLVs
  Type = 0, Len = 0 (0x00): End of TLVs
  Type = 1, Len = 3 (0x61): Stream GUID
  Type = 2, Len = 1 (0x22): T-Tag Placeholder (0 value)
  Type = 3, Len = 1 (0x23): T-Tag with actual value
  Type = 4, Len = 1 (0x24): Tx Port Id
+
+Order of TLVs from end of packet towards beginning [Offset, Size]
+ [ -4, 4 bytes] Magic
+ [ -6, 2 bytes] TTag (Placeholder or actual)
+ [-10, 4 bytes] Stream Guid
+ [-12, 2 bytes] Tx Port Id
+ [-13, 1 byte ] End
 */
 
 class SignProtocol : public AbstractProtocol

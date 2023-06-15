@@ -88,11 +88,11 @@ void PcapTransmitter::setPacketListLoopMode(
     txThread_.setPacketListLoopMode(loop, secDelay, nsecDelay);
 }
 
-void PcapTransmitter::setPacketListTtagMarkers(
+bool PcapTransmitter::setPacketListTtagMarkers(
         QList<uint> markers,
         uint repeatInterval)
 {
-    txThread_.setPacketListTtagMarkers(markers, repeatInterval);
+    return txThread_.setPacketListTtagMarkers(markers, repeatInterval);
 }
 
 void PcapTransmitter::useExternalStats(AbstractPort::PortStats *stats)
