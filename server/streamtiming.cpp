@@ -119,7 +119,7 @@ int StreamTiming::processRecords()
             struct timespec diff;
             timespecsub(&rxTime, &txTime, &diff);
 
-            uint guid = i.key() >> 8;
+            uint guid = guidFromKey(i.key());
             uint portId = i.value().portId;
 
             if (!timing_.contains(portId))
@@ -132,7 +132,7 @@ int StreamTiming::processRecords()
             count++;
 
             timingDebug("[%u/%u/%u] diff %ld.%09ld (%ld.%09ld - %ld.%09ld)",
-                i.value().portId, guid, i.key() & 0xFF,
+                i.value().portId, guid, ttagIdFromKey(i.key()),
                 diff.tv_sec, diff.tv_nsec,
                 rxTime.tv_sec, rxTime.tv_nsec,
                 txTime.tv_sec, txTime.tv_nsec);

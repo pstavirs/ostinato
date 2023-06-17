@@ -62,10 +62,6 @@ private:
     int processRecords();
     int deleteStaleRecords();
 
-    quint32 makeKey(uint guid, uint ttagId) {
-        return guid << 8 | (ttagId & 0xFF);
-    }
-
     // XXX: use only time intervals, not absolute time
     quint64 timespecToNsecs(const struct timespec &interval) {
         return interval.tv_nsec + interval.tv_sec*1e9;
@@ -83,16 +79,26 @@ private:
 
     QSet<uint> activePortSet_;
 
-    // XXX: TxRxKey = guid (24 bit MSB) + ttagid (8 bit LSB)
-    // TODO: encode tx port in in packet and use as part of key
+    // XXX: TxRxKey = ttagid (8 bit MSB) + guid (24 bit LSB)
+    // TODO: encode tx port in packet and use as part of key
     typedef quint32 TxRxKey;
+    TxRxKey makeKey(uint guid, uint ttagId) {
+        return (ttagId << 24 ) | (guid & 0x00FFFFFF);
+    }
+    uint guidFromKey(TxRxKey key) {
+        return uint(key) & 0x00FFFFFF;
+    }
+    uint ttagIdFromKey(TxRxKey key) {
+        return uint(key) >> 24;
+    }
+
     QHash<TxRxKey, TtagData> txHash_;
     QHash<TxRxKey, TtagData> rxHash_;
     QMutex txHashLock_;
     QMutex rxHashLock_;
 
     typedef uint PortIdKey;
-    typedef uint GuidKey;
+    typedef uint GuidKey; // guid only, no ttagid
     typedef QHash<GuidKey, Timing> PortTiming;
     QHash<PortIdKey, PortTiming*> timing_;
     QMutex timingLock_;
@@ -163,14 +169,12 @@ bool StreamTiming::recordTxTime(uint portId, uint *ttagList, int count,
     TtagData value = { .timeStamp = timestamp, .portId = portId};
     QMutexLocker locker(&txHashLock_);
 
-    // FIXME: Change TxRxKey to match the format passed to this function
     for (int i = 0; i < count; i++) {
-        uint guid = ttagList[i] & 0x00FFFFFF;
-        uint ttagId = ttagList[i] >> 24;
-        TxRxKey key = makeKey(guid, ttagId);
+        TxRxKey key = TxRxKey(ttagList[i]);
 
         timingDebug("[%d TX] %ld:%ld ttag %u guid %u", portId,
-                timestamp.tv_sec, long(timestamp.tv_nsec), ttagId, guid);
+                timestamp.tv_sec, long(timestamp.tv_nsec),
+                ttagIdFromKey(key), guidFromKey(key));
 
         txHash_.insert(key, value);
     }
