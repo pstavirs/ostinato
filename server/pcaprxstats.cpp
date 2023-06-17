@@ -26,8 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #define Xnotify qWarning // FIXME
 
-PcapRxStats::PcapRxStats(const char *device, StreamStats &portStreamStats, int id)
-    : streamStats_(portStreamStats)
+PcapRxStats::PcapRxStats(const char *device, int id)
 {
     setObjectName(QString("Rx$:%1").arg(device));
     device_ = QString::fromLatin1(device);
@@ -214,4 +213,22 @@ bool PcapRxStats::isRunning()
 bool PcapRxStats::isDirectional()
 {
     return isDirectional_;
+}
+
+// XXX: Stats are reset on read
+void PcapRxStats::updateRxStreamStats(StreamStats &streamStats)
+{
+    QMutexLocker lock(&streamStatsLock_);
+    StreamStatsIterator i(streamStats_);
+
+    while (i.hasNext())
+    {
+        i.next();
+        uint guid = i.key();
+        StreamStatsTuple sst = i.value();
+
+        streamStats[guid].rx_pkts += sst.rx_pkts;
+        streamStats[guid].rx_bytes += sst.rx_bytes;
+    }
+    streamStats_.clear();
 }

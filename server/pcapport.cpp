@@ -31,11 +31,11 @@ PcapPort::PcapPort(int id, const char *device)
 {
     monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
     monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
-    transmitter_ = new PcapTransmitter(device, streamStats_);
+    transmitter_ = new PcapTransmitter(device);
     capturer_ = new PortCapturer(device);
     emulXcvr_ = new EmulationTransceiver(device, deviceManager_);
     txTtagStatsPoller_ = new PcapTxTtagStats(device, id);
-    rxStatsPoller_ = new PcapRxStats(device, streamStats_, id);
+    rxStatsPoller_ = new PcapRxStats(device, id);
 
     if (!monitorRx_->handle() || !monitorTx_->handle())
         isUsable_ = false;
@@ -148,9 +148,14 @@ bool PcapPort::setRateAccuracy(AbstractPort::Accuracy accuracy)
 
 void PcapPort::updateStreamStats()
 {
-    // XXX: PcapTxThread already does this at the end of transmit; we
-    // just dump tx/rx stats poller debug stats here
+    QWriteLocker lock(&streamStatsLock_);
 
+    // XXX: Transmitter may also 'adjust' rx stats in some cases (pcap
+    // direction not supported platforms)
+    transmitter_->updateTxRxStreamStats(streamStats_);
+    rxStatsPoller_->updateRxStreamStats(streamStats_);
+
+    // Dump tx/rx stats poller debug stats
     qDebug("port %d txTtagStatsPoller: %s",
             id(), qUtf8Printable(txTtagStatsPoller_->debugStats()));
     qDebug("port %d rxStatsPoller: %s",

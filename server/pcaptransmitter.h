@@ -29,12 +29,13 @@ class PcapTransmitter : QObject
 {
     Q_OBJECT
 public:
-    PcapTransmitter(const char *device, StreamStats &portStreamStats);
+    PcapTransmitter(const char *device);
     ~PcapTransmitter();
 
     bool setRateAccuracy(AbstractPort::Accuracy accuracy);
     bool setStreamStatsTracking(bool enable);
     void adjustRxStreamStats(bool enable);
+    void updateTxRxStreamStats(StreamStats &streamStats); // Reset on read
 
     void clearPacketList();
     void loopNextPacketSet(qint64 size, qint64 repeats,
@@ -54,7 +55,8 @@ public:
 private slots:
     void updateTxThreadStreamStats();
 private:
-    StreamStats &streamStats_;
+    StreamStats streamStats_;
+    QMutex streamStatsLock_;
     PcapTxThread txThread_;
     PcapTxStats txStats_;
     StatsTuple stats_;

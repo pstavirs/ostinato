@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "packetsequence.h"
 #include "statstuple.h"
 
+#include <QMutex>
 #include <QThread>
 #include <pcap.h>
 
@@ -48,8 +49,7 @@ public:
 
     void setStats(StatsTuple *stats);
 
-    const StreamStats& streamStats();
-    void clearStreamStats();
+    StreamStats streamStats(); // reset on read
 
     void run();
 
@@ -94,6 +94,7 @@ private:
     StatsTuple *stats_;
     StatsTuple lastStats_;
     StreamStats streamStats_;
+    QMutex streamStatsLock_;
     quint8 ttagId_{0};
 
     double lastTxDuration_{0.0}; // in secs

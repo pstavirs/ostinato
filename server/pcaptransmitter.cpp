@@ -20,9 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcaptransmitter.h"
 
 PcapTransmitter::PcapTransmitter(
-        const char *device,
-        StreamStats &portStreamStats)
-    : streamStats_(portStreamStats), txThread_(device)
+        const char *device)
+    : txThread_(device)
 {
     adjustRxStreamStats_ = false;
     txStats_.setObjectName(QString("TxStats:%1").arg(device));
@@ -53,6 +52,31 @@ void PcapTransmitter::adjustRxStreamStats(bool enable)
 bool PcapTransmitter::setStreamStatsTracking(bool enable)
 {
     return txThread_.setStreamStatsTracking(enable);
+}
+
+// XXX: Stats are reset on read
+void PcapTransmitter::updateTxRxStreamStats(StreamStats &streamStats)
+{
+    QMutexLocker lock(&streamStatsLock_);
+    StreamStatsIterator i(streamStats_);
+
+    while (i.hasNext())
+    {
+        i.next();
+        uint guid = i.key();
+        StreamStatsTuple sst = i.value();
+
+        streamStats[guid].tx_pkts += sst.tx_pkts;
+        streamStats[guid].tx_bytes += sst.tx_bytes;
+        if (adjustRxStreamStats_) {
+            // XXX: rx_pkts counting may lag behind tx_pkts, so stream stats
+            // may become negative after adjustment transiently. But this
+            // should fix itself once all the rx pkts come in
+            streamStats[guid].rx_pkts -= sst.tx_pkts;
+            streamStats[guid].rx_bytes -= sst.tx_bytes;
+        }
+    }
+    streamStats_.clear();
 }
 
 void PcapTransmitter::clearPacketList()
@@ -114,6 +138,7 @@ bool PcapTransmitter::isRunning()
 {
     return txThread_.isRunning();
 }
+
 double PcapTransmitter::lastTxDuration()
 {
     return txThread_.lastTxDuration();
@@ -121,8 +146,9 @@ double PcapTransmitter::lastTxDuration()
 
 void PcapTransmitter::updateTxThreadStreamStats()
 {
+    QMutexLocker lock(&streamStatsLock_);
     PcapTxThread *txThread = dynamic_cast<PcapTxThread*>(sender());
-    const StreamStats& threadStreamStats = txThread->streamStats();
+    StreamStats threadStreamStats = txThread->streamStats();
     StreamStatsIterator i(threadStreamStats);
 
     while (i.hasNext())
@@ -133,13 +159,5 @@ void PcapTransmitter::updateTxThreadStreamStats()
 
         streamStats_[guid].tx_pkts += sst.tx_pkts;
         streamStats_[guid].tx_bytes += sst.tx_bytes;
-        if (adjustRxStreamStats_) {
-            // XXX: rx_pkts counting may lag behind tx_pkts, so stream stats
-            // may become negative after adjustment transiently. But this
-            // should fix itself once all the rx pkts come in
-            streamStats_[guid].rx_pkts -= sst.tx_pkts;
-            streamStats_[guid].rx_bytes -= sst.tx_bytes;
-        }
     }
-    txThread->clearStreamStats();
 }

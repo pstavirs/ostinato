@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "streamstats.h"
 
 #include <QList>
+#include <QReadWriteLock>
 #include <QtGlobal>
 
 #include <limits.h>
@@ -163,6 +164,7 @@ protected:
     quint64 maxStatsValue_;
     struct PortStats    stats_;
     StreamStats streamStats_;
+    QReadWriteLock streamStatsLock_;
     //! \todo Need lock for stats access/update
 
     const uint kTtagTimeInterval_{5}; // in seconds

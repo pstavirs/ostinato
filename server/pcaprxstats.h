@@ -24,12 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapsession.h"
 
+#include <QMutex>
+
 class StreamTiming;
 
 class PcapRxStats: public PcapSession
 {
 public:
-    PcapRxStats(const char *device, StreamStats &portStreamStats, int id);
+    PcapRxStats(const char *device, int id);
     pcap_t* handle();
     void run();
     bool start();
@@ -37,6 +39,7 @@ public:
     bool isRunning();
     bool isDirectional();
 
+    void updateRxStreamStats(StreamStats &streamStats); // Reset on read
 private:
     enum State {
         kNotStarted,
@@ -45,7 +48,8 @@ private:
     };
 
     QString device_;
-    StreamStats &streamStats_;
+    StreamStats streamStats_;
+    QMutex streamStatsLock_;
     volatile bool stop_;
     volatile State state_;
     bool isDirectional_;

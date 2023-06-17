@@ -236,14 +236,20 @@ void PcapTxThread::setStats(StatsTuple *stats)
     stats_ = stats;
 }
 
-const StreamStats& PcapTxThread::streamStats()
+StreamStats PcapTxThread::streamStats()
 {
-    return streamStats_;
-}
+    // This function is typically called in client-specific-RPC-thread
+    // context; hence different client RPC threads may call this function,
+    // so use a lock. Although RPCs are protected by the portLock just
+    // for this purpose, the streamStats RPC takes a Read lock, so it can
+    // still happen that multiple RPC threads land up here - that's why
+    // this lock is required
+    QMutexLocker lock(&streamStatsLock_);
 
-void PcapTxThread::clearStreamStats()
-{
-    streamStats_.clear();
+    StreamStats ss(streamStats_); // Make a copy
+    streamStats_.clear();         // Reset on read semantics
+
+    return ss; // Return copy
 }
 
 void PcapTxThread::run()
@@ -531,6 +537,8 @@ int PcapTxThread::sendQueueTransmit(pcap_t *p, PacketSequence *seq,
 
 void PcapTxThread::updateTxStreamStats()
 {
+    QMutexLocker lock(&streamStatsLock_);
+
     // If no packets in list, nothing to be done
     if (!packetListSize_)
         return;

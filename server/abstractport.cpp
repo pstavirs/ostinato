@@ -887,6 +887,10 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
     // In case stats are being maintained elsewhere
     updateStreamStats();
 
+    // Lock for read here as updateStreamStats() above will take write lock
+    // and the lock is NOT recursive
+    QReadLocker lock(&streamStatsLock_);
+
     if (streamStats_.contains(guid))
     {
         StreamStatsTuple sst = streamStats_.value(guid);
@@ -909,6 +913,10 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 {
     // In case stats are being maintained elsewhere
     updateStreamStats();
+
+    // Lock for read here as updateStreamStats() above will take write lock
+    // and the lock is NOT recursive
+    QReadLocker lock(&streamStatsLock_);
 
     // FIXME: change input param to a non-OstProto type and/or have
     // a getFirst/Next like API?
@@ -935,12 +943,14 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
 
 void AbstractPort::resetStreamStats(uint guid)
 {
+    QWriteLocker lock(&streamStatsLock_);
     streamStats_.remove(guid);
     clearStreamTiming(guid);
 }
 
 void AbstractPort::resetStreamStatsAll()
 {
+    QWriteLocker lock(&streamStatsLock_);
     streamStats_.clear();
     clearStreamTiming();
 }
