@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/abstractprotocol.h"
 #include "../common/framevalueattrib.h"
+#include "../common/packet.h"
 #include "../common/streambase.h"
 #include "devicemanager.h"
 #include "interfaceinfo.h"
@@ -400,6 +401,18 @@ int AbstractPort::updatePacketListSequential()
                 }
             }
 
+            // loopDelay == 0 implies 0 pps i.e. top speed
+            // For ttag calc/config below we need loopDelay to be non-zero,
+            // so we re-calc based on max line rate (speed). If we don't
+            // have the actual port speed, we assume 1000 Mbps
+            if (loopDelay == 0) {
+                double maxSpeed = data_.speed() ? data_.speed(): 1000;
+                double maxPktRate = (maxSpeed*1e6)
+                                        /(8*(streamList_[i]->frameLenAvg()
+                                                + Packet::kEthOverhead));
+                loopDelay = 1e9/maxPktRate; // in nanosec
+            }
+
             // Add a Ttag marker after every kTtagTimeInterval_ worth of pkts
             if (hasTtag) {
                 uint ttagPktInterval = kTtagTimeInterval_*1e9/loopDelay;
@@ -638,6 +651,7 @@ int AbstractPort::updatePacketListInterleaved()
     // i.e. send all streams "simultaneously" as fast as possible
     // as a result all streams will be at the same rate e.g. for 2 streams,
     // it would 50% each; for 3 streams - all at 33.3% and so on
+    // FIXME: Should we calc minGap based on max line rate and avg pkt size?
     if (minGap == ULLONG_MAX) {
         minGap = 1;
         duration = 1;

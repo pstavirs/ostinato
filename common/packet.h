@@ -78,6 +78,7 @@ const quint16 kIp4EthType = 0x0800;
 const quint16 kIp6EthType = 0x86dd;
 const quint16 kMplsEthType = 0x8847;
 const QSet<quint16> kVlanEthTypes = {0x8100, 0x9100, 0x88a8};
+const uint kEthOverhead = 20;
 
 // VLAN
 const quint16 kVlanTagSize = 4;
