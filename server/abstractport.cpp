@@ -737,19 +737,23 @@ int AbstractPort::updatePacketListInterleaved()
         }
     } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
+    qint64 delaySec = durSec - lastPktTxSec;
+    qint64 delayNsec = durNsec - lastPktTxNsec;
+    while (delayNsec < 0)
+    {
+        delayNsec += long(1e9);
+        delaySec--;
+    }
+
     // XXX: For interleaved mode, we ALWAYS have a single packet set with
-    // one repeat and 0 set delay
-    // TODO: Since we now create an explicit packet set, we can also calc
-    // the actual packet set delay and set it here and set list loop delay
-    // as 0
-    loopNextPacketSet(totalPkts, 1, 0, 0);
+    // one repeat
+    loopNextPacketSet(totalPkts, 1, delaySec, delayNsec);
     qDebug("Interleaved single PacketSet of size %lld, duration %llu.%09llu "
-           "repeat 1 and delay 0",
-            totalPkts, durSec, durNsec);
+           "repeat 1 and delay %lld.%09lld",
+            totalPkts, durSec, durNsec, delaySec, delayNsec);
 
     // Reset working sched/counts before building the packet list
     sec = nsec = 0;
-    lastPktTxSec = lastPktTxNsec = 0;
     for (int i = 0; i < numStreams; i++)
     {
         schedSec[i] = 0;
@@ -792,8 +796,6 @@ int AbstractPort::updatePacketListInterleaved()
                     packetListAttrib.errorFlags |= FrameValueAttrib::OutOfMemoryError;
                     goto _out_of_memory;
                 }
-                lastPktTxSec = sec;
-                lastPktTxNsec = nsec;
 
                 pktCount[i]++;
                 schedNsec[i] += (pktCount.at(i) < np1.at(i)) ? 
@@ -823,17 +825,9 @@ int AbstractPort::updatePacketListInterleaved()
         }
     } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
-    {
-        qint64 delaySec = durSec - lastPktTxSec;
-        qint64 delayNsec = durNsec - lastPktTxNsec;
-        while (delayNsec < 0)
-        {
-            delayNsec += long(1e9);
-            delaySec--;
-        }
-        qDebug("loop Delay = %lld.%09lld", delaySec, delayNsec);
-        setPacketListLoopMode(true, delaySec, delayNsec);
-    }
+    // XXX: The single packet has the delay, so no list loop delay required
+    // XXX: Both seq/interleaved mode no longer use list loop delay!
+    setPacketListLoopMode(true, 0, 0);
 
     // XXX: TTag repeat interval calculation:
     // CASE 1. pktListDuration < kTtagTimeInterval:
