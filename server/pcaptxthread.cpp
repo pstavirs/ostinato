@@ -290,6 +290,8 @@ void PcapTxThread::run()
                 packetSequenceList_.at(i)->ttagL4CksumOffset_);
     }
 
+    qDebug() << "Loop:" << (returnToQIdx_ >= 0)
+             << "LoopDelay:" << loopDelay_;
     qDebug() << "First Ttag: " << firstTtagPkt_
              << "Ttag Markers:" << ttagDeltaMarkers_;
 

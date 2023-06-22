@@ -343,7 +343,8 @@ int AbstractPort::updatePacketListSequential()
 
             if (n >= 1) {
                 loopNextPacketSet(x, n, 0, loopDelay);
-                qDebug("PacketSet: n = %lu, x = %lu", n, x);
+                qDebug("PacketSet: n = %lu, x = %lu, delay = %llu ns",
+                        n, x, loopDelay);
             }
             else if (n == 0)
                 x = 0;
@@ -365,7 +366,8 @@ int AbstractPort::updatePacketListSequential()
                 // Create a packet set for 'y' with repeat = 1
                 if (j == x) {
                     loopNextPacketSet(y, 1, 0, loopDelay);
-                    qDebug("PacketSet: n = 1, y = %lu", y);
+                    qDebug("PacketSet: n = 1, y = %lu, delay = %llu",
+                            y, loopDelay);
                 }
 
                 qDebug("q(%d, %d) sec = %lu nsec = %lu",
@@ -440,9 +442,10 @@ int AbstractPort::updatePacketListSequential()
                          returnToQIdx = 0;
                      */
 
-                    setPacketListLoopMode(true, 0, 
-                            streamList_[i]->sendUnit() == 
-                                StreamBase::e_su_bursts ? ibg1 : ipg1);
+                    // XXX: no list loop delay required since we don't create
+                    // any implicit packet sets now
+                    setPacketListLoopMode(true, 0, 0);
+                    qDebug("Seq mode list loop true with 0 delay");
                     goto _stop_no_more_pkts;
 
                 case StreamBase::e_nw_goto_next:
@@ -735,7 +738,10 @@ int AbstractPort::updatePacketListInterleaved()
     } while ((sec < durSec) || ((sec == durSec) && (nsec < durNsec)));
 
     // XXX: For interleaved mode, we ALWAYS have a single packet set with
-    // one repeat and 0n set loop delay
+    // one repeat and 0 set delay
+    // TODO: Since we now create an explicit packet set, we can also calc
+    // the actual packet set delay and set it here and set list loop delay
+    // as 0
     loopNextPacketSet(totalPkts, 1, 0, 0);
     qDebug("Interleaved single PacketSet of size %lld, duration %llu.%09llu "
            "repeat 1 and delay 0",
