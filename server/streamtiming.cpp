@@ -100,7 +100,7 @@ void StreamTiming::clear(uint portId, uint guid)
     if (!portTiming)
         return;
 
-    if (guid == SignProtocol::kInvalidGuid)
+    if (guid >= SignProtocol::kInvalidGuid)
         portTiming->clear();      // remove ALL guids
     else
         portTiming->remove(guid);
