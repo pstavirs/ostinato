@@ -85,20 +85,33 @@ public:
         return toDouble(text, ok) * multiplier;
     }
 
+    QString toPktRateString(double pps) const
+    {
+        QString text;
+
+        if (pps >= 1e6)
+            return QObject::tr("%L1 Mpps").arg(pps/1e6, 0, 'f', 3);
+
+        if (pps >= 1e3)
+            return QObject::tr("%L1 Kpps").arg(pps/1e3, 0, 'f', 3);
+
+        return QObject::tr("%L1").arg(pps, 0, 'f', 3);
+    }
+
     QString toBitRateString(double bps) const
     {
         QString text;
 
         if (bps >= 1e9)
-            return QObject::tr("%L1 Gbps").arg(bps/1e9, 0, 'f', 4);
+            return QObject::tr("%L1 Gbps").arg(bps/1e9, 0, 'f', 3);
 
         if (bps >= 1e6)
-            return QObject::tr("%L1 Mbps").arg(bps/1e6, 0, 'f', 4);
+            return QObject::tr("%L1 Mbps").arg(bps/1e6, 0, 'f', 3);
 
         if (bps >= 1e3)
-            return QObject::tr("%L1 Kbps").arg(bps/1e3, 0, 'f', 4);
+            return QObject::tr("%L1 Kbps").arg(bps/1e3, 0, 'f', 3);
 
-        return QObject::tr("%L1 bps").arg(bps, 0, 'f', 4);
+        return QObject::tr("%L1 bps").arg(bps, 0, 'f', 3);
     }
 
     QString toTimeIntervalString(qint64 nanosecs) const
@@ -106,13 +119,13 @@ public:
         QString text;
 
         if (nanosecs >= 1e9)
-            return QObject::tr("%L1 s").arg(nanosecs/1e9, 0, 'f', 3);
+            return QObject::tr("%L1 s").arg(nanosecs/1e9, 0, 'f', 2);
 
         if (nanosecs >= 1e6)
-            return QObject::tr("%L1 ms").arg(nanosecs/1e6, 0, 'f', 3);
+            return QObject::tr("%L1 ms").arg(nanosecs/1e6, 0, 'f', 2);
 
         if (nanosecs >= 1e3)
-            return QObject::tr("%L1 us").arg(nanosecs/1e3, 0, 'f', 3);
+            return QObject::tr("%L1 us").arg(nanosecs/1e3, 0, 'f', 2);
 
         return QObject::tr("%L1 ns").arg(nanosecs);
     }

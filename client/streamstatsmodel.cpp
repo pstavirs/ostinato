@@ -168,12 +168,12 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
             return QString("%L1").arg(aggrGuidStats_.value(guid).txDuration);
         case kAvgTxFrameRate:
             return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
-                QString("%L1").arg(
+                 XLocale().toPktRateString(
                     aggrGuidStats_.value(guid).txPkts
                         / aggrGuidStats_.value(guid).txDuration);
         case kAvgRxFrameRate:
             return aggrGuidStats_.value(guid).txDuration <= 0 ? QString("-") :
-                 QString("%L1").arg(
+                 XLocale().toPktRateString(
                     aggrGuidStats_.value(guid).rxPkts
                         / aggrGuidStats_.value(guid).txDuration);
         case kAvgTxBitRate:

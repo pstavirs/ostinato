@@ -46,6 +46,10 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     streamStats->verticalHeader()->setHighlightSections(false);
     streamStats->verticalHeader()->setDefaultSectionSize(
             streamStats->verticalHeader()->minimumSectionSize());
+
+    // Fit all columns in window whenever data changes
+    connect(model, &QAbstractItemModel::modelReset,
+            [=]() { streamStats->resizeColumnsToContents(); });
 }
 
 StreamStatsWindow::~StreamStatsWindow()
@@ -62,4 +66,6 @@ void StreamStatsWindow::on_actionShowDetails_triggered(bool checked)
         filterModel_->setFilterRegExp(QRegExp(".*"));
     else
         filterModel_->setFilterRegExp(QRegExp(kDefaultFilter_));
+
+    streamStats->resizeColumnsToContents();
 }
