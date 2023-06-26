@@ -34,6 +34,12 @@ class StreamTiming : public QObject
 {
     Q_OBJECT
 public:
+    struct Stats
+    {
+        quint64 latency;
+        quint64 jitter;
+    };
+
     bool recordTxTime(uint portId, uint guid, uint ttagId,
                       const struct timespec &timestamp);
     bool recordRxTime(uint portId, uint guid, uint ttagId,
@@ -47,7 +53,7 @@ public:
     bool recordTxTime(uint portId, uint *ttagList, int count,
                       const struct timespec &timestamp);
 
-    quint64 delay(uint portId, uint guid);
+    Stats stats(uint portId, uint guid);
     void clear(uint portId, uint guid = SignProtocol::kInvalidGuid);
 
     static StreamTiming* instance();
@@ -72,8 +78,13 @@ private:
         uint portId;
     };
 
+    // XXX: used only as a Qt Container value, so members will get init to 0
+    // when this struct is retrieved from the container due to Qt's default-
+    // cosntructed value semantics
     struct Timing {
         struct timespec sumDelays; // nanosec resolution
+        struct timespec lastDelay;
+        quint64 sumJitter; // nanosec resolution
         uint countDelays;
     };
 

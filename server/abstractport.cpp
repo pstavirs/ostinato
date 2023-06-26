@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devicemanager.h"
 #include "interfaceinfo.h"
 #include "packetbuffer.h"
-#include "streamtiming.h"
 
 #include <QString>
 #include <QIODevice>
@@ -886,9 +885,9 @@ void AbstractPort::stats(PortStats *stats)
                         stats_.rxFrameErrors + (maxStatsValue_ - epochStats_.rxFrameErrors);
 }
 
-quint64 AbstractPort::streamTimingDelay(uint guid)
+StreamTiming::Stats AbstractPort::streamTimingStats(uint guid)
 {
-    return streamTiming_->delay(id(), guid);
+    return streamTiming_->stats(id(), guid);
 }
 
 void AbstractPort::clearStreamTiming(uint guid)
@@ -909,12 +908,14 @@ void AbstractPort::streamStats(uint guid, OstProto::StreamStatsList *stats)
     {
         StreamStatsTuple sst = streamStats_.value(guid);
         OstProto::StreamStats *s = stats->add_stream_stats();
+        StreamTiming::Stats t = streamTimingStats(guid);
 
         s->mutable_stream_guid()->set_id(guid);
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(lastTransmitDuration());
-        s->set_latency(streamTimingDelay(guid));
+        s->set_latency(t.latency);
+        s->set_jitter(t.jitter);
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);
@@ -941,12 +942,14 @@ void AbstractPort::streamStatsAll(OstProto::StreamStatsList *stats)
         i.next();
         StreamStatsTuple sst = i.value();
         OstProto::StreamStats *s = stats->add_stream_stats();
+        StreamTiming::Stats t = streamTimingStats(i.key());
 
         s->mutable_stream_guid()->set_id(i.key());
         s->mutable_port_id()->set_id(id());
 
         s->set_tx_duration(txDur);
-        s->set_latency(streamTimingDelay(i.key()));
+        s->set_latency(t.latency);
+        s->set_jitter(t.jitter);
 
         s->set_tx_pkts(sst.tx_pkts);
         s->set_tx_bytes(sst.tx_bytes);

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "../common/protocol.pb.h"
 #include "streamstats.h"
+#include "streamtiming.h"
 
 #include <QList>
 #include <QReadWriteLock>
@@ -34,7 +35,6 @@ struct InterfaceInfo;
 class PacketBuffer;
 class QIODevice;
 class StreamBase;
-class StreamTiming;
 
 // TODO: send notification back to client(s)
 #define Xnotify qWarning
@@ -125,7 +125,7 @@ public:
     void stats(PortStats *stats);
     void resetStats() { epochStats_ = stats_; }
 
-    quint64 streamTimingDelay(uint guid);
+    StreamTiming::Stats streamTimingStats(uint guid);
     void clearStreamTiming(uint guid = UINT_MAX);
 
     // FIXME: combine single and All calls?
