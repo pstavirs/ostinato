@@ -52,6 +52,7 @@ enum {
     kAvgTxBitRate,
     kAvgRxBitRate,
     kAvgLatency,
+    kAvgJitter,
     kMaxAggrStreamStats
 };
 static QStringList aggrStatTitles = QStringList()
@@ -63,7 +64,8 @@ static QStringList aggrStatTitles = QStringList()
     << "Avg\nRx PktRate"
     << "Avg\nTx BitRate"
     << "Avg\nRx BitRate"
-    << "Avg\nLatency";
+    << "Avg\nLatency"
+    << "Avg\nJitter";
 
 static const uint kAggrGuid = 0xffffffff;
 
@@ -192,6 +194,12 @@ QVariant StreamStatsModel::data(const QModelIndex &index, int role) const
                 XLocale().toTimeIntervalString(
                     aggrGuidStats_.value(guid).latencySum
                         / aggrGuidStats_.value(guid).latencyCount);
+        case kAvgJitter:
+            return aggrGuidStats_.value(guid).latencyCount <= 0
+                        || aggrGuidStats_.value(guid).latencySum <= 0 ? QString("-") :
+                XLocale().toTimeIntervalString(
+                    aggrGuidStats_.value(guid).jitterSum
+                        / aggrGuidStats_.value(guid).latencyCount);
         default:
             break;
         };
@@ -267,6 +275,7 @@ void StreamStatsModel::appendStreamStatsList(
         ss.rxBytes = s.rx_bytes();
         ss.txBytes = s.tx_bytes();
         ss.rxLatency = s.latency();
+        ss.rxJitter = s.jitter();
 
         aggrPort.rxPkts += ss.rxPkts;
         aggrPort.txPkts += ss.txPkts;
@@ -282,6 +291,7 @@ void StreamStatsModel::appendStreamStatsList(
             aggrGuid.txDuration = s.tx_duration(); // XXX: use largest or avg?
         if (ss.rxLatency) {
             aggrGuid.latencySum += ss.rxLatency;
+            aggrGuid.jitterSum += ss.rxJitter;
             aggrGuid.latencyCount++;
         }
 
@@ -294,6 +304,7 @@ void StreamStatsModel::appendStreamStatsList(
             aggrAggr.txDuration = aggrGuid.txDuration;
         if (ss.rxLatency) {
             aggrAggr.latencySum += ss.rxLatency;
+            aggrAggr.jitterSum += ss.rxJitter;
             aggrAggr.latencyCount++;
         }
 
