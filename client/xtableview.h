@@ -169,7 +169,8 @@ private:
             for (int i = start; i < end; i++)
                 if (indexes.contains(model()->index(indexes.first().row(), i)))
                     text.append(model()->headerData(i, Qt::Horizontal)
-                                            .toString()+"\t");;
+                                            .toString().replace('\n', ' ')
+                                        +"\t");;
             text.append("\n");
         }
 

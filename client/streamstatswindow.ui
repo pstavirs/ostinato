@@ -19,6 +19,9 @@
      <property name="contextMenuPolicy">
       <enum>Qt::ActionsContextMenu</enum>
      </property>
+     <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+     </property>
      <property name="whatsThis">
       <string>Oops! We don't seem to have any stream statistics for the requested port(s)
 
