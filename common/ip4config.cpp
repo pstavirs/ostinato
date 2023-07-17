@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "ip4config.h"
 #include "ip4.h"
+#include "ipv4addressvalidator.h"
 
 #include <QHostAddress>
 
@@ -30,6 +31,10 @@ Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
     leIpVersion->setValidator(new QIntValidator(0, 15, this));
     leIpOptions->setValidator(new QRegExpValidator(QRegExp("[0-9a-fA-F]*"),
                                                    this));
+    leIpSrcAddr->setValidator(new IPv4AddressValidator(this));
+    leIpSrcAddrMask->setValidator(new IPv4AddressValidator(this));
+    leIpDstAddr->setValidator(new IPv4AddressValidator(this));
+    leIpDstAddrMask->setValidator(new IPv4AddressValidator(this));
 
     connect(cmbIpSrcAddrMode, SIGNAL(currentIndexChanged(int)),
         this, SLOT(on_cmbIpSrcAddrMode_currentIndexChanged(int)));

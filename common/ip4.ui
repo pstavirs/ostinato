@@ -214,12 +214,6 @@ Length (x4)</string>
       </item>
       <item row="1" column="1" >
        <widget class="QLineEdit" name="leIpSrcAddr" >
-        <property name="inputMask" >
-         <string>009.009.009.009; </string>
-        </property>
-        <property name="text" >
-         <string>...</string>
-        </property>
         <property name="alignment" >
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -264,12 +258,6 @@ Length (x4)</string>
         <property name="enabled" >
          <bool>false</bool>
         </property>
-        <property name="inputMask" >
-         <string>009.009.009.009; </string>
-        </property>
-        <property name="text" >
-         <string>...</string>
-        </property>
        </widget>
       </item>
       <item row="2" column="0" >
@@ -281,12 +269,6 @@ Length (x4)</string>
       </item>
       <item row="2" column="1" >
        <widget class="QLineEdit" name="leIpDstAddr" >
-        <property name="inputMask" >
-         <string>000.000.000.000; </string>
-        </property>
-        <property name="text" >
-         <string>...</string>
-        </property>
         <property name="alignment" >
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -330,12 +312,6 @@ Length (x4)</string>
        <widget class="QLineEdit" name="leIpDstAddrMask" >
         <property name="enabled" >
          <bool>false</bool>
-        </property>
-        <property name="inputMask" >
-         <string>009.009.009.009; </string>
-        </property>
-        <property name="text" >
-         <string>...</string>
         </property>
        </widget>
       </item>
