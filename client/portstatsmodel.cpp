@@ -137,7 +137,10 @@ QVariant PortStatsModel::data(const QModelIndex &index, int role) const
 
             // States
             case e_COMBO_STATE:
-                return QVariant();
+                return QString("Link %1%2%3")
+                    .arg(LinkStateName.at(stats.state().link_state()))
+                    .arg(stats.state().is_transmit_on() ? ";Tx On" : "")
+                    .arg(stats.state().is_capture_on() ? ";Cap On" : "");
 
             // Statistics
             case e_STAT_FRAMES_RCVD:
