@@ -1,4 +1,5 @@
 /*
+ *
 Copyright (C) 2010 Srivats P.
 
 This file is part of "Ostinato"
@@ -23,13 +24,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QCoreApplication> 
 #include <QProcess> 
+#include <QTime>
 
 #ifdef Q_OS_WIN32
 
+#include <ifdef.h>
 #include <ntddndis.h>
-#include <ws2ipdef.h>
 
+static const quint64 kMaxValue64 = 0xffffffffffffffffULL;
 PIP_ADAPTER_ADDRESSES WinPcapPort::adapterList_ = NULL;
+QList<WinPcapPort*> WinPcapPort::allPorts_;
+WinPcapPort::StatsMonitor *WinPcapPort::monitor_ = NULL;
+bool WinPcapPort::internalPortStats_ = false;
+
+// FIXME: duplicated from winhostdevice - remove duplicate
+static WCHAR errBuf[256];
+static inline QString errStr(ulong err)
+{
+    return FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  errBuf, sizeof(errBuf)-1, NULL) > 0 ?
+        QString("error 0x%1 %2").arg(err, 0, 16)
+                          .arg(QString().fromWCharArray(errBuf)) :
+        QString("error 0x%1").arg(err, 0, 16);
+}
 
 WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
     : PcapPort(id, device)
@@ -43,12 +61,21 @@ WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
 
     delete monitorRx_;
     delete monitorTx_;
+    monitorRx_ = monitorTx_ = NULL;
 
-    monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
-    monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
+    if (internalPortStats_) {
+        // One monitor each for rx and tx for each port
+        monitorRx_ = new PortMonitor(device, kDirectionRx, &stats_);
+        monitorTx_ = new PortMonitor(device, kDirectionTx, &stats_);
+    } else {
+        // By default, we have one monitor for both Rx/Tx of all ports
+        if (!monitor_)
+            monitor_ = new StatsMonitor();
+    }
 
     data_.set_description(description);
 
+    // XXX: luid_ is already populated by populateInterfaceInfo() call above
     adapter_ = PacketOpenAdapter((CHAR*)device);
     if (!adapter_)
         qFatal("Unable to open adapter %s", device);
@@ -59,10 +86,39 @@ WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
 
     data_.set_is_exclusive_control(hasExclusiveControl());
     minPacketSetSize_ = 256;
+
+    qDebug("adding dev to all ports list <%s>", device);
+    allPorts_.append(this);
 }
 
 WinPcapPort::~WinPcapPort()
 {
+    if (monitor_ && monitor_->isRunning()) {
+        monitor_->stop();
+        monitor_->wait();
+
+        delete monitor_;
+        monitor_ = nullptr;
+    }
+}
+
+void WinPcapPort::init()
+{
+    if (monitor_) {
+        if (!monitor_->isRunning())
+            monitor_->start();
+        monitor_->waitForSetupFinished();
+    }
+
+#if 0 // TODO
+    if (!isPromisc_)
+        addNote("Non Promiscuous Mode");
+#endif
+
+    if (monitor_)
+        AbstractPort::init();
+    else
+        PcapPort::init();
 }
 
 OstProto::LinkState WinPcapPort::linkState()
@@ -244,6 +300,146 @@ void WinPcapPort::PortMonitor::run()
     }
 }
 
+WinPcapPort::StatsMonitor::StatsMonitor()
+    : QThread()
+{
+    setObjectName("StatsMon");
+    stop_ = false;
+    setupDone_ = false;
+}
+
+WinPcapPort::StatsMonitor::~StatsMonitor()
+{
+}
+
+void WinPcapPort::StatsMonitor::run()
+{
+    struct PortStatsAndState {
+        NET_LUID luid;
+        PortStats *stats;
+        OstProto::LinkState *linkState;
+        bool firstError;
+    };
+    QList<PortStatsAndState> portList;
+    int count = 0;
+
+    //
+    // We first setup the port list to be polled
+    //
+    for (WinPcapPort* port : allPorts_) {
+        if (port->luid_.Value) {
+            portList.append(
+                {port->luid_, &(port->stats_), &(port->linkState_), false});
+        } else {
+            qWarning("No LUID for port %s - stats will not be available",
+                    port->name());
+        }
+        count++;
+    }
+    qDebug("stats port count = %d\n", count);
+
+    if (count <= 0) {
+        qWarning("No ports with valid LUID - no stats will be available");
+        return;
+    }
+    qDebug("stats for %d ports setup", count);
+    setupDone_ = true;
+
+    //
+    // We are all set - Let's start polling for stats!
+    //
+    while (!stop_) {
+        for (auto &port : portList) {
+            MIB_IF_ROW2 ifInfo;
+
+            ifInfo.InterfaceLuid.Value = port.luid.Value;
+
+            ulong status = GetIfEntry2(&ifInfo);
+            if (status != NO_ERROR) {
+                if (!port.firstError) {
+                    qWarning("Failed to fetch stats for Luid 0x%016llx (%s)"
+                            " - suppressing further stats error messages "
+                            "for this port",
+                            port.luid.Value, qPrintable(errStr(status)));
+                    port.firstError = true;
+                }
+                continue;
+            }
+
+            switch (ifInfo.OperStatus) {
+                case IfOperStatusUp:
+                    *(port.linkState) = OstProto::LinkStateUp; break;
+                case IfOperStatusDown:
+                    *(port.linkState) = OstProto::LinkStateDown; break;
+                default:
+                    *(port.linkState) = OstProto::LinkStateUnknown;
+            }
+
+            quint64 inPkts = ifInfo.InUcastPkts + ifInfo.InNUcastPkts;
+            port.stats->rxPps =
+                ((inPkts >= port.stats->rxPkts) ?
+                     inPkts - port.stats->rxPkts :
+                     inPkts + (kMaxValue64 - port.stats->rxPkts))
+                / kRefreshFreq_;
+            port.stats->rxBps  =
+                ((ifInfo.InOctets >= port.stats->rxBytes) ?
+                     ifInfo.InOctets - port.stats->rxBytes :
+                     ifInfo.InOctets + (kMaxValue64 - port.stats->rxBytes))
+                / kRefreshFreq_;
+            port.stats->rxPkts  = inPkts;
+            port.stats->rxBytes = ifInfo.InOctets;
+
+            quint64 outPkts = ifInfo.OutUcastPkts + ifInfo.OutNUcastPkts;
+            port.stats->txPps  =
+                ((outPkts >= port.stats->txPkts) ?
+                     outPkts - port.stats->txPkts :
+                     outPkts + (kMaxValue64 - port.stats->txPkts))
+                / kRefreshFreq_;
+            port.stats->txBps  =
+                ((ifInfo.OutOctets >= port.stats->txBytes) ?
+                     ifInfo.OutOctets - port.stats->txBytes :
+                     ifInfo.OutOctets + (kMaxValue64 - port.stats->txBytes))
+                / kRefreshFreq_;
+            port.stats->txPkts  = outPkts;
+            port.stats->txBytes = ifInfo.OutOctets;
+
+            port.stats->rxDrops = ifInfo.InDiscards;
+            port.stats->rxErrors = ifInfo.InErrors + ifInfo.InUnknownProtos;
+
+            // XXX: Ostinato stats not available in Win
+            //  - rxFifoErrors
+            //  - rxFrameErrors
+            // XXX: Win stats not available in Ostinato
+            //  - OutDiscards
+            //  - OutErrors
+        }
+        QThread::sleep(kRefreshFreq_);
+    }
+
+    portList.clear();
+}
+
+void WinPcapPort::StatsMonitor::stop()
+{
+    stop_ = true;
+}
+
+bool WinPcapPort::StatsMonitor::waitForSetupFinished(int msecs)
+{
+    QTime t;
+
+    t.start();
+    while (!setupDone_)
+    {
+        if (t.elapsed() > msecs)
+            return false;
+
+        QThread::msleep(10);
+    }
+
+    return true;
+}
+
 void WinPcapPort::populateInterfaceInfo()
 {
     if (!adapterList_) {
@@ -257,8 +453,11 @@ void WinPcapPort::populateInterfaceInfo()
 
     if (!adapter) {
         qWarning("Adapter info not found for %s", name());
+        luid_.Value = 0;
         return;
     }
+
+    luid_ = adapter->Luid;
 
     interfaceInfo_ = new InterfaceInfo;
 

@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <packet32.h>
 
+#include <ws2ipdef.h>
 #include <iphlpapi.h>
 
 class WinPcapPort : public PcapPort
@@ -36,6 +37,7 @@ public:
     WinPcapPort(int id, const char *device, const char *description);
     ~WinPcapPort();
 
+    void init();
     virtual OstProto::LinkState linkState();
     virtual bool hasExclusiveControl();
     virtual bool setExclusiveControl(bool exclusive);
@@ -51,10 +53,32 @@ protected:
                 AbstractPort::PortStats *stats);
         void run();
     };
+
+    class StatsMonitor: public QThread
+    {
+        public:
+            StatsMonitor();
+            ~StatsMonitor();
+            void run();
+            void stop();
+            bool waitForSetupFinished(int msecs = 10000);
+        private:
+            // TODO: int setPromisc(const char* portName);
+
+            static const int kRefreshFreq_ = 1; // in seconds
+            bool stop_;
+            bool setupDone_;
+    };
+
+    static QList<WinPcapPort*> allPorts_;
+    static StatsMonitor *monitor_; // rx/tx stats for ALL ports
+    static bool internalPortStats_;
+
 private:
     void populateInterfaceInfo();
 
     LPADAPTER adapter_;
+    NET_LUID luid_;
     PPACKET_OID_DATA linkStateOid_ ;
 
     static PIP_ADAPTER_ADDRESSES adapterList_;
