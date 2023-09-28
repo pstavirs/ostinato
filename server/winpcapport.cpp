@@ -100,6 +100,10 @@ WinPcapPort::~WinPcapPort()
         delete monitor_;
         monitor_ = nullptr;
     }
+
+    // npcap will already clear promisc at exit, but we still do explicitly
+    if (clearPromiscAtExit_)
+        clearPromisc();
 }
 
 void WinPcapPort::init()
@@ -110,10 +114,8 @@ void WinPcapPort::init()
         monitor_->waitForSetupFinished();
     }
 
-#if 0 // TODO
     if (!isPromisc_)
         addNote("Non Promiscuous Mode");
-#endif
 
     if (monitor_)
         AbstractPort::init();
@@ -202,6 +204,106 @@ bool WinPcapPort::setExclusiveControl(bool exclusive)
 
     return (exclusive == hasExclusiveControl());
 }
+
+bool WinPcapPort::setPromisc()
+{
+    if (!promiscHandle_) {
+        char errbuf[PCAP_ERRBUF_SIZE] = "";
+
+        promiscHandle_ = pcap_create(name(), errbuf);
+        if (!promiscHandle_) {
+            qDebug("%s: Error opening port to set promisc mode: %s",
+                    name(), errbuf);
+            return false;
+        }
+
+        int status = pcap_activate(promiscHandle_);
+        if (status) {
+            qDebug("%s: Error activating port to set promisc mode: %s",
+                    name(), pcap_statustostr(status));
+            pcap_close(promiscHandle_);
+            promiscHandle_ = nullptr;
+            return false;
+        }
+    }
+
+    uint data = NDIS_PACKET_TYPE_PROMISCUOUS;
+    uint size = sizeof(data);
+    int status = pcap_oid_set_request(promiscHandle_,
+                        OID_GEN_CURRENT_PACKET_FILTER, &data, &size);
+    if (status) {
+        qDebug("%s: Unable to set promisc mode: %s",
+                name(), pcap_statustostr(status));
+        pcap_close(promiscHandle_);
+        promiscHandle_ = nullptr;
+        return false;
+    }
+
+    isPromisc_ = clearPromiscAtExit_ = true;
+    return true;
+}
+
+bool WinPcapPort::clearPromisc()
+{
+    if (!promiscHandle_) {
+        qDebug("%s: No promisc handle to clear promisc mode", name());
+        return false;
+    }
+
+    uint data = NDIS_PACKET_TYPE_ALL_LOCAL
+                 | NDIS_PACKET_TYPE_DIRECTED
+                 | NDIS_PACKET_TYPE_BROADCAST
+                 | NDIS_PACKET_TYPE_MULTICAST;
+    uint size = sizeof(data);
+    int status = pcap_oid_set_request(promiscHandle_,
+            OID_GEN_CURRENT_PACKET_FILTER, &data, &size);
+    if (status) {
+        qDebug("%s: Unable to clear promisc mode: %s",
+                name(), pcap_statustostr(status));
+        pcap_close(promiscHandle_);
+        promiscHandle_ = nullptr;
+        return false;
+    }
+
+    isPromisc_ = clearPromiscAtExit_ = false;
+    pcap_close(promiscHandle_);
+
+    return true;
+}
+
+#if 0
+// The above set/clearPromisc implementation using standard npcap APIs.
+// The below implementation uses packet.dll APIs directly and may be
+// slightly more performant? To be verified!
+bool WinPcapPort::setPromiscAlt(bool promisc)
+{
+    bool ret = false;
+    uint data = promisc ? NDIS_PACKET_TYPE_PROMISCUOUS :
+        (NDIS_PACKET_TYPE_ALL_LOCAL
+         | NDIS_PACKET_TYPE_DIRECTED
+         | NDIS_PACKET_TYPE_BROADCAST
+         | NDIS_PACKET_TYPE_MULTICAST);
+
+    PPACKET_OID_DATA oid = (PPACKET_OID_DATA) malloc(sizeof(PACKET_OID_DATA) +
+            sizeof(data));
+    if (oid) {
+        memset(oid, 0, sizeof(PACKET_OID_DATA) + sizeof(data));
+
+        oid->Oid = OID_GEN_CURRENT_PACKET_FILTER;
+        oid->Length = sizeof(data);
+        memcpy(oid->Data, &data, sizeof(data));
+        if (PacketRequest(adapter_, true, oid)) {
+            isPromisc_ = clearPromiscAtExit_ = promisc;
+            ret = true;
+        } else
+            qDebug("%s: Unable to %s promisc mode", name(),
+                    promisc ? "set" : "clear");
+    } else
+        qDebug("%s: failed to alloc promisc oid", name());
+
+    return ret;
+}
+#endif
 
 WinPcapPort::PortMonitor::PortMonitor(const char *device, Direction direction,
     AbstractPort::PortStats *stats)
@@ -330,6 +432,7 @@ void WinPcapPort::StatsMonitor::run()
         if (port->luid_.Value) {
             portList.append(
                 {port->luid_, &(port->stats_), &(port->linkState_), false});
+            port->setPromisc();
         } else {
             qWarning("No LUID for port %s - stats will not be available",
                     port->name());

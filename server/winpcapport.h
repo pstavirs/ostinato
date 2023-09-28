@@ -26,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "pcapport.h"
 
+// BPF_MAJOR_VERSION definition is needed to prevent redefinition of
+// bpf_program, bpf_insn etc. - this was not needed in WinPcap as it
+// defines it, but npcap doesn't
+#define BPF_MAJOR_VERSION 1
 #include <packet32.h>
 
 #include <ws2ipdef.h>
@@ -70,12 +74,19 @@ protected:
             bool setupDone_;
     };
 
+    bool isPromisc_{false};
+    bool clearPromiscAtExit_{false};
+    pcap_t *promiscHandle_{nullptr};
+
     static QList<WinPcapPort*> allPorts_;
     static StatsMonitor *monitor_; // rx/tx stats for ALL ports
     static bool internalPortStats_;
 
 private:
     void populateInterfaceInfo();
+
+    bool setPromisc();
+    bool clearPromisc();
 
     LPADAPTER adapter_;
     NET_LUID luid_;
