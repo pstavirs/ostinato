@@ -109,7 +109,8 @@ void PcapPort::updateNotes()
 {
     QString notes;
 
-    if ((!monitorRx_->isPromiscuous()) || (!monitorTx_->isPromiscuous()))
+    if ((monitorRx_ && monitorTx_)
+            && (!monitorRx_->isPromiscuous() || !monitorTx_->isPromiscuous()))
         notes.append("<li>Non Promiscuous Mode</li>");
 
     if (!monitorRx_->isDirectional() && !hasExclusiveControl())

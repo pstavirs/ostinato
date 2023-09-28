@@ -76,13 +76,15 @@ WinPcapPort::WinPcapPort(int id, const char *device, const char *description)
     data_.set_description(description);
 
     // XXX: luid_ is already populated by populateInterfaceInfo() call above
-    adapter_ = PacketOpenAdapter((CHAR*)device);
-    if (!adapter_)
-        qFatal("Unable to open adapter %s", device);
-    linkStateOid_ = (PPACKET_OID_DATA) malloc(sizeof(PACKET_OID_DATA) + 
-            sizeof(NDIS_LINK_STATE));
-    if (!linkStateOid_)
-        qFatal("failed to alloc oidData");
+    if (internalPortStats_) {
+        adapter_ = PacketOpenAdapter((CHAR*)device);
+        if (!adapter_)
+            qFatal("Unable to open adapter %s", device);
+        linkStateOid_ = (PPACKET_OID_DATA) malloc(sizeof(PACKET_OID_DATA) +
+                sizeof(NDIS_LINK_STATE));
+        if (!linkStateOid_)
+            qFatal("failed to alloc oidData");
+    }
 
     data_.set_is_exclusive_control(hasExclusiveControl());
     minPacketSetSize_ = 256;
@@ -125,6 +127,12 @@ void WinPcapPort::init()
 
 OstProto::LinkState WinPcapPort::linkState()
 {
+    if (!internalPortStats_)
+        return AbstractPort::linkState();
+
+    assert(adapter_);
+    assert(linkStateOid_);
+
     memset(linkStateOid_, 0, sizeof(PACKET_OID_DATA) + sizeof(NDIS_LINK_STATE));
 
     linkStateOid_->Oid = OID_GEN_LINK_STATE;
@@ -162,7 +170,7 @@ OstProto::LinkState WinPcapPort::linkState()
 
 bool WinPcapPort::hasExclusiveControl() 
 {
-    QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    QString portName(name() + strlen("\\Device\\NPF_"));
     QString bindConfigFilePath(QCoreApplication::applicationDirPath()
                 + "/bindconfig.exe");
     int exitCode;
@@ -185,7 +193,7 @@ bool WinPcapPort::hasExclusiveControl()
 
 bool WinPcapPort::setExclusiveControl(bool exclusive) 
 {
-    QString portName(adapter_->Name + strlen("\\Device\\NPF_"));
+    QString portName(name() + strlen("\\Device\\NPF_"));
     QString bindConfigFilePath(QCoreApplication::applicationDirPath()
                 + "/bindconfig.exe");
     QString status;

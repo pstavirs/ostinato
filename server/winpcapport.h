@@ -88,9 +88,9 @@ private:
     bool setPromisc();
     bool clearPromisc();
 
-    LPADAPTER adapter_;
+    LPADAPTER adapter_{nullptr};
     NET_LUID luid_;
-    PPACKET_OID_DATA linkStateOid_ ;
+    PPACKET_OID_DATA linkStateOid_{nullptr};
 
     static PIP_ADAPTER_ADDRESSES adapterList_;
 };
