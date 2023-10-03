@@ -56,6 +56,20 @@ void PcapRxStats::run()
             SignProtocol::magic(), 0, BASE_HEX);
     // XXX: Exclude ICMP packets which contain an embedded signed packet
     //      For now we check upto 4 vlan tags
+    // XXX: libpcap for Linux has a special bpf vlan check which generates
+    //      incorrect BPF instructions for our capture filter expression,
+    //      so we modify it to work correctly
+    //      See https://srivatsp.com/ostinato/ostinato-rx-stream-stats-zero/
+#ifdef Q_OS_LINUX
+    capture_filter.prepend(
+        "not ("
+            "icmp or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) or "
+            "(vlan and icmp) "
+        ") and ");
+#else
     capture_filter.append(
         "and not ("
             "icmp or "
@@ -64,6 +78,7 @@ void PcapRxStats::run()
             "(vlan and icmp) or "
             "(vlan and icmp) "
         ")");
+#endif
 
     qDebug("In %s", __PRETTY_FUNCTION__);
 
