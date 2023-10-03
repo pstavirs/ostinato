@@ -684,6 +684,7 @@ bool StreamBase::preflightCheck(QStringList &result) const
     bool chkShort = true;
     bool chkTrunc = true;
     bool chkJumbo = true;
+    bool chkSignIcmp = true;
     int count = isFrameSizeVariable() ? frameSizeVariableCount() : 1;
 
     for (int i = 0; i < count; i++)
@@ -700,6 +701,17 @@ bool StreamBase::preflightCheck(QStringList &result) const
             chkShort = false;
             pass = false;
         }
+
+        if (chkSignIcmp && hasProtocol(OstProto::Protocol::kSignFieldNumber)
+                && hasProtocol(OstProto::Protocol::kIcmpFieldNumber))
+        {
+            result << QObject::tr("Stream statistics are not supported "
+                    "for ICMP packets - please use a non-ICMP protocol or "
+                    "remove special signature from ICMP streams");
+            chkSignIcmp = false;
+            pass = false;
+        }
+
 
         if (chkTrunc && (pktLen < (frameProtocolLength(i) + kFcsSize)))
         {
