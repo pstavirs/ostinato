@@ -42,4 +42,8 @@ const QString kRpcServerAddress("RpcServer/Address");
 const QString kPortListIncludeKey("PortList/Include");
 const QString kPortListExcludeKey("PortList/Exclude");
 
+//
+// Internal Section Keys
+//
+const QString kInternalRxStatsFilterKey("Internal/RxStatsFilter");
 #endif

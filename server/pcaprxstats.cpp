@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "pcapextra.h"
 #include "../common/debugdefs.h"
 #include "../common/sign.h"
+#include "settings.h"
 #include "streamtiming.h"
 
 #define Xnotify qWarning // FIXME
@@ -80,7 +81,13 @@ void PcapRxStats::run()
         ")");
 #endif
 
+    // Override filter expression if one is specified in .ini
+    if (appSettings->contains(kInternalRxStatsFilterKey))
+        capture_filter = appSettings->value(kInternalRxStatsFilterKey)
+                            .toString();
+
     qDebug("In %s", __PRETTY_FUNCTION__);
+    qDebug("RxStats Filter: %s", qPrintable(capture_filter));
 
     handle_ = pcap_open_live(qPrintable(device_), 65535,
                     flags, 100 /* ms */, errbuf);
