@@ -32,6 +32,8 @@ Updater::Updater()
 
 #if 1
     // Tests!
+    Q_ASSERT(isVersionNewer("1.3.0", "1.2.0") == true);
+    Q_ASSERT(isVersionNewer("1.3.0", "1.1") == true);
     Q_ASSERT(isVersionNewer("1.2.0", "1.1") == true);
     Q_ASSERT(isVersionNewer("1.1", "1") == true);
     Q_ASSERT(isVersionNewer("10.1", "2") == true);
