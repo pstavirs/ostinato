@@ -31,8 +31,12 @@ class IconOnlyDelegate : public QStyledItemDelegate
     {
         QStyleOptionViewItem opt = option;
         opt.decorationPosition = QStyleOptionViewItem::Top;
-        opt.features &= ~QStyleOptionViewItem::HasDisplay;
         QStyledItemDelegate::paint(painter, opt, index);
+    }
+
+    QString displayText(const QVariant&, const QLocale&) const
+    {
+        return QString();
     }
 };
 
