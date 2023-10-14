@@ -81,7 +81,8 @@ StreamTiming::Stats StreamTiming::stats(uint portId, uint guid)
         return stats;
 
     stats.latency = timespecToNsecs(t.sumDelays)/t.countDelays;
-    stats.jitter = t.sumJitter/(t.countDelays-1);
+    if (t.countDelays > 1)
+        stats.jitter = t.sumJitter/(t.countDelays-1);
 
     return stats;
 }
