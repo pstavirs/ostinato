@@ -44,8 +44,7 @@ PortStatsWindow::PortStatsWindow(PortGroupList *pgl, QWidget *parent)
     model = pgl->getPortStatsModel();
 
     // Hide 'user' row
-    proxyStatsModel = new PortStatsProxyModel(
-                            QSet<int>({e_INFO_USER}), this);
+    proxyStatsModel = new PortStatsProxyModel(e_INFO_USER, this);
     if (proxyStatsModel) {
         proxyStatsModel->setSourceModel(model);
         tvPortStats->setModel(proxyStatsModel);
