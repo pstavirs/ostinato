@@ -27,7 +27,6 @@ PcapTransmitter::PcapTransmitter(
     txStats_.setObjectName(QString("TxStats:%1").arg(device));
     memset(&stats_, 0, sizeof(stats_));
     txStats_.setTxThreadStats(&stats_);
-    txStats_.start(); // TODO: alongwith user transmit start
 
     txThread_.setStats(&stats_);
     connect(&txThread_, SIGNAL(finished()), SLOT(updateTxThreadStreamStats()));
@@ -35,7 +34,6 @@ PcapTransmitter::PcapTransmitter(
 
 PcapTransmitter::~PcapTransmitter()
 {
-    txStats_.stop(); // TODO: alongwith user transmit stop
 }
 
 bool PcapTransmitter::setRateAccuracy(
@@ -126,12 +124,20 @@ void PcapTransmitter::useExternalStats(AbstractPort::PortStats *stats)
 
 void PcapTransmitter::start()
 {
+    // XXX: Start the stats thread before the tx thread, so no tx stats
+    // is missed
+    txStats_.start();
+    Q_ASSERT(txStats_.isRunning());
     txThread_.start();
 }
 
 void PcapTransmitter::stop()
 {
+    // XXX: Stop the tx thread before the stats thread, so no tx stats
+    // is missed
     txThread_.stop();
+    Q_ASSERT(!txThread_.isRunning());
+    txStats_.stop();
 }
 
 bool PcapTransmitter::isRunning()
