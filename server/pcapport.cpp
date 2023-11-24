@@ -401,6 +401,8 @@ PcapPort::PortCapturer::PortCapturer(const char *device)
 
 PcapPort::PortCapturer::~PortCapturer()
 {
+    if (isRunning())
+        stop();
     capFile_.close();
 }
 
@@ -549,7 +551,8 @@ PcapPort::EmulationTransceiver::EmulationTransceiver(const char *device,
 
 PcapPort::EmulationTransceiver::~EmulationTransceiver()
 {
-    stop();
+    if (isRunning())
+        stop();
 }
 
 void PcapPort::EmulationTransceiver::run()
@@ -738,7 +741,7 @@ void PcapPort::EmulationTransceiver::stop()
             QThread::msleep(10);
     }
     else {
-        qWarning("Receive stop requested but is not running!");
+        qWarning("Emulation Xcvr stop requested but is not running!");
         return;
     }
 }
