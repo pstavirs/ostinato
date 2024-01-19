@@ -30,6 +30,8 @@ ArpConfigForm::ArpConfigForm(QWidget *parent)
     opCodeCombo->setValidator(new QIntValidator(0, 0xFFFF, this));
     opCodeCombo->addItem(1, "ARP Request");
     opCodeCombo->addItem(2, "ARP Reply");
+    opCodeCombo->addItem(3, "Reverse ARP Request");
+    opCodeCombo->addItem(4, "Reverse ARP Reply");
 
     connect(senderHwAddrMode, SIGNAL(currentIndexChanged(int)), 
             SLOT(on_senderHwAddrMode_currentIndexChanged(int)));

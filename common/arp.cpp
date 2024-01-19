@@ -62,12 +62,14 @@ void ArpProtocol::protoDataCopyFrom(const OstProto::Protocol &protocol)
 
 QString ArpProtocol::name() const
 {
-    return QString("Address Resolution Protocol");
+    return isRarp() ?
+        QString("Reverse Address Resolution Protocol") :
+        QString("Address Resolution Protocol");
 }
 
 QString ArpProtocol::shortName() const
 {
-    return QString("ARP");
+    return isRarp() ? QString("RARP") : QString("ARP");
 }
 
 /*!
@@ -96,7 +98,7 @@ quint32 ArpProtocol::protocolId(ProtocolIdType type) const
 {
     switch(type)
     {
-        case ProtocolIdEth: return 0x0806;
+        case ProtocolIdEth: return isRarp() ? 0x8035 : 0x0806;
         default:break;
     }
 
@@ -807,4 +809,12 @@ int ArpProtocol::protocolFrameVariableCount() const
     }
 
     return count;
+}
+
+bool ArpProtocol::isRarp() const
+{
+    if ((data.op_code() == 3)
+            || (data.op_code() ==4))
+        return true;
+    return false;
 }

@@ -96,6 +96,8 @@ public:
     virtual int protocolFrameVariableCount() const;
 
 private:
+    bool isRarp() const;
+
     OstProto::Arp    data;
 };
 
