@@ -431,7 +431,7 @@ _retry:
         diffFile.close();
         if (diffFile.size())
         {
-            error.append(tr("<p>There is a diff between the original and imported streams. See details to review the diff.</p><p>Why a diff? See <a href='%1'>possible reasons</a>.</p>\n\n\n\n").arg("https://jump.ostinato.org/pcapdiff"));
+            error.append(tr("<p>There is a diff between the original and imported streams. See details to review the diff.</p><p>&#x1F4A1; If you don't need to edit packets, you can retry the import and uncheck the Intelligent Import option.</p><p>Why a diff? See <a href='%1'>possible reasons</a>.</p>\n\n\n\n").arg("https://jump.ostinato.org/pcapdiff"));
             diffFile.open();
             diffFile.seek(0);
             error.append(QString(diffFile.readAll()));
