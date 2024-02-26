@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QHostAddress>
 #include <QStringList>
+#include <QRegularExpression>>
 
 PortManager *PortManager::instance_ = NULL;
 
@@ -242,13 +243,11 @@ AbstractPort::Accuracy PortManager::rateAccuracy()
 
 bool PortManager::filterAcceptsPort(const char *name)
 {
-    QRegExp pattern;
     QStringList includeList = appSettings->value(kPortListIncludeKey)
                                     .toStringList();
     QStringList excludeList = appSettings->value(kPortListExcludeKey)
                                     .toStringList();
 
-    pattern.setPatternSyntax(QRegExp::Wildcard);
 
     // An empty (or missing) includeList accepts all ports
     // NOTE: A blank "IncludeList=" is read as a stringlist with one
@@ -258,8 +257,10 @@ bool PortManager::filterAcceptsPort(const char *name)
         goto _include_pass;
 
     foreach (QString str, includeList) {
-        pattern.setPattern(str);
-        if (pattern.exactMatch(name))
+        QString wildcardExp = QRegularExpression::wildcardToRegularExpression(str);
+        QRegularExpression pattern(QRegularExpression::anchoredPattern(wildcardExp),
+                              QRegularExpression::CaseInsensitiveOption);
+        if (pattern.match(name).hasMatch())
             goto _include_pass;
     }
 
@@ -268,8 +269,10 @@ bool PortManager::filterAcceptsPort(const char *name)
 
 _include_pass:
     foreach (QString str, excludeList) {
-        pattern.setPattern(str);
-        if (pattern.exactMatch(name))
+        QString wildcardExp = QRegularExpression::wildcardToRegularExpression(str);
+        QRegularExpression pattern(QRegularExpression::anchoredPattern(wildcardExp),
+                                   QRegularExpression::CaseInsensitiveOption);
+        if (pattern.match(name).hasMatch())
             return false;
     }
 

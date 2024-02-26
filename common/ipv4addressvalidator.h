@@ -36,7 +36,7 @@ public:
 
     virtual void fixup(QString &input) const
     {
-        QStringList bytes = input.split('.', QString::SkipEmptyParts);
+        QStringList bytes = input.split('.', Qt::SkipEmptyParts);
 
         while (bytes.count() < 4)
             bytes.append("0");

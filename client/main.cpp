@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QFile>
 #include <QSettings>
 #include <QtGlobal>
+#include <QRandomGenerator>
 
 #include <google/protobuf/stubs/common.h>
 
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
 
     ThemeManager::instance()->setTheme(appSettings->value(kThemeKey).toString());
 
-    qsrand(QDateTime::currentDateTime().toTime_t());
+//    qsrand(QDateTime::currentDateTime().toTime_t());
 
     mainWindow = new MainWindow;
     mainWindow->show();

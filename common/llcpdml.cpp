@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "llc.pb.h"
 #include "snap.pb.h"
 
-#include <QRegExp>
+#include <QRegularExpression>
 
 PdmlLlcProtocol::PdmlLlcProtocol()
 {
@@ -56,7 +56,7 @@ void PdmlLlcProtocol::unknownFieldHandler(QString name, int /*pos*/,
                 .toUInt(&isOk, kBaseHex));
         snap->set_is_override_oui(true);
     }
-    else if ((name == "llc.type") || (name.contains(QRegExp("llc\\..*pid"))))
+    else if ((name == "llc.type") || (name.contains(QRegularExpression("llc\\..*pid"))))
     {
         OstProto::Snap *snap = stream->mutable_protocol(
                 stream->protocol_size()-1)->MutableExtension(OstProto::snap);

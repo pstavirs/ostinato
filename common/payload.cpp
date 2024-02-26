@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "payload.h"
 #include "streambase.h"
 
+#include <QRandomGenerator>
+
 PayloadProtocol::PayloadProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
 {
@@ -149,7 +151,7 @@ QVariant PayloadProtocol::fieldData(int index, FieldAttrib attrib,
                         case OstProto::Payload::e_dp_random:
                             //! \todo (HIGH) cksum is incorrect for random pattern
                             for (int i = 0; i < dataLen; i++)
-                                fv[i] =  qrand() % (0xFF + 1);
+                                fv[i] =  QRandomGenerator::global()->generate() % (0xFF + 1);
                             break;
                         default:
                             qWarning("Unhandled data pattern %d", 

@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QTcpSocket>
 #include <QThreadStorage>
 #include <QtGlobal>
+
 #include <qendian.h>
 
 #include <stdio.h>
@@ -83,7 +84,8 @@ void RpcConnection::start()
         return;
     }
     qDebug("clientSock Thread = %p", clientSock->thread());
-    qsrand(QDateTime::currentDateTime().toTime_t());
+
+//    qsrand(QDateTime::currentDateTime().toTime_t());
 
     connId.setLocalData(new QString(id.arg(clientSock->peerAddress().toString())
                                       .arg(clientSock->peerPort())));

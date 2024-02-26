@@ -39,7 +39,7 @@ StreamStatsWindow::StreamStatsWindow(QAbstractItemModel *model, QWidget *parent)
     count++;
 
     filterModel_ = new StreamStatsFilterModel(this);
-    filterModel_->setFilterRegExp(QRegExp(kDefaultFilter_));
+    filterModel_->setFilterRegularExpression(QRegularExpression(kDefaultFilter_));
     filterModel_->setSourceModel(model);
     streamStats->setModel(filterModel_);
 
@@ -63,9 +63,9 @@ StreamStatsWindow::~StreamStatsWindow()
 void StreamStatsWindow::on_actionShowDetails_triggered(bool checked)
 {
     if (checked)
-        filterModel_->setFilterRegExp(QRegExp(".*"));
+        filterModel_->setFilterRegularExpression(QRegularExpression(".*"));
     else
-        filterModel_->setFilterRegExp(QRegExp(kDefaultFilter_));
+        filterModel_->setFilterRegularExpression(QRegularExpression(kDefaultFilter_));
 
     streamStats->resizeColumnsToContents();
 }

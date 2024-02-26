@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "uint128.h"
 #include <QHostAddress>
+#include <QRegularExpression>>
 
 enum {
     kIp4Address,
@@ -114,7 +115,7 @@ QVariant NdpStatusModel::data(const QModelIndex &index, int role) const
             switch (role) {
                 case Qt::DisplayRole:
                     return QString("%1").arg(ndp.mac(), 6*2, 16, QChar('0'))
-                            .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:")
+                            .replace(QRegularExpression("([0-9a-fA-F]{2}\\B)"), "\\1:")
                             .toUpper();
                 default:
                     break;

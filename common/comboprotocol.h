@@ -188,7 +188,7 @@ public:
     }
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const
+        CksumType cksumType = CksumIp, CksumFlags cksumFlags = CksumFlag::ExcludeCksumField) const
     {
         // For a Pseudo IP cksum, we assume it is the succeeding protocol
         // that is requesting it and hence return protoB's cksum;

@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _STREAM_BASE_H
 
 #include <QString>
-#include <QLinkedList>
 #include <QVariant>
 
 #include "protocol.pb.h"

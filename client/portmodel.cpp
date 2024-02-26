@@ -294,7 +294,7 @@ QPixmap PortModel::statusIcon(
     QString key = QString("$ost:portStatusIcon:%1:%2:%3:%4")
                     .arg(linkState).arg(exclusive).arg(transmit).arg(capture);
 
-    if (QPixmapCache::find(key, pixmap))
+    if (QPixmapCache::find(key, &pixmap))
         return pixmap;
 
     static int sz = QPixmap(":/icons/frag_link_up.png").width();

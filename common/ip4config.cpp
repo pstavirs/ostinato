@@ -29,7 +29,7 @@ Ip4ConfigForm::Ip4ConfigForm(QWidget *parent)
     setupUi(this);
 
     leIpVersion->setValidator(new QIntValidator(0, 15, this));
-    leIpOptions->setValidator(new QRegExpValidator(QRegExp("[0-9a-fA-F]*"),
+    leIpOptions->setValidator(new QRegularExpressionValidator(QRegularExpression("[0-9a-fA-F]*"),
                                                    this));
     leIpSrcAddr->setValidator(new IPv4AddressValidator(this));
     leIpSrcAddrMask->setValidator(new IPv4AddressValidator(this));
@@ -277,7 +277,7 @@ void Ip4ConfigForm::storeWidget(AbstractProtocol *proto)
             QHostAddress(leIpDstAddrMask->text()).toIPv4Address());
     proto->setFieldData(
             Ip4Protocol::ip4_options,
-            QByteArray::fromHex(QByteArray().append(leIpOptions->text())));
+            QByteArray::fromHex(QByteArray().append(leIpOptions->text().toUtf8())));
 }
 
 /*

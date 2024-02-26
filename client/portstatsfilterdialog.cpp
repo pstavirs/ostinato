@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "portstatsfilterdialog.h"
 
+#include <functional>
+
 PortStatsFilterDialog::PortStatsFilterDialog(QWidget *parent)
     : QDialog(parent)
 {
@@ -88,7 +90,7 @@ void PortStatsFilterDialog::on_tbSelectIn_clicked()
 
     foreach(QModelIndex idx, lvUnselected->selectionModel()->selectedIndexes())
         rows.append(idx.row());
-    std::sort(rows.begin(), rows.end(), qGreater<int>());
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
 
     QModelIndex idx = lvSelected->selectionModel()->currentIndex();
     int insertAt = idx.isValid() ? idx.row() : mSelected.rowCount();
@@ -106,7 +108,7 @@ void PortStatsFilterDialog::on_tbSelectOut_clicked()
 
     foreach(QModelIndex idx, lvSelected->selectionModel()->selectedIndexes())
         rows.append(idx.row());
-    std::sort(rows.begin(), rows.end(), qGreater<int>());
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
 
     foreach(int row, rows)
     {

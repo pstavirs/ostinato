@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "uint128.h"
 #include <QHostAddress>
+#include <QRandomGenerator>
 
 
 Ip6Protocol::Ip6Protocol(StreamBase *stream, AbstractProtocol *parent)
@@ -340,7 +341,7 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                     else if (data.src_addr_mode()==OstProto::Ip6::kRandomHost) {
                         // XXX: qrand is int (32bit) not 64bit, some stdlib
                         // implementations have RAND_MAX as low as 0x7FFF
-                        host = UInt128(qrand(), qrand()) & ~mask;
+                        host = UInt128(QRandomGenerator::global()->generate(), QRandomGenerator::global()->generate()) & ~mask;
                     }
                     src = prefix | host;
                     break;
@@ -403,7 +404,7 @@ QVariant Ip6Protocol::fieldData(int index, FieldAttrib attrib,
                     else if (data.dst_addr_mode()==OstProto::Ip6::kRandomHost) {
                         // XXX: qrand is int (32bit) not 64bit, some stdlib
                         // implementations have RAND_MAX as low as 0x7FFF
-                        host = UInt128(qrand(), qrand()) & ~mask;
+                        host = UInt128(QRandomGenerator::global()->generate(), QRandomGenerator::global()->generate()) & ~mask;
                     }
                     dst = prefix | host;
                     break;

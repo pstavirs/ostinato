@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QByteArray>
 #include <QFlags>
 #include <QHash>
-#include <QLinkedList>
 #include <QString>
 #include <QVariant>
 #include <qendian.h>
@@ -109,6 +108,7 @@ public:
 
     //! Flags affecting cksum calculation, can be OR'd
     enum CksumFlag {
+        ExcludeCksumField = 0x0,
         IncludeCksumField = 0x1, //!< Default: exclude cksum field(s)
     };
     Q_DECLARE_FLAGS(CksumFlags, CksumFlag);  //!< \private abcd
@@ -171,7 +171,7 @@ public:
     bool protocolHasPayload() const;
 
     virtual quint32 protocolFrameCksum(int streamIndex = 0,
-        CksumType cksumType = CksumIp, CksumFlags cksumFlags = 0) const;
+                                       CksumType cksumType = CksumIp, CksumFlags cksumFlags = CksumFlag::ExcludeCksumField) const;
     quint32 protocolFrameHeaderCksum(int streamIndex = 0,
         CksumType cksumType = CksumIp,
         CksumScope cksumScope = CksumScopeAdjacentProtocol) const;

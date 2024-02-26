@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QByteArray>
 #include <QHash>
-#include <QTime>
+#include <QElapsedTimer>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -982,7 +982,7 @@ void LinuxPort::StatsMonitor::stop()
 
 bool LinuxPort::StatsMonitor::waitForSetupFinished(int msecs)
 {
-    QTime t;
+    QElapsedTimer t;
 
     t.start();
     while (!setupDone_)

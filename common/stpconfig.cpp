@@ -22,7 +22,7 @@ This module is developed by PLVision  <developers@plvision.eu>
 #include "stpconfig.h"
 #include "stp.h"
 
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 #include <QIntValidator>
 
 #define ONE_BYTE_MAX 255
@@ -59,11 +59,11 @@ public:
 StpConfigForm::StpConfigForm(QWidget *parent)
     : AbstractProtocolConfigForm(parent)
 {
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
+    QRegularExpression reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
     setupUi(this);
 
-    QRegExpValidator *validateMACAddress =
-        new QRegExpValidator(reMac, this);
+    QRegularExpressionValidator *validateMACAddress =
+        new QRegularExpressionValidator(reMac, this);
     UNumberValidator *validateByte =
         new UNumberValidator(0, ONE_BYTE_MAX, this);
     UNumberValidator *validate2Byte =

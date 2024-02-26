@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "arp.h"
 
 #include <QHostAddress>
-#include <QRegExp>
+#include <QRegularExpression>
+#include <QRandomGenerator>
 
 #define uintToMacStr(num)    \
     QString("%1").arg(num, 6*2, BASE_HEX, QChar('0')) \
-        .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
+        .replace(QRegularExpression("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
 
 ArpProtocol::ArpProtocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
@@ -348,7 +349,7 @@ QVariant ArpProtocol::fieldData(int index, FieldAttrib attrib,
                 case OstProto::Arp::kRandomHost:
                     subnet = data.sender_proto_addr() 
                             & data.sender_proto_addr_mask();
-                    host = (qrand() & ~data.sender_proto_addr_mask());
+                    host = (QRandomGenerator::global()->generate() & ~data.sender_proto_addr_mask());
                     protoAddr = subnet | host;
                     break;
                 default:
@@ -456,7 +457,7 @@ QVariant ArpProtocol::fieldData(int index, FieldAttrib attrib,
                 case OstProto::Arp::kRandomHost:
                     subnet = data.target_proto_addr() 
                             & data.target_proto_addr_mask();
-                    host = (qrand() & ~data.target_proto_addr_mask());
+                    host = (QRandomGenerator::global()->generate() & ~data.target_proto_addr_mask());
                     protoAddr = subnet | host;
                     break;
                 default:
