@@ -25,8 +25,8 @@ GmpConfigForm::GmpConfigForm(QWidget *parent)
 {
     setupUi(this);
 
-    auxData->setValidator(new QRegExpValidator(
-                QRegExp("[0-9A-Fa-f]*"), this));
+    auxData->setValidator(new QRegularExpressionValidator(
+                QRegularExpression("[0-9A-Fa-f]*"), this));
 }
 
 GmpConfigForm::~GmpConfigForm()
@@ -272,7 +272,7 @@ void GmpConfigForm::on_addGroupRecord_clicked()
     grpRec["overrideAuxDataLength"] = defRec.is_override_aux_data_length();
     grpRec["auxDataLength"] = defRec.aux_data_length();
     grpRec["auxData"] = QByteArray().append(
-            QString().fromStdString(defRec.aux_data()));
+            QString().fromStdString(defRec.aux_data()).toUtf8());
 
     item->setData(Qt::UserRole, grpRec);
     item->setText(QString("%1: %2")
@@ -320,7 +320,7 @@ void GmpConfigForm::on_groupList_currentItemChanged(QListWidgetItem *current,
     rec["groupRecordSourceCount"] = groupRecordSourceCount->text().toUInt();
     rec["overrideAuxDataLength"] = overrideAuxDataLength->isChecked();
     rec["auxDataLength"] = auxDataLength->text().toUInt();
-    rec["auxData"] = QByteArray().fromHex(QByteArray().append(auxData->text()));
+    rec["auxData"] = QByteArray().fromHex(QByteArray().append(auxData->text().toUtf8()));
 
     previous->setData(Qt::UserRole, rec);
     previous->setText(QString("%1: %2")

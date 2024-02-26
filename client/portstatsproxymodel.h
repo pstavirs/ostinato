@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _PORT_STATS_PROXY_MODEL_H
 
 #include <QSortFilterProxyModel>
+#include <QRegularExpression>
 
 class PortStatsProxyModel : public QSortFilterProxyModel
 {
@@ -29,7 +30,7 @@ public:
     PortStatsProxyModel(int userRow, QObject *parent = 0)
         : QSortFilterProxyModel(parent), userRow_(userRow)
     {
-        setFilterRegExp(QRegExp(".*"));
+        setFilterRegularExpression(QRegularExpression(".*"));
     }
 
 protected:
@@ -39,7 +40,7 @@ protected:
         QModelIndex index = sourceModel()->index(userRow_, sourceColumn,sourceParent);
         QString user = sourceModel()->data(index).toString();
 
-        return filterRegExp().exactMatch(user) ? true : false;
+        return filterRegularExpression().match(user).hasMatch() ? true : false;
     }
     bool filterAcceptsRow(int sourceRow, 
                           const QModelIndex &/*sourceParent*/) const

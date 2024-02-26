@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "uint128.h"
 
 #include <QHostAddress>
+#include <QRandomGenerator>
 
 namespace ipUtils {
 enum AddrMode {
@@ -60,7 +61,7 @@ quint32 inline ipAddress(quint32 baseIp, int prefix, AddrMode mode, int count,
         break;
     case kRandom:
         subnet = baseIp & mask;
-        host = (qrand() & ~mask);
+        host = (QRandomGenerator::global()->generate() & ~mask);
         ip = subnet | host;
         break;
     default:
@@ -111,8 +112,8 @@ void inline ipAddress(quint64 baseIpHi, quint64 baseIpLo, int prefix,
                 hostLo = ((baseIpLo & ~maskLo) - u) & ~maskLo;
             } 
             else if (mode==kRandom) {
-                hostHi = qrand() & ~maskHi;
-                hostLo = qrand() & ~maskLo;
+                hostHi = QRandomGenerator::global()->generate() & ~maskHi;
+                hostLo = QRandomGenerator::global()->generate() & ~maskLo;
             }
             ipHi = prefixHi | hostHi;
             ipLo = prefixLo | hostLo;

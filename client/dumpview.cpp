@@ -31,7 +31,7 @@ DumpView::DumpView(QWidget *parent)
 
     // NOTE: Monospaced fonts only !!!!!!!!!!!
     setFont(QFont("Courier"));
-    w = fontMetrics().width('X');
+    w = fontMetrics().horizontalAdvance("X");
     h = fontMetrics().height();
 
     mLineHeight = h;

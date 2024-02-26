@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "ip4.h"
 
 #include <QHostAddress>
+#include <QRandomGenerator>
 
 Ip4Protocol::Ip4Protocol(StreamBase *stream, AbstractProtocol *parent)
     : AbstractProtocol(stream, parent)
@@ -433,7 +434,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                     break;
                 case OstProto::Ip4::e_im_random_host:
                     subnet = data.src_ip() & data.src_ip_mask();
-                    host = (qrand() & ~data.src_ip_mask());
+                    host = (QRandomGenerator::global()->generate() & ~data.src_ip_mask());
                     srcIp = subnet | host;
                     break;
                 default:
@@ -486,7 +487,7 @@ QVariant Ip4Protocol::fieldData(int index, FieldAttrib attrib,
                     break;
                 case OstProto::Ip4::e_im_random_host:
                     subnet = data.dst_ip() & data.dst_ip_mask();
-                    host = (qrand() & ~data.dst_ip_mask());
+                    host = (QRandomGenerator::global()->generate() & ~data.dst_ip_mask());
                     dstIp = subnet | host;
                     break;
                 default:

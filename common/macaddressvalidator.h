@@ -37,7 +37,7 @@ public:
     virtual void fixup(QString &input) const
     {
         QStringList bytes = input.split(QRegularExpression("[:-]"),
-                                         QString::SkipEmptyParts);
+                                         Qt::SkipEmptyParts);
 
         if (!bytes.isEmpty() && bytes.last().size() == 1)
             bytes.last().prepend("0");

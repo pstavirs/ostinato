@@ -431,7 +431,7 @@ QPixmap PortStatsModel::statusIcons(
     QString key = QString("$ost:statusList:%1:%2:%3")
                     .arg(linkState).arg(transmit).arg(capture);
 
-    if (QPixmapCache::find(key, pixmap))
+    if (QPixmapCache::find(key, &pixmap))
         return pixmap;
 
     static int sz = QPixmap(":/icons/transmit_on.png").width();

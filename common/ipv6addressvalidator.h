@@ -43,7 +43,7 @@ public:
         if (addr.protocol() == QAbstractSocket::IPv6Protocol)
             state = Acceptable;
         else
-            if (_ip6ValidChars.exactMatch(input))
+            if (_ip6ValidChars.match(input).hasMatch())
                 state = Intermediate;
             else
                 state = Invalid;
@@ -69,7 +69,7 @@ public:
         input = addr.toString();
     }
 private:
-    QRegExp _ip6ValidChars;
+    QRegularExpression _ip6ValidChars;
 };
 
 #endif

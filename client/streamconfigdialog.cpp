@@ -219,9 +219,9 @@ StreamConfigDialog::StreamConfigDialog(
 
 void StreamConfigDialog::setupUiExtra()
 {
-    QRegExp reHex2B("[0-9,a-f,A-F]{1,4}");
-    QRegExp reHex4B("[0-9,a-f,A-F]{1,8}");
-    QRegExp reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
+    QRegularExpression reHex2B("[0-9,a-f,A-F]{1,4}");
+    QRegularExpression reHex4B("[0-9,a-f,A-F]{1,8}");
+    QRegularExpression reMac("([0-9,a-f,A-F]{2,2}[:-]){5,5}[0-9,a-f,A-F]{2,2}");
 
     // ---- Setup default stuff that cannot be done in designer ----
     bgProto[ProtoL1] = new QButtonGroup();
@@ -1253,7 +1253,7 @@ bool StreamConfigDialog::isCurrentStreamValid()
         if (QMessageBox::warning(this, "Preflight Check",
                     tr("<p>We found possible problems with this stream -</p>")
                     + "<ul>"
-                    + log.replaceInStrings(QRegExp("(.*)"), "<li>\\1</li>")
+                    + log.replaceInStrings(QRegularExpression("(.*)"), "<li>\\1</li>")
                         .join("\n")
                     + "</ul>"
                     + tr("<p>Ignore?</p>"),

@@ -266,14 +266,14 @@ void PortsWindow::showMyReservedPortsOnly(bool enabled)
 
     if (enabled) {
         QString rx = "Port Group|\\["
-                    + QRegExp::escape(appSettings->value(kUserKey, 
+                    + QRegularExpression::escape(appSettings->value(kUserKey,
                                             kUserDefaultValue).toString())
                     + "\\]";
-        qDebug("%s: regexp: <%s>", __FUNCTION__, qPrintable(rx));
-        proxyPortModel->setFilterRegExp(QRegExp(rx));
+        qDebug("%s: RegularExpression: <%s>", __FUNCTION__, qPrintable(rx));
+        proxyPortModel->setFilterRegularExpression(QRegularExpression(rx));
     }
     else
-        proxyPortModel->setFilterRegExp(QRegExp(""));
+        proxyPortModel->setFilterRegularExpression(QRegularExpression(""));
 }
 
 void PortsWindow::when_portView_currentChanged(const QModelIndex& currentIndex,

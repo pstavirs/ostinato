@@ -64,8 +64,8 @@ NativeFileFormat::NativeFileFormat()
     // TODO: convert Q_ASSERT to something that will run in RELEASE mode also
     Q_ASSERT(magic.IsInitialized());
     Q_ASSERT(cksum.IsInitialized());
-    Q_ASSERT(magic.ByteSize() == kFileMagicSize);
-    Q_ASSERT(cksum.ByteSize() == kFileChecksumSize);
+    Q_ASSERT(magic.ByteSizeLong() == kFileMagicSize);
+    Q_ASSERT(cksum.ByteSizeLong() == kFileChecksumSize);
 }
 
 bool NativeFileFormat::open(

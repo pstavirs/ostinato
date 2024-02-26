@@ -25,12 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 struct FrameValueAttrib
 {
     enum ErrorFlag {
+        NoError               = 0x0,
         UnresolvedSrcMacError = 0x1,
         UnresolvedDstMacError = 0x2,
         OutOfMemoryError      = 0x4,
     };
     Q_DECLARE_FLAGS(ErrorFlags, ErrorFlag);
-    ErrorFlags errorFlags{0};
+    ErrorFlags errorFlags{ErrorFlag::NoError};
     // TODO?: int len;
     
     FrameValueAttrib& operator+=(const FrameValueAttrib& rhs) {

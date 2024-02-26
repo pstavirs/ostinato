@@ -476,7 +476,7 @@ _retry:
         goto _exit;
 
     if (QFileInfo(fileName).suffix().isEmpty()) {
-        QString fileExt = fileType.section(QRegExp("[\\*\\)]"), 1, 1);
+        QString fileExt = fileType.section(QRegularExpression("[\\*\\)]"), 1, 1);
         qDebug("Adding extension '%s' to '%s'",
                 qPrintable(fileExt), qPrintable(fileName));
         fileName.append(fileExt);
@@ -491,7 +491,7 @@ _retry:
         }
     }
 
-    fileType = fileType.remove(QRegExp("\\(.*\\)")).trimmed();
+    fileType = fileType.remove(QRegularExpression("\\(.*\\)")).trimmed();
     if (!fileType.startsWith("Ostinato") 
             && !fileType.startsWith("Python"))
     {

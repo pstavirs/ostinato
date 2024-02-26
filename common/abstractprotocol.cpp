@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <qendian.h>
 
+#include <QRandomGenerator>
+
 #if 0
 #ifdef qDebug
 #undef qDebug
@@ -1160,7 +1162,7 @@ bool varyCounter(QString protocolName, QByteArray &buf, int frameIndex,
             break;
         case OstProto::VariableField::kRandom:
             newfv = (oldfv & ~varField.mask()) 
-                | ((varField.value() + qrand()) & varField.mask());
+                | ((varField.value() + QRandomGenerator::global()->generate()) & varField.mask());
             break;
         default:
             qWarning("%s Unsupported varField mode %d", 

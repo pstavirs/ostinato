@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QProcess>
-#include <QRegExp>
+#include <QRegularExpression>>
 #include <QTemporaryFile>
 #include <QTimer>
 #include <QtGlobal>

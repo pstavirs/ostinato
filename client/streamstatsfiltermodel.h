@@ -37,7 +37,7 @@ protected:
     {
         QString title = sourceModel()->headerData(sourceColumn, Qt::Horizontal)
                                             .toString();
-        return filterRegExp().exactMatch(title) ? true : false;
+        return filterRegularExpression().match(title).hasMatch() ? true : false;
     }
     bool filterAcceptsRow(int /*sourceRow*/,
                           const QModelIndex &/*sourceParent*/) const

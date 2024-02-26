@@ -78,7 +78,7 @@ private:
     AbstractPort *port_;
 
     QMutex listLock_; // protects all the lists
-    QHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
+    QMultiHash<uint, OstProto::DeviceGroup*> deviceGroupList_;
     QHash<DeviceKey, Device*> deviceList_; // fast access to devices
     QMap<DeviceKey, Device*> sortedDeviceList_; // sorted access to devices
     QMultiHash<DeviceKey, Device*> bcastList_;

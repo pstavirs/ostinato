@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _MAC_EDIT_H
 
 #include <QLineEdit>
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 
 class MacEdit: public QLineEdit
 {
@@ -39,14 +39,14 @@ inline MacEdit::MacEdit(QWidget *parent)
     : QLineEdit(parent)
 {
     // Allow : or - as separator
-    QRegExp reMac("([0-9,a-f,A-F]{0,2}[:-]){5,5}[0-9,a-f,A-F]{0,2}");
+    QRegularExpression reMac("([0-9,a-f,A-F]{0,2}[:-]){5,5}[0-9,a-f,A-F]{0,2}");
 
-    setValidator(new QRegExpValidator(reMac, this));
+    setValidator(new QRegularExpressionValidator(reMac, this));
 }
 
 inline quint64 MacEdit::value()
 {
-    QStringList bytes = text().split(QRegExp("[:-]"));
+    QStringList bytes = text().split(QRegularExpression("[:-]"));
     quint64 mac = 0;
 
     while (bytes.count() > 6)
@@ -61,7 +61,7 @@ inline quint64 MacEdit::value()
 inline void MacEdit::setValue(quint64 val)
 {
     setText(QString("%1").arg(val, 6*2, 16, QChar('0'))
-        .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper());
+        .replace(QRegularExpression("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper());
 }
 
 inline void MacEdit::focusOutEvent(QFocusEvent *e)

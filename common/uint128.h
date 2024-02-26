@@ -219,7 +219,7 @@ template <> inline UInt128 qToBigEndian<UInt128>(const UInt128 src)
 inline QDebug operator<<(QDebug debug, const UInt128 &value)
 {
     QDebugStateSaver saver(debug);
-    debug.maybeSpace() << hex << value.hi64() << " " << value.lo64();
+    debug.maybeSpace() << Qt::hex << value.hi64() << " " << value.lo64();
 
     return debug;
 }

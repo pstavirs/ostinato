@@ -20,11 +20,11 @@ This module is developed by PLVision  <developers@plvision.eu>
 */
 
 #include "stp.h"
-#include <QRegExp>
+#include <QRegularExpression>
 
 #define uintToMacStr(num)    \
     QString("%1").arg(num, 6 * 2, BASE_HEX, QChar('0')) \
-    .replace(QRegExp("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
+    .replace(QRegularExpression("([0-9a-fA-F]{2}\\B)"), "\\1:").toUpper()
 #define ONE_BIT(pos) ((unsigned int)(1 << (pos)))
 #define BITS(bit) (bit)
 #define BYTES(byte) (byte)

@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "uint128.h"
 
 #include <QDebug>
+#include <QRandomGenerator>
 
 extern ProtocolManager *OstProtocolManager;
 extern quint64 getDeviceMacAddress(int portId, int streamId, int frameIndex);
@@ -235,9 +236,11 @@ quint16    StreamBase::frameLen(int streamIndex) const
         case e_fl_random:
             //! \todo (MED) This 'random' sequence is same across iterations
             pktLen = 64; // to avoid the 'maybe used uninitialized' warning
-            qsrand(reinterpret_cast<ulong>(this));
+
+//            qsrand(reinterpret_cast<ulong>(this));
+
             for (int i = 0; i <= streamIndex; i++)
-                pktLen = qrand();
+                pktLen = QRandomGenerator::global()->generate();
             pktLen = frameLenMin() + (pktLen %
                 (frameLenMax() - frameLenMin() + 1));
             break;
@@ -622,13 +625,13 @@ int StreamBase::findReplace(quint32 protocolNumber, int fieldIndex,
         qDebug() << "findReplace:"
                  << "stream" <<  mStreamId->id()
                  << "field" << fieldValue
-                 << "findMask" << hex << findMask.value<T>() << dec
+                 << "findMask" << Qt::hex << findMask.value<T>() << Qt::dec
                  << "findValue" << findValue.value<T>();
         if ((fieldValue & findMask.value<T>()) == findValue.value<T>()) {
             T newValue = (fieldValue & ~replaceMask.value<T>())
                         | (replaceValue.value<T>() & replaceMask.value<T>());
             qDebug() << "findReplace:"
-                     << "replaceMask" << hex << replaceMask.value<T>() << dec
+                     << "replaceMask" << Qt::hex << replaceMask.value<T>() << Qt::dec
                      << "replaceValue" << replaceValue.value<T>()
                      << "newValue" << newValue;
 

@@ -31,7 +31,7 @@ class DeviceGroupDialog: public QDialog, private Ui::DeviceGroupDialog
     Q_OBJECT
 public:
     DeviceGroupDialog(Port *port, int deviceGroupIndex,
-            QWidget *parent = NULL, Qt::WindowFlags flags = 0);
+            QWidget *parent = NULL, Qt::WindowFlags flags = Qt::WindowFlags());
 
     virtual void accept();
 private slots:

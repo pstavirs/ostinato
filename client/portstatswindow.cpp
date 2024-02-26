@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QDockWidget>
 #include <QHeaderView>
 #include <QMainWindow>
+#include <QRegularExpression>>
 
 extern QMainWindow *mainWindow;
 
@@ -113,10 +114,10 @@ void PortStatsWindow::showMyReservedPortsOnly(bool enabled)
 
     if (enabled) {
         QString rx(appSettings->value(kUserKey, kUserDefaultValue).toString());
-        proxyStatsModel->setFilterRegExp(QRegExp::escape(rx));
+        proxyStatsModel->setFilterRegularExpression(QRegularExpression::escape(rx));
     }
     else
-        proxyStatsModel->setFilterRegExp(QRegExp(".*")); // match all
+        proxyStatsModel->setFilterRegularExpression(QRegularExpression(".*")); // match all
 }
 
 /* ------------- SLOTS (private) -------------- */

@@ -49,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <QProgressDialog>
 #include <QTimer>
 #include <QUrl>
+#include <QRegularExpression>
 
 #ifdef Q_OS_WIN32
 #define WIN32_NO_STATUS
@@ -326,7 +327,7 @@ _retry:
         goto _exit;
 
     if (QFileInfo(fileName).suffix().isEmpty()) {
-        QString fileExt = fileType.section(QRegExp("[\\*\\)]"), 1, 1);
+        QString fileExt = fileType.section(QRegularExpression("[\\*\\)]"), 1, 1);
         qDebug("Adding extension '%s' to '%s'",
                 qPrintable(fileExt), qPrintable(fileName));
         fileName.append(fileExt);
